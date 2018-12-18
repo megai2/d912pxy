@@ -86,7 +86,7 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
     3) ....
     4) PROFIT!
 
-## Case 3
+## Case 3 
 
   Visual errors
  
