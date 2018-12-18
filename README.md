@@ -18,9 +18,14 @@ Profiling shows that api overhead for d912pxy is 40-20% less then for plain dire
 Real performance differs on scene.
 
 DX12:
+
 https://cdn.discordapp.com/attachments/477036595019644928/524540609105756160/unknown.png 
+
+
 DX9:
+
 https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unknown.png
+
    
 # Requirements
 
