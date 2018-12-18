@@ -81,6 +81,7 @@ struct heapIndexes
 #define texState batchData
 
 Texture2DArray 					textureBinds[]  : register(t0, space0);
+TextureCube 					textureBindsCubed[]  : register(t0, space1);
 sampler      					samplerBinds[]  : register(s0);
 ConstantBuffer<batchDataType> batchData : register(b0);
 
@@ -234,31 +235,29 @@ float3 texcoord_cube3d_to_array2d(float3 orig)
 	{
 		if (ao.x > ao.z)
 		{
-			ret.xy = (orig.y >= 0) ? ao.yz : -ao.yz;
+			ret.xy = ao.yz;
 			ret.z = (orig.x >= 0) ? 0 : 1;
 		} else {
-			ret.xy = (orig.z >= 0) ? -ao.yx : ao.yx;
+			ret.xy = ao.xy;
 			ret.z = (orig.z >= 0) ? 4 : 5;
 		}
 	} else {
 		if (ao.y > ao.z)
 		{
-			ret.xy = (orig.y >= 0) ? ao.xz : -ao.xz;
+			ret.xy = ao.xz;
 			ret.z = (orig.y >= 0) ? 2 : 3;		
 		} else {
-			ret.xy = (orig.z >= 0) ? -ao.yx : ao.yx;
+			ret.xy = ao.xy;
 			ret.z = (orig.z >= 0) ? 4 : 5;							
 		}	
 	}
 	
-	ret.xy = (ret.xy - 1)/2;
-	
 	return ret;
 }
 
-float4 dx9texldl_texCube(Texture2DArray tex, sampler spl, float4 uv, float w, uint srgbMask)
+float4 dx9texldl_texCube(TextureCube tex, sampler spl, float4 uv, float w, uint srgbMask)
 {
-	float3 auv = texcoord_cube3d_to_array2d(uv.xyz);
+	float3 auv = uv.xyz;
 		
 	float4 ret = tex.SampleLevel(spl, auv, w);
 	
@@ -267,9 +266,9 @@ float4 dx9texldl_texCube(Texture2DArray tex, sampler spl, float4 uv, float w, ui
 	return ret;
 }
 
-float4 dx9texld_texCube(Texture2DArray tex, sampler spl, float4 uv, uint srgbMask)
+float4 dx9texld_texCube(TextureCube tex, sampler spl, float4 uv, uint srgbMask)
 {
-	float3 auv = texcoord_cube3d_to_array2d(uv.xyz);	
+	float3 auv = uv.xyz;	
 	
 	float4 ret = tex.Sample(spl, auv);
 	
