@@ -11,6 +11,16 @@ DirectX9 to DirectX12 API proxy for Guild Wars 2
  This project is not yet finished, expect bugs, crashes, hungs, stalls and all other fun(or not so fun) stuff!
  
  Current state: v0.9 alpha
+ 
+# Showcase
+
+Profiling shows that api overhead for d912pxy is 40-20% less then for plain directx9.
+Real performance differs on scene.
+
+DX12:
+https://cdn.discordapp.com/attachments/477036595019644928/524540609105756160/unknown.png 
+DX9:
+https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unknown.png
    
 # Requirements
 
