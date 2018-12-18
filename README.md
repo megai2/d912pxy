@@ -5,7 +5,7 @@ DirectX9 to DirectX12 API proxy for Guild Wars 2
 
 -Makes games that use DirectX9, use DirectX12 instead, without any change to game code. 
 
- Especially Guild Wars 2. You can try use it in other games, maybe i will work.
+ Especially Guild Wars 2. You can try use it in other games, maybe it will work.
  
  
  This project is not yet finished, expect bugs, crashes, hungs, stalls and all other fun(or not so fun) stuff!
