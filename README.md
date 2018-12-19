@@ -49,6 +49,12 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 2. Delete d912pxy folder
 3. Done
 
+# Known bugs
+
+-Screenshot functionality not working
+
+-SMAA shader working wrong
+
 # Troubleshooting
 
 ## Case 1
