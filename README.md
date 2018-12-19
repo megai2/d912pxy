@@ -56,6 +56,7 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
   Something are missing at start.
   
 **Solution**
+
   I'm not supplying any shaders with release. 
   
   This means, that shaders will be recompiled on first use, and then load much faster.
