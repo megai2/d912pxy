@@ -57,10 +57,15 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
   
 **Solution**
   I'm not supplying any shaders with release. 
+  
   This means, that shaders will be recompiled on first use, and then load much faster.
+  
   Still, shaders loaded in realtime on demand and in async manner, what triggers missing parts/fragments.
+  
   Most time this is not critical.
+  
   Fixing this problem need some investigation and on TODO list.
+  
   
 ## Case 2
   Game crashes/Error dialog related to d912pxy pops out.
