@@ -40,14 +40,14 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 1. Set "Resolution" in graphics options to "Fullscreen windowed"/"Windowed".
 2. Download latest release
 3. Unpack it into game folder
-4. Run the game
+4. Run d912pxy/install.bat
+5. Run the game
 
 # How to remove
 
-1. Delete d3d9.dll from bin64 folder located in game root folder. This will stop loading d912pxy at game start. 
-2. If you want clean deletion, manually delete all d3d9*.dll files and P7x64*.dll files
-3. Delete d912pxy folder
-4. Done
+1. Run d912pxy/remove.bat
+2. Delete d912pxy folder
+3. Done
 
 # Troubleshooting
 
@@ -81,10 +81,15 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
   
   Then, if you still here, post your issue on github with 
   
-    1) Log file form P7logs
-    2) Crash.dmp if you have it
-    3) ....
-    4) PROFIT!
+    1. Log file form P7logs
+    2. Crash.dmp if you have it    
+    
+ If you asked to run debug version do this
+ 
+   1. Run d912pxy/remove.bat
+   2. Run d912pxy/install_debug.bat
+   3. Run game
+   4. Send the log file or/and Crash.dmp to github
 
 ## Case 3 
 
@@ -92,12 +97,12 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
  
 **Solution**
 
-  1. In bin64 subfolder, rename d3d9.dll to d3d9_.dll(or something else), rename d3d9ps.dll to d3d9.dll
-  2. Run the game, reproduse visual error.
-  3. Delete contents of d912pxy/shaders/cso and d912pxy/shaders/hlsl folders
-  4 In bin64 subfolder, rename d3d9.dll to d3d9ps.dll, rename d3d9_.dll to d3d9.dll
-  5. Run the game again. Wait for shaders to recompile.
-  6. If error fixed, if you want(and more over if you can!) - send the newest created files in d912pxy/shaders/bugs to this github. goto 8.
-  7. If error is not fixed, post your issue on github with a description on how to reproduse visual error
-  8. ...
-  9. PROFIT!
+  1. Run d912pxy/remove.bat
+  2. Run d912pxy/install_ps.bat
+  3. Run the game, reproduse visual error.
+  4. Run d912pxy/clean_shaders.bat
+  5. Run d912pxy/remove.bat
+  6. Run d912pxy/install.bat
+  7. Run the game again. Wait for shaders to recompile.
+  8. If error fixed, if you want(and more over if you can!) - send the newest created files in d912pxy/shaders/bugs to this github. goto 8.
+  9. If error is not fixed, post your issue on github with a description on how to reproduse visual error  
