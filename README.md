@@ -125,6 +125,10 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
   
 | [EN](README.md#d912pxy) | [RU](README.md#d912pxy-1) |
 
+**Support developer**
+
+WMZ 442298672293
+
 # d912pxy
 
 Переводчик DirectX9 API в DirectX12 API для Guild Wars 2
@@ -249,3 +253,7 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
   7. Запустите игру заного. Подождите пока шейдеры перекомпилируются.
   8. Если проблема исправлена и вы хотите(и главное можете!) - отправьте новые файлы из папки d912pxy/shaders/bugs на github. goto 8.
   9. Если ошибка не исправлена, напишите о ней на github вместе с описанием того, как данную ошибку повторить.  
+  
+**Поддержка разработчика**
+
+ WMR 232397187043
