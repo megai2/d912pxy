@@ -38,10 +38,11 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 # How to use
 
 1. Set "Resolution" in graphics options to "Fullscreen windowed"/"Windowed".
-2. Download latest release
-3. Unpack it into game folder
-4. Run d912pxy/install.bat
-5. Run the game
+2. Disable all overlay software
+3. Download latest release
+4. Unpack it into game folder
+5. Run d912pxy/install.bat
+6. Run the game
 
 # How to remove
 
