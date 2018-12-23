@@ -1,4 +1,4 @@
-[EN|RU]
+[EN](README.md#d912pxy)|[RU](README.md#d912pxy-1)
 
 # d912pxy
 DirectX9 to DirectX12 API proxy for Guild Wars 2
