@@ -1,3 +1,5 @@
+[EN|RU]
+
 # d912pxy
 DirectX9 to DirectX12 API proxy for Guild Wars 2
 
@@ -10,7 +12,7 @@ DirectX9 to DirectX12 API proxy for Guild Wars 2
  
  This project is not yet finished, expect bugs, crashes, hungs, stalls and all other fun(or not so fun) stuff!
  
- Current state: v0.9 alpha
+ Current state: v0.9.2 alpha
  
 # Showcase
 
@@ -99,6 +101,7 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
     
  If you asked to run debug version do this
  
+   0. Debug version writes ton of data, do not run it for long time!
    1. Run d912pxy/remove.bat
    2. Run d912pxy/install_debug.bat
    3. Run game
@@ -119,3 +122,130 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
   7. Run the game again. Wait for shaders to recompile.
   8. If error fixed, if you want(and more over if you can!) - send the newest created files in d912pxy/shaders/bugs to this github. goto 8.
   9. If error is not fixed, post your issue on github with a description on how to reproduse visual error  
+  
+[EN|RU]
+
+# d912pxy
+
+Переводчик DirectX9 API в DirectX12 API для Guild Wars 2
+
+-Что делает эта штука?
+
+-Позволяет играм, которые используют DirectX9, использовать DirectX12, без изменений в игровом коде. 
+
+ К таким играм относится и Guild Wars 2, для которой и написана данная библиотека. Можете попробовать использовать эту библиотеку в других играх, возможно она будет работать.
+ 
+ 
+ Этот проект ещё не завершен и находится в стадии альфа тестирования, возможны зависания, ошибки и вылеты!
+ 
+ Текущая версия: v0.9.2 альфа
+ 
+# Результаты
+
+Тестирование показывает что дополнительные расходы при работе с d912pxy на 40-20% меньше чем при работе с обычным DirectX9.
+Реальная производительность зависит от сцены!
+
+DX12:
+
+https://cdn.discordapp.com/attachments/477036595019644928/524540609105756160/unknown.png 
+
+
+DX9:
+
+https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unknown.png
+
+   
+# Требования
+
+Видеокарта с поддержкой DirectX12, конкретно 12.1 feature level и 3+ Gb VRAM.
+
+16 Gb системной памяти
+
+(будет изменятся по мере оптимизации)
+ 
+# Как использовать
+
+1. Установите поле "Resolution" в настройках графики в "Fullscreen windowed"/"Windowed"
+2. Выключите все оверлеи/аддоны
+3. Скачайте последний доступный релиз
+4. Распакуйте архив в папку с игрой
+5. Запустите d912pxy/install.bat
+6. Запустите игру
+
+# Как удалить
+
+1. Запустите d912pxy/remove.bat
+2. Удалите папку d912pxy
+3. Готово
+
+# Known bugs
+
+-Функция скриншотов не работает
+
+-SMAA сглаживание работает не так как положено
+
+# Troubleshooting
+
+## Case 1
+  Мир долго прогружается, прогружается по частям.
+  
+  Какие либо детали отсутствуют на экране.
+  
+**Solution**
+
+  Я не предоставляю шейдеры вместе с релизом.
+  
+  Это значит, что шейдеры будут перекомпилированы при первом использовании и далее станут загружатся намного быстрее.
+  
+  Однако, шейдеры загружаются в реальном времени и по требованию в асинхронной манере, что создает эффект загружающихся/отсутствующих частей.
+    
+  Обычно это не критично.
+  
+  Пока что эта проблема не решена, т.к. требует более детального исследования данного вопроса.
+  
+  
+## Case 2
+  Игра вылетает, зависает или выдает ошибку связанную с d912pxy
+  
+**Solution**
+
+  Не обращайтесь в техподдержку игры если установили d912pxy!
+  
+  Если игра падает без d912pxy, не спрашивайте об этом здесь, т.к. d912pxy не делает модификаций в игровых файлах.
+    
+  Во первых удостоверьтесь что установили "Windowed fullscreen" или "Windowed" в настройках игры.
+  
+  Во вторых удостоверьтесь что игра работает без d912pxy.  
+  
+  В третьих обновите графические драйвера и обновите DirectX9!
+    
+  (ссылка на установку dx9 https://www.microsoft.com/ru-ru/download/details.aspx?id=34429)
+  
+  Если проблема не решена напишите о ней на github вместе со следующей информацией
+  
+    1. Лог файл из папки P7logs
+    2. Crash.dmp если он у вас появился
+    
+ Если вас попросят запустить дебаг версию, следуйте данной инструкции
+ 
+   0. Дебаг версия записывает огромное количество данных, не запускате её надолго!
+   1. Запустить d912pxy/remove.bat
+   2. Запустить d912pxy/install_debug.bat
+   3. Запустить игру
+   4. Отправить лог файл и Crash.dmp на github
+
+## Case 3 
+
+  Ошибки в графике
+ 
+**Solution**
+
+  1. Запустите d912pxy/remove.bat
+  2. Запустите d912pxy/install_ps.bat
+  3. Запустите игру, повторите найденную ошибку в графике.
+  4. Запустите d912pxy/clean_shaders.bat
+  5. Запустите d912pxy/remove.bat
+  6. Запустите d912pxy/install.bat
+  7. Запустите игру заного. Подождите пока шейдеры перекомпилируются.
+  8. Если проблема исправлена и вы хотите(и главное можете!) - отправьте новые файлы из папки d912pxy/shaders/bugs на github. goto 8.
+  9. Если ошибка не исправлена, напишите о ней на github вместе с описанием того, как данную ошибку повторить.  
