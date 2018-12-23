@@ -1,4 +1,4 @@
-[EN](README.md#d912pxy)|[RU](README.md#d912pxy-1)
+| [EN](README.md#d912pxy) | [RU](README.md#d912pxy-1) |
 
 # d912pxy
 DirectX9 to DirectX12 API proxy for Guild Wars 2
@@ -123,7 +123,7 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
   8. If error fixed, if you want(and more over if you can!) - send the newest created files in d912pxy/shaders/bugs to this github. goto 8.
   9. If error is not fixed, post your issue on github with a description on how to reproduse visual error  
   
-[EN|RU]
+| [EN](README.md#d912pxy) | [RU](README.md#d912pxy-1) |
 
 # d912pxy
 
