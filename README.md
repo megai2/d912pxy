@@ -1,7 +1,6 @@
 | [EN](README.md#d912pxy) | [RU](README.md#d912pxy-1) |
 
-# d912pxy
-DirectX9 to DirectX12 API proxy for Guild Wars 2
+# d912pxy - "DirectX9 to DirectX12 API proxy for Guild Wars 2"
 
 -What this thing does? 
 
@@ -41,7 +40,7 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 
 1. Set "Resolution" in graphics options to "Fullscreen windowed"/"Windowed".
 2. Disable all overlay software
-3. Download latest release
+3. Download latest release [from here](https://github.com/megai2/d912pxy/releases/tag/v0.9.2a)
 4. Unpack it into game folder
 5. Run d912pxy/install.bat
 6. Run the game
@@ -129,9 +128,7 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 
 WMZ 442298672293
 
-# d912pxy
-
-Переводчик DirectX9 API в DirectX12 API для Guild Wars 2
+# d912pxy - "DirectX9 to DirectX12 API proxy for Guild Wars 2"
 
 -Что делает эта штука?
 
@@ -171,7 +168,7 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
 
 1. Установите поле "Resolution" в настройках графики в "Fullscreen windowed"/"Windowed"
 2. Выключите все оверлеи/аддоны
-3. Скачайте последний доступный релиз
+3. Скачайте последний доступный релиз [ссылка](https://github.com/megai2/d912pxy/releases/tag/v0.9.2a)
 4. Распакуйте архив в папку с игрой
 5. Запустите d912pxy/install.bat
 6. Запустите игру
