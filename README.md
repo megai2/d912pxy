@@ -1,4 +1,4 @@
-| [EN](README.md#d912pxy) | [RU](README.md#d912pxy-1) |
+| [EN](https://github.com/megai2/d912pxy#d912pxy---directx9-to-directx12-api-proxy-for-guild-wars-2) | [RU](https://github.com/megai2/d912pxy#d912pxy---directx9-to-directx12-api-proxy-for-guild-wars-2-1) |
 
 # d912pxy - "DirectX9 to DirectX12 API proxy for Guild Wars 2"
 
@@ -122,11 +122,12 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
   8. If error fixed, if you want(and more over if you can!) - send the newest created files in d912pxy/shaders/bugs to this github. goto 8.
   9. If error is not fixed, post your issue on github with a description on how to reproduse visual error  
   
-| [EN](README.md#d912pxy) | [RU](README.md#d912pxy-1) |
 
-**Support developer**
+# Support developer
 
 WMZ 442298672293
+
+| [EN](https://github.com/megai2/d912pxy#d912pxy---directx9-to-directx12-api-proxy-for-guild-wars-2) | [RU](https://github.com/megai2/d912pxy#d912pxy---directx9-to-directx12-api-proxy-for-guild-wars-2-1) |
 
 # d912pxy - "DirectX9 to DirectX12 API proxy for Guild Wars 2"
 
@@ -251,6 +252,6 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
   8. Если проблема исправлена и вы хотите(и главное можете!) - отправьте новые файлы из папки d912pxy/shaders/bugs на github. goto 8.
   9. Если ошибка не исправлена, напишите о ней на github вместе с описанием того, как данную ошибку повторить.  
   
-**Поддержка разработчика**
+# Поддержка разработчика
 
  WMR 232397187043
