@@ -1,4 +1,4 @@
-| [EN](https://github.com/megai2/d912pxy#d912pxy---directx9-to-directx12-api-proxy-for-guild-wars-2) | [RU](https://github.com/megai2/d912pxy#d912pxy---directx9-to-directx12-api-proxy-for-guild-wars-2-1) |
+# | [EN](https://github.com/megai2/d912pxy#d912pxy---directx9-to-directx12-api-proxy-for-guild-wars-2) | [RU](https://github.com/megai2/d912pxy#d912pxy---directx9-to-directx12-api-proxy-for-guild-wars-2-1) |
 
 # d912pxy - "DirectX9 to DirectX12 API proxy for Guild Wars 2"
 
