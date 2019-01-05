@@ -11,7 +11,7 @@
  
  This project is not yet finished, expect bugs, crashes, hungs, stalls and all other fun(or not so fun) stuff!
  
- Current state: v0.9.2 alpha
+ Current state: v0.9.3 alpha
  
 # Showcase
 
@@ -140,7 +140,7 @@ WMZ 442298672293
  
  Этот проект ещё не завершен и находится в стадии альфа тестирования, возможны зависания, ошибки и вылеты!
  
- Текущая версия: v0.9.2 альфа
+ Текущая версия: v0.9.3 альфа
  
 # Результаты
 
