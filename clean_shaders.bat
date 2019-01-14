@@ -1,3 +1,2 @@
-del /Q shaders\cso\
-del /Q shaders\hlsl\
+del /Q pck\shader_cso.pck
 pause
