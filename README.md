@@ -11,12 +11,12 @@
  
  This project is not yet finished, expect bugs, crashes, hungs, stalls and all other fun(or not so fun) stuff!
  
- Current state: v0.9.3 alpha
+ Current state: v0.9.4 alpha
  
 # Showcase
 
 Profiling shows that api overhead for d912pxy is 40-20% less then for plain directx9.
-Real performance differs on scene.
+Real performance differs on scene and on hardware.
 
 DX12:
 
@@ -30,7 +30,7 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
    
 # Requirements
 
-DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
+Windows 10 OS, DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 
 16 Gb RAM
 
@@ -38,10 +38,10 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
  
 # How to use
 
-1. Set "Resolution" in graphics options to "Fullscreen windowed"/"Windowed".
+1. Recommended: Set "Resolution" in graphics options to "Fullscreen windowed"/"Windowed".
 2. Disable all overlay software
-3. Download latest release [from here](https://github.com/megai2/d912pxy/releases/tag/v0.9.3a)
-4. Unpack it into game folder
+3. Download latest release [from here](https://github.com/megai2/d912pxy/releases/tag/v0.9.4a)
+4. Unpack it into game folder, so d912pxy folder is in game root folder
 5. Run d912pxy/install.bat
 6. Run the game
 
@@ -61,42 +61,33 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 
 ## Case 1
   Things are loading part-by-part.
-  Something are missing at start.
-  
+    
 **Solution**
 
-  I'm not supplying any shaders with release. 
+  d912pxy loads shaders in async manner, cause there is no efficient way to load them instantly.
   
-  This means, that shaders will be recompiled on first use, and then load much faster.
-  
-  Still, shaders loaded in realtime on demand and in async manner, what triggers missing parts/fragments.
-  
-  Most time this is not critical.
-  
-  Fixing this problem need some investigation and on TODO list.
+  This can create some visual errors, but performs much better in terms of performance.
   
   
 ## Case 2
-  Game crashes/Error dialog related to d912pxy pops out.
+  Game crashes/hangs
   
 **Solution**
 
-  Do not ask game support about this crashes/errors!
+  Do not ask game support about this crashes!
   
   If you game crashes without d912pxy, don't ask about this here, cause d912pxy do zero modifications to game data.
   
-  First be shure you set resolution to Windowed fullscreen or windowed.
+  Be shure that game runs without d912pxy!
   
-  Second be shure that game runs without d912pxy.
-  
-  Third update your driver and directx9!
+  Next update your driver and directx9.
   
   (link to dx9 https://www.microsoft.com/ru-ru/download/details.aspx?id=34429)
   
   Then, if you still here, post your issue on github with 
   
     1. Log file form P7logs
-    2. Crash.dmp if you have it    
+    2. Crash.dmp and d912pxy_crash.txt if you have it    
     
  If you asked to run debug version do this
  
@@ -119,9 +110,7 @@ DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
   5. Run d912pxy/remove.bat
   6. Run d912pxy/install.bat
   7. Run the game again. Wait for shaders to recompile.
-  8. If error fixed, if you want(and more over if you can!) - send the newest created files in d912pxy/shaders/bugs to this github. goto 8.
-  9. If error is not fixed, post your issue on github with a description on how to reproduse visual error  
-  
+  8. If error is not fixed, post your issue on github with a description on how to reproduse visual error  
 
 # Support developer
 
@@ -140,12 +129,12 @@ WMZ 442298672293
  
  Этот проект ещё не завершен и находится в стадии альфа тестирования, возможны зависания, ошибки и вылеты!
  
- Текущая версия: v0.9.3 альфа
+ Текущая версия: v0.9.4 альфа
  
 # Результаты
 
 Тестирование показывает, что дополнительные расходы при работе с d912pxy на 40-20% меньше, чем при работе с обычным DirectX9.
-Реальная производительность зависит от сцены!
+Реальная производительность зависит от сцены и от железа!
 
 DX12:
 
@@ -159,7 +148,7 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
    
 # Требования
 
-Видеокарта с поддержкой DirectX12, конкретно 12.1 feature level и 3+ Gb VRAM.
+Windows 10, Видеокарта с поддержкой DirectX12, конкретно 12.1 feature level и 3+ Gb VRAM.
 
 16 Gb системной памяти
 
@@ -167,10 +156,10 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
  
 # Как использовать
 
-1. Установите поле "Resolution" в настройках графики в "Fullscreen windowed"/"Windowed"
+1. Рекомендуется: Установите поле "Resolution" в настройках графики в "Fullscreen windowed"/"Windowed"
 2. Выключите все оверлеи/аддоны
-3. Скачайте последний доступный релиз [ссылка](https://github.com/megai2/d912pxy/releases/tag/v0.9.3a)
-4. Распакуйте архив в папку с игрой
+3. Скачайте последний доступный релиз [ссылка](https://github.com/megai2/d912pxy/releases/tag/v0.9.4a)
+4. Распакуйте архив в папку с игрой, так чтобы папка d912pxy находилась в корневой папке игры.
 5. Запустите d912pxy/install.bat
 6. Запустите игру
 
@@ -191,23 +180,15 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
 ## Случай 1
   Мир долго прогружается, прогружается по частям.
   
-  Какие-либо детали отсутствуют на экране.
-  
 **Решение**
 
-  Я не предоставляю шейдеры вместе с релизом.
+  d912pxy загружает шейдеры асинхронно, т.к. невозможно эффективно загружать шейдеры сразу.
   
-  Это значит, что шейдеры будут перекомпилированы при первом использовании и далее станут загружаться намного быстрее.
-  
-  Однако, шейдеры загружаются в реальном времени и по требованию в асинхронной манере, что создает эффект загружающихся/отсутствующих частей.
-    
-  Обычно это не критично.
-  
-  Пока что эта проблема не решена, т.к. требует более детального исследования данного вопроса.
+  Такой подход может создать некоторые графические ошиибки, но с другой стороны более эффективен по производительности.
   
   
 ## Случай 2
-  Игра вылетает, зависает или выдает ошибку связанную с d912pxy
+  Игра вылетает, зависает.
   
 **Решение**
 
@@ -215,18 +196,16 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
   
   Если игра падает без d912pxy, не спрашивайте об этом здесь, т.к. d912pxy не делает модификаций в игровых файлах.
     
-  Во-первых, удостоверьтесь, что установили "Windowed fullscreen" или "Windowed" в настройках игры.
+  Удостоверьтесь, что игра работает без d912pxy.  
   
-  Во-вторых, удостоверьтесь, что игра работает без d912pxy.  
-  
-  В-третьих, обновите графические драйвера и обновите DirectX9!
+  Далее обновите графические драйвера и обновите DirectX9!
     
   (ссылка на установку dx9 https://www.microsoft.com/ru-ru/download/details.aspx?id=34429)
   
   Если проблема не решена, напишите о ней на github вместе со следующей информацией:
   
     1. Лог файл из папки P7logs
-    2. Crash.dmp если он у вас появился
+    2. Crash.dmp и d912pxy_crash.txt если он у вас появился
     
  Если вас попросят запустить дебаг версию, следуйте данной инструкции:
  
@@ -249,8 +228,7 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
   5. Запустите d912pxy/remove.bat
   6. Запустите d912pxy/install.bat
   7. Запустите игру заново. Подождите пока шейдеры перекомпилируются.
-  8. Если проблема исправлена и вы хотите(и главное можете!) - отправьте новые файлы из папки d912pxy/shaders/bugs на github. goto 8.
-  9. Если ошибка не исправлена, напишите о ней на github вместе с описанием того, как данную ошибку повторить.  
+  8. Если ошибка не исправлена, напишите о ней на github вместе с описанием того, как данную ошибку повторить.  
   
 # Поддержка разработчика
 
