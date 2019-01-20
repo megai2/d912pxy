@@ -55,8 +55,6 @@ Windows 10 OS, DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 
 -Screenshot functionality not working
 
--SMAA shader working wrong
-
 # Troubleshooting
 
 ## Case 1
@@ -172,8 +170,6 @@ Windows 10, Видеокарта с поддержкой DirectX12, конкре
 # Извесные проблемы
 
 -Функция скриншотов не работает
-
--SMAA сглаживание работает не так, как положено
 
 # Решение проблем
 
