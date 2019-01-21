@@ -203,7 +203,19 @@ float4 dx9texldl_tex2d(Texture2DArray tex, sampler spl, float4 uv, float w, uint
 	return ret;
 }
 
+
 float4 dx9texldl_depth(Texture2DArray tex, sampler spl, float4 uv, float w, uint srgbMask)
+{
+	float3 auv = 0;
+	auv.xy = uv.xy;
+				
+	float4 ret = 0;
+	ret.x = tex.SampleCmpLevelZero(ShadowSampler, auv, uv.z);
+		
+	return ret;
+}
+
+float4 dx9texld_depth(Texture2DArray tex, sampler spl, float4 uv, uint srgbMask)
 {
 	float3 auv = 0;
 	auv.xy = uv.xy;
