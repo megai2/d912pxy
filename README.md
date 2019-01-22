@@ -11,7 +11,7 @@
  
  This project is not yet finished, expect bugs, crashes, hungs, stalls and all other fun(or not so fun) stuff!
  
- Current state: v0.9.5.3 alpha
+ Current state: v0.9.5.4 alpha
  
 # Showcase
 
@@ -40,7 +40,7 @@ Windows 10 OS, DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
 
 1. Recommended: Set "Resolution" in graphics options to "Fullscreen windowed"/"Windowed".
 2. Disable all overlay software
-3. Download latest release [from here](https://github.com/megai2/d912pxy/releases/tag/v0.9.5.3a_correct)
+3. Download latest release [from here](https://github.com/megai2/d912pxy/releases/tag/v0.9.5.4a)
 4. Unpack it into game folder, so d912pxy folder is in game root folder
 5. Run d912pxy/install.bat
 6. Run the game
@@ -127,7 +127,7 @@ WMZ 442298672293
  
  Этот проект ещё не завершен и находится в стадии альфа тестирования, возможны зависания, ошибки и вылеты!
  
- Текущая версия: v0.9.5.3 альфа
+ Текущая версия: v0.9.5.4 альфа
  
 # Результаты
 
@@ -156,7 +156,7 @@ Windows 10, Видеокарта с поддержкой DirectX12, конкре
 
 1. Рекомендуется: Установите поле "Resolution" в настройках графики в "Fullscreen windowed"/"Windowed"
 2. Выключите все оверлеи/аддоны
-3. Скачайте последний доступный релиз [ссылка](https://github.com/megai2/d912pxy/releases/tag/v0.9.5.3a_correct)
+3. Скачайте последний доступный релиз [ссылка](https://github.com/megai2/d912pxy/releases/tag/v0.9.5.4a)
 4. Распакуйте архив в папку с игрой, так чтобы папка d912pxy находилась в корневой папке игры.
 5. Запустите d912pxy/install.bat
 6. Запустите игру
