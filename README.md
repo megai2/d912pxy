@@ -18,6 +18,22 @@
 Profiling shows that API overhead for d912pxy is up to 70% less then for plain DirectX9.
 Real performance differs on scene and on hardware.
 
+Like running mistlock sanctuary in Guild Wars 2 on i7-7700/GTX960 results in:
+
+```
+@6.3k batches, all max, 1080p
+
+dx9
+  min FPS: 5,5
+  max FPS: 21,5
+dx12
+  min FPS: 17,6
+  max FPS: 26,6
+boost:
+  min FPS: +220%
+  max FPS: +23%
+```
+
 DX12:
 
 https://cdn.discordapp.com/attachments/477036595019644928/524540609105756160/unknown.png 
