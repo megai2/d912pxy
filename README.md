@@ -2,9 +2,6 @@
 
 # d912pxy - "DirectX9 to DirectX12 API proxy for Guild Wars 2"
 
-On source code: will be released after i do some cleanups.
-
-
 -What this thing does? 
 
 -Makes games that use DirectX9, use DirectX12 instead, without any change to game code. 
