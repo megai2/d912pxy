@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.exp
 
 # Precompiled Headers
 *.gch
@@ -59,6 +60,9 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+
+# allow our bin directory
+!bin/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
