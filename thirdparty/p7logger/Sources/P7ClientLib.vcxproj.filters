@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Client.cpp" />
+    <ClCompile Include="Trace.cpp" />
+    <ClCompile Include="CRC32.cpp" />
+    <ClCompile Include="Telemetry.cpp" />
+    <ClCompile Include="ClBaical.cpp" />
+    <ClCompile Include="ClNull.cpp" />
+    <ClCompile Include="ClFile.cpp" />
+    <ClCompile Include="Proxy.cpp" />
+    <ClCompile Include="ClText.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Client.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Socket.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TPackets.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Trace.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonClient.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Headers\P7_Client.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Headers\P7_Extensions.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="PacketsPool.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Telemetry.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Headers\P7_Server.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Headers\P7_Telemetry.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Headers\P7_Trace.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="ClBaical.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ClNull.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ClFile.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Headers\P7_Cproxy.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="ClText.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ClTextConsole.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ClTextFile.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ClTextSink.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ClTextSyslog.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{93853555-f085-4953-aa1c-46abdd838c11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interfaces">
+      <UniqueIdentifier>{e7355a25-5568-4c65-9263-bd669d821d4c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="P7Client.rc" />
+  </ItemGroup>
+</Project>
