@@ -37,29 +37,25 @@ DX9:
 
 https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unknown.png
 
-   
 # Requirements
 
-Windows 10 OS, DirectX12 capable GPU, with 12.1 feature level and 3+ Gb VRAM.
+You will obviously need a DirectX12 capable GPU, with 12.1 feature level and 3GB+ VRAM.
+16 GB of RAM is recommended.
 
-16 Gb RAM
+Requirements will be more precise in the future based on feedback and code optimization.
 
-(will be more precise, based on feedback and optimizations in code)
- 
-# How to use
+# Installing
 
-1. Recommended: Set "Resolution" in graphics options to "Fullscreen windowed"/"Windowed".
-2. Disable all overlay software
-3. Download latest release [from here](https://github.com/megai2/d912pxy/releases/tag/v0.9.5.5a)
-4. Unpack it into game folder, so d912pxy folder is in game root folder
-5. Run d912pxy/install.bat
-6. Run the game
+1. Set your resolution to `Fullscreen Windowed` or `Windowed` mode.
+2. Disable all overlay software.
+3. Download latest release [from here](https://github.com/megai2/d912pxy/releases).
+4. Unpack it into the game folder, so d912pxy folder is in game root folder. (Next to Gw2-64.exe)
+5. Run the game.
 
-# How to remove
+# Uninstalling
 
-1. Run d912pxy/remove.bat
-2. Delete d912pxy folder
-3. Done
+You can uninstall by simply deleting the `d912pxy` folder, `bin64/d3d9.dll` and `bin64/P7x64.dll`.
+Don't remove any other files other then that.
 
 # Known bugs
 
