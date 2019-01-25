@@ -1,0 +1,19 @@
+LIBRARY "d3d9"
+
+EXPORTS
+	D3DPERF_BeginEvent=__ProxyFunc0 @1
+	D3DPERF_EndEvent=__ProxyFunc1 @2
+	D3DPERF_GetStatus=__ProxyFunc2 @3
+	D3DPERF_QueryRepeatFrame=__ProxyFunc3 @4
+	D3DPERF_SetMarker=__ProxyFunc4 @5
+	D3DPERF_SetOptions=__ProxyFunc5 @6
+	D3DPERF_SetRegion=__ProxyFunc6 @7
+	DebugSetLevel=__ProxyFunc7 @8
+	DebugSetMute=__ProxyFunc8 @9
+	Direct3DCreate9=__ProxyFunc9 @10
+	Direct3DCreate9Ex=__ProxyFunc10 @11
+	Direct3DShaderValidatorCreate9=__ProxyFunc11 @12
+	PSGPError=__ProxyFunc12 @13
+	PSGPSampleTexture=__ProxyFunc13 @14
+	D3D9DeviceFuncHook @15
+	D3D9DeviceFuncUnHook @16
