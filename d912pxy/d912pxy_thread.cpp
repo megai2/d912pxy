@@ -135,7 +135,7 @@ void d912pxy_thread::WaitForIssuedWorkCompletion()
 }
 
 
-DWORD d912pxy_thread_main(void * arg)
+DWORD WINAPI d912pxy_thread_main(void * arg)
 {
 	d912pxy_thread* obj = (d912pxy_thread*)arg;
 

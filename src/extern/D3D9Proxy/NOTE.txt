@@ -1,2 +1,0 @@
-Uses modified D3D9Proxy code.
-Original link: https://github.com/iorlas/D3D9Proxy
