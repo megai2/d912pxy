@@ -108,6 +108,7 @@ Don't remove any other files other than that.
  
 **Solution**
 
+  0. Update GPU drivers first!
   1. Install Release_ps version [from here](https://github.com/megai2/d912pxy/releases)
   2. Run the game and reproduce the visual error
   3. Exit the game and remove d912pxy/pck/shaders_cso.pck
