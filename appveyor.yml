@@ -1,4 +1,4 @@
-version: {branch}_{build}
+version: '{build}'
 
 skip_non_tags: true
 
@@ -12,15 +12,15 @@ configuration:
 
 - Release_d
 
-- Release_ps
-
 - Release_pp
+
+- Release_ps
 
 platform: x64
 
 before_build:
 
-- cmd: 'echo #define BUILD_VERSION_NAME L"%APPVEYOR_REPO_TAG_NAME%_%APPVEYOR_BUILD_NUMBER%"  > d912pxy/build_version.h'
+- cmd: 'echo #define BUILD_VERSION_NAME L"d912pxy version: %APPVEYOR_REPO_TAG_NAME%_%APPVEYOR_BUILD_NUMBER%"  > d912pxy\build_version.h'
 
 build:
 
@@ -29,3 +29,9 @@ build:
   parallel: true
 
   verbosity: normal
+
+artifacts:
+
+- path: bin
+
+  name: d912pxy
