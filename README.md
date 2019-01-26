@@ -14,7 +14,7 @@ This project is in early development, expect bugs, crashes, hangs, stalls and al
 Profiling shows that API overhead for d912pxy is up to 70% less then for plain DirectX9.
 Real performance differs on scene and on hardware.
 
-Like running mistlock sanctuary in Guild Wars 2 on i7-7700/GTX960 results in:
+For example, running mistlock sanctuary in Guild Wars 2 on i7-7700/GTX960 results in:
 
 ```
 @6.3k batches, all max, 1080p
@@ -44,7 +44,7 @@ https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unk
 You will obviously need a DirectX12 capable GPU, with 12.1 feature level and 3GB+ VRAM.
 16 GB of RAM is recommended.
 
-Requirements will be more precise in the future based on feedback and code optimization.
+Requirements will become more precise in the future based on feedback and code optimization.
 
 # Installing
 
@@ -80,7 +80,7 @@ Don't remove any other files other than that.
   
 **Solution**
 
-  Do not ask game support about this crashes!
+  Do not ask game support about these crashes!
   
   If your game crashes without d912pxy don't ask about this here because d912pxy does zero modification to the game data.
   
@@ -109,11 +109,11 @@ Don't remove any other files other than that.
 **Solution**
 
   1. Install Release_ps version [from here](https://github.com/megai2/d912pxy/releases)
-  2. Run the game and reproduce visual error
+  2. Run the game and reproduce the visual error
   3. Exit the game and remove d912pxy/pck/shaders_cso.pck
   4. Install the regular version
   5. Run the game again and wait for the shaders to recompile (this will take a notable time)
-  6. If the error is not fixed, post your issue on github with a description on how to reproduse the visual error.
+  6. If the error is not fixed post your issue on github with a description on how to reproduse the visual error
 
 # Support developer
 
