@@ -53,7 +53,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 			double pv = (double)dataAcm[i] / ((double)maxValue2);
 			pv *= 256*2;
 
-			UINT32 pvi = pv;
+			UINT32 pvi = (UINT32)pv;
 
 			if (pvi > 1)
 				pvi -= 1;
@@ -119,7 +119,7 @@ void d912pxy_performance_graph::RecordPresent(int batchCount)
 
 		rd = PXY_PERFGRPH_FPS_PTS / PXY_PERFGRPH_FPS_MAX * rd;
 
-		r = floor(rd);
+		r = (UINT64)rd;
 
 		if (r >= PXY_PERFGRPH_FPS_PTS)
 		{

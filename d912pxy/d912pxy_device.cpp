@@ -94,7 +94,7 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Pr
 	LOG_DBG_DTDM("dx9 tmp device ok");
 
 	m_log->P7_INFO(LGC_DEFAULT, TM("d912pxy(Direct3D9 to Direct3D12 api proxy) loaded"));	
-	m_log->P7_INFO(LGC_DEFAULT, TM("v0.9.5.6a"));
+	m_log->P7_INFO(LGC_DEFAULT, BUILD_VERSION_NAME);
 	m_log->P7_INFO(LGC_DEFAULT, TM("Batch Limit: %u"), PXY_INNER_MAX_IFRAME_BATCH_COUNT);
 	m_log->P7_INFO(LGC_DEFAULT, TM("Recreation Limit: %u"), PXY_INNER_MAX_IFRAME_CLEANUPS);
 	m_log->P7_INFO(LGC_DEFAULT, TM("TextureBind Limit: %u"), PXY_INNER_MAX_TEXTURE_STAGES);
