@@ -1,4 +1,4 @@
-version: 0.9.5r{build}a
+version: {branch}_{build}
 
 skip_non_tags: true
 
