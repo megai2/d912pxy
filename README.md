@@ -82,9 +82,9 @@ Don't remove any other files other than that.
 
   Do not ask game support about this crashes!
   
-  If you game crashes without d912pxy, don't ask about this here, because d912pxy do zero modification to game data.
+  If your game crashes without d912pxy don't ask about this here because d912pxy does zero modification to the game data.
   
-  Be sure that the game runs without d912pxy!
+  Make sure that the game runs without d912pxy!
   
   Next, update your driver and directx9.
   
