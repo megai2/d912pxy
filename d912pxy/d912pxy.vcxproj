@@ -188,17 +188,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ps|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\bin64\</OutDir>
-    <TargetName>d3d9ps</TargetName>
+    <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_d|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\bin64\</OutDir>
-    <TargetName>d3d9d</TargetName>
+    <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_pp|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\bin64\</OutDir>
-    <TargetName>d3d9pp</TargetName>
+    <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
