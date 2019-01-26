@@ -7,6 +7,8 @@ You can try use it in other games, maybe it will work.
  
 This project is in early development, expect bugs, crashes, hangs, stalls and all other fun stuff.
  
+[![Build status](https://ci.appveyor.com/api/projects/status/gs8drlb0goyp6h28?svg=true)](https://ci.appveyor.com/project/megai2/d912pxy)
+ 
 # Showcase
 
 Profiling shows that API overhead for d912pxy is up to 70% less then for plain DirectX9.
@@ -46,7 +48,7 @@ Requirements will be more precise in the future based on feedback and code optim
 
 # Installing
 
-1. Set your resolution to `Fullscreen Windowed` or `Windowed` mode.
+1. Recommended: Set your resolution to `Fullscreen Windowed` or `Windowed` mode.
 2. Disable all overlay software.
 3. Download latest release [from here](https://github.com/megai2/d912pxy/releases).
 4. Unpack it into the game folder, so d912pxy folder is in game root folder. (Next to Gw2-64.exe)
@@ -96,10 +98,9 @@ Don't remove any other files other then that.
  If you asked to run debug version do this
  
    0. Debug version writes ton of data, do not run it for long time!
-   1. Run d912pxy/remove.bat
-   2. Run d912pxy/install_debug.bat
-   3. Run game
-   4. Send the log file or/and Crash.dmp to github
+   1. Install Release_d  version [from here](https://github.com/megai2/d912pxy/releases).
+   2. Run game, reproduce situation.
+   3. Send the log file or/and Crash.dmp to github
 
 ## Case 3 
 
@@ -107,14 +108,12 @@ Don't remove any other files other then that.
  
 **Solution**
 
-  1. Run d912pxy/remove.bat
-  2. Run d912pxy/install_ps.bat
-  3. Run the game, reproduse visual error.
-  4. Run d912pxy/clean_shaders.bat
-  5. Run d912pxy/remove.bat
-  6. Run d912pxy/install.bat
-  7. Run the game again. Wait for shaders to recompile.
-  8. If error is not fixed, post your issue on github with a description on how to reproduse visual error  
+  1. Install Release_ps version [from here](https://github.com/megai2/d912pxy/releases).
+  2. Run the game, reproduce visual error.
+  3. Exit game, remove d912pxy/pck/shaders_cso.pck
+  4. Install regular version.
+  5. Run the game again. Wait for shaders to recompile, as this will take notable time.
+  6. If error is not fixed, post your issue on github with a description on how to reproduse visual error.
 
 # Support developer
 
