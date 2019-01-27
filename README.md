@@ -56,7 +56,7 @@ Requirements will become more precise in the future based on feedback and code o
 
 # Uninstalling
 
-You can uninstall by simply deleting the `d912pxy` folder, and `bin64/d3d9.dll`.
+You can uninstall by simply deleting the `d912pxy` folder and `bin64/d3d9.dll`.
 Don't remove any other files other than that.
 
 # Known bugs
