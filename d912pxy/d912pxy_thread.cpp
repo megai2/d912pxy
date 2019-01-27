@@ -28,10 +28,8 @@ d912pxy_thread::d912pxy_thread()
 {
 	isRunning = 1;
 	workEvent = CreateEvent(NULL, 0, 0, NULL);
+	completionEvent = CreateEvent(NULL, 1, 0, NULL);
 	workIssued = 0;
-
-	InitializeCriticalSection(&threadCompletionLock);
-	InitializeCriticalSection(&threadCompletionWaiter);
 
 	thrdHandle = CreateThread(
 		NULL,
@@ -59,23 +57,17 @@ void d912pxy_thread::Stop()
 
 void d912pxy_thread::ThreadProc()
 {
-	EnterCriticalSection(&threadCompletionLock);
-
 	while (isRunning)
 	{
 		WaitForSingleObject(workEvent, INFINITE);
 		ThreadJob();		
 	}
-
-	LeaveCriticalSection(&threadCompletionLock);
 }
 
 void d912pxy_thread::ThreadJob()
 {
 	return;//do nothing 
 }
-
-
 
 void d912pxy_thread::SignalWork()
 {
@@ -94,15 +86,10 @@ void d912pxy_thread::IgnoreJob()
 
 void d912pxy_thread::SignalWorkCompleted()
 {
-	InterlockedDecrement(&workIssued);
-		
-	LeaveCriticalSection(&threadCompletionLock);
-
-	EnterCriticalSection(&threadCompletionWaiter);
-
-	EnterCriticalSection(&threadCompletionLock);
-
-	LeaveCriticalSection(&threadCompletionWaiter);
+	if (!InterlockedDecrement(&workIssued))
+	{
+		SetEvent(completionEvent);
+	}
 }
 
 void d912pxy_thread::IssueWork()
@@ -119,19 +106,13 @@ UINT d912pxy_thread::IsWorkCompleted()
 void d912pxy_thread::WaitForIssuedWorkCompletion()
 {
 	if (IsWorkCompleted())
+	{
+		ResetEvent(completionEvent);
 		return;
+	}
 
-	EnterCriticalSection(&threadCompletionWaiter);
-
-	EnterCriticalSection(&threadCompletionLock);
-
-	LeaveCriticalSection(&threadCompletionWaiter);
-	
-	LeaveCriticalSection(&threadCompletionLock);
-
-	EnterCriticalSection(&threadCompletionWaiter);
-
-	LeaveCriticalSection(&threadCompletionWaiter);
+	WaitForSingleObject(completionEvent, INFINITE);
+	ResetEvent(completionEvent);
 }
 
 

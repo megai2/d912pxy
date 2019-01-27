@@ -54,10 +54,9 @@ public:
 
 private:
 	HANDLE workEvent;
-	HANDLE thrdHandle;
+	HANDLE completionEvent;
 
-	CRITICAL_SECTION threadCompletionLock;
-	CRITICAL_SECTION threadCompletionWaiter;
+	HANDLE thrdHandle;
 
 	LONG workIssued;
 
