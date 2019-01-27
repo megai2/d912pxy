@@ -53,6 +53,7 @@ void d912pxy_thread::Stop()
 	WaitForSingleObject(thrdHandle, INFINITE);
 	CloseHandle(thrdHandle);
 	CloseHandle(workEvent);
+	CloseHandle(completionEvent);
 }
 
 void d912pxy_thread::ThreadProc()
