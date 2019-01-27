@@ -76,6 +76,8 @@ public:
 
 	void TransitStates(d912pxy_gpu_cmd_list_group tgtList);
 
+	void NoteBindedSurfaceTransit(d912pxy_surface* surf, UINT slot);
+
 private:	
 
 	void InitRootSignature();

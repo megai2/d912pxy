@@ -174,7 +174,7 @@ public:
 	d912pxy_replay(d912pxy_device* dev);
 	~d912pxy_replay();
 
-	void ViewTransit(d912pxy_surface* res, D3D12_RESOURCE_STATES to);
+	UINT ViewTransit(d912pxy_surface* res, D3D12_RESOURCE_STATES to);
 	void PSORaw(d912pxy_trimmed_dx12_pso* dsc);
 	void OMStencilRef(DWORD ref);
 	void OMBlendFac(float* color);

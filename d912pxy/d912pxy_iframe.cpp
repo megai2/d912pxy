@@ -596,6 +596,12 @@ void d912pxy_iframe::TransitStates(d912pxy_gpu_cmd_list_group tgtList)
 	d912pxy_s(GPUcl)->GID(tgtList)->OMSetRenderTargets(bindedRTVcount, bindedRTV, 0, bindedDSV);
 }
 
+void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
+{
+	if (bindedSurfaces[slot] == surf)
+		batchCommisionDF |= 4;
+}
+
 void d912pxy_iframe::InitRootSignature()
 {
 	D3D12_DESCRIPTOR_RANGE ranges[3];

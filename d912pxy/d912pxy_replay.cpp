@@ -238,12 +238,12 @@ d912pxy_replay::~d912pxy_replay()
 		delete threads[i];
 }
 
-void d912pxy_replay::ViewTransit(d912pxy_surface * res, D3D12_RESOURCE_STATES to)
+UINT d912pxy_replay::ViewTransit(d912pxy_surface * res, D3D12_RESOURCE_STATES to)
 {
 	REPLAY_STACK_GET(DRPL_TRAN);
 
 	if (to == res->GetCurrentState())
-		return;
+		return 0;
 
 	it->transit.res = res;
 	it->transit.to = to;
@@ -252,6 +252,8 @@ void d912pxy_replay::ViewTransit(d912pxy_surface * res, D3D12_RESOURCE_STATES to
 	res->IFrameTrans(to);
 
 	++stackTop;
+
+	return 1;
 }
 
 void d912pxy_replay::PSORaw(d912pxy_trimmed_dx12_pso * dsc)

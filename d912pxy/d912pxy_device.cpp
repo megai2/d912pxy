@@ -1137,10 +1137,10 @@ HRESULT WINAPI d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pT
 	if (pTexture)
 	{
 		srvId = *(UINT64*)((intptr_t)pTexture - 0x8);
-	/*	if (srvId & 0x100000000)
+		if (srvId & 0x100000000)
 		{
 			srvId = pTexture->GetPriority();
-		}*/
+		}
 	}
 		
 	mTextureState.dirty |= (1 << (Stage >> 2));

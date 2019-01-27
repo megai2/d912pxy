@@ -608,57 +608,47 @@ UINT d912pxy_surface::GetSRVHeapId()
 
 		if (srvHeapIdx == 0xFFFFFFFF)
 		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC newSrv;
+
+			newSrv.Format = GetSRVFormat();
+			newSrv.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			newSrv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			newSrv.Texture2D.PlaneSlice = 0;
+			newSrv.Texture2D.MipLevels = 1;
+			newSrv.Texture2D.MostDetailedMip = 0;
+			newSrv.Texture2D.ResourceMinLODClamp = 0;
+
+			srvHeapIdx = m_dev->GetDHeap(PXY_INNER_HEAP_SRV)->CreateSRV(m_res, &newSrv);
+
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-			{
-				D3D12_SHADER_RESOURCE_VIEW_DESC zBufCv;
-				zBufCv.Format = GetSRVFormat();
-
-				zBufCv.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				zBufCv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-				zBufCv.Texture2D.PlaneSlice = 0;
-				zBufCv.Texture2D.MipLevels = 1;
-				zBufCv.Texture2D.MostDetailedMip = 0;
-				zBufCv.Texture2D.ResourceMinLODClamp = 0;
-
-
-				srvHeapIdx = m_dev->GetDHeap(PXY_INNER_HEAP_SRV)->CreateSRV(m_res, &zBufCv);
-
-				d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_DEPTH_READ);
-				//PerformViewTypeTransit(D3D12_RESOURCE_STATE_DEPTH_READ);				
+			{				
+				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_DEPTH_READ))
+				{
+					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 0);
+				}			
 			}
 			else {
-				D3D12_SHADER_RESOURCE_VIEW_DESC zBufCv;
-				zBufCv.Format = GetSRVFormat();
-
-				zBufCv.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				zBufCv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-				/*if (zBufCv.Format == DXGI_FORMAT_B8G8R8A8_UNORM)
-					zBufCv.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(0, 1, 2, 3);*/
-
-
-				zBufCv.Texture2D.PlaneSlice = 0;
-				zBufCv.Texture2D.MipLevels = 1;
-				zBufCv.Texture2D.MostDetailedMip = 0;
-				zBufCv.Texture2D.ResourceMinLODClamp = 0;
-
-				srvHeapIdx = m_dev->GetDHeap(PXY_INNER_HEAP_SRV)->CreateSRV(m_res, &zBufCv);
-
-				//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but not shure
-				//d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-				//PerformViewTypeTransit(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);				
+				//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but some drivers handle this bad
+				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+				{
+					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 1);
+				}			
 			}
 		}
 		else {
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 			{
-				d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_DEPTH_READ);
-				//PerformViewTypeTransit(D3D12_RESOURCE_STATE_DEPTH_READ);				
+				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_DEPTH_READ))
+				{
+					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 0);
+				}		
 			}
 			else {
-				//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but not shure
-				//d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-				//PerformViewTypeTransit(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but some drivers handle this bad
+				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+				{
+					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 1);
+				}
 			}
 		}
 
