@@ -90,10 +90,12 @@ Don't remove any files other than those specified above.
   
   (link to dx9 https://www.microsoft.com/en-us/download/details.aspx?id=34429)
   
-  Then, if you are still here, post your issue on github with 
+  Then, if you are still here, post your issue [here](https://github.com/megai2/d912pxy/issues/13) with 
   
     1. Log file form P7logs
     2. Crash.dmp and d912pxy_crash.txt if you have it    
+    3. Version number of d912pxy you used
+    
     
  If you are asked to run debug version do this
  
@@ -114,7 +116,7 @@ Don't remove any files other than those specified above.
   3. Exit the game and remove d912pxy/pck/shaders_cso.pck
   4. Install the regular version
   5. Run the game again and wait for the shaders to recompile (this will take some time)
-  6. If the error is not fixed post your issue on github with a description on how to reproduce the visual error
+  6. If the error is not fixed post your issue [here](https://github.com/megai2/d912pxy/issues/15) with a description on how to reproduce the visual error
 
 # Support developer
 
