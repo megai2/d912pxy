@@ -96,9 +96,9 @@ void d912pxy_helper::d3d12_ReportLeaks()
 #endif
 }
 
-ComPtr<ID3D12Device1> d912pxy_helper::CreateDevice(ComPtr<IDXGIAdapter3> adapter)
+ComPtr<ID3D12Device> d912pxy_helper::CreateDevice(ComPtr<IDXGIAdapter3> adapter)
 {
-	ComPtr<ID3D12Device1> d3d12Device2;
+	ComPtr<ID3D12Device> d3d12Device2;
 	ThrowIfFailed(D3D12CreateDevice(adapter.Get(), usingFeatures, IID_PPV_ARGS(&d3d12Device2)), "D3D12CreateDevice");
 
 	// Enable debug messages in debug mode.
@@ -178,7 +178,7 @@ ComPtr<IDXGIAdapter3> d912pxy_helper::GetAdapter()
 	return dxgiAdapter4;
 }
 
-ComPtr<ID3D12CommandQueue> d912pxy_helper::CreateCommandQueue(ComPtr<ID3D12Device1> device, D3D12_COMMAND_LIST_TYPE type)
+ComPtr<ID3D12CommandQueue> d912pxy_helper::CreateCommandQueue(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type)
 {
 	ComPtr<ID3D12CommandQueue> d3d12CommandQueue;
 

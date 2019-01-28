@@ -31,7 +31,7 @@ d912pxy_s_dcl(thread_cleanup, d912pxy_cleanup_thread);
 d912pxy_s_dcl(iframe, d912pxy_iframe);
 d912pxy_s_dcl(GPUque, d912pxy_gpu_que);
 d912pxy_s_dcl(GPUcl, d912pxy_gpu_cmd_list);
-d912pxy_s_dcl(DXDev, ID3D12Device1);
+d912pxy_s_dcl(DXDev, ID3D12Device);
 d912pxy_s_dcl(CMDReplay, d912pxy_replay);
 d912pxy_s_dcl(textureState, d912pxy_texstage_cache);
 d912pxy_s_dcl(texloadThread, d912pxy_texture_loader);

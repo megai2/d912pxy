@@ -45,8 +45,8 @@ namespace d912pxy_helper {
 	void d3d12_ReportLeaks();
 
 	ComPtr<IDXGIAdapter3> GetAdapter();
-	ComPtr<ID3D12Device1> CreateDevice(ComPtr<IDXGIAdapter3> adapter);
-	ComPtr<ID3D12CommandQueue> CreateCommandQueue(ComPtr<ID3D12Device1> device, D3D12_COMMAND_LIST_TYPE type);
+	ComPtr<ID3D12Device> CreateDevice(ComPtr<IDXGIAdapter3> adapter);
+	ComPtr<ID3D12CommandQueue> CreateCommandQueue(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type);
 	bool CheckTearingSupport();	
 
 	ComPtr<IDXGISwapChain4> CreateSwapChain(HWND hWnd, ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount, BOOL fullscreen);

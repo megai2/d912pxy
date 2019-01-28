@@ -236,7 +236,7 @@ public:
 	static d912pxy_iframe* iframe;
 	static d912pxy_gpu_que* GPUque;
 	static d912pxy_gpu_cmd_list* GPUcl;
-	static ID3D12Device1* DXDev;
+	static ID3D12Device* DXDev;
 	static d912pxy_replay* CMDReplay;
 	static d912pxy_texstage_cache* textureState;
 	static d912pxy_sampler_cache* samplerState;

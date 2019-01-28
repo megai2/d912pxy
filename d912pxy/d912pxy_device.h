@@ -154,7 +154,7 @@ public:
 
 	HRESULT PostInit(IDirect3DDevice9** realDev);
 
-	ID3D12Device1* GetDev12Ptr() { return m_d12evice_ptr;  }
+	ID3D12Device* GetDev12Ptr() { return m_d12evice_ptr;  }
 	D3D12_HEAP_PROPERTIES GetResourceHeap(D3D12_HEAP_TYPE Type);
 	d912pxy_dheap* GetDHeap(UINT slot);
 
@@ -177,8 +177,8 @@ private:
 	CRITICAL_SECTION threadLock;	
 	CRITICAL_SECTION cleanupLock;
 
-	ComPtr<ID3D12Device1> m_d12evice;
-	ID3D12Device1* m_d12evice_ptr;
+	ComPtr<ID3D12Device> m_d12evice;
+	ID3D12Device* m_d12evice_ptr;
 
 	d912pxy_iframe* iframe;	
 	d912pxy_texture_loader* texLoader;
