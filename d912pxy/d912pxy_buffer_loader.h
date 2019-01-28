@@ -42,6 +42,7 @@ public:
 	void IssueUpload(d912pxy_vstream* dst, d912pxy_upload_item* ul, UINT offset, UINT size);
 
 	void ThreadJob();
+	void ThreadInitProc();
 
 private:
 	UINT isRunning;

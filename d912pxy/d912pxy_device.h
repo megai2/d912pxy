@@ -160,9 +160,6 @@ public:
 
 	void IFrameCleanupEnqeue(d912pxy_comhandler* obj);
 
-	d912pxy_texture_loader* GetTexLoader() { return texLoader; };
-	d912pxy_buffer_loader* GetBufLoader() { return bufLoader; };
-
 	UINT InterruptThreads() { return InterlockedAdd(&threadInterruptState, 0); };
 	void LockThread(UINT thread);
 	void InitLockThread(UINT thread);

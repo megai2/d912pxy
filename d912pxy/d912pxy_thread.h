@@ -52,6 +52,8 @@ public:
 
 	void WaitForIssuedWorkCompletion();	
 
+	virtual void ThreadInitProc();
+
 private:
 	HANDLE workEvent;
 	HANDLE completionEvent;

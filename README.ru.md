@@ -34,12 +34,12 @@ boost:
 
 DX12:
 
-https://cdn.discordapp.com/attachments/477036595019644928/524540609105756160/unknown.png 
+https://cdn.discordapp.com/attachments/477036595019644928/539417113593380865/unknown.png 
 
 
 DX9:
 
-https://cdn.discordapp.com/attachments/477036595019644928/524541036626837504/unknown.png
+https://cdn.discordapp.com/attachments/477036595019644928/539417612501647360/unknown.png
 
    
 # Требования

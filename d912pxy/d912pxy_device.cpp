@@ -30,6 +30,8 @@ UINT64 d912pxy_device::apiOverhead = 0;
 
 d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Proxy(dev), d912pxy_comhandler(L"device")
 {
+	d912pxy_s(dev) = this;
+
 	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
 
 	IP7_Telemetry* tTel = P7_Create_Telemetry(l_pClient, TM("dheap stats"));
@@ -259,9 +261,6 @@ d912pxy_device::~d912pxy_device(void)
 
 	m_log->P7_INFO(LGC_DEFAULT, TM("pending GPU cleanups processed"));
 
-	delete replayer;
-	m_log->P7_INFO(LGC_DEFAULT, TM("replay thread stopped"));
-
 	delete bufLoader;
 	m_log->P7_INFO(LGC_DEFAULT, TM("buffer load thread stopped"));
 
@@ -285,6 +284,9 @@ d912pxy_device::~d912pxy_device(void)
 
 	delete mGPUque;
 	m_log->P7_INFO(LGC_DEFAULT, TM("GPU queue freed"));
+
+	delete replayer;
+	m_log->P7_INFO(LGC_DEFAULT, TM("replay thread stopped"));
 
 	delete texLoader;		
 	m_log->P7_INFO(LGC_DEFAULT, TM("texture load thread stopped"));
@@ -460,8 +462,6 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 
 	API_OVERHEAD_TRACK_START(0)
 
-	replayer->Finish();
-
 	iframe->End();
 	mGPUque->Flush(0);
 
@@ -487,13 +487,12 @@ HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 #ifdef FRAME_METRIC_PRESENT
 	iframeReplTime->Reset();
 #endif
-	replayer->Finish();
+
+	iframe->End();
 
 #ifdef FRAME_METRIC_PRESENT
 	UINT64 replTime = iframeReplTime->Elapsed().count();
 #endif
-
-	iframe->End();
 
 #ifdef PERFORMANCE_GRAPH_WRITE
 	perfGraph->RecordPresent(iframe->GetBatchCount());
@@ -1691,7 +1690,7 @@ void d912pxy_device::LockThread(UINT thread)
 
 void d912pxy_device::InitLockThread(UINT thread)
 {
-//	EnterCriticalSection(&threadLockdEvents[thread]);
+	EnterCriticalSection(&threadLockdEvents[thread]);
 }
 
 void d912pxy_device::LockAsyncThreads()
@@ -1706,6 +1705,7 @@ void d912pxy_device::LockAsyncThreads()
 
 	texLoader->SignalWork();
 	bufLoader->SignalWork();
+	replayer->Finish();
 	//iframe->PSO()->SignalWork();
 
 	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)

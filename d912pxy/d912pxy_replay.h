@@ -194,10 +194,10 @@ public:
 
 	void Finish();
 
-	void InitWorkers();
-
 	void IssueWork(UINT batch);
 	void ReRangeThreads(UINT batches);
+
+	void Start();
 
 	d912pxy_replay_item* GetItem(UINT id) { return &stack[id]; };
 
@@ -237,6 +237,6 @@ private:
 	UINT cWorker;
 
 	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS];
-	UINT stopMarker;
+	LONG stopMarker;
 };
 

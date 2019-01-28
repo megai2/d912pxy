@@ -31,10 +31,13 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"rep
 	d912pxy_s(CMDReplay) = this;
 
 	stackTop = 0;
-	stopMarker = 0;
+	stopMarker = 1;
 
 	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
-		threads[i] = new d912pxy_replay_thread(dev);
+	{
+		d912pxy_gpu_cmd_list_group clg = (d912pxy_gpu_cmd_list_group)(CLG_RP1 + i);
+		threads[i] = new d912pxy_replay_thread(dev, clg);
+	}
 
 	ReRangeThreads(PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
 
@@ -42,11 +45,12 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"rep
 }
 
 d912pxy_replay::~d912pxy_replay()
-{
-	Finish();
-
+{	
 	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
+	{
+		threads[i]->Stop();
 		delete threads[i];
+	}		
 }
 
 UINT d912pxy_replay::ViewTransit(d912pxy_surface * res, D3D12_RESOURCE_STATES to)
@@ -434,29 +438,26 @@ void d912pxy_replay::Replay(UINT start, UINT end, d912pxy_gpu_cmd_list_group lis
 
 	LOG_DBG_DTDM("replay range [%u , %u, %u]", start, end, stackTop);
 
+	d912pxy_s(iframe)->SetRSigOnList(listGrp);	
+
 	for (UINT i = start; i != end; ++i)
 	{
 		LOG_DBG_DTDM("RP TY %s", d912pxy_replay_item_type_dsc[stack[i].type]);
 
 		if (i >= stackTop)
 		{
-			if (stopMarker)
+			if (InterlockedAdd(&stopMarker, 0))
 				return;
 		sleepAgain:
 			thrd->WaitForJob();
 			//if we waked this thread just to mark it finished
 			if (i >= stackTop)
 			{
-				if (stopMarker)
+				if (InterlockedAdd(&stopMarker, 0))
 					return;
 				else
 					goto sleepAgain;
-			}
-			else if (i == start)
-			{
-				//we waked this thread for the first time so, we need to transfer OM/RS/RSIG shits from prev gpu cmd list ><
-				//TODO
-			}
+			}			
 		}
 
 		switch (stack[i].type) 
@@ -495,25 +496,12 @@ void d912pxy_replay::Finish()
 		LOG_ERR_THROW2(-1, "too many replay items");
 	}
 
-	stopMarker = 1;
+	InterlockedIncrement(&stopMarker);	
 
 	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
-		threads[i]->Finish();
+		threads[i]->Finish();	
 
 	ReRangeThreads(stackTop);
-
-	stackTop = 0;
-	stopMarker = 0;
-}
-
-void d912pxy_replay::InitWorkers()
-{
-	d912pxy_iframe* ifr = d912pxy_s(iframe);
-	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
-	{
-		d912pxy_gpu_cmd_list_group clg = (d912pxy_gpu_cmd_list_group)(CLG_RP1 + i);
-		ifr->SetRSigOnList(clg);
-	}
 }
 
 void d912pxy_replay::IssueWork(UINT batch)
@@ -526,7 +514,8 @@ void d912pxy_replay::IssueWork(UINT batch)
 			switchPoint = PXY_INNER_MAX_IFRAME_BATCH_REPLAY;
 			return;
 		}
-		d912pxy_s(iframe)->TransitStates((d912pxy_gpu_cmd_list_group)(CLG_RP1 + cWorker + 1));
+		//this should be executed on replay thread, with somekind new DRPL_ item, but for now we use one thread and this is sufficient, so TODO
+		//d912pxy_s(iframe)->TransitStates((d912pxy_gpu_cmd_list_group)(CLG_RP1 + cWorker + 1));
 		threads[cWorker]->SignalWork();
 		threads[++cWorker]->SignalWork();
 		switchPoint += switchRange;
@@ -542,14 +531,19 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 	cWorker = 0;
 
 	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
-	{
-		d912pxy_gpu_cmd_list_group clg = (d912pxy_gpu_cmd_list_group)(CLG_RP1 + i);
+	{		
 		rangeEnds[i] = switchRange * (i + 1);
 		if (i == (PXY_INNER_REPLAY_THREADS - 1))
-			threads[i]->ExecRange(switchRange * i, PXY_INNER_MAX_IFRAME_BATCH_REPLAY, clg);
+			threads[i]->ExecRange(switchRange * i, PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
 		else
-			threads[i]->ExecRange(switchRange * i, rangeEnds[i], clg);
+			threads[i]->ExecRange(switchRange * i, rangeEnds[i]);
 	}
+}
+
+void d912pxy_replay::Start()
+{
+	stackTop = 0;
+	InterlockedDecrement(&stopMarker);
 }
 
 d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type type, UINT depth)

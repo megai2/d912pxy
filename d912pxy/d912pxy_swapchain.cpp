@@ -389,7 +389,14 @@ HRESULT d912pxy_swapchain::Swap()
 			LOG_ERR_THROW2(pret, "d912pxy_swapchain::Swap");			
 		}
 
+		UINT32 tmp = currentBackBuffer;
+
 		currentBackBuffer = m_d12swp->GetCurrentBackBufferIndex();
+
+		if (tmp != currentBackBuffer)
+		{
+			LOG_ERR_THROW2(-1, "DXGI back buffer sequence corruption");
+		}
 
 		return pret;
 	}

@@ -91,7 +91,7 @@ void d912pxy_vstream::Unlock()
 {
 	opFlags |= PXY_INNER_BUFFER_FLAG_DIRTY;
 	--lockDepth;
-	m_dev->GetBufLoader()->IssueUpload(this, uploadRes[uploadResSel], lockOffsets[lockDepth], lockSizes[lockDepth]);
+	d912pxy_s(bufloadThread)->IssueUpload(this, uploadRes[uploadResSel], lockOffsets[lockDepth], lockSizes[lockDepth]);
 }
 
 void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12GraphicsCommandList * cl)

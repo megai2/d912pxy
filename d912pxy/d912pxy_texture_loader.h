@@ -42,6 +42,8 @@ public:
 
 	void ThreadJob();
 
+	void ThreadInitProc();
+
 private:
 	void CheckInterrupt();
 

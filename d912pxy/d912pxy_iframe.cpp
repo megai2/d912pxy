@@ -197,10 +197,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 		for (int i = 0; i != streamsActive; ++i)
 			if (streamBinds[i].buffer)
 				streamBinds[i].buffer->GetBase()->ThreadRef(1);
-
-		
-		d912pxy_s(CMDReplay)->Finish();
-
+						
 		End();
 		d912pxy_s(GPUque)->Flush(0);
 
@@ -476,7 +473,7 @@ void d912pxy_iframe::Start()
 
 	d912pxy_s(psoCache)->MarkDirty(0);
 
-	d912pxy_s(CMDReplay)->InitWorkers();
+	d912pxy_s(CMDReplay)->Start();
 
 	if (mSwapChain)
 		mSwapChain->StartFrame();
@@ -494,9 +491,11 @@ void d912pxy_iframe::Start()
 
 void d912pxy_iframe::End()
 {
-	if (mRBarrierStkPointer)
+	//d912pxy_s(CMDReplay)->Finish();
+
+	/*if (mRBarrierStkPointer)
 		d912pxy_s(GPUcl)->GID(CLG_TOP)->ResourceBarrier(mRBarrierStkPointer, mRBarrierStkData);
-	mRBarrierStkPointer = 0;
+	mRBarrierStkPointer = 0;*/
 
 	/*for (int i = 0; i != streamsActive; ++i)
 		streamBinds[i].buffer = NULL;

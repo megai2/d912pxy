@@ -32,7 +32,7 @@ d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_non
 	buffer = new d912pxy_ringbuffer<d912pxy_buffer_load_item*>(PXY_INNER_MAX_ASYNC_BUFFERLOADS, 0);
 	swapBuffer = new d912pxy_ringbuffer<d912pxy_vstream*>(PXY_INNER_MAX_ASYNC_BUFFERLOADS, 0);
 
-	dev->InitLockThread(PXY_INNER_THREADID_BUF_LOADER);
+	d912pxy_s(bufloadThread) = this;
 }
 
 d912pxy_buffer_loader::~d912pxy_buffer_loader()
@@ -96,4 +96,9 @@ void d912pxy_buffer_loader::ThreadJob()
 
 		m_dev->LockThread(PXY_INNER_THREADID_BUF_LOADER);
 	}
+}
+
+void d912pxy_buffer_loader::ThreadInitProc()
+{
+	d912pxy_s(dev)->InitLockThread(PXY_INNER_THREADID_BUF_LOADER);
 }

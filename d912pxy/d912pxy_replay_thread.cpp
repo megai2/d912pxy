@@ -24,9 +24,9 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread()
+d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread()
 {
-	endMarker = CreateEvent(0, 0, 0, 0);
+	listGrp = iListGrp;
 }
 
 d912pxy_replay_thread::~d912pxy_replay_thread()
@@ -40,20 +40,23 @@ void d912pxy_replay_thread::ThreadJob()
 
 	rpl->Replay(startRI, endRI, listGrp, this);
 
-	SetEvent(endMarker);
+	m_dev->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
 
 	IgnoreJob();
 }
 
-void d912pxy_replay_thread::ExecRange(UINT start, UINT end, d912pxy_gpu_cmd_list_group iListGrp)
+void d912pxy_replay_thread::ExecRange(UINT start, UINT end)
 {
-	startRI = start;
-	listGrp = iListGrp;	
+	startRI = start;	
 	endRI = end;
 }
 
 void d912pxy_replay_thread::Finish()
 {
-	SignalWork();
-	WaitForSingleObject(endMarker, INFINITE);
+	SignalWork();	
+}
+
+void d912pxy_replay_thread::ThreadInitProc()
+{
+	d912pxy_s(dev)->InitLockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
 }

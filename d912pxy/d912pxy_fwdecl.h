@@ -74,8 +74,9 @@ SOFTWARE.
 
 #define PXY_INNER_THREADID_TEX_LOADER 0
 #define PXY_INNER_THREADID_BUF_LOADER 1
+#define PXY_INNER_THREADID_RPL_THRD0 2
 //#define PXY_INNER_THREADID_PSO_COMPILER 2
-#define PXY_INNER_THREADID_MAX 2
+#define PXY_INNER_THREADID_MAX 3
 
 #define PXY_INNER_REPLAY_THREADS 1
 
@@ -188,6 +189,7 @@ class d912pxy_gpu_cmd_list;
 class d912pxy_texstage_cache;
 class d912pxy_surface_layer;
 class d912pxy_texture_loader;
+class d912pxy_buffer_loader;
 class d912pxy_sampler_cache;
 class d912pxy_pso_cache;
 class d912pxy_batch;
@@ -240,8 +242,10 @@ public:
 	static d912pxy_sampler_cache* samplerState;
 	static d912pxy_pso_cache* psoCache;
 	static d912pxy_texture_loader* texloadThread;
+	static d912pxy_buffer_loader* bufloadThread;
 	static d912pxy_batch* batch;	
 	static d912pxy_vfs* vfs;
+	static d912pxy_device* dev;
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a

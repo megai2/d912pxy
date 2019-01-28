@@ -58,10 +58,12 @@ void d912pxy_thread::Stop()
 
 void d912pxy_thread::ThreadProc()
 {
+	ThreadInitProc();
+	WaitForSingleObject(workEvent, INFINITE);
 	while (isRunning)
-	{
-		WaitForSingleObject(workEvent, INFINITE);
+	{		
 		ThreadJob();		
+		WaitForSingleObject(workEvent, INFINITE);
 	}
 }
 
@@ -114,6 +116,10 @@ void d912pxy_thread::WaitForIssuedWorkCompletion()
 
 	WaitForSingleObject(completionEvent, INFINITE);
 	ResetEvent(completionEvent);
+}
+
+void d912pxy_thread::ThreadInitProc()
+{
 }
 
 

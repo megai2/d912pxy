@@ -31,8 +31,6 @@ d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_no
 	buffer = new d912pxy_ringbuffer<d912pxy_texture_load_item*>(PXY_INNER_MAX_ASYNC_TEXLOADS, 0);
 	swapBuffer = new d912pxy_ringbuffer<d912pxy_resource*>(PXY_INNER_MAX_ASYNC_TEXLOADS, 0);
 
-	dev->InitLockThread(PXY_INNER_THREADID_TEX_LOADER);
-
 	d912pxy_s(texloadThread) = this;
 }
 
@@ -77,6 +75,11 @@ void d912pxy_texture_loader::ThreadJob()
 	}
 
 	CheckInterrupt();
+}
+
+void d912pxy_texture_loader::ThreadInitProc()
+{
+	d912pxy_s(dev)->InitLockThread(PXY_INNER_THREADID_TEX_LOADER);
 }
 
 void d912pxy_texture_loader::CheckInterrupt()

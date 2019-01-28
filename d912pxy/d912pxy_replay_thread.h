@@ -29,20 +29,20 @@ class d912pxy_replay_thread :
 	public d912pxy_thread, public d912pxy_noncom
 {
 public:
-	d912pxy_replay_thread(d912pxy_device* dev);
+	d912pxy_replay_thread(d912pxy_device* dev, d912pxy_gpu_cmd_list_group iListGrp);
 	~d912pxy_replay_thread();
 
 	void ThreadJob();
 
-	void ExecRange(UINT start, UINT end, d912pxy_gpu_cmd_list_group iListGrp);
+	void ExecRange(UINT start, UINT end);
 
 	void Finish();
+	void ThreadInitProc();
+
 private:
 
 	UINT startRI;
 	UINT endRI;
 	d912pxy_gpu_cmd_list_group listGrp;
-
-	HANDLE endMarker;
 };
 
