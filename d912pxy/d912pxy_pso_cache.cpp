@@ -142,7 +142,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	case D3DRS_SRCBLEND:
 		cDsc.BlendStateRT0.SrcBlend = (D3D12_BLEND)Value;
-		/*switch (Value)
+		switch (Value)
 		{
 		case D3DBLEND_SRCCOLOR:
 			Value = D3DBLEND_SRCALPHA;
@@ -159,13 +159,13 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		default:
 			;
 		}
-		cDsc.BlendState.RenderTarget[0].SrcBlendAlpha = (D3D12_BLEND)Value;*/
+		cDsc.BlendStateRT0.SrcBlendAlpha = (D3D12_BLEND)Value;
 
 		break; //19,   /* D3DBLEND */
 
 	case D3DRS_DESTBLEND:
 		cDsc.BlendStateRT0.DestBlend = (D3D12_BLEND)Value;
-		/*switch (Value)
+		switch (Value)
 		{
 		case D3DBLEND_SRCCOLOR:
 			Value = D3DBLEND_SRCALPHA;
@@ -182,7 +182,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		default:
 			;
 		}
-		cDsc.BlendState.RenderTarget[0].DestBlendAlpha = (D3D12_BLEND)Value;*/
+		cDsc.BlendStateRT0.DestBlendAlpha = (D3D12_BLEND)Value;
 
 		break; //20,   /* D3DBLEND */
 
@@ -238,7 +238,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	case D3DRS_BLENDOP:
 		cDsc.BlendStateRT0.BlendOp = (D3D12_BLEND_OP)Value;
-		//cDsc.BlendState.RenderTarget[0].BlendOpAlpha = (D3D12_BLEND_OP)Value;
+		cDsc.BlendStateRT0.BlendOpAlpha = (D3D12_BLEND_OP)Value;
 		break; //171,   // D3DBLENDOP setting
 
 	case D3DRS_SLOPESCALEDEPTHBIAS:
