@@ -156,7 +156,7 @@ void d912pxy_shader_db::DeletePair(UINT32 ha)
 	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->CurrentCID();
 	
 	if (it)
-		delete it;
+		it->Release();
 
 	shaderPairs->SetValue(0);
 
