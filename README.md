@@ -3,18 +3,18 @@
 d912pxy is a way to make games that use DirectX 9, use DirectX 12 instead, without changing any game code.
 
 This is specifically designed for Guild Wars 2.
-You can try use it in other games, maybe it will work.
+You can try to use it in other games, it might work.
  
-This project is in early development, expect bugs, crashes, hangs, stalls and all other fun stuff.
+This project is in early development, expect bugs, crashes, hangs, stalls and some other fun stuff.
  
 [![Build status](https://ci.appveyor.com/api/projects/status/gs8drlb0goyp6h28?svg=true)](https://ci.appveyor.com/project/megai2/d912pxy)
  
 # Showcase
 
-Profiling shows that API overhead for d912pxy is up to 70% less then for plain DirectX9.
-Real performance differs on scene and on hardware.
+Profiling shows that API overhead for d912pxy is up to 70% less than for plain DirectX9.
+Real performance differs depending on the scene and the hardware.
 
-For example, running mistlock sanctuary in Guild Wars 2 on i7-7700/GTX960 results in:
+For example, running Mistlock Sanctuary in Guild Wars 2 on i7-7700/GTX960 results in:
 
 ```
 @6.3k batches, all max, 1080p
@@ -57,7 +57,7 @@ Requirements will become more precise in the future based on feedback and code o
 # Uninstalling
 
 You can uninstall by simply deleting the `d912pxy` folder and `bin64/d3d9.dll`.
-Don't remove any other files other than that.
+Don't remove any files other than those specified above.
 
 # Known bugs
 
@@ -70,9 +70,9 @@ Don't remove any other files other than that.
     
 **Solution**
 
-  d912pxy loads shaders in async manner, cause there is no efficient way to load them instantly.
+  d912pxy loads shaders asynchrounosly, because there is no efficient way to load them instantly.
   
-  This can create some visual errors, but performs much better in terms of performance.
+  This can create some visual errors, but results in much better performance.
   
   
 ## Case 2
@@ -97,7 +97,7 @@ Don't remove any other files other than that.
     
  If you are asked to run debug version do this
  
-   0. Debug version writes ton of data, do not run it for long time!
+   0. Debug version writes ton of data, do not run it for a long time!
    1. Install Release_d version [from here](https://github.com/megai2/d912pxy/releases)
    2. Run the game and reproduce the error
    3. Send the log file or/and Crash.dmp to github
@@ -113,8 +113,8 @@ Don't remove any other files other than that.
   2. Run the game and reproduce the visual error
   3. Exit the game and remove d912pxy/pck/shaders_cso.pck
   4. Install the regular version
-  5. Run the game again and wait for the shaders to recompile (this will take a notable time)
-  6. If the error is not fixed post your issue on github with a description on how to reproduse the visual error
+  5. Run the game again and wait for the shaders to recompile (this will take some time)
+  6. If the error is not fixed post your issue on github with a description on how to reproduce the visual error
 
 # Support developer
 
