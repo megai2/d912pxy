@@ -440,8 +440,10 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 	switch (surf_dx9dsc.Format)
 	{
 		case D3DFMT_DXT1:
-		case D3DFMT_DXT5:
+		case D3DFMT_DXT2:
 		case D3DFMT_DXT3:
+		case D3DFMT_DXT4:
+		case D3DFMT_DXT5:
 		case D3DFMT_ATI2:
 			blockHeight = blockHeight >> 2;
 		default:
@@ -668,8 +670,9 @@ UINT d912pxy_surface::GetWPitchDX9(UINT lv)
 		return max(1, ((w + 3) / 4)) * 4;
 	case D3DFMT_DXT1:
 		return max(1, ((w + 3) / 4)) * 8;
-	case D3DFMT_DXT3:
-		return max(1, ((w + 3) / 4)) * 16;
+	case D3DFMT_DXT2:		
+	case D3DFMT_DXT3:		
+	case D3DFMT_DXT4:
 	case D3DFMT_DXT5:
 		return max(1, ((w + 3) / 4)) * 16;
 	case D3DFMT_V8U8:
@@ -694,13 +697,13 @@ UINT d912pxy_surface::GetWPitchLV(UINT lv)
 	UINT w = subresFootprints[lv].Footprint.Width;
 
 	switch (surf_dx9dsc.Format)
-	{
-	case D3DFMT_ATI2:
-		return max(1, ((w + 3) / 4)) * 16;
+	{			
 	case D3DFMT_DXT1:
 		return max(1, ((w + 3) / 4)) * 8;
+	case D3DFMT_ATI2:
+	case D3DFMT_DXT2:
 	case D3DFMT_DXT3:
-		return max(1, ((w + 3) / 4)) * 16;
+	case D3DFMT_DXT4:
 	case D3DFMT_DXT5:
 		return max(1, ((w + 3) / 4)) * 16;
 	case D3DFMT_V8U8:
