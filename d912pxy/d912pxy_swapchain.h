@@ -66,6 +66,8 @@ public:
 	HRESULT AsyncSwapNote();
 	HRESULT AsyncSwapExec();
 
+	void CopyToDXGI(ID3D12GraphicsCommandList* cl);
+
 private:
 	DWORD m_idx;
 	HWND m_hwnd;
@@ -74,10 +76,11 @@ private:
 
 	d912pxy_device* m_dev;
 
-	d912pxy_surface* backBufferSurfaces[256];
-	d912pxy_surface* depthStencilSurface;
+	d912pxy_surface* dxgiBackBuffer[4];
 
-	UINT currentBackBuffer;
+	d912pxy_surface* backBufferSurface;
+	d912pxy_surface* depthStencilSurface;
+	
 	UINT totalBackBuffers;
 
 	UINT isFullscreen;

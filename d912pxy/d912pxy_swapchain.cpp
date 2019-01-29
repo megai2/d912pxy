@@ -54,27 +54,23 @@ d912pxy_swapchain::d912pxy_swapchain(d912pxy_device* dev, int index, HWND hWnd, 
 
 	if (m_d12swp)
 	{
-		currentBackBuffer = m_d12swp->GetCurrentBackBufferIndex();
-
 		for (int i = 0; i != bufferCount; ++i)
 		{
 			ComPtr<ID3D12Resource> bbRes;
 
 			LOG_ERR_THROW2(m_d12swp->GetBuffer(i, IID_PPV_ARGS(&bbRes)), "swapchain getbuffer fail");
 
-			backBufferSurfaces[i] = new d912pxy_surface(dev, bbRes, D3D12_RESOURCE_STATE_COMMON, this);
+			dxgiBackBuffer[i] = new d912pxy_surface(dev, bbRes, D3D12_RESOURCE_STATE_COMMON, this);
 		}
 	}
 	else {
 				
 		m_log->P7_ERROR(LGC_DEFAULT, TM("swapchain for wnd %llX w %u h %u c %u failed, but faking that's this is ok"), hWnd, width, height, bufferCount);
 
-		currentBackBuffer = 0;
-
 		for (int i = 0; i != bufferCount; ++i)
 		{
 			UINT lret = 0;
-			backBufferSurfaces[i] = new d912pxy_surface(dev, width, height, D3DFMT_A8R8G8B8, D3DUSAGE_RENDERTARGET, &lret, 1);
+			dxgiBackBuffer[i] = new d912pxy_surface(dev, width, height, D3DFMT_A8R8G8B8, D3DUSAGE_RENDERTARGET, &lret, 1);
 		}
 	}
 
@@ -83,10 +79,10 @@ d912pxy_swapchain::d912pxy_swapchain(d912pxy_device* dev, int index, HWND hWnd, 
 	else
 		m_flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	
-	//recheck it later at app logic, maybe it will create new zbuffer to match needs
+	backBufferSurface = new d912pxy_surface(dev, width, height, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE, 0, 0, 0);	
 	depthStencilSurface = new d912pxy_surface(dev, width, height, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, 0, 1);
 
-	dev->SetRenderTarget(0, backBufferSurfaces[0]);
+	dev->SetRenderTarget(0, backBufferSurface);
 	dev->SetDepthStencilSurface(depthStencilSurface);
 
 	SetFullscreen(Fullscreen);
@@ -99,8 +95,9 @@ d912pxy_swapchain::~d912pxy_swapchain()
 	m_d12swp->SetFullscreenState(0, NULL);
 
 	for (int i = 0; i != totalBackBuffers; ++i)
-		backBufferSurfaces[i]->Release();
+		dxgiBackBuffer[i]->Release();
 
+	backBufferSurface->Release();
 	depthStencilSurface->Release();
 }
 
@@ -141,9 +138,9 @@ HRESULT d912pxy_swapchain::GetBackBuffer(UINT iBackBuffer, D3DBACKBUFFER_TYPE Ty
 
 	//megai2: DX9 uses the same surface interface for various buffers, but we - not, so assming that app saving backbuffer for SetRenderTarget, we need to fake up acces to real back buffer
 
-	*ppBackBuffer = (IDirect3DSurface9 *)backBufferSurfaces[0];
+	*ppBackBuffer = (IDirect3DSurface9 *)backBufferSurface;
 
-	backBufferSurfaces[0]->AddRef();
+	backBufferSurface->AddRef();
 
 	return D3D_OK;
 }
@@ -205,20 +202,20 @@ ComPtr<IDXGISwapChain4> d912pxy_swapchain::GetD12swpc()
 
 void d912pxy_swapchain::StartFrame()
 {
-	backBufferSurfaces[currentBackBuffer]->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, CLG_TOP);
+	backBufferSurface->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, CLG_TOP);
 
-	m_dev->SetRenderTarget(0, backBufferSurfaces[currentBackBuffer]);
+	m_dev->SetRenderTarget(0, backBufferSurface);
 	m_dev->SetDepthStencilSurface(depthStencilSurface);	
 }
 
 void d912pxy_swapchain::EndFrame()
 {
-	backBufferSurfaces[currentBackBuffer]->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, CLG_SEQ);
+	backBufferSurface->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, CLG_SEQ);
 }
 
 d912pxy_surface * d912pxy_swapchain::GetRTBackBuffer()
 {
-	return backBufferSurfaces[currentBackBuffer];
+	return backBufferSurface;
 }
 
 void d912pxy_swapchain::Resize(UINT width, UINT height, UINT fullscreen, UINT newVSync)
@@ -228,10 +225,11 @@ void d912pxy_swapchain::Resize(UINT width, UINT height, UINT fullscreen, UINT ne
 	vSync = newVSync;
 
 	depthStencilSurface->Release();
+	backBufferSurface->Release();
 
 	for (int i = 0; i != totalBackBuffers; ++i)
 	{
-		backBufferSurfaces[i]->Release();
+		dxgiBackBuffer[i]->Release();
 	}
 
 	d912pxy_s(iframe)->ClearBindedSurfaces();
@@ -263,18 +261,16 @@ void d912pxy_swapchain::Resize(UINT width, UINT height, UINT fullscreen, UINT ne
 
 	m_d12swp->ResizeBuffers(totalBackBuffers, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, m_flags);
 
-	currentBackBuffer = m_d12swp->GetCurrentBackBufferIndex();
-
 	for (int i = 0; i != totalBackBuffers; ++i)
 	{
 		ComPtr<ID3D12Resource> bbRes;
 
 		LOG_ERR_THROW2(m_d12swp->GetBuffer(i, IID_PPV_ARGS(&bbRes)), "swapchain getbuffer fail");
 
-		backBufferSurfaces[i] = new d912pxy_surface(m_dev, bbRes, D3D12_RESOURCE_STATE_COMMON, this);
+		dxgiBackBuffer[i] = new d912pxy_surface(m_dev, bbRes, D3D12_RESOURCE_STATE_COMMON, this);
 	}
 
-	//recheck it later at app logic, maybe it will create new zbuffer to match needs
+	backBufferSurface = new d912pxy_surface(m_dev, width, height, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE, 0, 0, 0);
 	depthStencilSurface = new d912pxy_surface(m_dev, width, height, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, 0, 1);
 
 /*	m_dev->SetRenderTarget(0, backBufferSurfaces[0]);
@@ -389,15 +385,6 @@ HRESULT d912pxy_swapchain::Swap()
 			LOG_ERR_THROW2(pret, "d912pxy_swapchain::Swap");			
 		}
 
-		UINT32 tmp = currentBackBuffer;
-
-		currentBackBuffer = m_d12swp->GetCurrentBackBufferIndex();
-
-		if (tmp != currentBackBuffer)
-		{
-			LOG_ERR_THROW2(-1, "DXGI back buffer sequence corruption");
-		}
-
 		return pret;
 	}
 	else
@@ -427,8 +414,7 @@ HRESULT d912pxy_swapchain::AsyncSwapNote()
 			markedAsLostOnFullscreen = 1;
 		}
 		else {
-			LOG_ERR_THROW2(pret, "d912pxy_swapchain::Swap");
-			currentBackBuffer = !currentBackBuffer;
+			LOG_ERR_THROW2(pret, "d912pxy_swapchain::Swap");			
 		}
 
 		return pret;
@@ -442,4 +428,19 @@ HRESULT d912pxy_swapchain::AsyncSwapExec()
 	HRESULT pret = Swap();
 
 	return pret;
+}
+
+void d912pxy_swapchain::CopyToDXGI(ID3D12GraphicsCommandList * cl)
+{
+	UINT dxgiIdx = m_d12swp->GetCurrentBackBufferIndex();
+
+	d912pxy_surface* dxgiBuf = dxgiBackBuffer[dxgiIdx];
+	
+	dxgiBuf->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT, cl);
+	backBufferSurface->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_PRESENT, cl);
+
+	backBufferSurface->CopyTo2(dxgiBuf, cl);
+
+	backBufferSurface->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
+	dxgiBuf->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST, cl);
 }

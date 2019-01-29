@@ -311,8 +311,6 @@ void d912pxy_iframe::BindSurface(UINT index, d912pxy_surface* obj)
 
 	if ((index > 0) && obj)
 	{
-		obj = obj->CheckRTV();
-
 		D3DSURFACE_DESC rtDsc = obj->GetDX9DescAtLevel(0);
 
 		if (rtDsc.Format == D3DFMT_NULL)
