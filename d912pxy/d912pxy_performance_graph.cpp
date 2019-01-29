@@ -27,82 +27,46 @@ SOFTWARE.
 d912pxy_performance_graph::d912pxy_performance_graph()
 {
 	frameTime.Reset();
-	ZeroMemory(dataAcm, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FPS_PTS * 4);
-	maxValue = 0;
+	ZeroMemory(dataAcm, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 4);	
 }
 
 
 d912pxy_performance_graph::~d912pxy_performance_graph()
 {
-	UINT8* imgData = (UINT8*)malloc(PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FPS_PTS * 3);
+	UINT8* imgData = (UINT8*)malloc(PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 3);
 
 	for (int j = 0; j != PXY_PERFGRPH_BATCH_PTS; ++j)
 	{	
 		UINT32 maxValue2 = 1;		
-		for (int k = 0; k != PXY_PERFGRPH_FPS_PTS; ++k)
+		for (int k = 0; k != PXY_PERFGRPH_FRAMETIME_PTS; ++k)
 		{
 			UINT32 tmp = dataAcm[k*PXY_PERFGRPH_BATCH_PTS + j];
 			if (tmp > maxValue2)
 				maxValue2 = tmp;
 		}
 
-		for (int k = 0; k != PXY_PERFGRPH_FPS_PTS; ++k)
+		for (int k = 0; k != PXY_PERFGRPH_FRAMETIME_PTS; ++k)
 		{
 			int i = j + k * PXY_PERFGRPH_BATCH_PTS;
 			
 			double pv = (double)dataAcm[i] / ((double)maxValue2);
-			pv *= 256*2;
+			pv *= 256;
 
 			UINT32 pvi = (UINT32)pv;
 
 			if (pvi > 1)
 				pvi -= 1;
 
-		/*	if (pvi >= 128 * 5)
-			{
-				imgData[i * 3 + 0] = pvi - 256 * 5;
-				imgData[i * 3 + 1] = pvi - 256 * 5;
-				imgData[i * 3 + 2] = pvi - 256 * 5;
-			}
-			else if (pvi >= 256 * 4)
-			{
-				imgData[i * 3 + 0] = pvi - 256 * 4;
-				imgData[i * 3 + 1] = pvi - 256 * 4;
-				imgData[i * 3 + 2] = 0;
-			}
-			else if (pvi >= 256 * 3)
-			{
-				imgData[i * 3 + 0] = 0;
-				imgData[i * 3 + 1] = pvi - 256 * 3;
-				imgData[i * 3 + 2] = pvi - 256 * 3;
-			}
-			else if (pvi >= 256 * 2)
-			{
-				imgData[i * 3 + 0] = 0;
-				imgData[i * 3 + 1] = 0;
-				imgData[i * 3 + 2] = pvi - 256 * 2;
-			}
-			else*/ if (pvi >= 256 * 1)
-			{
-				imgData[i * 3 + 0] = pvi - 256 * 1;
-				imgData[i * 3 + 1] = 0;
-				imgData[i * 3 + 2] = 0;
-			}
-			else if (pvi > 256 * 0)
+			if (pvi > 256 * 0)
 			{
 				imgData[i * 3 + 0] = pvi;
 				imgData[i * 3 + 1] = pvi;
 				imgData[i * 3 + 2] = pvi;
 			}
-			else {
-				imgData[i * 3 + 0] = 128;
-				imgData[i * 3 + 1] = 128;
-				imgData[i * 3 + 2] = 128;
-			}
 		}
 	}
 
-	stbi_write_png("performance_graph.png", PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FPS_PTS, 3, imgData, 0);
+	stbi_write_png("performance_graph.png", PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 3, imgData, 0);
 }
 
 
@@ -112,32 +76,23 @@ void d912pxy_performance_graph::RecordPresent(int batchCount)
 
 	if (r > 0)
 	{
-		double rd = (double)1000*1000 / r;
+		if (r < PXY_PERFGRPH_FRAMETIME_MIN)
+			r = 0;
+		else
+			r = r - PXY_PERFGRPH_FRAMETIME_MIN;
 
-		if (rd >= PXY_PERFGRPH_FPS_MAX)
-			rd = PXY_PERFGRPH_FPS_MAX;
+		r = r / ((PXY_PERFGRPH_FRAMETIME_MAX - PXY_PERFGRPH_FRAMETIME_MIN) / PXY_PERFGRPH_FRAMETIME_PTS);
 
-		rd = PXY_PERFGRPH_FPS_PTS / PXY_PERFGRPH_FPS_MAX * rd;
-
-		r = (UINT64)rd;
-
-		if (r >= PXY_PERFGRPH_FPS_PTS)
-		{
-			r = PXY_PERFGRPH_FPS_PTS - 1;
-		}
+		if (r >= PXY_PERFGRPH_FRAMETIME_PTS)
+			r = PXY_PERFGRPH_FRAMETIME_PTS - 1;
 	}
-	else
-		r = PXY_PERFGRPH_FPS_PTS - 1;
 
 	batchCount = batchCount / PXY_PERFGRPH_BATCH_DIV;
 
 	if (batchCount >= PXY_PERFGRPH_BATCH_PTS)
 		batchCount = PXY_PERFGRPH_BATCH_PTS - 1;
 
-	UINT32 mv = ++dataAcm[r * PXY_PERFGRPH_BATCH_PTS + batchCount];
-
-	if (mv > maxValue)
-		maxValue = mv;	
+	++dataAcm[r * PXY_PERFGRPH_BATCH_PTS + batchCount];
 
 	frameTime.Reset();
 }
