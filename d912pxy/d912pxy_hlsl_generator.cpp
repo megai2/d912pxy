@@ -324,7 +324,8 @@ void d912pxy_hlsl_generator::Process()
 	if (!of)
 		return;
 		
-//temporary code for verification
+#ifdef _DEBUG
+//code for asm verification
 	const char* copener = "/*\n";
 	const char* ccloser = "\n*/\n";
 	fwrite(copener, 3, 1, of);
@@ -335,6 +336,7 @@ void d912pxy_hlsl_generator::Process()
 	fflush(of);
 	dasm->Release();
 ////////////////////////
+#endif
 
 
 	majVer = (oCode[0] & 0xFF00) >> 8;
