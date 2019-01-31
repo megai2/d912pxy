@@ -88,6 +88,8 @@ public:
 
 	DWORD GetDX9RsValue(D3DRENDERSTATETYPE State) { return DX9RSvalues[State]; };
 	UINT Use();
+	UINT UseCompiled(d912pxy_pso_cache_item* it);
+	UINT UseWithFeedbackPtr(void** feedback);
 
 	d912pxy_pso_cache_item* UseByDesc(d912pxy_trimmed_dx12_pso* dsc, UINT32 frameStartTime);
 

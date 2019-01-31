@@ -41,12 +41,14 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 
 	d912pxy_pso_cache::vsMaxVars = 0;
 	d912pxy_pso_cache::psMaxVars = 0;
-
+	
 	shaderCleanupBuffer = new d912pxy_ringbuffer<d912pxy_shader*>(0xFFFF, 0);
 
 	ZeroMemory(&d912pxy_pso_cache::cDscBase, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
 	cDsc.NumRenderTargets = 1;
+	cDsc.RTVFormat0 = DXGI_FORMAT_B8G8R8A8_UNORM;
+	cDsc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	d912pxy_pso_cache::cDscBase.SampleDesc.Count = 1;
 	d912pxy_pso_cache::cDscBase.SampleDesc.Quality = 0;
 	d912pxy_pso_cache::cDscBase.SampleMask = 0xFFFFFFFF;
@@ -55,7 +57,7 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 	d912pxy_pso_cache::cDscBase.GS.pShaderBytecode = NULL;
 	d912pxy_pso_cache::cDscBase.DS.pShaderBytecode = NULL;
 	d912pxy_pso_cache::cDscBase.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
+	
 	State(D3DRS_STENCILFAIL, D3DSTENCILOP_KEEP);
 	State(D3DRS_STENCILZFAIL, D3DSTENCILOP_KEEP);
 	State(D3DRS_CCW_STENCILFAIL, D3DSTENCILOP_KEEP);
@@ -68,7 +70,9 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 	State(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
 	State(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
 	State(D3DRS_DESTBLENDALPHA, D3DBLEND_ZERO);
+	State(D3DRS_FILLMODE, D3DFILL_SOLID);
 
+	State(D3DRS_COLORWRITEENABLE, 0xFFFFFFFF);
 	State(D3DRS_STENCILWRITEMASK, 0xFFFFFFFF);
 	State(D3DRS_STENCILMASK, 0xFFFFFFFF);
 	State(D3DRS_STENCILFAIL, 1);
@@ -79,7 +83,7 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 	
 	dirty = 1;
 
-	psoCompileBuffer = new d912pxy_ringbuffer<d912pxy_pso_cache_item*>(0xFFFF, 0);
+	psoCompileBuffer = new d912pxy_ringbuffer<d912pxy_pso_cache_item*>(0xFFFF, 0);	
 }
 
 d912pxy_pso_cache::~d912pxy_pso_cache()
@@ -394,6 +398,24 @@ UINT d912pxy_pso_cache::Use()
 
 		dirty = 0;
 	}
+
+	return 1;
+}
+
+UINT d912pxy_pso_cache::UseCompiled(d912pxy_pso_cache_item * it)
+{
+	d912pxy_s(CMDReplay)->PSOCompiled(it);
+
+	dirty = 0;
+
+	return 1;
+}
+
+UINT d912pxy_pso_cache::UseWithFeedbackPtr(void ** feedback)
+{
+	d912pxy_s(CMDReplay)->PSORawFeedback(&cDsc, feedback);
+
+	dirty = 0;	
 
 	return 1;
 }

@@ -38,6 +38,8 @@ typedef enum d912pxy_replay_item_type {
 	DRPL_RCLR,
 	DRPL_DCLR,
 	DRPL_RPSO,
+	DRPL_RPSF,
+	DRPL_CPSO,
 	DRPL_RECT,
 } d912pxy_replay_item_type;
 
@@ -125,6 +127,11 @@ typedef struct d912pxy_replay_pso_raw {
 	d912pxy_trimmed_dx12_pso rawState;
 } d912pxy_replay_pso_raw;
 
+typedef struct d912pxy_replay_pso_raw_feedback {
+	d912pxy_trimmed_dx12_pso rawState;
+	void** feedbackPtr;
+} d912pxy_replay_pso_raw_feedback;
+
 typedef struct d912pxy_replay_rect {
 	d912pxy_surface* src;
 	d912pxy_surface* dst;
@@ -141,6 +148,10 @@ typedef struct d912pxy_replay_cs_copy_data {
 	intptr_t parStreamBind;
 } d912pxy_replay_cs_copy_data;
 
+typedef struct d912pxy_replay_pso_compiled {
+	d912pxy_pso_cache_item* psoItem;
+} d912pxy_replay_pso_compiled;
+
 typedef struct d912pxy_replay_item {
 	d912pxy_replay_item_type type;
 	union {
@@ -156,6 +167,8 @@ typedef struct d912pxy_replay_item {
 		d912pxy_replay_clear_ds clrDs;
 		d912pxy_replay_clear_rt clrRt;
 		d912pxy_replay_pso_raw rawPso;
+		d912pxy_replay_pso_compiled compiledPso;
+		d912pxy_replay_pso_raw_feedback rawPsoFeedback;
 		d912pxy_replay_rect srect;
 		d912pxy_replay_gpu_data_dlt gpuddl;
 		d912pxy_replay_cs_copy_data cscp;
@@ -175,7 +188,9 @@ public:
 	~d912pxy_replay();
 
 	UINT ViewTransit(d912pxy_surface* res, D3D12_RESOURCE_STATES to);
+	void PSOCompiled(d912pxy_pso_cache_item* dsc);
 	void PSORaw(d912pxy_trimmed_dx12_pso* dsc);
+	void PSORawFeedback(d912pxy_trimmed_dx12_pso* dsc, void** ptr);
 	void OMStencilRef(DWORD ref);
 	void OMBlendFac(float* color);
 	void RSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor);
@@ -224,6 +239,7 @@ private:
 	D912PXY_REPLAY_HA_DECL(void, RCLR, d912pxy_replay_clear_rt);
 	D912PXY_REPLAY_HA_DECL(void, DCLR, d912pxy_replay_clear_ds);
 	D912PXY_REPLAY_HA_DECL(ID3D12PipelineState*, RPSO, d912pxy_replay_pso_raw);
+	D912PXY_REPLAY_HA_DECL(ID3D12PipelineState*, RPSF, d912pxy_replay_pso_raw_feedback);	
 	D912PXY_REPLAY_HA_DECL(void, RECT, d912pxy_replay_rect);
 
 	d912pxy_replay_item stack[PXY_INNER_MAX_IFRAME_BATCH_REPLAY];

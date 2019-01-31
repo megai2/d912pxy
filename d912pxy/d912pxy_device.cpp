@@ -179,6 +179,15 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Pr
 
 	//origD3D_create_call.pPresentationParameters->Windowed = !origD3D_create_call.pPresentationParameters->Windowed;
 
+	if (!origD3D_create_call.pPresentationParameters->hDeviceWindow)
+		origD3D_create_call.pPresentationParameters->hDeviceWindow = origD3D_create_call.hFocusWindow;
+
+	if (!origD3D_create_call.pPresentationParameters->BackBufferHeight)
+		origD3D_create_call.pPresentationParameters->BackBufferHeight = 1;
+
+	if (!origD3D_create_call.pPresentationParameters->BackBufferWidth)
+		origD3D_create_call.pPresentationParameters->BackBufferWidth = 1;
+
 	swapchains[0] = new d912pxy_swapchain(
 		this,
 		0,
@@ -887,11 +896,14 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 
 	API_OVERHEAD_TRACK_START(0)
 
-	if (State > D3DRS_BLENDOPALPHA)
-		return D3DERR_INVALIDCALL;
+	/*if (State > D3DRS_BLENDOPALPHA)
+		return D3DERR_INVALIDCALL;*/
 
 	switch (State)
 	{
+		case D3DRS_ENABLE_D912PXY_API_HACKS:
+			return 343434;
+		break;
 		case D3DRS_SCISSORTESTENABLE: 
 			if (Value)
 				d912pxy_s(iframe)->RestoreScissor();
@@ -998,8 +1010,20 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
-	//megai2: normal apps don't call this shit and i'm lazy to do it for now
-	return D3DERR_INVALIDCALL; 
+	
+	switch (State)
+	{
+	case D3DRS_D912PXY_ENQUEUE_PSO_COMPILE:
+		d912pxy_s(psoCache)->UseWithFeedbackPtr((void**)pValue);
+		break;
+	case D3DRS_D912PXY_SETUP_PSO:
+		d912pxy_s(psoCache)->UseCompiled((d912pxy_pso_cache_item*)pValue);
+		break;
+	default:
+		return D3DERR_INVALIDCALL;
+	}
+
+	return D3D_OK;
 }
 
 HRESULT WINAPI d912pxy_device::ValidateDevice(DWORD* pNumPasses)
@@ -1087,9 +1111,9 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 		float fvColor[4] =
 		{
 			((Color >> 24) & 0xFF) / 255.0f,
-			((Color >> 16) & 0xFF) / 255.0f,
+			((Color >> 0) & 0xFF) / 255.0f,
 			((Color >> 8) & 0xFF) / 255.0f,
-			((Color >> 0) & 0xFF) / 255.0f
+			((Color >> 16) & 0xFF) / 255.0f
 		};
 
 		d912pxy_surface* surf = iframe->GetBindedSurface(1);

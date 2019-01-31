@@ -71,11 +71,30 @@ UINT d912pxy_replay::ViewTransit(d912pxy_surface * res, D3D12_RESOURCE_STATES to
 	return 1;
 }
 
+void d912pxy_replay::PSOCompiled(d912pxy_pso_cache_item * dsc)
+{
+	REPLAY_STACK_GET(DRPL_CPSO);
+
+	it->compiledPso.psoItem = dsc;
+
+	++stackTop;
+}
+
 void d912pxy_replay::PSORaw(d912pxy_trimmed_dx12_pso * dsc)
 {
 	REPLAY_STACK_GET(DRPL_RPSO);
 
 	it->rawPso.rawState = *dsc;
+
+	++stackTop;
+}
+
+void d912pxy_replay::PSORawFeedback(d912pxy_trimmed_dx12_pso * dsc, void ** ptr)
+{
+	REPLAY_STACK_GET(DRPL_RPSF);
+
+	it->rawPsoFeedback.rawState = *dsc;
+	it->rawPsoFeedback.feedbackPtr = ptr;
 
 	++stackTop;
 }
@@ -346,6 +365,13 @@ D912PXY_REPLAY_HA_IMPL(ID3D12PipelineState*, RPSO, d912pxy_replay_pso_raw)
 	return psoPtr;
 }
 
+D912PXY_REPLAY_HA_IMPL(ID3D12PipelineState*, RPSF, d912pxy_replay_pso_raw_feedback)
+{
+	*it->feedbackPtr = d912pxy_s(psoCache)->UseByDesc(&it->rawState, 0);
+
+	return NULL;
+}
+
 D912PXY_REPLAY_HA_IMPL(void, RECT, d912pxy_replay_rect)
 {
 	d912pxy_surface* sSrc = it->src;
@@ -420,6 +446,11 @@ void d912pxy_replay::PlayId(UINT id, ID3D12GraphicsCommandList * cl)
 		RHA_RECT(&it->srect, cl);
 	}
 	break;
+	case DRPL_RPSF:
+	{
+		RHA_RPSF(&it->rawPsoFeedback, cl);
+	}
+	break;
 	default:
 	{
 		LOG_ERR_THROW2(-1, "replay type error");
@@ -462,6 +493,17 @@ void d912pxy_replay::Replay(UINT start, UINT end, d912pxy_gpu_cmd_list_group lis
 
 		switch (stack[i].type) 
 		{
+		case DRPL_CPSO:
+		{
+			d912pxy_pso_cache_item* it = stack[i].compiledPso.psoItem;
+
+			psoPtr = it->GetPtr();
+
+			if (psoPtr)
+				cl->SetPipelineState(psoPtr);
+
+			break;
+		}
 		case DRPL_RPSO:
 		{
 			d912pxy_pso_cache_item* it = d912pxy_s(psoCache)->UseByDesc(&stack[i].rawPso.rawState, 0);

@@ -143,13 +143,20 @@ d912pxy_vdecl::d912pxy_vdecl(d912pxy_device * dev, const D3DVERTEXELEMENT9 * dat
 			case D3DDECLTYPE_UDEC3: //13,								
 			case D3DDECLTYPE_DEC3N: //14,
 			default:
-				LOG_ERR_THROW(-1/*vdecl type err*/);
+				LOG_ERR_THROW2(-1, "vdecl type err");
 		}
 			
 	
 		declData12[i].SemanticName = semantics[i].s; 		
 		declData12[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		declData12[i].InstanceDataStepRate = 0;
+
+		if (data[i].Method == D3DDECLMETHOD_PER_VERTEX_CONSTANT)
+		{
+			declData12[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+			declData12[i].InstanceDataStepRate = -1;
+		}
+
 		//doubt are here
 		declData12[i].AlignedByteOffset = data[i].Offset;
 
