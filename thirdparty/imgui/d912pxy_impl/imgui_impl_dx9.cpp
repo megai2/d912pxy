@@ -134,6 +134,11 @@ void ImGui_ImplDX9_RenderDrawLists_d912pxy(ImDrawData* draw_data)
 	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 
+	DWORD rs_atOld, rs_sctOld;
+
+	g_pd3dDevice->GetRenderState(D3DRS_ALPHATESTENABLE, &rs_atOld);
+	g_pd3dDevice->GetRenderState(D3DRS_SCISSORTESTENABLE, &rs_sctOld);
+
 	g_pd3dDevice->SetRenderState(D3DRS_ALPHATESTENABLE, false);
 	g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, true);
 
@@ -187,7 +192,9 @@ void ImGui_ImplDX9_RenderDrawLists_d912pxy(ImDrawData* draw_data)
 		vtx_offset += cmd_list->VtxBuffer.Size;
 	}
 
-	g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, false);
+	g_pd3dDevice->SetRenderState(D3DRS_ALPHATESTENABLE, rs_atOld);
+	g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, rs_sctOld);
+
 	g_pd3dDevice->SetStreamSource(1, NULL, 0, 0);
 }
 

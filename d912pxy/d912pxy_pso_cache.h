@@ -86,7 +86,7 @@ public:
 	void DSVFormat(DXGI_FORMAT fmt);
 	void OMReflect(UINT RTcnt, D3D12_CPU_DESCRIPTOR_HANDLE* dsv);
 
-	DWORD GetDX9RsValue(D3DRENDERSTATETYPE State) { return DX9RSvalues[State]; };
+	DWORD GetDX9RsValue(D3DRENDERSTATETYPE State);
 	UINT Use();
 	UINT UseCompiled(d912pxy_pso_cache_item* it);
 	UINT UseWithFeedbackPtr(void** feedback);

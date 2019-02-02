@@ -904,14 +904,6 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 		case D3DRS_ENABLE_D912PXY_API_HACKS:
 			return 343434;
 		break;
-		case D3DRS_SCISSORTESTENABLE: 
-			if (Value)
-				d912pxy_s(iframe)->RestoreScissor();
-			else 
-				d912pxy_s(iframe)->IgnoreScissor();
-			//LOG_DBG_DTDM("RS unimpl 174"); 
-		break;
-
 		case D3DRS_STENCILREF:
 			replayer->OMStencilRef(Value);			
 		break; //57,   /* Reference value used in stencil test */
@@ -1020,7 +1012,8 @@ HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* p
 		d912pxy_s(psoCache)->UseCompiled((d912pxy_pso_cache_item*)pValue);
 		break;
 	default:
-		return D3DERR_INVALIDCALL;
+		*pValue = d912pxy_s(psoCache)->GetDX9RsValue(State);
+		return D3D_OK;
 	}
 
 	return D3D_OK;

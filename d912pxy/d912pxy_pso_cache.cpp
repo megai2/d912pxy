@@ -122,6 +122,13 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	switch (State)
 	{
+	case D3DRS_SCISSORTESTENABLE:
+		if (Value)
+			d912pxy_s(iframe)->RestoreScissor();
+		else
+			d912pxy_s(iframe)->IgnoreScissor();
+		DX9RSvalues[State] = Value;
+		break;
 	case D3DRS_ZENABLE:
 		cDsc.DepthStencilState.DepthEnable = (Value == D3DZB_TRUE);
 		break; //7,    /* D3DZBUFFERTYPE (or TRUE/FALSE for legacy) */
@@ -390,14 +397,32 @@ void d912pxy_pso_cache::OMReflect(UINT RTcnt, D3D12_CPU_DESCRIPTOR_HANDLE * dsv)
 		cDsc.DSVFormat = DXGI_FORMAT_UNKNOWN;
 }
 
+DWORD d912pxy_pso_cache::GetDX9RsValue(D3DRENDERSTATETYPE State)
+{
+	switch (State)
+	{
+	case D3DRS_ALPHABLENDENABLE:
+		return cDsc.BlendStateRT0.BlendEnable;
+		break;
+	case D3DRS_DESTBLEND:
+		return cDsc.BlendStateRT0.DestBlend;
+		break;
+	default:
+		return DX9RSvalues[State];
+	}
+
+	return 0;	
+}
+
 UINT d912pxy_pso_cache::Use()
 {
 	if (dirty)
-	{				
+	{
 		d912pxy_s(CMDReplay)->PSORaw(&cDsc);
 
 		dirty = 0;
-	}
+	} 
+
 
 	return 1;
 }
@@ -415,7 +440,8 @@ UINT d912pxy_pso_cache::UseWithFeedbackPtr(void ** feedback)
 {
 	d912pxy_s(CMDReplay)->PSORawFeedback(&cDsc, feedback);
 
-	dirty = 0;	
+	//megai2: force dirty to reset PSO to current state data 
+	dirty = 1;	
 
 	return 1;
 }
