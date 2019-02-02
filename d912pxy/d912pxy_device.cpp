@@ -197,7 +197,8 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Pr
 		origD3D_create_call.pPresentationParameters->BackBufferHeight,
 		origD3D_create_call.pPresentationParameters->BackBufferCount,
 		!origD3D_create_call.pPresentationParameters->Windowed,
-		(origD3D_create_call.pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE)
+		(origD3D_create_call.pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE),
+		origD3D_create_call.pPresentationParameters->FullScreen_RefreshRateInHz
 	);
 
 	iframe->SetSwapper(swapchains[0]);
@@ -438,7 +439,7 @@ HRESULT WINAPI d912pxy_device::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS* 
 		if (swapchains[i])
 			continue;
 		
-		swapchains[i] = new d912pxy_swapchain(this, i, pPresentationParameters->hDeviceWindow, mGPUque->GetDXQue(), pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, pPresentationParameters->BackBufferCount, !pPresentationParameters->Windowed, pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE);
+		swapchains[i] = new d912pxy_swapchain(this, i, pPresentationParameters->hDeviceWindow, mGPUque->GetDXQue(), pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, pPresentationParameters->BackBufferCount, !pPresentationParameters->Windowed, pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, pPresentationParameters->FullScreen_RefreshRateInHz);
 
 		*pSwapChain = swapchains[i];
 
@@ -477,6 +478,8 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 	//pPresentationParameters->Windowed = !pPresentationParameters->Windowed;
 	
 	//swapchains[0]->SetFullscreen(!pPresentationParameters->Windowed);
+	
+	swapchains[0]->SetRefreshRate(pPresentationParameters->FullScreen_RefreshRateInHz);
 
 	swapchains[0]->Resize(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, !origD3D_create_call.pPresentationParameters->Windowed, (pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE));
 	

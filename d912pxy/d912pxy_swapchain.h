@@ -29,7 +29,7 @@ SOFTWARE.
 class d912pxy_swapchain : public d912pxy_comhandler, public IDirect3DSwapChain9
 {
 public:
-	d912pxy_swapchain(d912pxy_device* dev, int index, HWND hWnd, ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount, BOOL Fullscreen, UINT i_vSync);
+	d912pxy_swapchain(d912pxy_device* dev, int index, HWND hWnd, ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount, BOOL Fullscreen, UINT i_vSync, UINT i_refreshHz);
 	virtual ~d912pxy_swapchain();
 
 	HRESULT WINAPI QueryInterface(REFIID riid, void** ppvObj);
@@ -46,6 +46,8 @@ public:
 	HRESULT WINAPI GetPresentParameters(D3DPRESENT_PARAMETERS* pPresentationParameters);
 
 	///
+
+	void SetRefreshRate(UINT hz);
 
 	void SetFullscreen(UINT fullscreen);
 
@@ -87,6 +89,7 @@ private:
 	UINT m_width;
 	UINT m_height;
 	UINT m_flags;
+	UINT m_refreshRateHz;
 	
 	UINT markedAsLostOnFullscreen;
 

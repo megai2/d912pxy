@@ -27,12 +27,14 @@ SOFTWARE.
 
 #define LOG_DBG_DEV(fmt, ...) m_log->P7_DEBUG(LGC_SWPCHA, TM(fmt), __VA_ARGS__)
 
-d912pxy_swapchain::d912pxy_swapchain(d912pxy_device* dev, int index, HWND hWnd, ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount_div2, BOOL Fullscreen, UINT i_vSync):
+d912pxy_swapchain::d912pxy_swapchain(d912pxy_device* dev, int index, HWND hWnd, ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount_div2, BOOL Fullscreen, UINT i_vSync, UINT i_refreshHz):
 	d912pxy_comhandler(L"swap chain")
 {
 	m_dev = dev;
 	m_idx = index;
 	m_hwnd = hWnd;
+
+	m_refreshRateHz = i_vSync;
 
 	vSync = i_vSync;
 
@@ -173,6 +175,11 @@ HRESULT d912pxy_swapchain::GetPresentParameters(D3DPRESENT_PARAMETERS * pPresent
 	return E_NOTIMPL;
 }
 
+void d912pxy_swapchain::SetRefreshRate(UINT hz)
+{
+	m_refreshRateHz = hz;
+}
+
 void d912pxy_swapchain::SetFullscreen(UINT fullscreen)
 {
 	if (fullscreen)
@@ -183,7 +190,7 @@ void d912pxy_swapchain::SetFullscreen(UINT fullscreen)
 		mdsc.Height = m_height;
 		mdsc.Width = m_width;
 		mdsc.RefreshRate.Denominator = 1;
-		mdsc.RefreshRate.Numerator = 60;
+		mdsc.RefreshRate.Numerator = m_refreshRateHz;
 		mdsc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 		mdsc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 
