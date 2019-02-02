@@ -8,6 +8,8 @@ You can try to use it in other games, it might work.
 This project is in early development, expect bugs, crashes, hangs, stalls and some other fun stuff.
  
 [![Build status](https://ci.appveyor.com/api/projects/status/gs8drlb0goyp6h28?svg=true)](https://ci.appveyor.com/project/megai2/d912pxy)
+
+**WARNING: USING OF THIS SOFTAWRE IS ENTIRELY AT YOUR OWN RISK!**
  
 # Showcase
 
