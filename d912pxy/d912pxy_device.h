@@ -27,6 +27,13 @@ SOFTWARE.
 #include "stdafx.h"
 #include <chrono>
 
+static const D3D12_DESCRIPTOR_HEAP_DESC d912pxy_dx12_heap_config[PXY_INNER_MAX_DSC_HEAPS] = {
+	{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 0 },
+	{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 64, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 0 },
+	{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, PXY_INNER_MAX_IFRAME_BATCH_COUNT * 10 + 1024, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 0 },
+	{ D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 64, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 0 }
+};
+
 class d912pxy_device: public IDirect3DDevice9Proxy, public d912pxy_comhandler
 {
 public:
@@ -169,7 +176,20 @@ public:
 
 	void TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId);
 
-	static UINT64 apiOverhead;
+	void CopyOriginalDX9Data(IDirect3DDevice9Proxy* dev);
+	void InitVFS();
+	void InitClassFields();
+	void InitThreadSyncObjects();
+	void InitSingletons();
+	void InitNullSRV();
+	void InitDrawUPBuffers();
+	void FreeAdditionalDX9Objects();
+	void InitDescriptorHeaps();
+	void PrintInfoBanner();
+	void InitDefaultSwapChain();
+
+	ComPtr<IDXGIAdapter3> SelectSuitableGPU();
+	void SetupDevice(ComPtr<IDXGIAdapter3> gpu);
 
 private:
 	LONG threadInterruptState;	
@@ -179,19 +199,12 @@ private:
 
 	ComPtr<ID3D12Device> m_d12evice;
 	ID3D12Device* m_d12evice_ptr;
-
-	d912pxy_iframe* iframe;	
-	d912pxy_texture_loader* texLoader;
-	d912pxy_buffer_loader* bufLoader;
-	d912pxy_replay* replayer;
-	d912pxy_gpu_que* mGPUque;
-	d912pxy_shader_db* mShaderDB;
+	
 	IDirect3DVertexBuffer9* mDrawUPVbuf;
 	IDirect3DIndexBuffer9* mDrawUPIbuf;
 	UINT mDrawUPStreamPtr;
 
 	d912pxy_dheap* m_dheaps[PXY_INNER_MAX_DSC_HEAPS];
-	D3D12_DESCRIPTOR_HEAP_DESC device_heap_config[PXY_INNER_MAX_DSC_HEAPS];
 	
 	d912pxy_swapchain* swapchains[PXY_INNER_MAX_SWAP_CHAINS];
 
@@ -199,32 +212,10 @@ private:
 	d912pxy_surface* mNullTexture;
 	UINT mNullTextureSRV;
 
-	UINT last_ps_fvconsts;
-	UINT last_vs_fvconsts;
-
 	//info data and dx9 catch'ups
 	DWORD gpu_totalVidmemMB;
 	D3DDISPLAYMODE cached_dx9displaymode;
 	D3DCAPS9 cached_dx9caps;
-
-	//telemetry log
-
-	IP7_Telemetry* m_logMetrics;
-	tUINT8 metricIFrameReplayTime;
-	tUINT8 metricIFramePrep;
-	tUINT8 metricIFrameExec;
-	tUINT8 metricIFrameDraws;
-	tUINT8 metricIFrameSync;
-
-	Stopwatch* iframePrepTime;
-	Stopwatch* iframeReplTime;
-	Stopwatch* iframeExecTime;
-	Stopwatch* iframeSyncTime;
-	
-	tUINT8 metricIFramePrepPerBatch;
-	tUINT8 metricIFrameAppCPU;
-	tUINT8 metricIFrameAPIOverhead;
-	tUINT8 metricIFrameOverheadPerBatch;
 
 #ifdef TRACK_SHADER_BUGS_PROFILE
 	D3DFORMAT stageFormatsTrack[1024];

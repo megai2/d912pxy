@@ -1,0 +1,94 @@
+/*
+MIT License
+
+Copyright(c) 2019 megai2
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+#pragma once
+#include "stdafx.h"
+
+#define PXY_METRICS_API_OVERHEAD_DEVICE 0
+#define PXY_METRICS_API_OVERHEAD_VSTREAM 1
+#define PXY_METRICS_API_OVERHEAD_TEXTURE 2
+#define PXY_METRICS_API_OVERHEAD_COUNT 3
+
+#define PXY_METRICS_IFRAME_PREP 0
+#define PXY_METRICS_IFRAME_EXEC 1
+#define PXY_METRICS_IFRAME_SYNC 2
+#define PXY_METRICS_IFRAME_COUNT 3
+
+static const wchar_t* PXY_METRICS_API_OVERHEAD_NAMES[] = {
+	L"overhead / device",
+	L"overhead / vstream",
+	L"overhead / texture",
+	L"overhead / total"
+};
+
+static const wchar_t* PXY_METRICS_IFRAME_TIME_NAMES [] = {
+	L"time / prep",
+	L"time / exec",
+	L"time / sync"
+};
+
+static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {
+	L"slots / rtv",
+	L"slots / dsv",
+	L"slots / srv",
+	L"slots / spl"
+};
+
+class d912pxy_metrics : public d912pxy_noncom
+{
+public:
+	d912pxy_metrics(d912pxy_device* dev);
+	~d912pxy_metrics();
+	   
+	void TrackAPIOverheadStart(UINT group);
+	void TrackAPIOverheadEnd(UINT group);
+
+	void TrackIFrameTime(UINT start, UINT group);
+	void TrackDHeapSlots(UINT idx, UINT slots);
+
+	void TrackDrawCount(UINT draws);
+	void TrackCleanupCount(UINT cleanups);
+
+	void FlushIFrameValues();
+
+private:
+	IP7_Telemetry* iframeMetrics;	
+	tUINT8 metricIFrameTimes[PXY_METRICS_IFRAME_COUNT];
+	tUINT8 metricIFrameAPIOverhead[PXY_METRICS_API_OVERHEAD_COUNT + 1];
+	tUINT8 metricIFrameDraws;
+	tUINT8 metricIFrameCleans;
+	tUINT8 metricIFramePerBatchPrep;
+	tUINT8 metricIFramePerBatchOverhead;
+	tUINT8 metricIFrameAppPrep;	
+
+	IP7_Telemetry* dheapMetrics;
+	tUINT8 metricDHeapSlots[PXY_INNER_MAX_DSC_HEAPS];
+	
+	Stopwatch* iframeTime[PXY_METRICS_IFRAME_COUNT];
+	Stopwatch* apiOverheadTime[PXY_METRICS_API_OVERHEAD_COUNT+1];
+	UINT64 apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT+1];	
+
+	UINT lastDraws;
+};
+

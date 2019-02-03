@@ -55,9 +55,5 @@ private:
 	HANDLE fenceEvent;
 	UINT64 fenceId;
 
-	IP7_Telemetry* m_logMetrics;
-
-	tUINT8 m_cleanupCntMetrics;
-
 	d912pxy_gpu_cleanup_thread* mCleanupThread;
 };

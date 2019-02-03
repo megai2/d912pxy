@@ -24,10 +24,10 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-UINT g_HeapIndex = 0;
-
-d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, D3D12_DESCRIPTOR_HEAP_DESC * desc) : d912pxy_noncom(dev, L"dheap")
+d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, UINT idx) : d912pxy_noncom(dev, L"dheap")
 {
+	const D3D12_DESCRIPTOR_HEAP_DESC* desc = &d912pxy_dx12_heap_config[idx];
+
 	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateDescriptorHeap(desc, IID_PPV_ARGS(&heap)));
 
 	handleSz = d912pxy_s(DXDev)->GetDescriptorHandleIncrementSize(desc->Type);
@@ -46,13 +46,7 @@ d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, D3D12_DESCRIPTOR_HEAP_DESC * 
 
 	m_desc = desc;
 
-	m_logMetrics = P7_Get_Shared_Telemetry(L"tel_dheap");
-
-	wchar_t buf[255];
-	wsprintf(buf, L"slots / %u", g_HeapIndex);
-	selfIID = g_HeapIndex;
-
-	m_logMetrics->Create(buf, 0, slots, 1, 1, &slotMetrics);
+	selfIID = idx;
 
 	LOG_DBG_DTDM("type %u cnt %u id %u", desc->Type, slots, g_HeapIndex);
 
@@ -61,13 +55,10 @@ d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, D3D12_DESCRIPTOR_HEAP_DESC * 
 	slotsToCleanup = 0;
 
 	heapStartCache = heap->GetGPUDescriptorHandleForHeapStart();
-
-	++g_HeapIndex;
 }
 
 d912pxy_dheap::~d912pxy_dheap()
 {
-	m_logMetrics->Release();
 	free(slotFlags);
 }
 
@@ -89,9 +80,7 @@ UINT d912pxy_dheap::OccupySlot()
 		{
 			slotFlags[writeIdx] = D912PXY_DHEAP_SLOT_USED;
 			--slots;
-#ifdef FRAME_METRIC_DHEAP
-			m_logMetrics->Add(slotMetrics, slots);
-#endif
+			FRAME_METRIC_DHEAP(selfIID, slots)
 			return writeIdx;
 		}
 
@@ -137,9 +126,7 @@ void d912pxy_dheap::CleanupSlots(UINT count)
 		}
 	}
 
-#ifdef FRAME_METRIC_DHEAP
-	m_logMetrics->Add(slotMetrics, slots);
-#endif
+	FRAME_METRIC_DHEAP(selfIID, slots)
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE d912pxy_dheap::GetDHeapHandle(UINT slot)

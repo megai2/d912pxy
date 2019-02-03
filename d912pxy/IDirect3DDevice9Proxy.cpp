@@ -35,7 +35,7 @@ IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3DDevice9Proxy* chain)
 	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
 
 	wchar_t buf[1024];
-	wsprintf(buf, L"d3d9dev proxy cn %08lX %08lX", ((intptr_t)this) >> 32, (intptr_t)this & 0xFFFFFFFF);
+	wsprintf(buf, L"d3d9dev proxy chained %08lX %08lX", ((intptr_t)this) >> 32, (intptr_t)this & 0xFFFFFFFF);
 
 	log_trace = P7_Create_Trace(l_pClient, buf);	
 	l_pClient->Release();
@@ -61,7 +61,7 @@ IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevi
 	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
 
 	wchar_t buf[1024];
-	wsprintf(buf, L"d3d9dev proxy cn %08lX %08lX", ((intptr_t)this) >> 32, (intptr_t)this & 0xFFFFFFFF);
+	wsprintf(buf, L"d3d9dev proxy %08lX %08lX", ((intptr_t)this) >> 32, (intptr_t)this & 0xFFFFFFFF);
 
 	log_trace = P7_Create_Trace(l_pClient, buf);
 	l_pClient->Release();

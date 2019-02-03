@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_VSTREAM
+
 d912pxy_vbuf::d912pxy_vbuf(d912pxy_vstream * iBase) 
 {
 	base = iBase;
@@ -96,71 +98,4 @@ D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC *pDesc)
 }
 
 #undef D912PXY_METHOD_IMPL_CN
-
-/*
-
-void d912pxy_vbuf::ReformatDataForVDecl(UINT stride, UINT slot, d912pxy_vdecl * decl)
-{
-	if (opFlags & PXY_INNER_BUFFER_FLAG_REFMTD)
-		return;
-
-	D3DVERTEXELEMENT9* declEl;
-	UINT cnt;
-
-	declEl = decl->GetDeclarationPtr(&cnt);
-	--cnt;
-
-	for (int i = 0; i != cnt; ++i)
-	{
-		if (declEl[i].Stream != slot)
-			continue;
-
-		switch (declEl[i].Type)
-		{
-		case D3DDECLTYPE_D3DCOLOR:
-		{
-			UINT bIdx = 0;
-			UINT8* aaByte = (UINT8*)bufferMem;
-			while (bIdx < (dx9desc.Size - declEl[i].Offset - 3))
-			{				
-				//FMT for dxgi is ABGR
-				//DX9 really uses ARGB
-
-				UINT8 swap = 0;
-
-				UINT32 colorV = *(UINT32*)&aaByte[bIdx + declEl[i].Offset];
-
-				//  WW ZZ YY XX
-				//0xFF FF FF FF
-				// d3d color is 
-				//  AA RR GG BB				
-				//expands to 
-				//  AA BB GG RR
-
-				// so
-				// W = A
-				// Z = B
-				// Y = G
-				// X = R
-
-				//means we need to swap RR and BB
-
-				colorV = colorV & 0xFF00FF00 |
-					((colorV & 0xFF) << 16) | //move B to Z
-					((colorV & 0xFF0000) >> 16) //move R to X
-					;
-
-				*(UINT32*)&aaByte[bIdx + declEl[i].Offset] = colorV;
-
-				bIdx += stride;				
-			} 
-		}
-		break;
-		default:
-			;
-		}
-	}
-
-	opFlags |= PXY_INNER_BUFFER_FLAG_REFMTD;
-}
-*/
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

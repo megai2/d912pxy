@@ -26,6 +26,8 @@ SOFTWARE.
 
 d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iQueues, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom(dev, L"GPU queue"), d912pxy_thread()
 {
+	d912pxy_s(GPUque) = this;
+
 	mLists = new d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>(iQueues, 0);
 
 	InitializeCriticalSection(&execLock);
@@ -117,6 +119,7 @@ HRESULT d912pxy_gpu_que::ExecuteCommandsImm(UINT doSwap)
 HRESULT d912pxy_gpu_que::ExecuteCommands(UINT doSwap)
 {
 	HRESULT ret = 0;
+	FRAME_METRIC_EXEC(1)
 
 	WaitForIssuedWorkCompletion();
 	
@@ -158,6 +161,8 @@ HRESULT d912pxy_gpu_que::ExecuteCommands(UINT doSwap)
 		
 	//we have a new list setted up, so we can continue to commit data
 	m_dev->UnLockAsyncThreads();
+
+	FRAME_METRIC_EXEC(0)
 
 	return ret;
 }

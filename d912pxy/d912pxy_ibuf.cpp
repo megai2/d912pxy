@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_VSTREAM
+
 d912pxy_ibuf::d912pxy_ibuf(d912pxy_vstream* iBase) 
 {
 	base = iBase;	
@@ -87,3 +89,4 @@ D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DINDEXBUFFER_DESC *pDesc)
 }
 
 #undef D912PXY_METHOD_IMPL_CN
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

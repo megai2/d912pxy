@@ -34,7 +34,7 @@ SOFTWARE.
 class d912pxy_dheap : public d912pxy_noncom
 {
 public:
-	d912pxy_dheap(d912pxy_device* dev, D3D12_DESCRIPTOR_HEAP_DESC* desc);
+	d912pxy_dheap(d912pxy_device* dev, UINT idx);
 	~d912pxy_dheap();
 
 	UINT OccupySlot();
@@ -57,7 +57,7 @@ public:
 		return heap; 
 	};
 
-	D3D12_DESCRIPTOR_HEAP_DESC* GetDesc() {
+	const D3D12_DESCRIPTOR_HEAP_DESC* GetDesc() {
 		return m_desc;
 	}
 
@@ -77,11 +77,8 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuBase;
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuBase;
 
-	D3D12_DESCRIPTOR_HEAP_DESC* m_desc;
+	const D3D12_DESCRIPTOR_HEAP_DESC* m_desc;
 	
-	IP7_Telemetry* m_logMetrics;
-	tUINT8 slotMetrics;
-
 	D3D12_GPU_DESCRIPTOR_HANDLE heapStartCache;
 };
 

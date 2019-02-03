@@ -399,7 +399,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;FRAMEANALYZER_EXPORTS;_WINDOWS;_USRDLL;FRAME_METRICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;FRAMEANALYZER_EXPORTS;_WINDOWS;_USRDLL;ENABLE_METRICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -441,6 +441,7 @@
     <ClInclude Include="d912pxy_iframe.h" />
     <ClInclude Include="d912pxy_memtree.h" />
     <ClInclude Include="d912pxy_memtree2.h" />
+    <ClInclude Include="d912pxy_metrics.h" />
     <ClInclude Include="d912pxy_noncom.h" />
     <ClInclude Include="d912pxy_performance_graph.h" />
     <ClInclude Include="d912pxy_pool.h" />
@@ -505,6 +506,7 @@
     <ClCompile Include="d912pxy_iframe.cpp" />
     <ClCompile Include="d912pxy_memtree.cpp" />
     <ClCompile Include="d912pxy_memtree2.cpp" />
+    <ClCompile Include="d912pxy_metrics.cpp" />
     <ClCompile Include="d912pxy_noncom.cpp" />
     <ClCompile Include="d912pxy_performance_graph.cpp" />
     <ClCompile Include="d912pxy_pool.cpp" />

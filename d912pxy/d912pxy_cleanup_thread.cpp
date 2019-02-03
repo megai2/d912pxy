@@ -26,6 +26,8 @@ SOFTWARE.
 
 d912pxy_cleanup_thread::d912pxy_cleanup_thread(d912pxy_device* dev) : d912pxy_noncom(dev, L"delayed cleanup thread")
 {
+	d912pxy_s(thread_cleanup) = this;
+
 	buffer = new d912pxy_linked_list<d912pxy_comhandler*>();
 	SignalWork();
 }

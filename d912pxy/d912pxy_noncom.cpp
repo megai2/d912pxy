@@ -52,7 +52,10 @@ d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
 
 #ifdef DEBUG_LEAKOBJ
 	if (g_ObjectsCounter == 1)
+	{
 		gLeakMapLock = CreateMutex(0, 0, 0);
+		gLeakTracker.clear();
+	}
 	lkObjTrace = g_ObjectsCounter;
 	WaitForSingleObject(gLeakMapLock, INFINITE);
 	gLeakTracker[lkObjTrace] = logModule;

@@ -98,6 +98,7 @@ SOFTWARE.
 #define PXY_INNER_SHDR_BUG_COUNT 9
 #define PXY_INNER_SHDR_BUG_FILE_SIZE PXY_INNER_SHDR_BUG_COUNT * 4
 
+//#define ENABLE_METRICS
 //#define PERFORMANCE_GRAPH_WRITE_DX9
 //#define PERFORMANCE_GRAPH_WRITE
 //#define PER_BATCH_FLUSH_DEBUG 1
@@ -108,21 +109,23 @@ SOFTWARE.
 
 #ifdef _DEBUG
 	//#define TRACK_SHADER_BUGS_PROFILE
-	#define FRAME_METRICS
+	#define ENABLE_METRICS
 #endif
 
-#ifdef FRAME_METRICS
-	#define FRAME_METRIC_CLEANUPS
-	#define FRAME_METRIC_DHEAP
-	#define FRAME_METRIC_SYNC
-	#define FRAME_METRIC_PRESENT
-	#define FRAME_METRIC_API_OVERHEAD
-#endif
-
-#ifdef FRAME_METRIC_API_OVERHEAD
-	#define API_OVERHEAD_TRACK_START(a) UINT64 apioh_local_start = 0; QueryPerformanceCounter((LARGE_INTEGER*)&apioh_local_start);
-	#define API_OVERHEAD_TRACK_END(a) UINT64 apioh_local_end = 0; QueryPerformanceCounter((LARGE_INTEGER*)&apioh_local_end); d912pxy_device::apiOverhead += apioh_local_end - apioh_local_start;
+#ifdef ENABLE_METRICS
+	#define FRAME_METRIC_CLEANUPS(a) d912pxy_s(metrics)->TrackCleanupCount(a);
+	#define FRAME_METRIC_DHEAP(a,b) d912pxy_s(metrics)->TrackDHeapSlots(a,b);
+	#define FRAME_METRIC_EXEC(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_EXEC);
+	#define FRAME_METRIC_SYNC(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC);
+	#define FRAME_METRIC_PRESENT(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_PREP);
+	#define API_OVERHEAD_TRACK_START(a) d912pxy_s(metrics)->TrackAPIOverheadStart(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);
+	#define API_OVERHEAD_TRACK_END(a) d912pxy_s(metrics)->TrackAPIOverheadEnd(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);	
 #else 
+	#define FRAME_METRIC_CLEANUPS(a,b)
+	#define FRAME_METRIC_DHEAP(a,b)
+	#define FRAME_METRIC_EXEC(a) 
+	#define FRAME_METRIC_SYNC(a)
+	#define FRAME_METRIC_PRESENT(a) 
 	#define API_OVERHEAD_TRACK_START(a)
 	#define API_OVERHEAD_TRACK_END(a)
 #endif
@@ -140,6 +143,11 @@ SOFTWARE.
 #else 
 //#define ENABLE_DEBUG_LOGGING
 #endif
+
+#define LOG_INFO_DTDM(fmt, ...) (m_log->P7_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+#define LOG_ERR_DTDM(fmt, ...) (m_log->P7_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+
+#define LOG_INFO_DTDM2(code, fmt, ...) code; LOG_INFO_DTDM(fmt, __VA_ARGS__)
 
 #ifdef ENABLE_DEBUG_LOGGING
 #ifdef _DEBUG
@@ -206,6 +214,7 @@ class d912pxy_pso_cache;
 class d912pxy_batch;
 class d912pxy_pso_cache_item;
 class d912pxy_vfs;
+class d912pxy_metrics;
 struct d912pxy_trimmed_dx12_pso;
 
 typedef struct d912pxy_device_texture_state {
@@ -257,6 +266,7 @@ public:
 	static d912pxy_batch* batch;	
 	static d912pxy_vfs* vfs;
 	static d912pxy_device* dev;
+	static d912pxy_metrics* metrics;
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a

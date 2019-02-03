@@ -25,6 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_texture
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_TEXTURE
 
 d912pxy_texture::d912pxy_texture(d912pxy_device* dev, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format) : d912pxy_basetexture(dev)
 {
@@ -162,3 +163,4 @@ D912PXY_METHOD_IMPL(AddDirtyRect)(THIS_ CONST RECT* pDirtyRect)
 }
 
 #undef D912PXY_METHOD_IMPL_CN
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

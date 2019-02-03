@@ -24,43 +24,97 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-using namespace Microsoft::WRL;
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE
 
-UINT64 d912pxy_device::apiOverhead = 0;
+using namespace Microsoft::WRL;
 
 d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Proxy(dev), d912pxy_comhandler(L"device")
 {
 	d912pxy_s(dev) = this;
 
-	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
+	CopyOriginalDX9Data(dev);	
+	PrintInfoBanner();
 
-	IP7_Telemetry* tTel = P7_Create_Telemetry(l_pClient, TM("dheap stats"));
-	tTel->Share(L"tel_dheap");
+#ifdef ENABLE_METRICS
+	new d912pxy_metrics(this);
+	FRAME_METRIC_PRESENT(1)
+#endif
 
-	m_logMetrics = P7_Create_Telemetry(l_pClient, TM("iframe stats"));
-	m_logMetrics->Share(L"iframe_stats");
+	LOG_INFO_DTDM2(InitClassFields(),					"Startup step 1/9");
+	LOG_INFO_DTDM2(InitVFS(),							"Startup step 2/9");
+	LOG_INFO_DTDM2(InitThreadSyncObjects(),				"Startup step 3/9");
+	LOG_INFO_DTDM2(SetupDevice(SelectSuitableGPU()),	"Startup step 4/9");
+	LOG_INFO_DTDM2(InitDescriptorHeaps(),				"Startup step 5/9");
+	LOG_INFO_DTDM2(InitSingletons(),					"Startup step 6/9");
+	LOG_INFO_DTDM2(InitNullSRV(),						"Startup step 7/9");
+	LOG_INFO_DTDM2(InitDrawUPBuffers(),					"Startup step 8/9");
+	LOG_INFO_DTDM2(InitDefaultSwapChain(),				"Startup step 9/9");
+	LOG_INFO_DTDM2(d912pxy_s(iframe)->Start(),			"Started first IFrame");	
+}
 
-	m_logMetrics->Create(TM("iframe1 / DIP"), 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT, PXY_INNER_MAX_IFRAME_BATCH_COUNT/2, 1, &metricIFrameDraws);
-	m_logMetrics->Create(TM("iframe1 / GPU"), 0, 10000, 10000, 1, &metricIFrameExec);
-	m_logMetrics->Create(TM("iframe1 / CPU"), 0, 60000, 60000, 1, &metricIFramePrep);
-	m_logMetrics->Create(TM("iframe1 / AOH"), 0, 60000, 60000, 1, &metricIFrameAPIOverhead);
+d912pxy_device::~d912pxy_device(void)
+{	
+	LOG_INFO_DTDM("d912pxy exiting");
 
-	m_logMetrics->Create(TM("iframe2 / SYN"), 0, 5000, 5000, 1, &metricIFrameSync);
-	m_logMetrics->Create(TM("iframe2 / RPL"), 0, 5000, 5000, 1, &metricIFrameReplayTime);
+	LOG_INFO_DTDM2(d912pxy_s(CMDReplay)->Finish(),   "Replayer finished");
+	LOG_INFO_DTDM2(d912pxy_s(iframe)->End(),		 "Last iframe ended");
+	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(),		 "Additional DX9 objects freed");
+	LOG_INFO_DTDM2(d912pxy_s(GPUque)->Flush(0),      "Last gpu cmd lists flushed");
+	LOG_INFO_DTDM2(swapchains[0]->Release(),		 "Swapchain stopped");
 
-	m_logMetrics->Create(TM("iframe3 / PPB"), 0, 3000, 2000, 1, &metricIFramePrepPerBatch);
-	m_logMetrics->Create(TM("iframe3 / OPB"), 0, 3000, 2000, 1, &metricIFrameOverheadPerBatch);	
-	m_logMetrics->Create(TM("iframe3 / APT"), 0, 3000, 2000, 1, &metricIFrameAppCPU); 
+	//megai2: we have some tree like deletions of objects, so we must call this multiple times
+	for (int i = 0; i != 100; ++i)
+		d912pxy_s(GPUque)->Flush(0);
 
-	l_pClient->Release();
+	LOG_INFO_DTDM("Pending GPU cleanups processed");
+		
+	LOG_INFO_DTDM2(delete d912pxy_s(bufloadThread),		"Final cleanups  1/11");
+	LOG_INFO_DTDM2(delete d912pxy_s(iframe),			"Final cleanups  2/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(sdb),				"Final cleanups  3/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(thread_cleanup),	"Final cleanups  4/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(pool_vstream),		"Final cleanups  5/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(pool_upload),		"Final cleanups  6/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(pool_surface),		"Final cleanups  7/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(GPUque),			"Final cleanups  8/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(CMDReplay),			"Final cleanups  9/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups 10/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(vfs),				"Final cleanups 11/12");
+		
+	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
+		delete m_dheaps[i];
+
+	LOG_INFO_DTDM("Final cleanups 12/12");
 	
-	iframeExecTime = new Stopwatch();
-	iframePrepTime = new Stopwatch();
-	iframeReplTime = new Stopwatch();
-	iframeSyncTime = new Stopwatch();
+#ifdef ENABLE_METRICS
+	delete d912pxy_s(metrics);
+#endif
+	
+	LOG_INFO_DTDM("d912pxy exited");
 
-	m_dev = NULL;
+#ifdef _DEBUG
+	d912pxy_helper::d3d12_ReportLeaks();
+#endif
+}
 
+void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9Proxy* dev)
+{
+	LOG_DBG_DTDM("dx9 tmp device handling");
+
+	IDirect3DDevice9* tmpDev;
+	LOG_ERR_THROW(dev->PostInit(&tmpDev));
+
+	LOG_DBG_DTDM("dx9 tmp postini %016llX", tmpDev);
+
+	LOG_ERR_THROW(tmpDev->GetDeviceCaps(&cached_dx9caps));
+	LOG_ERR_THROW(tmpDev->GetDisplayMode(0, &cached_dx9displaymode));
+
+	dev->Release();
+
+	LOG_DBG_DTDM("dx9 tmp device ok");
+}
+
+void d912pxy_device::InitVFS()
+{
 	new d912pxy_vfs();
 
 	d912pxy_s(vfs)->SetRoot("./d912pxy/pck");
@@ -75,142 +129,42 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Pr
 		m_log->P7_ERROR(LGC_DEFAULT, TM("shader_profiles VFS not loaded"));
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
-	
+}
+
+void d912pxy_device::InitClassFields()
+{
 	ZeroMemory(swapchains, sizeof(intptr_t)*PXY_INNER_MAX_SWAP_CHAINS);
-	
-	LOG_DBG_DTDM("dx9 tmp device handling");	
-		
-	IDirect3DDevice9* tmpDev;
-	LOG_ERR_THROW(dev->PostInit(&tmpDev));	
+}
 
-	LOG_DBG_DTDM("dx9 tmp postini %016llX", tmpDev);
-	
-	LOG_ERR_THROW(tmpDev->GetDeviceCaps(&cached_dx9caps));
-
-	//if (origD3D_create_call.pPresentationParameters->Windowed)
-	LOG_ERR_THROW(tmpDev->GetDisplayMode(0, &cached_dx9displaymode));
-
-	//tmpDev->Release();
-	dev->Release();
-
-	LOG_DBG_DTDM("dx9 tmp device ok");
-
-	m_log->P7_INFO(LGC_DEFAULT, TM("d912pxy(Direct3D9 to Direct3D12 api proxy) loaded"));	
-	m_log->P7_INFO(LGC_DEFAULT, BUILD_VERSION_NAME);
-	m_log->P7_INFO(LGC_DEFAULT, TM("Batch Limit: %u"), PXY_INNER_MAX_IFRAME_BATCH_COUNT);
-	m_log->P7_INFO(LGC_DEFAULT, TM("Recreation Limit: %u"), PXY_INNER_MAX_IFRAME_CLEANUPS);
-	m_log->P7_INFO(LGC_DEFAULT, TM("TextureBind Limit: %u"), PXY_INNER_MAX_TEXTURE_STAGES);
-	m_log->P7_INFO(LGC_DEFAULT, TM("RenderTargets Limit: %u"), PXY_INNER_MAX_RENDER_TARGETS);
-	m_log->P7_INFO(LGC_DEFAULT, TM("ShaderConst Limit: %u"), PXY_INNER_MAX_SHADER_CONSTS);
-	m_log->P7_INFO(LGC_DEFAULT, TM("Streams Limit: %u"), PXY_INNER_MAX_VBUF_STREAMS);
-	
-	m_log->P7_INFO(LGC_DEFAULT, TM("!!!NOT INTENDED TO PERFORM ALL DIRECT3D9 FEATURES!!!"));
-	
-	d912pxy_helper::d3d12_EnableDebugLayer();
-
+void d912pxy_device::InitThreadSyncObjects()
+{
 	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)
 	{
 		InitializeCriticalSection(&threadLockdEvents[i]);
 	}
 	InitializeCriticalSection(&threadLock);
 	InitializeCriticalSection(&cleanupLock);
+}
 
-	ComPtr<IDXGIAdapter3> gpu = d912pxy_helper::GetAdapter();
-	
-	DXGI_ADAPTER_DESC2 pDesc;
-	LOG_ERR_THROW(gpu->GetDesc2(&pDesc));
+void d912pxy_device::InitSingletons()
+{
+	new d912pxy_gpu_que(this, 2, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
+	new d912pxy_replay(this);
+	new d912pxy_shader_db(this);
 
-	gpu_totalVidmemMB = (DWORD)pDesc.DedicatedVideoMemory >> 20;
-	
-	m_log->P7_INFO(LGC_DEFAULT, TM("GPU name: %s vidmem: %u Mb"), pDesc.Description, gpu_totalVidmemMB);
-	m_log->P7_INFO(LGC_DEFAULT, TM("original dx9 display mode width %u height %u"), cached_dx9displaymode.Width, cached_dx9displaymode.Height);
-
-	m_d12evice = d912pxy_helper::CreateDevice(gpu);	
-
-	m_d12evice_ptr = m_d12evice.Get();
-
-	d912pxy_s(DXDev) = m_d12evice_ptr;
-
-	D3D12_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT vaSizes;
-	m_d12evice->CheckFeatureSupport(D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT, &vaSizes, sizeof(vaSizes));
-
-	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
-
-	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
-	
-	m_log->P7_INFO(LGC_DEFAULT, TM("VA BPR %lu VA BPP %lu BU %u AR %u CR %u CU %u"), 
-		1 << (vaSizes.MaxGPUVirtualAddressBitsPerResource - 20), 1 << (vaSizes.MaxGPUVirtualAddressBitsPerProcess - 20), 
-		vaMem.Budget >> 20, vaMem.AvailableForReservation >> 20, vaMem.CurrentReservation >> 20, vaMem.CurrentUsage >> 20
-	);
-	
-	m_log->P7_INFO(LGC_DEFAULT, TM("Adapter Nodes: %u"), m_d12evice->GetNodeCount());
-
-	LOG_DBG_DTDM("dev %016llX", m_d12evice.Get());
-
-	//heaps
-	device_heap_config[PXY_INNER_HEAP_RTV] = { D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 0 };
-	device_heap_config[PXY_INNER_HEAP_DSV] = { D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 64, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 0 };
-	device_heap_config[PXY_INNER_HEAP_SRV] = { D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, PXY_INNER_MAX_IFRAME_BATCH_COUNT*10 + 1024, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 0 };
-	//device_heap_config[PXY_INNER_HEAP_CBV] = { D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 256, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 0 };
-	device_heap_config[PXY_INNER_HEAP_SPL] = { D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 64, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 0 };
-
-	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
-	{
-		m_dheaps[i] = new d912pxy_dheap(this, &device_heap_config[i]);
-	}
-
-	mGPUque = new d912pxy_gpu_que(this, 2, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
-
-	d912pxy_s(GPUque) = mGPUque;
-
-	replayer = new d912pxy_replay(this);
-	mShaderDB = new d912pxy_shader_db(this);
-
-	iframe = new d912pxy_iframe(this, m_dheaps);
-
-	d912pxy_s(iframe) = iframe;
-
+	new d912pxy_iframe(this, m_dheaps);
 	d912pxy_s(textureState)->SetStatePointer(&mTextureState);
 
-	texLoader = new d912pxy_texture_loader(this);
-	bufLoader = new d912pxy_buffer_loader(this);		
-	
-	swapchains[0] = NULL;
-
-	//origD3D_create_call.pPresentationParameters->Windowed = !origD3D_create_call.pPresentationParameters->Windowed;
-
-	if (!origD3D_create_call.pPresentationParameters->hDeviceWindow)
-		origD3D_create_call.pPresentationParameters->hDeviceWindow = origD3D_create_call.hFocusWindow;
-
-	if (!origD3D_create_call.pPresentationParameters->BackBufferHeight)
-		origD3D_create_call.pPresentationParameters->BackBufferHeight = 1;
-
-	if (!origD3D_create_call.pPresentationParameters->BackBufferWidth)
-		origD3D_create_call.pPresentationParameters->BackBufferWidth = 1;
-
-	swapchains[0] = new d912pxy_swapchain(
-		this,
-		0,
-		origD3D_create_call.pPresentationParameters->hDeviceWindow,
-		mGPUque->GetDXQue(),
-		origD3D_create_call.pPresentationParameters->BackBufferWidth,
-		origD3D_create_call.pPresentationParameters->BackBufferHeight,
-		origD3D_create_call.pPresentationParameters->BackBufferCount,
-		!origD3D_create_call.pPresentationParameters->Windowed,
-		(origD3D_create_call.pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE),
-		origD3D_create_call.pPresentationParameters->FullScreen_RefreshRateInHz
-	);
-
-	iframe->SetSwapper(swapchains[0]);
-
+	new d912pxy_texture_loader(this);
+	new d912pxy_buffer_loader(this);
 	new d912pxy_upload_pool(this);
 	new d912pxy_vstream_pool(this);
 	new d912pxy_surface_pool(this);
+	new d912pxy_cleanup_thread(this);
+}
 
-	d912pxy_s(thread_cleanup) = new d912pxy_cleanup_thread(this);
-
-	iframe->Start();
-
+void d912pxy_device::InitNullSRV()
+{
 	UINT uuLc = 1;
 	mNullTexture = new d912pxy_surface(this, 1, 1, D3DFMT_A8B8G8R8, 0, &uuLc, 6);
 	D3DLOCKED_RECT lr;
@@ -226,11 +180,14 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Pr
 
 	for (int i = 0; i != 16; ++i)
 		SetTexture(i, 0);
+}
 
+void d912pxy_device::InitDrawUPBuffers()
+{
 	UINT32 tmpUPbufSpace = 0xFFFF;
 
 	mDrawUPVbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace, 0, 0)->AsDX9VB();
-	mDrawUPIbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace *2, D3DFMT_INDEX16,1)->AsDX9IB();
+	mDrawUPIbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace * 2, D3DFMT_INDEX16, 1)->AsDX9IB();
 
 	UINT16* ibufDt;
 	mDrawUPIbuf->Lock(0, 0, (void**)&ibufDt, 0);
@@ -242,92 +199,103 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Pr
 
 	mDrawUPIbuf->Unlock();
 	mDrawUPStreamPtr = 0;
-
 }
 
-d912pxy_device::~d912pxy_device(void)
-{	
-	m_log->P7_INFO(LGC_DEFAULT, TM("d912pxy exiting"));
-
-	replayer->Finish();
-	m_log->P7_INFO(LGC_DEFAULT, TM("replayer finished"));
-
-	iframe->End();
-	m_log->P7_INFO(LGC_DEFAULT, TM("last iframe ended"));
-
+void d912pxy_device::FreeAdditionalDX9Objects()
+{
 	mDrawUPIbuf->Release();
 	mDrawUPVbuf->Release();
 	mNullTexture->Release();
+}
 
-	mGPUque->Flush(0);
-	m_log->P7_INFO(LGC_DEFAULT, TM("last gpu cmd lists flushed"));
-
-	swapchains[0]->Release();
-	m_log->P7_INFO(LGC_DEFAULT, TM("swapchain stopped"));
-
-	//megai2: we have some tree like deletions of objects, so we must call this multiple times
-	for (int i = 0; i != 100; ++i)
-		mGPUque->Flush(0);
-
-	m_log->P7_INFO(LGC_DEFAULT, TM("pending GPU cleanups processed"));
-
-	delete bufLoader;
-	m_log->P7_INFO(LGC_DEFAULT, TM("buffer load thread stopped"));
-
-	delete iframe;
-	m_log->P7_INFO(LGC_DEFAULT, TM("iframe deconstructed"));
-
-	delete mShaderDB;
-	m_log->P7_INFO(LGC_DEFAULT, TM("shader database freed"));
-
-	delete d912pxy_s(thread_cleanup);
-	m_log->P7_INFO(LGC_DEFAULT, TM("cleanup thread finished"));
-
-	delete d912pxy_s(pool_vstream);
-	m_log->P7_INFO(LGC_DEFAULT, TM("vstream pool freed"));
-
-	delete d912pxy_s(pool_upload);
-	m_log->P7_INFO(LGC_DEFAULT, TM("upload pool freed"));
-
-	delete d912pxy_s(pool_surface);
-	m_log->P7_INFO(LGC_DEFAULT, TM("surface pool freed"));
-
-	delete mGPUque;
-	m_log->P7_INFO(LGC_DEFAULT, TM("GPU queue freed"));
-
-	delete replayer;
-	m_log->P7_INFO(LGC_DEFAULT, TM("replay thread stopped"));
-
-	delete texLoader;		
-	m_log->P7_INFO(LGC_DEFAULT, TM("texture load thread stopped"));
-
-	delete iframeExecTime;
-	delete iframePrepTime;
-	delete iframeReplTime;
-	delete iframeSyncTime;
-
-	m_log->P7_INFO(LGC_DEFAULT, TM("stopwatches freed"));
-	
+void d912pxy_device::InitDescriptorHeaps()
+{
 	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
-		delete m_dheaps[i];
+	{
+		m_dheaps[i] = new d912pxy_dheap(this, i);
+	}
+}
 
-	m_log->P7_INFO(LGC_DEFAULT, TM("heaps deleted"));
+void d912pxy_device::PrintInfoBanner()
+{
+	LOG_INFO_DTDM("d912pxy(Direct3D9 to Direct3D12 api proxy) loaded");
+	LOG_INFO_DTDM(BUILD_VERSION_NAME);
+	LOG_INFO_DTDM("Batch Limit: %u", PXY_INNER_MAX_IFRAME_BATCH_COUNT);
+	LOG_INFO_DTDM("Recreation Limit: %u", PXY_INNER_MAX_IFRAME_CLEANUPS);
+	LOG_INFO_DTDM("TextureBind Limit: %u", PXY_INNER_MAX_TEXTURE_STAGES);
+	LOG_INFO_DTDM("RenderTargets Limit: %u", PXY_INNER_MAX_RENDER_TARGETS);
+	LOG_INFO_DTDM("ShaderConst Limit: %u", PXY_INNER_MAX_SHADER_CONSTS);
+	LOG_INFO_DTDM("Streams Limit: %u", PXY_INNER_MAX_VBUF_STREAMS);
+	LOG_INFO_DTDM("!!!NOT INTENDED TO PERFORM ALL DIRECT3D9 FEATURES!!!");
+	LOG_INFO_DTDM("DX9: original display mode width %u height %u", cached_dx9displaymode.Width, cached_dx9displaymode.Height);
+}
 
-	m_logMetrics->Release();
+void d912pxy_device::InitDefaultSwapChain()
+{
+	//origD3D_create_call.pPresentationParameters->Windowed = !origD3D_create_call.pPresentationParameters->Windowed;
 
-	m_log->P7_INFO(LGC_DEFAULT, TM("lock objects freed"));
+	if (!origD3D_create_call.pPresentationParameters->hDeviceWindow)
+		origD3D_create_call.pPresentationParameters->hDeviceWindow = origD3D_create_call.hFocusWindow;
 
-	m_log->P7_DEBUG(LGC_DEFAULT, TM("max encountered consts PS %u VS %u"), last_ps_fvconsts, last_vs_fvconsts);
+	if (!origD3D_create_call.pPresentationParameters->BackBufferHeight)
+		origD3D_create_call.pPresentationParameters->BackBufferHeight = 1;
 
-	m_log->P7_INFO(LGC_DEFAULT, TM("d912pxy vfs closed"));
+	if (!origD3D_create_call.pPresentationParameters->BackBufferWidth)
+		origD3D_create_call.pPresentationParameters->BackBufferWidth = 1;
 
-	delete d912pxy_s(vfs);
+	swapchains[0] = new d912pxy_swapchain(
+		this,
+		0,
+		origD3D_create_call.pPresentationParameters->hDeviceWindow,
+		d912pxy_s(GPUque)->GetDXQue(),
+		origD3D_create_call.pPresentationParameters->BackBufferWidth,
+		origD3D_create_call.pPresentationParameters->BackBufferHeight,
+		origD3D_create_call.pPresentationParameters->BackBufferCount,
+		!origD3D_create_call.pPresentationParameters->Windowed,
+		(origD3D_create_call.pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE),
+		origD3D_create_call.pPresentationParameters->FullScreen_RefreshRateInHz
+	);
+
+	d912pxy_s(iframe)->SetSwapper(swapchains[0]);
+}
+
+ComPtr<IDXGIAdapter3> d912pxy_device::SelectSuitableGPU()
+{
+	d912pxy_helper::d3d12_EnableDebugLayer();
+
+	ComPtr<IDXGIAdapter3> gpu = d912pxy_helper::GetAdapter();
 	
-	m_log->P7_INFO(LGC_DEFAULT, TM("d912pxy exited"));
+	DXGI_ADAPTER_DESC2 pDesc;
+	LOG_ERR_THROW(gpu->GetDesc2(&pDesc));
 
-#ifdef _DEBUG
-	d912pxy_helper::d3d12_ReportLeaks();
-#endif
+	gpu_totalVidmemMB = (DWORD)pDesc.DedicatedVideoMemory >> 20;
+	
+	m_log->P7_INFO(LGC_DEFAULT, TM("GPU name: %s vidmem: %u Mb"), pDesc.Description, gpu_totalVidmemMB);		
+
+	return gpu;
+}
+
+void d912pxy_device::SetupDevice(ComPtr<IDXGIAdapter3> gpu)
+{
+	m_d12evice = d912pxy_helper::CreateDevice(gpu);
+	m_d12evice_ptr = m_d12evice.Get();
+	d912pxy_s(DXDev) = m_d12evice_ptr;
+
+	D3D12_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT vaSizes;
+	m_d12evice->CheckFeatureSupport(D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT, &vaSizes, sizeof(vaSizes));
+
+	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
+
+	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
+
+	m_log->P7_INFO(LGC_DEFAULT, TM("VA BPR %lu VA BPP %lu BU %u AR %u CR %u CU %u"),
+		1 << (vaSizes.MaxGPUVirtualAddressBitsPerResource - 20), 1 << (vaSizes.MaxGPUVirtualAddressBitsPerProcess - 20),
+		vaMem.Budget >> 20, vaMem.AvailableForReservation >> 20, vaMem.CurrentReservation >> 20, vaMem.CurrentUsage >> 20
+	);
+
+	m_log->P7_INFO(LGC_DEFAULT, TM("Adapter Nodes: %u"), m_d12evice->GetNodeCount());
+
+	LOG_DBG_DTDM("dev %016llX", m_d12evice.Get());
 }
 
 HRESULT WINAPI d912pxy_device::QueryInterface(REFIID riid, void** ppvObj)
@@ -439,7 +407,7 @@ HRESULT WINAPI d912pxy_device::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS* 
 		if (swapchains[i])
 			continue;
 		
-		swapchains[i] = new d912pxy_swapchain(this, i, pPresentationParameters->hDeviceWindow, mGPUque->GetDXQue(), pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, pPresentationParameters->BackBufferCount, !pPresentationParameters->Windowed, pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, pPresentationParameters->FullScreen_RefreshRateInHz);
+		swapchains[i] = new d912pxy_swapchain(this, i, pPresentationParameters->hDeviceWindow, d912pxy_s(GPUque)->GetDXQue(), pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, pPresentationParameters->BackBufferCount, !pPresentationParameters->Windowed, pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, pPresentationParameters->FullScreen_RefreshRateInHz);
 
 		*pSwapChain = swapchains[i];
 
@@ -472,8 +440,8 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 
 	API_OVERHEAD_TRACK_START(0)
 
-	iframe->End();
-	mGPUque->Flush(0);
+	d912pxy_s(iframe)->End();
+	d912pxy_s(GPUque)->Flush(0);
 
 	//pPresentationParameters->Windowed = !pPresentationParameters->Windowed;
 	
@@ -483,7 +451,7 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 
 	swapchains[0]->Resize(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, !origD3D_create_call.pPresentationParameters->Windowed, (pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE));
 	
-	iframe->Start();
+	d912pxy_s(iframe)->Start();
 
 	API_OVERHEAD_TRACK_END(0)
 		
@@ -495,58 +463,28 @@ HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 	LOG_DBG_DTDM(__FUNCTION__);
 
 	API_OVERHEAD_TRACK_START(0)
+	d912pxy_s(iframe)->End();
+	API_OVERHEAD_TRACK_END(0)	
+	FRAME_METRIC_PRESENT(0)
 
-#ifdef FRAME_METRIC_PRESENT
-	iframeReplTime->Reset();
-#endif
-
-	iframe->End();
-
-#ifdef FRAME_METRIC_PRESENT
-	UINT64 replTime = iframeReplTime->Elapsed().count();
-#endif
+	LOG_DBG_DTDM2("Present Exec GPU");
+	HRESULT ret = d912pxy_s(GPUque)->ExecuteCommands(1);
 
 #ifdef PERFORMANCE_GRAPH_WRITE
 	perfGraph->RecordPresent(iframe->GetBatchCount());
 #endif
 
-#ifdef FRAME_METRIC_PRESENT
-	UINT64 prepCPUtime = iframePrepTime->Elapsed().count() - replTime;
-
-	m_logMetrics->Add(metricIFramePrep, prepCPUtime);
-	m_logMetrics->Add(metricIFrameReplayTime, replTime);
-	m_logMetrics->Add(metricIFrameDraws, iframe->GetBatchCount());
-
-	m_logMetrics->Add(metricIFramePrepPerBatch, prepCPUtime / (iframe->GetBatchCount()+1));
-
-#ifdef FRAME_METRIC_API_OVERHEAD
-
-	API_OVERHEAD_TRACK_END(0)
-
-	m_logMetrics->Add(metricIFrameAPIOverhead, d912pxy_device::apiOverhead);
-	m_logMetrics->Add(metricIFrameOverheadPerBatch, d912pxy_device::apiOverhead / (iframe->GetBatchCount() + 1));
-	m_logMetrics->Add(metricIFrameAppCPU, prepCPUtime - d912pxy_device::apiOverhead);
-
-	d912pxy_device::apiOverhead = 0;
-#endif
+#ifdef ENABLE_METRICS
+	d912pxy_s(metrics)->FlushIFrameValues();
+	d912pxy_s(metrics)->TrackDrawCount(d912pxy_s(iframe)->GetBatchCount());
+#endif 
 	
-	iframeExecTime->Reset();
-#endif
-
-	LOG_DBG_DTDM2("Present Exec GPU");
-
-	HRESULT ret = mGPUque->ExecuteCommands(1);
-
-#ifdef FRAME_METRIC_PRESENT
-	m_logMetrics->Add(metricIFrameExec, iframeExecTime->Elapsed().count());
-
-	iframePrepTime->Reset();
-#endif
-
+	FRAME_METRIC_PRESENT(1)
+	API_OVERHEAD_TRACK_START(0)
 	mDrawUPStreamPtr = 0;
+	d912pxy_s(iframe)->Start();
+	API_OVERHEAD_TRACK_END(0)	
 
-	iframe->Start();
-	
 	return ret;
 }
 
@@ -796,7 +734,7 @@ HRESULT WINAPI d912pxy_device::SetRenderTarget(DWORD RenderTargetIndex, IDirect3
 
 	d912pxy_surface* rtSurf = (d912pxy_surface*)pRenderTarget;
 
-	iframe->BindSurface(1 + RenderTargetIndex, rtSurf);
+	d912pxy_s(iframe)->BindSurface(1 + RenderTargetIndex, rtSurf);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -809,7 +747,7 @@ HRESULT WINAPI d912pxy_device::GetRenderTarget(DWORD RenderTargetIndex, IDirect3
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppRenderTarget = iframe->GetBindedSurface(RenderTargetIndex + 1);
+	*ppRenderTarget = d912pxy_s(iframe)->GetBindedSurface(RenderTargetIndex + 1);
 	(*ppRenderTarget)->AddRef();
 
 	API_OVERHEAD_TRACK_END(0)
@@ -823,7 +761,7 @@ HRESULT WINAPI d912pxy_device::SetDepthStencilSurface(IDirect3DSurface9* pNewZSt
 	
 	API_OVERHEAD_TRACK_START(0)
 
-	iframe->BindSurface(0, (d912pxy_surface*)pNewZStencil);
+	d912pxy_s(iframe)->BindSurface(0, (d912pxy_surface*)pNewZStencil);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -836,7 +774,7 @@ HRESULT WINAPI d912pxy_device::GetDepthStencilSurface(IDirect3DSurface9** ppZSte
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppZStencilSurface = iframe->GetBindedSurface(0);
+	*ppZStencilSurface = d912pxy_s(iframe)->GetBindedSurface(0);
 	(*ppZStencilSurface)->AddRef();	
 
 	API_OVERHEAD_TRACK_END(0)
@@ -852,7 +790,7 @@ HRESULT WINAPI d912pxy_device::SetScissorRect(CONST RECT* pRect)
 	
 	API_OVERHEAD_TRACK_START(0)
 
-	iframe->SetScissors((D3D12_RECT*)pRect);
+	d912pxy_s(iframe)->SetScissors((D3D12_RECT*)pRect);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -879,7 +817,7 @@ HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
 	main_viewport.MaxDepth = pViewport->MaxZ;
 	main_viewport.MinDepth = pViewport->MinZ;
 
-	iframe->SetViewport(&main_viewport);
+	d912pxy_s(iframe)->SetViewport(&main_viewport);
 
 	API_OVERHEAD_TRACK_END(0)
 	
@@ -908,7 +846,7 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 			return 343434;
 		break;
 		case D3DRS_STENCILREF:
-			replayer->OMStencilRef(Value);			
+			d912pxy_s(CMDReplay)->OMStencilRef(Value);
 		break; //57,   /* Reference value used in stencil test */
 
 		case D3DRS_BLENDFACTOR:
@@ -922,7 +860,7 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 				fvClra[i] = ((Color >> (i << 3)) & 0xFF) / 255.0f;
 			}
 
-			replayer->OMBlendFac(fvClra);
+			d912pxy_s(CMDReplay)->OMBlendFac(fvClra);
 		}
 		break; //193,   /* D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR */
 		
@@ -1112,10 +1050,10 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 			((Color >> 16) & 0xFF) / 255.0f
 		};
 
-		d912pxy_surface* surf = iframe->GetBindedSurface(1);
+		d912pxy_surface* surf = d912pxy_s(iframe)->GetBindedSurface(1);
 
 		if (surf)
-			replayer->RTClear(surf, fvColor);
+			d912pxy_s(CMDReplay)->RTClear(surf, fvColor);
 			//iframe->GetBindedSurface(1)->d912_rtv_clear(fvColor, Count, (D3D12_RECT*)pRects);//megai2: rect is 4 uint structure, may comply
 	}
 
@@ -1123,10 +1061,10 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 	{
 		DWORD cvtCf = ((D3D12_CLEAR_FLAG_DEPTH * ((Flags & D3DCLEAR_ZBUFFER) != 0)) | (D3D12_CLEAR_FLAG_STENCIL * ((Flags & D3DCLEAR_STENCIL) != 0)));
 
-		d912pxy_surface* surf = iframe->GetBindedSurface(0);
+		d912pxy_surface* surf = d912pxy_s(iframe)->GetBindedSurface(0);
 
 		if (surf)
-			replayer->DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf);
+			d912pxy_s(CMDReplay)->DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf);
 
 		//	surf->d912_dsv_clear(Z, Stencil & 0xFF, Count, (D3D12_RECT*)pRects, (D3D12_CLEAR_FLAGS)cvtCf);
 	}
@@ -1359,7 +1297,7 @@ HRESULT WINAPI d912pxy_device::CreateVertexShader(CONST DWORD* pFunction, IDirec
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppShader = (IDirect3DVertexShader9*)(new d912pxy_vshader(this, pFunction, mShaderDB));
+	*ppShader = (IDirect3DVertexShader9*)(new d912pxy_vshader(this, pFunction, d912pxy_s(sdb)));
 
 	API_OVERHEAD_TRACK_END(0)
 	
@@ -1397,7 +1335,7 @@ HRESULT WINAPI d912pxy_device::CreatePixelShader(CONST DWORD* pFunction, IDirect
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppShader = (IDirect3DPixelShader9*)(new d912pxy_pshader(this, pFunction, mShaderDB));
+	*ppShader = (IDirect3DPixelShader9*)(new d912pxy_pshader(this, pFunction, d912pxy_s(sdb)));
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -1437,9 +1375,6 @@ HRESULT WINAPI d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONS
 	API_OVERHEAD_TRACK_START(0)
 
 #ifdef _DEBUG
-	if (last_vs_fvconsts < ((StartRegister + Vector4fCount) << 2))
-		last_vs_fvconsts = (StartRegister + Vector4fCount) << 2;
-
 	if (PXY_INNER_MAX_SHADER_CONSTS <= ((StartRegister + Vector4fCount) * 4))
 	{
 		LOG_DBG_DTDM("too many shader consts, trimming");
@@ -1464,9 +1399,6 @@ HRESULT WINAPI d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST
 	API_OVERHEAD_TRACK_START(0)
 
 #ifdef _DEBUG
-	if (last_ps_fvconsts < ((StartRegister + Vector4fCount) << 2))
-		last_ps_fvconsts = (StartRegister + Vector4fCount) << 2;
-
 	if (PXY_INNER_MAX_SHADER_CONSTS <= ((StartRegister + Vector4fCount) * 4))
 	{
 		LOG_DBG_DTDM3("too many shader consts, trimming");
@@ -1505,7 +1437,7 @@ HRESULT WINAPI d912pxy_device::SetStreamSource(UINT StreamNumber, IDirect3DVerte
 	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
 		return D3DERR_INVALIDCALL;
 
-	iframe->SetVBuf((d912pxy_vbuf*)pStreamData, StreamNumber, OffsetInBytes, Stride);
+	d912pxy_s(iframe)->SetVBuf((d912pxy_vbuf*)pStreamData, StreamNumber, OffsetInBytes, Stride);
 
 	API_OVERHEAD_TRACK_END(0)
 	
@@ -1521,7 +1453,7 @@ HRESULT WINAPI d912pxy_device::SetStreamSourceFreq(UINT StreamNumber, UINT Divid
 	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
 		return D3DERR_INVALIDCALL;
 
-	iframe->SetStreamFreq(StreamNumber, Divider);
+	d912pxy_s(iframe)->SetStreamFreq(StreamNumber, Divider);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -1535,7 +1467,7 @@ HRESULT WINAPI d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 	API_OVERHEAD_TRACK_START(0)
 
 	if (pIndexData)
-		iframe->SetIBuf((d912pxy_ibuf*)pIndexData);
+		d912pxy_s(iframe)->SetIBuf((d912pxy_ibuf*)pIndexData);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -1570,7 +1502,7 @@ HRESULT WINAPI d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurf
 HRESULT WINAPI d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
 { 	
 	API_OVERHEAD_TRACK_START(0)
-	replayer->StretchRect((d912pxy_surface*)pSourceSurface, (d912pxy_surface*)pDestSurface);
+	d912pxy_s(CMDReplay)->StretchRect((d912pxy_surface*)pSourceSurface, (d912pxy_surface*)pDestSurface);
 	API_OVERHEAD_TRACK_END(0)
 
 	return D3D_OK; 
@@ -1633,23 +1565,23 @@ HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, U
 	memcpy(dstPtr, pVertexStreamZeroData, VertexStreamZeroStride * 3 * PrimitiveCount);
 	mDrawUPVbuf->Unlock();
 	
-	d912pxy_ibuf* oi = iframe->GetIBuf();
-	d912pxy_device_streamsrc oss = iframe->GetStreamSource(0);
-	d912pxy_device_streamsrc ossi = iframe->GetStreamSource(1);
+	d912pxy_ibuf* oi = d912pxy_s(iframe)->GetIBuf();
+	d912pxy_device_streamsrc oss = d912pxy_s(iframe)->GetStreamSource(0);
+	d912pxy_device_streamsrc ossi = d912pxy_s(iframe)->GetStreamSource(1);
 	
-	iframe->SetIBuf((d912pxy_ibuf*)mDrawUPIbuf);
-	iframe->SetVBuf((d912pxy_vbuf*)mDrawUPVbuf, 0, mDrawUPStreamPtr, VertexStreamZeroStride);	
-	iframe->SetStreamFreq(0, 1);
-	iframe->SetStreamFreq(1, 0);
+	d912pxy_s(iframe)->SetIBuf((d912pxy_ibuf*)mDrawUPIbuf);
+	d912pxy_s(iframe)->SetVBuf((d912pxy_vbuf*)mDrawUPVbuf, 0, mDrawUPStreamPtr, VertexStreamZeroStride);
+	d912pxy_s(iframe)->SetStreamFreq(0, 1);
+	d912pxy_s(iframe)->SetStreamFreq(1, 0);
 
 	mDrawUPStreamPtr += PrimitiveCount * 3 * VertexStreamZeroStride;
 
 	DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);
 	
-	iframe->SetIBuf(oi);
-	iframe->SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
-	iframe->SetStreamFreq(0, oss.divider);
-	iframe->SetStreamFreq(1, ossi.divider);
+	d912pxy_s(iframe)->SetIBuf(oi);
+	d912pxy_s(iframe)->SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
+	d912pxy_s(iframe)->SetStreamFreq(0, oss.divider);
+	d912pxy_s(iframe)->SetStreamFreq(1, ossi.divider);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -1693,7 +1625,7 @@ d912pxy_dheap * d912pxy_device::GetDHeap(UINT slot)
 void d912pxy_device::IFrameCleanupEnqeue(d912pxy_comhandler * obj)
 {
 	EnterCriticalSection(&cleanupLock);
-	mGPUque->EnqueueCleanup(obj);
+	d912pxy_s(GPUque)->EnqueueCleanup(obj);
 	LeaveCriticalSection(&cleanupLock);
 }
 
@@ -1715,17 +1647,15 @@ void d912pxy_device::InitLockThread(UINT thread)
 
 void d912pxy_device::LockAsyncThreads()
 {
-#ifdef FRAME_METRIC_SYNC
-	iframeSyncTime->Reset();	
-#endif
+	FRAME_METRIC_SYNC(1)
 
 	EnterCriticalSection(&threadLock);
 
 	InterlockedIncrement(&threadInterruptState);
 
-	texLoader->SignalWork();
-	bufLoader->SignalWork();
-	replayer->Finish();
+	d912pxy_s(texloadThread)->SignalWork();
+	d912pxy_s(bufloadThread)->SignalWork();
+	d912pxy_s(CMDReplay)->Finish();
 	//iframe->PSO()->SignalWork();
 
 	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)
@@ -1733,9 +1663,7 @@ void d912pxy_device::LockAsyncThreads()
 		EnterCriticalSection(&threadLockdEvents[i]);			
 	}
 	
-#ifdef FRAME_METRIC_SYNC
-	m_logMetrics->Add(metricIFrameSync, iframeSyncTime->Elapsed().count());
-#endif
+	FRAME_METRIC_SYNC(0)
 }
 
 void d912pxy_device::UnLockAsyncThreads()
@@ -1829,3 +1757,4 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 
 #endif
 
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

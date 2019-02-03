@@ -1,1 +1,1 @@
-#define BUILD_VERSION_NAME L"unknown" 
+#define BUILD_VERSION_NAME "unknown" 

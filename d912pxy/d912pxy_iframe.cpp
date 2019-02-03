@@ -26,6 +26,8 @@ SOFTWARE.
 
 d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d912pxy_noncom(dev, L"iframe")
 {
+	d912pxy_s(iframe) = this;
+
 	halfPixelFixWriteAdr = 0;
 
 	mHeaps = heaps;
