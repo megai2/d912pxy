@@ -131,14 +131,14 @@ HRESULT WINAPI IDirect3D9Proxy::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType
 	//Create fake for the device, using original device.
 	tmp = new IDirect3DDevice9Proxy(origIDirect3D9, cp);
 
+	HRESULT hres = tmp->PostInit(ppReturnedDeviceInterface);
+
 	d3d9ProxyCB_OnDevCreate cb = D3D9ProxyCb_get_OnDevCreate();
 
 	if (cb != NULL)
-		tmp = cb(tmp);
+		*ppReturnedDeviceInterface = cb(tmp, this);
+	else 
+		*ppReturnedDeviceInterface = tmp;
 
-	HRESULT hres = tmp->PostInit(ppReturnedDeviceInterface);
-
-	//Replace returned device with our fake class
-	*ppReturnedDeviceInterface = tmp;
-	return hres; 
+	return hres;
 }

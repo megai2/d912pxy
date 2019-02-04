@@ -30,32 +30,6 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3DDevice9Proxy* chain) 
-{
-	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
-
-	wchar_t buf[1024];
-	wsprintf(buf, L"d3d9dev proxy chained %08lX %08lX", ((intptr_t)this) >> 32, (intptr_t)this & 0xFFFFFFFF);
-
-	log_trace = P7_Create_Trace(l_pClient, buf);	
-	l_pClient->Release();
-	log_trace->Register_Module(L"pass", &log_module);
-
-	log_trace->P7_DEBUG(log_module, TM("chained oobj %016llX odev %016llX"), chain->origID3D9, chain->origIDirect3DDevice9);
-
-	origID3D9 = chain->origID3D9;
-	origIDirect3DDevice9 = chain->origIDirect3DDevice9;
-
-	origD3D_create_call = chain->origD3D_create_call;
-	memcpy(&origPP, origD3D_create_call.pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
-	origD3D_create_call.pPresentationParameters = &origPP;	
-
-#ifdef PERFORMANCE_GRAPH_WRITE
-	perfGraph = new d912pxy_performance_graph();
-	batchCnt = 0;
-#endif
-}
-
 IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevice9Proxy_create_params cp)
 {
 	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
@@ -122,7 +96,7 @@ ULONG IDirect3DDevice9Proxy::Release(void){
 
 		d3d9ProxyCB_OnDevDestroy cb = D3D9ProxyCb_get_OnDevDestroy();
 		if (cb)
-			cb(this);
+			cb((IDirect3DDevice9*)this);
 
 		delete(this);
 	}

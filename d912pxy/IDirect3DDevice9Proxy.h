@@ -42,8 +42,6 @@ typedef struct Direct3DDevice9Proxy_create_params {
 class IDirect3DDevice9Proxy : public IDirect3DDevice9
 {
 public:
-	IDirect3DDevice9Proxy(IDirect3DDevice9Proxy* chain);
-
 	IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevice9Proxy_create_params cp);
 	virtual ~IDirect3DDevice9Proxy(void);
 
@@ -195,5 +193,5 @@ protected:
 
 //callback for d3d9 dev creation
 
-typedef IDirect3DDevice9Proxy* (*d3d9ProxyCB_OnDevCreate)(IDirect3DDevice9Proxy* device);
-typedef void(*d3d9ProxyCB_OnDevDestroy)(IDirect3DDevice9Proxy* device);
+typedef IDirect3DDevice9* (*d3d9ProxyCB_OnDevCreate)(IDirect3DDevice9Proxy* device, IDirect3D9* obj);
+typedef void(*d3d9ProxyCB_OnDevDestroy)(IDirect3DDevice9* device);

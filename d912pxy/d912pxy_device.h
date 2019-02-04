@@ -34,10 +34,10 @@ static const D3D12_DESCRIPTOR_HEAP_DESC d912pxy_dx12_heap_config[PXY_INNER_MAX_D
 	{ D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 64, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 0 }
 };
 
-class d912pxy_device: public IDirect3DDevice9Proxy, public d912pxy_comhandler
+class d912pxy_device: public IDirect3DDevice9, public d912pxy_comhandler
 {
 public:
-	d912pxy_device(IDirect3DDevice9Proxy* dev);
+	d912pxy_device(IDirect3DDevice9* dev, IDirect3D9* dx9object);
 	virtual ~d912pxy_device(void);
 
 	HRESULT WINAPI QueryInterface (REFIID riid, void** ppvObj);
@@ -158,8 +158,7 @@ public:
 	HRESULT WINAPI DrawTriPatch(UINT Handle,CONST float* pNumSegs,CONST D3DTRIPATCH_INFO* pTriPatchInfo);
 	HRESULT WINAPI DeletePatch(UINT Handle);
 	HRESULT WINAPI CreateQuery(D3DQUERYTYPE Type,IDirect3DQuery9** ppQuery);
-
-	HRESULT PostInit(IDirect3DDevice9** realDev);
+	HRESULT WINAPI GetDirect3D(IDirect3D9** ppv);
 
 	ID3D12Device* GetDev12Ptr() { return m_d12evice_ptr;  }
 	D3D12_HEAP_PROPERTIES GetResourceHeap(D3D12_HEAP_TYPE Type);
@@ -176,7 +175,7 @@ public:
 
 	void TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId);
 
-	void CopyOriginalDX9Data(IDirect3DDevice9Proxy* dev);
+	void CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATION_PARAMETERS* origPars, D3DPRESENT_PARAMETERS* origPP);
 	void InitVFS();
 	void InitClassFields();
 	void InitThreadSyncObjects();
@@ -186,7 +185,7 @@ public:
 	void FreeAdditionalDX9Objects();
 	void InitDescriptorHeaps();
 	void PrintInfoBanner();
-	void InitDefaultSwapChain();
+	void InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters);
 
 	ComPtr<IDXGIAdapter3> SelectSuitableGPU();
 	void SetupDevice(ComPtr<IDXGIAdapter3> gpu);
@@ -216,6 +215,10 @@ private:
 	DWORD gpu_totalVidmemMB;
 	D3DDISPLAYMODE cached_dx9displaymode;
 	D3DCAPS9 cached_dx9caps;
+	D3DDEVICE_CREATION_PARAMETERS creationData;
+	D3DPRESENT_PARAMETERS initialPresentParameters;
+
+	IDirect3D9* baseDX9object;
 
 #ifdef TRACK_SHADER_BUGS_PROFILE
 	D3DFORMAT stageFormatsTrack[1024];

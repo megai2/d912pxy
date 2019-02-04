@@ -28,11 +28,13 @@ SOFTWARE.
 
 using namespace Microsoft::WRL;
 
-d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Proxy(dev), d912pxy_comhandler(L"device")
+d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, IDirect3D9* dx9object) : d912pxy_comhandler(L"device")
 {
 	d912pxy_s(dev) = this;
 
-	CopyOriginalDX9Data(dev);	
+	baseDX9object = dx9object;
+	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);	
+
 	PrintInfoBanner();
 
 #ifdef ENABLE_METRICS
@@ -40,16 +42,16 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9Proxy * dev) : IDirect3DDevice9Pr
 	FRAME_METRIC_PRESENT(1)
 #endif
 
-	LOG_INFO_DTDM2(InitClassFields(),					"Startup step 1/9");
-	LOG_INFO_DTDM2(InitVFS(),							"Startup step 2/9");
-	LOG_INFO_DTDM2(InitThreadSyncObjects(),				"Startup step 3/9");
-	LOG_INFO_DTDM2(SetupDevice(SelectSuitableGPU()),	"Startup step 4/9");
-	LOG_INFO_DTDM2(InitDescriptorHeaps(),				"Startup step 5/9");
-	LOG_INFO_DTDM2(InitSingletons(),					"Startup step 6/9");
-	LOG_INFO_DTDM2(InitNullSRV(),						"Startup step 7/9");
-	LOG_INFO_DTDM2(InitDrawUPBuffers(),					"Startup step 8/9");
-	LOG_INFO_DTDM2(InitDefaultSwapChain(),				"Startup step 9/9");
-	LOG_INFO_DTDM2(d912pxy_s(iframe)->Start(),			"Started first IFrame");	
+	LOG_INFO_DTDM2(InitClassFields(),									"Startup step 1/9");
+	LOG_INFO_DTDM2(InitVFS(),											"Startup step 2/9");
+	LOG_INFO_DTDM2(InitThreadSyncObjects(),								"Startup step 3/9");
+	LOG_INFO_DTDM2(SetupDevice(SelectSuitableGPU()),					"Startup step 4/9");
+	LOG_INFO_DTDM2(InitDescriptorHeaps(),								"Startup step 5/9");
+	LOG_INFO_DTDM2(InitSingletons(),									"Startup step 6/9");
+	LOG_INFO_DTDM2(InitNullSRV(),										"Startup step 7/9");
+	LOG_INFO_DTDM2(InitDrawUPBuffers(),									"Startup step 8/9");
+	LOG_INFO_DTDM2(InitDefaultSwapChain(&initialPresentParameters),		"Startup step 9/9");
+	LOG_INFO_DTDM2(d912pxy_s(iframe)->Start(),							"Started first IFrame");	
 }
 
 d912pxy_device::~d912pxy_device(void)
@@ -96,17 +98,28 @@ d912pxy_device::~d912pxy_device(void)
 #endif
 }
 
-void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9Proxy* dev)
+void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATION_PARAMETERS* origPars, D3DPRESENT_PARAMETERS* origPP)
 {
 	LOG_DBG_DTDM("dx9 tmp device handling");
 
-	IDirect3DDevice9* tmpDev;
-	LOG_ERR_THROW(dev->PostInit(&tmpDev));
+	LOG_ERR_THROW2(dev->GetCreationParameters(origPars), "dx9 dev->GetCreationParameters");
 
-	LOG_DBG_DTDM("dx9 tmp postini %016llX", tmpDev);
+	IDirect3DSwapChain9* dx9swc;
+	LOG_ERR_THROW2(dev->GetSwapChain(0, &dx9swc), "dx9 dev->GetSwapChain");
+	dx9swc->GetPresentParameters(origPP);
+	dx9swc->Release();
+	
+	if (!origPP->hDeviceWindow)
+		origPP->hDeviceWindow = origPars->hFocusWindow;
 
-	LOG_ERR_THROW(tmpDev->GetDeviceCaps(&cached_dx9caps));
-	LOG_ERR_THROW(tmpDev->GetDisplayMode(0, &cached_dx9displaymode));
+	if (!origPP->BackBufferHeight)
+		origPP->BackBufferHeight = 1;
+
+	if (!origPP->BackBufferWidth)
+		origPP->BackBufferWidth = 1;
+
+	LOG_ERR_THROW(dev->GetDeviceCaps(&cached_dx9caps));
+	LOG_ERR_THROW(dev->GetDisplayMode(0, &cached_dx9displaymode));
 
 	dev->Release();
 
@@ -230,30 +243,19 @@ void d912pxy_device::PrintInfoBanner()
 	LOG_INFO_DTDM("DX9: original display mode width %u height %u", cached_dx9displaymode.Width, cached_dx9displaymode.Height);
 }
 
-void d912pxy_device::InitDefaultSwapChain()
+void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
-	//origD3D_create_call.pPresentationParameters->Windowed = !origD3D_create_call.pPresentationParameters->Windowed;
-
-	if (!origD3D_create_call.pPresentationParameters->hDeviceWindow)
-		origD3D_create_call.pPresentationParameters->hDeviceWindow = origD3D_create_call.hFocusWindow;
-
-	if (!origD3D_create_call.pPresentationParameters->BackBufferHeight)
-		origD3D_create_call.pPresentationParameters->BackBufferHeight = 1;
-
-	if (!origD3D_create_call.pPresentationParameters->BackBufferWidth)
-		origD3D_create_call.pPresentationParameters->BackBufferWidth = 1;
-
 	swapchains[0] = new d912pxy_swapchain(
 		this,
 		0,
-		origD3D_create_call.pPresentationParameters->hDeviceWindow,
+		pPresentationParameters->hDeviceWindow,
 		d912pxy_s(GPUque)->GetDXQue(),
-		origD3D_create_call.pPresentationParameters->BackBufferWidth,
-		origD3D_create_call.pPresentationParameters->BackBufferHeight,
-		origD3D_create_call.pPresentationParameters->BackBufferCount,
-		!origD3D_create_call.pPresentationParameters->Windowed,
-		(origD3D_create_call.pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE),
-		origD3D_create_call.pPresentationParameters->FullScreen_RefreshRateInHz
+		pPresentationParameters->BackBufferWidth,
+		pPresentationParameters->BackBufferHeight,
+		pPresentationParameters->BackBufferCount,
+		!pPresentationParameters->Windowed,
+		(pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE),
+		pPresentationParameters->FullScreen_RefreshRateInHz
 	);
 
 	d912pxy_s(iframe)->SetSwapper(swapchains[0]);
@@ -351,14 +353,14 @@ HRESULT WINAPI d912pxy_device::GetDisplayMode(UINT iSwapChain, D3DDISPLAYMODE* p
 
 	if (iSwapChain == 0)
 	{
-		if (origD3D_create_call.pPresentationParameters->Windowed)
+		if (initialPresentParameters.Windowed)
 			memcpy(pMode, &cached_dx9displaymode, sizeof(D3DDISPLAYMODE));
 		else
 		{
-			pMode->Width = origD3D_create_call.pPresentationParameters->BackBufferWidth;
-			pMode->Height = origD3D_create_call.pPresentationParameters->BackBufferHeight;
-			pMode->RefreshRate = origD3D_create_call.pPresentationParameters->FullScreen_RefreshRateInHz;
-			pMode->Format = origD3D_create_call.pPresentationParameters->BackBufferFormat;
+			pMode->Width = initialPresentParameters.BackBufferWidth;
+			pMode->Height = initialPresentParameters.BackBufferHeight;
+			pMode->RefreshRate = initialPresentParameters.FullScreen_RefreshRateInHz;
+			pMode->Format = initialPresentParameters.BackBufferFormat;
 		}
 	} 
 	return D3D_OK;
@@ -370,10 +372,8 @@ HRESULT WINAPI d912pxy_device::GetCreationParameters(D3DDEVICE_CREATION_PARAMETE
 
 	if (!pParameters)
 		return D3DERR_INVALIDCALL;
-	pParameters->AdapterOrdinal = origD3D_create_call.Adapter;
-	pParameters->DeviceType = origD3D_create_call.DeviceType;
-	pParameters->hFocusWindow = origD3D_create_call.hFocusWindow;
-	pParameters->BehaviorFlags = origD3D_create_call.BehaviorFlags;
+
+	*pParameters = creationData;
 
 	return D3D_OK;
 }
@@ -449,7 +449,7 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 	
 	swapchains[0]->SetRefreshRate(pPresentationParameters->FullScreen_RefreshRateInHz);
 
-	swapchains[0]->Resize(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, !origD3D_create_call.pPresentationParameters->Windowed, (pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE));
+	swapchains[0]->Resize(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, !initialPresentParameters.Windowed, (pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE));
 	
 	d912pxy_s(iframe)->Start();
 
@@ -1493,6 +1493,12 @@ HRESULT WINAPI d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** 
 	return 0; 
 }
 
+HRESULT WINAPI d912pxy_device::GetDirect3D(IDirect3D9 ** ppv)
+{
+	*ppv = baseDX9object;
+	return D3D_OK;
+}
+
 //UNIMPLEMENTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 HRESULT WINAPI d912pxy_device::UpdateSurface(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, CONST POINT* pDestPoint) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
@@ -1596,12 +1602,6 @@ HRESULT WINAPI d912pxy_device::SetFVF(DWORD FVF) { LOG_DBG_DTDM(__FUNCTION__); r
 HRESULT WINAPI d912pxy_device::GetFVF(DWORD* pFVF) { LOG_DBG_DTDM(__FUNCTION__); return 0; }
 
 ////////////////////////////////////////////
-
-HRESULT d912pxy_device::PostInit(IDirect3DDevice9** realDev)
-{
-	//skip call to Id3d9
-	return D3D_OK;
-}
 
 D3D12_HEAP_PROPERTIES d912pxy_device::GetResourceHeap(D3D12_HEAP_TYPE Type)
 {

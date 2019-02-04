@@ -121,7 +121,7 @@ SOFTWARE.
 	#define API_OVERHEAD_TRACK_START(a) d912pxy_s(metrics)->TrackAPIOverheadStart(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);
 	#define API_OVERHEAD_TRACK_END(a) d912pxy_s(metrics)->TrackAPIOverheadEnd(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);	
 #else 
-	#define FRAME_METRIC_CLEANUPS(a,b)
+	#define FRAME_METRIC_CLEANUPS(a)
 	#define FRAME_METRIC_DHEAP(a,b)
 	#define FRAME_METRIC_EXEC(a) 
 	#define FRAME_METRIC_SYNC(a)
