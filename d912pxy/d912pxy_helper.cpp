@@ -38,7 +38,7 @@ IP7_Trace::hModule m_helperLGM;
 
 UINT s_crashLine = 0;
 
-D3D_FEATURE_LEVEL usingFeatures = D3D_FEATURE_LEVEL_11_0;
+D3D_FEATURE_LEVEL usingFeatures = D3D_FEATURE_LEVEL_11_1;
 
 void d912pxy_helper::ThrowIfFailed(HRESULT hr, const char* reason)
 {
