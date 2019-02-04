@@ -376,3 +376,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database 
 healthchecksdb
+
+# P7 dump file 
+*.p7d
