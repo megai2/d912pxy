@@ -28,11 +28,11 @@ SOFTWARE.
 
 using namespace Microsoft::WRL;
 
-d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, IDirect3D9* dx9object) : d912pxy_comhandler(L"device")
+d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(L"device")
 {
 	d912pxy_s(dev) = this;
+	initPtr = par;
 
-	baseDX9object = dx9object;
 	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);	
 
 	PrintInfoBanner();
@@ -100,30 +100,48 @@ d912pxy_device::~d912pxy_device(void)
 
 void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATION_PARAMETERS* origPars, D3DPRESENT_PARAMETERS* origPP)
 {
-	LOG_DBG_DTDM("dx9 tmp device handling");
+	if (dev)
+	{
+		LOG_INFO_DTDM("Using dx9 startup");
 
-	LOG_ERR_THROW2(dev->GetCreationParameters(origPars), "dx9 dev->GetCreationParameters");
+		LOG_DBG_DTDM("dx9 tmp device handling");
 
-	IDirect3DSwapChain9* dx9swc;
-	LOG_ERR_THROW2(dev->GetSwapChain(0, &dx9swc), "dx9 dev->GetSwapChain");
-	dx9swc->GetPresentParameters(origPP);
-	dx9swc->Release();
-	
-	if (!origPP->hDeviceWindow)
-		origPP->hDeviceWindow = origPars->hFocusWindow;
+		LOG_ERR_THROW2(dev->GetCreationParameters(origPars), "dx9 dev->GetCreationParameters");
 
-	if (!origPP->BackBufferHeight)
-		origPP->BackBufferHeight = 1;
+		IDirect3DSwapChain9* dx9swc;
+		LOG_ERR_THROW2(dev->GetSwapChain(0, &dx9swc), "dx9 dev->GetSwapChain");
+		dx9swc->GetPresentParameters(origPP);
+		dx9swc->Release();
 
-	if (!origPP->BackBufferWidth)
-		origPP->BackBufferWidth = 1;
+		if (!origPP->hDeviceWindow)
+			origPP->hDeviceWindow = origPars->hFocusWindow;
 
-	LOG_ERR_THROW(dev->GetDeviceCaps(&cached_dx9caps));
-	LOG_ERR_THROW(dev->GetDisplayMode(0, &cached_dx9displaymode));
+		if (!origPP->BackBufferHeight)
+			origPP->BackBufferHeight = 1;
 
-	dev->Release();
+		if (!origPP->BackBufferWidth)
+			origPP->BackBufferWidth = 1;
 
-	LOG_DBG_DTDM("dx9 tmp device ok");
+		LOG_ERR_THROW(dev->GetDeviceCaps(&cached_dx9caps));
+		LOG_ERR_THROW(dev->GetDisplayMode(0, &cached_dx9displaymode));
+
+		dev->Release();
+	} else {
+		LOG_INFO_DTDM("Using no-dx9 startup");
+
+		*origPP = *((D3DPRESENT_PARAMETERS*)initPtr);
+
+		ZeroMemory(&cached_dx9caps, sizeof(D3DCAPS9));
+		ZeroMemory(&cached_dx9displaymode, sizeof(D3DDISPLAYMODE));
+
+		//megai2: TODO 
+		//fill D3DCAPS9
+		//fill D3DDISPLAYMODE
+
+		initPtr = 0;
+	}
+
+	LOG_DBG_DTDM("Original DX9 data ackquried");
 }
 
 void d912pxy_device::InitVFS()
@@ -1495,7 +1513,7 @@ HRESULT WINAPI d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** 
 
 HRESULT WINAPI d912pxy_device::GetDirect3D(IDirect3D9 ** ppv)
 {
-	*ppv = baseDX9object;
+	*ppv = (IDirect3D9*)initPtr;
 	return D3D_OK;
 }
 

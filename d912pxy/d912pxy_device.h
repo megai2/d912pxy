@@ -37,7 +37,7 @@ static const D3D12_DESCRIPTOR_HEAP_DESC d912pxy_dx12_heap_config[PXY_INNER_MAX_D
 class d912pxy_device: public IDirect3DDevice9, public d912pxy_comhandler
 {
 public:
-	d912pxy_device(IDirect3DDevice9* dev, IDirect3D9* dx9object);
+	d912pxy_device(IDirect3DDevice9* dev, void* par);
 	virtual ~d912pxy_device(void);
 
 	HRESULT WINAPI QueryInterface (REFIID riid, void** ppvObj);
@@ -218,7 +218,7 @@ private:
 	D3DDEVICE_CREATION_PARAMETERS creationData;
 	D3DPRESENT_PARAMETERS initialPresentParameters;
 
-	IDirect3D9* baseDX9object;
+	void* initPtr;
 
 #ifdef TRACK_SHADER_BUGS_PROFILE
 	D3DFORMAT stageFormatsTrack[1024];
