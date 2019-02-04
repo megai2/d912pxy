@@ -7,6 +7,7 @@ public:
 	
 	Stopwatch()
 	{
+		QueryPerformanceFrequency(&Frequency);
 		Reset();
 	}
 
@@ -18,7 +19,7 @@ public:
 	UINT64 Elapsed()
 	{
 		QueryPerformanceCounter(&stopTime);
-		return stopTime.QuadPart - reset_time.QuadPart;
+		return (stopTime.QuadPart - reset_time.QuadPart) * 1000000 / Frequency.QuadPart;
 	}
 
 	UINT64 GetStopTime()
@@ -34,6 +35,7 @@ public:
 
 private:
 
+	LARGE_INTEGER Frequency;
 	LARGE_INTEGER stopTime;
 	LARGE_INTEGER reset_time;
 };
