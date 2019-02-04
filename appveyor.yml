@@ -18,7 +18,7 @@ platform: x64
 
 before_build:
 
-- cmd: 'echo #define BUILD_VERSION_NAME L"d912pxy version: %APPVEYOR_REPO_TAG_NAME% r%APPVEYOR_BUILD_NUMBER%"  > d912pxy\build_version.h'
+- cmd: 'echo #define BUILD_VERSION_NAME "d912pxy version: %APPVEYOR_REPO_TAG_NAME% r%APPVEYOR_BUILD_NUMBER%"  > d912pxy\build_version.h'
 
 build:
 
