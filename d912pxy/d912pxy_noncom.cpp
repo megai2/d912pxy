@@ -25,7 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 #ifdef _DEBUG
-UINT g_ObjectsCounter = 0;
+LONG g_ObjectsCounter = 0;
 
 #ifdef DEBUG_LEAKOBJ
 
@@ -47,16 +47,16 @@ d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
 	LOG_DBG_DTDM("new %s", logModule);
 
 #ifdef _DEBUG
-	++g_ObjectsCounter;
-	LOG_DBG_DTDM("obj %u is %s", g_ObjectsCounter, logModule);
+	LONG ouid = InterlockedIncrement(&g_ObjectsCounter);
+	LOG_DBG_DTDM("obj %u is %s", ouid, logModule);
 
 #ifdef DEBUG_LEAKOBJ
-	if (g_ObjectsCounter == 1)
+	if (ouid == 1)
 	{
 		gLeakMapLock = CreateMutex(0, 0, 0);
 		gLeakTracker.clear();
 	}
-	lkObjTrace = g_ObjectsCounter;
+	lkObjTrace = ouid;
 	WaitForSingleObject(gLeakMapLock, INFINITE);
 	gLeakTracker[lkObjTrace] = logModule;
 	ReleaseMutex(gLeakMapLock);
@@ -70,7 +70,7 @@ d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
 d912pxy_noncom::~d912pxy_noncom()
 {
 #ifdef _DEBUG	
-	--g_ObjectsCounter;
+	InterlockedDecrement(&g_ObjectsCounter);
 
 #ifdef DEBUG_LEAKOBJ
 	LOG_DBG_DTDM("Objs last = %u", g_ObjectsCounter);
