@@ -4,9 +4,7 @@
 class Stopwatch final
 {
 public:
-
-	using elapsed_resolution = std::chrono::microseconds;
-
+	
 	Stopwatch()
 	{
 		Reset();
@@ -14,29 +12,28 @@ public:
 
 	void Reset()
 	{
-		reset_time = clock.now();
+		QueryPerformanceCounter(&reset_time);
 	}
 
-	elapsed_resolution Elapsed()
+	UINT64 Elapsed()
 	{
-		return std::chrono::duration_cast<elapsed_resolution>(clock.now() - reset_time);
+		QueryPerformanceCounter(&stopTime);
+		return stopTime.QuadPart - reset_time.QuadPart;
 	}
 
-	elapsed_resolution GetStopTime()
+	UINT64 GetStopTime()
 	{
-		return stopTime;
+		return stopTime.QuadPart;
 	}
 
 
 	void Stop()
 	{
-		stopTime = Elapsed();
+		stopTime.QuadPart = Elapsed();
 	}
 
 private:
 
-	elapsed_resolution stopTime;
-
-	std::chrono::high_resolution_clock clock;
-	std::chrono::high_resolution_clock::time_point reset_time;
+	LARGE_INTEGER stopTime;
+	LARGE_INTEGER reset_time;
 };

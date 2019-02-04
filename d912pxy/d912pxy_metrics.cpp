@@ -83,7 +83,7 @@ void d912pxy_metrics::TrackAPIOverheadStart(UINT group)
 
 void d912pxy_metrics::TrackAPIOverheadEnd(UINT group)
 {
-	apiOverheadTotalTime[group] += apiOverheadTime[group]->Elapsed().count();
+	apiOverheadTotalTime[group] += apiOverheadTime[group]->Elapsed();
 }
 
 void d912pxy_metrics::TrackIFrameTime(UINT start, UINT group)
@@ -127,12 +127,12 @@ void d912pxy_metrics::FlushIFrameValues()
 	for (int i = 0; i != PXY_METRICS_IFRAME_COUNT; ++i)
 	{
 		if (i == PXY_METRICS_IFRAME_EXEC)
-			iframeMetrics->Add(metricIFrameTimes[i], iframeTime[i]->GetStopTime().count() - iframeTime[PXY_METRICS_IFRAME_SYNC]->GetStopTime().count());
+			iframeMetrics->Add(metricIFrameTimes[i], iframeTime[i]->GetStopTime() - iframeTime[PXY_METRICS_IFRAME_SYNC]->GetStopTime());
 		else 
-			iframeMetrics->Add(metricIFrameTimes[i], iframeTime[i]->GetStopTime().count());
+			iframeMetrics->Add(metricIFrameTimes[i], iframeTime[i]->GetStopTime());
 	}
 
-	iframeMetrics->Add(metricIFrameAppPrep, (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime().count() - apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT])*10000 / (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime().count() + 1));
-	iframeMetrics->Add(metricIFramePerBatchPrep, iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime().count() / (lastDraws + 1));
+	iframeMetrics->Add(metricIFrameAppPrep, (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() - apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT])*10000 / (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() + 1));
+	iframeMetrics->Add(metricIFramePerBatchPrep, iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() / (lastDraws + 1));
 	iframeMetrics->Add(metricIFramePerBatchOverhead, apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT] / (lastDraws + 1));
 }

@@ -72,7 +72,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 
 void d912pxy_performance_graph::RecordPresent(int batchCount)
 {
-	UINT64 r = frameTime.Elapsed().count();
+	UINT64 r = frameTime.Elapsed();
 
 	if (r > 0)
 	{
