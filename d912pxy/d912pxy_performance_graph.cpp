@@ -48,7 +48,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 		for (int k = 0; k != PXY_PERFGRPH_FRAMETIME_PTS; ++k)
 		{
 			int i = j + k * PXY_PERFGRPH_BATCH_PTS;
-			
+
 			double pv = (double)dataAcm[i] / ((double)maxValue2);
 			pv *= 256;
 
@@ -62,7 +62,12 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 				imgData[i * 3 + 0] = pvi;
 				imgData[i * 3 + 1] = pvi;
 				imgData[i * 3 + 2] = pvi;
+			} else {
+				imgData[i * 3 + 0] = 0;
+				imgData[i * 3 + 1] = 0;
+				imgData[i * 3 + 2] = 0;
 			}
+
 		}
 	}
 
