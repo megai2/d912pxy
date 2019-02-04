@@ -38,26 +38,31 @@ HINSTANCE hlD3D9 = 0;
 d3d9ProxyCB_OnDevCreate pxCb_devCreate = NULL;
 d3d9ProxyCB_OnDevDestroy pxCb_devDestroy = NULL;
 
+bool loadD3D9dll()
+{
+	//Get path to the original d3d9.dll
+	wchar_t infoBuf[4096];
+	GetSystemDirectory(infoBuf, 4096);
+	lstrcatW(infoBuf, L"\\d3d9.dll");
+
+	//And load it...
+	hlD3D9 = LoadLibrary(infoBuf);
+	if (!hlD3D9) {
+		MessageBox(NULL, L"Cannot find original d3d9.dll in the system directory!", L"D3D9 Proxy DLL error", MB_OK | MB_ICONERROR);
+		return FALSE;
+	}
+	else
+		return TRUE;
+}
+
 bool d3d9_proxy_dll_main(HINSTANCE hInst, DWORD reason, LPVOID)
 {
 	if (reason == DLL_PROCESS_ATTACH) {
 		hlThis = hInst;
-
-		//Get path to the original d3d9.dll
-		wchar_t infoBuf[MAX_PATH];
-		GetSystemDirectory(infoBuf, MAX_PATH);
-		lstrcatW(infoBuf, L"\\d3d9.dll");
-
-		//And load it...
-		hlD3D9 = LoadLibrary(infoBuf);
-		if (!hlD3D9) {
-			MessageBox(NULL, L"Cannot find original d3d9.dll in the system directory!", L"D3D9 Proxy DLL error", MB_OK | MB_ICONERROR);
-			return FALSE;
-		}
-
 	}
 	else if (reason == DLL_PROCESS_DETACH) {
-		FreeLibrary(hlD3D9);
+		if (hlD3D9)
+			FreeLibrary(hlD3D9);
 	}
 	return TRUE;
 }
@@ -83,6 +88,10 @@ extern "C" IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
 
 	//Recall original function
 	typedef IDirect3D9* (WINAPI* Direct3DCreate9Func)(UINT sdkver);
+
+	if (!hlD3D9)
+		loadD3D9dll();
+
 	Direct3DCreate9Func origDirect3DCreate9 = (Direct3DCreate9Func)GetProcAddress(hlD3D9, "Direct3DCreate9");
 	IDirect3D9* res = origDirect3DCreate9(SDKVersion);
 
@@ -97,10 +106,12 @@ extern "C" HRESULT WINAPI Direct3DCreate9Ex(
 	typedef HRESULT (WINAPI* Direct3DCreate9Ex_t)(UINT SDKVersion, IDirect3D9Ex ** ppD3D);
 
 	static Direct3DCreate9Ex_t _imp_Direct3DCreate9Ex = NULL;
-	HINSTANCE hD3D = hlD3D9;
 
-	if (hD3D && !_imp_Direct3DCreate9Ex) {
-		_imp_Direct3DCreate9Ex = (Direct3DCreate9Ex_t)GetProcAddress(hD3D, "Direct3DCreate9Ex");
+	if (!hlD3D9)
+		loadD3D9dll();
+
+	if (hlD3D9 && !_imp_Direct3DCreate9Ex) {
+		_imp_Direct3DCreate9Ex = (Direct3DCreate9Ex_t)GetProcAddress(hlD3D9, "Direct3DCreate9Ex");
 	}
 
 	if (_imp_Direct3DCreate9Ex)
@@ -115,10 +126,12 @@ extern "C" int WINAPI D3DPERF_BeginEvent(D3DCOLOR col, LPCWSTR wszName)
 
 	typedef int (WINAPI* BeginEvent_t)(D3DCOLOR, LPCWSTR);
 	static BeginEvent_t _imp_BeginEvent = NULL;
-	HINSTANCE hD3D = hlD3D9;
 
-	if (hD3D && !_imp_BeginEvent)
-		_imp_BeginEvent = (BeginEvent_t)GetProcAddress(hD3D, "D3DPERF_BeginEvent");
+	if (!hlD3D9)
+		loadD3D9dll();
+
+	if (hlD3D9 && !_imp_BeginEvent)
+		_imp_BeginEvent = (BeginEvent_t)GetProcAddress(hlD3D9, "D3DPERF_BeginEvent");
 
 	if (_imp_BeginEvent)
 		return _imp_BeginEvent(col, wszName);
@@ -131,10 +144,12 @@ extern "C" int WINAPI D3DPERF_EndEvent(void)
 
 	typedef int (WINAPI* EndEvent_t)(void);
 	static EndEvent_t _imp_EndEvent = NULL;
-	HINSTANCE hD3D = hlD3D9;
 
-	if (hD3D && !_imp_EndEvent)
-		_imp_EndEvent = (EndEvent_t)GetProcAddress(hD3D, "D3DPERF_EndEvent");
+	if (!hlD3D9)
+		loadD3D9dll();
+
+	if (hlD3D9 && !_imp_EndEvent)
+		_imp_EndEvent = (EndEvent_t)GetProcAddress(hlD3D9, "D3DPERF_EndEvent");
 
 	if (_imp_EndEvent)
 		return _imp_EndEvent();
@@ -147,10 +162,12 @@ extern "C" void WINAPI D3DPERF_SetMarker(D3DCOLOR col, LPCWSTR wszName)
 
 	typedef VOID(WINAPI* Direct3DSet_t)(D3DCOLOR, LPCWSTR);
 	static Direct3DSet_t _imp_SetMarker = NULL;
-	HINSTANCE hD3D = hlD3D9;
+	
+	if (!hlD3D9)
+		loadD3D9dll();
 
-	if (hD3D && !_imp_SetMarker)
-		_imp_SetMarker = (Direct3DSet_t)GetProcAddress(hD3D, "D3DPERF_SetMarker");
+	if (hlD3D9 && !_imp_SetMarker)
+		_imp_SetMarker = (Direct3DSet_t)GetProcAddress(hlD3D9, "D3DPERF_SetMarker");
 
 	if (_imp_SetMarker)
 		_imp_SetMarker(col, wszName);
@@ -161,10 +178,12 @@ extern "C" void WINAPI D3DPERF_SetRegion(D3DCOLOR col, LPCWSTR wszName)
 
 	typedef VOID(WINAPI* Direct3DSet_t)(D3DCOLOR, LPCWSTR);
 	static Direct3DSet_t _imp_SetRegion = NULL;
-	HINSTANCE hD3D = hlD3D9;
+	
+	if (!hlD3D9)
+		loadD3D9dll();
 
-	if (hD3D && !_imp_SetRegion)
-		_imp_SetRegion = (Direct3DSet_t)GetProcAddress(hD3D, "D3DPERF_SetRegion");
+	if (hlD3D9 && !_imp_SetRegion)
+		_imp_SetRegion = (Direct3DSet_t)GetProcAddress(hlD3D9, "D3DPERF_SetRegion");
 
 	if (_imp_SetRegion)
 		_imp_SetRegion(col, wszName);
@@ -175,10 +194,12 @@ extern "C" BOOL WINAPI D3DPERF_QueryRepeatFrame(void)
 
 	typedef BOOL(WINAPI* QueryRepeatFrame_t)(void);
 	static QueryRepeatFrame_t _imp_QueryRepeatFrame = NULL;
-	HINSTANCE hD3D = hlD3D9;
+	
+	if (!hlD3D9)
+		loadD3D9dll();
 
-	if (hD3D && !_imp_QueryRepeatFrame)
-		_imp_QueryRepeatFrame = (QueryRepeatFrame_t)GetProcAddress(hD3D, "D3DPERF_QueryRepeatFrame");
+	if (hlD3D9 && !_imp_QueryRepeatFrame)
+		_imp_QueryRepeatFrame = (QueryRepeatFrame_t)GetProcAddress(hlD3D9, "D3DPERF_QueryRepeatFrame");
 
 	if (_imp_QueryRepeatFrame)
 		return _imp_QueryRepeatFrame();
@@ -190,10 +211,12 @@ extern "C" void WINAPI D3DPERF_SetOptions(DWORD dwOptions)
 {
 	typedef void (WINAPI* SetOptions_t)(DWORD);
 	static SetOptions_t _imp_SetOptions = NULL;
-	HINSTANCE hD3D = hlD3D9;
+	
+	if (!hlD3D9)
+		loadD3D9dll();
 
-	if (hD3D && !_imp_SetOptions)
-		_imp_SetOptions = (SetOptions_t)GetProcAddress(hD3D, "D3DPERF_SetOptions");
+	if (hlD3D9 && !_imp_SetOptions)
+		_imp_SetOptions = (SetOptions_t)GetProcAddress(hlD3D9, "D3DPERF_SetOptions");
 
 	if (_imp_SetOptions)
 		_imp_SetOptions(dwOptions);
@@ -203,10 +226,12 @@ extern "C" DWORD WINAPI D3DPERF_GetStatus(void)
 {
 	typedef DWORD(WINAPI* GetStatus_t)(void);
 	static GetStatus_t _imp_GetStatus = NULL;
-	HINSTANCE hD3D = hlD3D9;
+	
+	if (!hlD3D9)
+		loadD3D9dll();
 
-	if (hD3D && !_imp_GetStatus)
-		_imp_GetStatus = (GetStatus_t)GetProcAddress(hD3D, "D3DPERF_GetStatus");
+	if (hlD3D9 && !_imp_GetStatus)
+		_imp_GetStatus = (GetStatus_t)GetProcAddress(hlD3D9, "D3DPERF_GetStatus");
 
 	if (_imp_GetStatus)
 		return _imp_GetStatus();

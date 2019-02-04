@@ -9,3 +9,4 @@ EXPORTS
 	D3DPERF_QueryRepeatFrame
 	D3DPERF_SetOptions
 	D3DPERF_GetStatus
+	CreateD912PXY
