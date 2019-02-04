@@ -42,6 +42,10 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comha
 	FRAME_METRIC_PRESENT(1)
 #endif
 
+#ifdef PERFORMANCE_GRAPH_WRITE
+	perfGraph = new d912pxy_performance_graph();
+#endif
+
 	LOG_INFO_DTDM2(InitClassFields(),									"Startup step 1/9");
 	LOG_INFO_DTDM2(InitVFS(),											"Startup step 2/9");
 	LOG_INFO_DTDM2(InitThreadSyncObjects(),								"Startup step 3/9");
@@ -89,6 +93,10 @@ d912pxy_device::~d912pxy_device(void)
 	
 #ifdef ENABLE_METRICS
 	delete d912pxy_s(metrics);
+#endif
+
+#ifdef PERFORMANCE_GRAPH_WRITE
+	delete perfGraph;
 #endif
 	
 	LOG_INFO_DTDM("d912pxy exited");
@@ -489,7 +497,7 @@ HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 	HRESULT ret = d912pxy_s(GPUque)->ExecuteCommands(1);
 
 #ifdef PERFORMANCE_GRAPH_WRITE
-	perfGraph->RecordPresent(iframe->GetBatchCount());
+	perfGraph->RecordPresent(d912pxy_s(iframe)->GetBatchCount());
 #endif
 
 #ifdef ENABLE_METRICS

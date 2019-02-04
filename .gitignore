@@ -379,3 +379,4 @@ healthchecksdb
 
 # P7 dump file 
 *.p7d
+bin/performance_graph.png

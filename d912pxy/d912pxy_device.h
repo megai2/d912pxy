@@ -220,6 +220,10 @@ private:
 
 	void* initPtr;
 
+#ifdef PERFORMANCE_GRAPH_WRITE	
+	d912pxy_performance_graph* perfGraph;
+#endif
+
 #ifdef TRACK_SHADER_BUGS_PROFILE
 	D3DFORMAT stageFormatsTrack[1024];
 #endif	
