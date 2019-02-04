@@ -58,7 +58,7 @@ d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom(dev, L"m
 
 	iframeMetrics->Create(TM("derived / prep per batch"), 0, 3000, 2000, 1, &metricIFramePerBatchPrep);
 	iframeMetrics->Create(TM("derived / overhead per batch"), 0, 3000, 2000, 1, &metricIFramePerBatchOverhead);
-	iframeMetrics->Create(TM("derived / app prep"), 0, 3000, 2000, 1, &metricIFrameAppPrep);
+	iframeMetrics->Create(TM("derived / app prep"), 0, 10000, 10000, 1, &metricIFrameAppPrep);
 
 	l_pClient->Release();
 
@@ -132,7 +132,7 @@ void d912pxy_metrics::FlushIFrameValues()
 			iframeMetrics->Add(metricIFrameTimes[i], iframeTime[i]->GetStopTime().count());
 	}
 
-	iframeMetrics->Add(metricIFrameAppPrep, iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime().count() - apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT]);
+	iframeMetrics->Add(metricIFrameAppPrep, (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime().count() - apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT])*10000 / (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime().count() + 1));
 	iframeMetrics->Add(metricIFramePerBatchPrep, iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime().count() / (lastDraws + 1));
 	iframeMetrics->Add(metricIFramePerBatchOverhead, apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT] / (lastDraws + 1));
 }

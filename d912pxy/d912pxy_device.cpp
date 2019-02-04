@@ -475,8 +475,8 @@ HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 #endif
 
 #ifdef ENABLE_METRICS
-	d912pxy_s(metrics)->FlushIFrameValues();
 	d912pxy_s(metrics)->TrackDrawCount(d912pxy_s(iframe)->GetBatchCount());
+	d912pxy_s(metrics)->FlushIFrameValues();	
 #endif 
 	
 	FRAME_METRIC_PRESENT(1)
