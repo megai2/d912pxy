@@ -48,7 +48,7 @@ d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, UINT idx) : d912pxy_noncom(de
 
 	selfIID = idx;
 
-	LOG_DBG_DTDM("type %u cnt %u id %u", desc->Type, slots, g_HeapIndex);
+	LOG_DBG_DTDM("type %u cnt %u id %u", desc->Type, slots, selfIID);
 
 	writeIdx = 0;
 	cleanIdx = 0;
