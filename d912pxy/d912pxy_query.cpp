@@ -71,6 +71,9 @@ D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFla
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
+	if (dwSize == 4)
+		((DWORD*)pData)[0] = 1;
+
 	return S_OK;
 }
 

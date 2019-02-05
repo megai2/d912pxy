@@ -379,4 +379,9 @@ healthchecksdb
 
 # P7 dump file 
 *.p7d
+
+# debug runs output / debug related
 bin/performance_graph.png
+bin/d912pxy_crash.txt
+*.hlsl
+*.cap
