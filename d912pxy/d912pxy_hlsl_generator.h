@@ -44,6 +44,23 @@ SOFTWARE.
 #define HLSL_HIO_PRIOG_END 31
 #define HLSL_HIO_PRIORITY(a,b) d912pxy_hlsl_generator_head_priority_group_size * a + b
 
+static const UINT HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[] = {
+	1,//D3DDECLUSAGE_POSITION = 0,
+	2,//D3DDECLUSAGE_BLENDWEIGHT,   // 1
+	3,//D3DDECLUSAGE_BLENDINDICES,  // 2
+	4,//D3DDECLUSAGE_NORMAL,        // 3
+	5,//D3DDECLUSAGE_PSIZE,         // 4
+	14,//D3DDECLUSAGE_TEXCOORD,      // 5
+	6,//D3DDECLUSAGE_TANGENT,       // 6
+	7,//D3DDECLUSAGE_BINORMAL,      // 7
+	8,//D3DDECLUSAGE_TESSFACTOR,    // 8
+	9,//D3DDECLUSAGE_POSITIONT,     // 9
+	10,//D3DDECLUSAGE_COLOR,         // 10
+	15,//D3DDECLUSAGE_FOG,           // 11
+	12,//D3DDECLUSAGE_DEPTH,         // 12
+	13//D3DDECLUSAGE_SAMPLE// 13
+};
+
 #define HLSL_GEN_WRITE_PROC_PD(fmt, ...) WriteProcLinePredef(fmt, __VA_ARGS__)
 #define HLSL_GEN_WRITE_PROC(fmt, ...) WriteProcLine(fmt, __VA_ARGS__)
 #define HLSL_GEN_WRITE_HEADI(prio, fmt, ...) WriteHeadILine(prio, fmt, __VA_ARGS__)

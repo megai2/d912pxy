@@ -1477,14 +1477,14 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					UINT dclId = ((op[1] >> 16) & 0xF);
 					UINT usageType = op[1] & 0x1F;
 					HLSL_GEN_WRITE_HEADI(
-						HLSL_HIO_PRIORITY(usageType+1, dclId),
+						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId),
 						"	float4 %s%u: %s%u;",
 						d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(usageType,1), dclId
 					);
 
 					if (dclId > 0)
 					{
-						UINT itr = (HLSL_HIO_PRIORITY(usageType + 1, dclId) + headerOffsetI);
+						UINT itr = (HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId) + headerOffsetI);
 						do
 						{
 							--itr;
@@ -1704,8 +1704,8 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					else {
 						UINT dclId = (op[1] >> 16) & 0xF;
 						UINT usageType = op[1] & 0x1F;
-						HLSL_GEN_WRITE_HEADO(
-							HLSL_HIO_PRIORITY(usageType+1, dclId),
+						HLSL_GEN_WRITE_HEADO(							
+							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId),
 							"	float4 %s%u: %s%u;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(usageType, 1), dclId
 						);
