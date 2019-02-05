@@ -155,7 +155,9 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfol
 		ret2.sz = ret->GetBufferSize();
 		ret2.blob = ret;
 
+#ifndef _DEBUG
 		DeleteFile(replFn);
+#endif
 
 		return ret2;
 	}
