@@ -69,13 +69,13 @@ HRESULT d912pxy_gpu_que::ExecuteCurrentGPUWork(UINT doSwap)
 
 	if (doSwap)
 	{
-		mSwp->CopyToDXGI(mCurrentGPUWork->GID(CLG_SEQ).Get());
+		mSwp->CopyFrameToDXGI(mCurrentGPUWork->GID(CLG_SEQ).Get());
 	}
 
 	mCurrentGPUWork->Execute();
 
 	if (doSwap)
-		ret = mSwp->AsyncSwapExec();
+		ret = mSwp->Swap();
 	else
 		ret = D3D_OK;
 
@@ -149,7 +149,7 @@ HRESULT d912pxy_gpu_que::ExecuteCommands(UINT doSwap)
 		swapAsked = doSwap;
 		if (mSwp)
 		{
-			ret = mSwp->AsyncSwapNote();
+			ret = mSwp->SwapCheck();
 			if (ret != S_OK)
 				swapAsked = 0;
 		}

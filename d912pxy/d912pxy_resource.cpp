@@ -241,10 +241,12 @@ void d912pxy_resource::UpdateDescCache()
 
 void d912pxy_resource::EvictFromGPU()
 {
-	ID3D12Pageable* mr = (ID3D12Pageable*)m_res.Get();
-	d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->Evict(1, &mr), "Evict");
-
-	evicted = 1;
+	if (!evicted)
+	{
+		ID3D12Pageable* mr = (ID3D12Pageable*)m_res.Get();
+		d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->Evict(1, &mr), "Evict");
+		evicted = 1;
+	}
 }
 
 void d912pxy_resource::MakeGPUResident()
@@ -321,6 +323,20 @@ void d912pxy_resource::IFrameBarrierTrans2(UINT subres, D3D12_RESOURCE_STATES to
 	cl->ResourceBarrier(1, &bar);	
 }
 
+void d912pxy_resource::IFrameBarrierTrans3(UINT subres, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from, ID3D12GraphicsCommandList * cl, ComPtr<ID3D12Resource> res)
+{
+	D3D12_RESOURCE_BARRIER bar;
+
+	bar.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	bar.Transition.pResource = res.Get();
+	bar.Transition.StateBefore = from;
+	bar.Transition.StateAfter = to;
+	bar.Transition.Subresource = subres;
+	bar.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+	cl->ResourceBarrier(1, &bar);
+}
+
 void d912pxy_resource::IFrameTrans(D3D12_RESOURCE_STATES to)
 {
 	LOG_DBG_DTDM("abarrier %016llX to %u from %u", m_res.Get(), to, stateCache);
@@ -330,6 +346,11 @@ void d912pxy_resource::IFrameTrans(D3D12_RESOURCE_STATES to)
 void d912pxy_resource::CopyTo2(d912pxy_resource * dst, ID3D12GraphicsCommandList * cq)
 {
 	cq->CopyResource(dst->GetD12Obj().Get(), m_res.Get());
+}
+
+void d912pxy_resource::CopyTo3(ComPtr<ID3D12Resource> dst, ID3D12GraphicsCommandList * cq)
+{
+	cq->CopyResource(dst.Get(), m_res.Get());
 }
 
 void d912pxy_resource::CopyTo(d912pxy_resource * dst, UINT srcIsReady, ID3D12GraphicsCommandList* cq)

@@ -420,16 +420,6 @@ DXGI_FORMAT d912pxy_surface::ConvertInnerDSVFormat()
 	}
 }
 
-d912pxy_surface * d912pxy_surface::CheckRTV()
-{
-	if (backBuffer)
-	{
-		return backBuffer->GetRTBackBuffer();
-	}
-
-	return this;
-}
-
 void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 {
 	d912pxy_upload_item* ul = d912pxy_s(pool_upload)->GetUploadObject(subresFootprints[lv].Footprint.RowPitch*subresFootprints[lv].Footprint.Height);

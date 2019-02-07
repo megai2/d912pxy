@@ -26,10 +26,40 @@ SOFTWARE.
 
 #include "stdafx.h"
 
+typedef enum d912pxy_swapchain_state {
+	SWCS_SETUP = 0,
+	SWCS_INIT_ERROR,
+	SWCS_SWAPPABLE,
+	SWCS_SWAPPABLE_EXCLUSIVE,
+	SWCS_RECONFIGURE,
+	SWCS_SWAP_ERROR,
+	SWCS_FOCUS_LOST_SWITCH,
+	SWCS_FOCUS_LOST,
+	SWCS_FOCUS_PENDING,
+	SWCS_RESETUP,
+	SWCS_SHUTDOWN,
+	SWCS_COUNT
+} d912pxy_swapchain_state;
+
+static const char* d912pxy_swapchain_state_names[] = {
+	"SWCS_SETUP",
+	"SWCS_INIT_ERROR",
+	"SWCS_SWAPPABLE",
+	"SWCS_SWAPPABLE_EXCLUSIVE",
+	"SWCS_RECONFIGURE",
+	"SWCS_SWAP_ERROR",
+	"SWCS_FOCUS_LOST_SWITCH",
+	"SWCS_FOCUS_LOST",
+	"SWCS_FOCUS_PENDING",
+	"SWCS_RESETUP",
+	"SWCS_SHUTDOWN",
+	"SWCS_COUNT"
+};
+
 class d912pxy_swapchain : public d912pxy_comhandler, public IDirect3DSwapChain9
 {
 public:
-	d912pxy_swapchain(d912pxy_device* dev, int index, HWND hWnd, ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount, BOOL Fullscreen, UINT i_vSync, UINT i_refreshHz);
+	d912pxy_swapchain(d912pxy_device* dev, int index, D3DPRESENT_PARAMETERS* in_pp);
 	virtual ~d912pxy_swapchain();
 
 	HRESULT WINAPI QueryInterface(REFIID riid, void** ppvObj);
@@ -47,55 +77,68 @@ public:
 
 	///
 
-	void SetRefreshRate(UINT hz);
-
-	void SetFullscreen(UINT fullscreen);
-
-	ComPtr<IDXGISwapChain4> GetD12swpc();
+	HRESULT SetPresentParameters(D3DPRESENT_PARAMETERS* pp);
 
 	void StartFrame();
 	void EndFrame();
 
-	d912pxy_surface* GetRTBackBuffer();
-
-	void Resize(UINT width, UINT height, UINT fullscreen, UINT newVSync);
-
-
 	HRESULT TestCoopLevel();
-
 	HRESULT Swap();
+	HRESULT SwapCheck();
 
-	HRESULT AsyncSwapNote();
-	HRESULT AsyncSwapExec();
+	void CopyFrameToDXGI(ID3D12GraphicsCommandList* cl);
 
-	void CopyToDXGI(ID3D12GraphicsCommandList* cl);
+	void SetGammaRamp(DWORD Flags, CONST D3DGAMMARAMP* pRamp);
+	void GetGammaRamp(D3DGAMMARAMP* pRamp);
 
-private:
-	DWORD m_idx;
-	HWND m_hwnd;
+private:	
+	void ChangeState(d912pxy_swapchain_state newState);
 
-	UINT vSync;
+	void ThrowCritialError(HRESULT ret, const char* msg);
+	
+	void ResetFrameTargets();
+	void FreeFrameTargets();
+	void FixPresentParameters();
 
-	d912pxy_device* m_dev;
-
-	d912pxy_surface* dxgiBackBuffer[4];
+	D3DPRESENT_PARAMETERS currentPP;
+	D3DPRESENT_PARAMETERS oldPP;
 
 	d912pxy_surface* backBufferSurface;
 	d912pxy_surface* depthStencilSurface;
+
+	d912pxy_swapchain_state state;	
+	HRESULT swapCheckValue;
+	UINT errorCount;
+	HRESULT (d912pxy_swapchain::*swapHandlers[SWCS_COUNT])();
+
+	HRESULT SwapHandle_Default();	
+	HRESULT SwapHandle_Setup();
+	HRESULT SwapHandle_Init_Error();
+	HRESULT SwapHandle_Swappable();
+	HRESULT SwapHandle_Swappable_Exclusive();
+	HRESULT SwapHandle_Reconfigure();
+	HRESULT SwapHandle_Swap_Error();
+	HRESULT SwapHandle_Focus_Lost();
+	HRESULT SwapHandle_ReSetup();
+	HRESULT SwapHandle_Focus_Pending();
+	HRESULT SwapHandle_Focus_Lost_Switch();
 	
-	UINT totalBackBuffers;
+	//DXGI related
+	bool InitDXGISwapChain();
+	void FreeDXGISwapChain();
+	bool GetDXGIBuffers();
+	void FreeDXGISwapChainReferences();
+	bool ChangeDXGISwapChain();
+	bool SetDXGIFullscreen();	
+	DXGI_FORMAT GetDXGIFormatForBackBuffer(D3DFORMAT fmt);
 
-	UINT isFullscreen;
-	UINT m_width;
-	UINT m_height;
-	UINT m_flags;
-	UINT m_refreshRateHz;
-	
-	UINT markedAsLostOnFullscreen;
+	void CacheDXGITearingSupport();
 
-	ComPtr<IDXGISwapChain4> m_d12swp;
-	ComPtr<ID3D12Fence> fence;
-
-	HANDLE fenceEvent;
+	ComPtr<IDXGISwapChain4> dxgiSwapchain;
+	ComPtr<ID3D12Resource> dxgiBackBuffer[4];	
+	UINT dxgiResizeFlags;
+	UINT dxgiPresentFlags;
+	UINT dxgiTearingSupported;
+	UINT dxgiBuffersCount;
 };
 

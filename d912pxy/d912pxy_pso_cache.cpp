@@ -86,6 +86,7 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 	State(D3DRS_STENCILFUNC, 8);
 	
 	dirty = 1;
+	externalLock = 0;
 
 	psoCompileBuffer = new d912pxy_ringbuffer<d912pxy_pso_cache_item*>(0xFFFF, 0);	
 }
@@ -497,17 +498,22 @@ d912pxy_vshader * d912pxy_pso_cache::GetVShader()
 
 void d912pxy_pso_cache::ThreadJob()
 {
+	while (InterlockedAdd(&externalLock, 0))
+	{
+		Sleep(1000);
+	}
+
 	while (psoCompileBuffer->HaveElements())
 	{
 		d912pxy_pso_cache_item* it = psoCompileBuffer->GetElement();
 
 		it->Compile();
-
+		
 		psoCompileBuffer->Next();
 	}
 
 	ProcessShaderCleanup();
-
+	
 	/*if (m_dev->InterruptThreads())
 	{
 		m_dev->LockThread(PXY_INNER_THREADID_PSO_COMPILER);
@@ -549,6 +555,11 @@ void d912pxy_pso_cache::CompileItem(d912pxy_pso_cache_item * item)
 UINT d912pxy_pso_cache::IsCompileQueueFree()
 {
 	return (psoCompileBuffer->HaveElements() == 0);
+}
+
+void d912pxy_pso_cache::LockCompileQue(UINT lock)
+{
+	InterlockedExchange(&externalLock, lock);
 }
 
 d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_trimmed_dx12_pso* sDsc) : d912pxy_noncom(dev, L"PSO item")

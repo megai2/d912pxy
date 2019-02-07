@@ -274,51 +274,178 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 	swapchains[0] = new d912pxy_swapchain(
 		this,
 		0,
-		pPresentationParameters->hDeviceWindow,
-		d912pxy_s(GPUque)->GetDXQue(),
-		pPresentationParameters->BackBufferWidth,
-		pPresentationParameters->BackBufferHeight,
-		pPresentationParameters->BackBufferCount,
-		!pPresentationParameters->Windowed,
-		(pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE),
-		pPresentationParameters->FullScreen_RefreshRateInHz
+		pPresentationParameters
 	);
 
 	d912pxy_s(iframe)->SetSwapper(swapchains[0]);
 }
 
-ComPtr<IDXGIAdapter3> d912pxy_device::SelectSuitableGPU()
+ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 {
 	d912pxy_helper::d3d12_EnableDebugLayer();
 
-	ComPtr<IDXGIAdapter3> gpu = d912pxy_helper::GetAdapter();
+	ComPtr<IDXGIFactory4> dxgiFactory;
+	UINT createFactoryFlags = 0;
+#ifdef _DEBUG
+	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+#endif
+
+	LOG_ERR_THROW2(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)), "DXGI factory @ GetAdapter");
+
+	ComPtr<IDXGIAdapter1> dxgiAdapter1;
+	ComPtr<IDXGIAdapter3> dxgiAdapter4;
+	ComPtr<IDXGIAdapter3> gpu = nullptr;
+
+	SIZE_T maxVidmem = 0;
+	D3D_FEATURE_LEVEL usingFeatures = D3D_FEATURE_LEVEL_12_1;
+
+	const D3D_FEATURE_LEVEL featureToCreate[] = {
+		D3D_FEATURE_LEVEL_9_1,//megai2: should never happen
+		D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0
+	};
+
+	LOG_INFO_DTDM("Enum DXGI adapters");
+	{		
+		for (UINT i = 0; dxgiFactory->EnumAdapters1(i, &dxgiAdapter1) != DXGI_ERROR_NOT_FOUND; ++i)
+		{			
+			LOG_ERR_THROW2(dxgiAdapter1.As(&dxgiAdapter4), "dxgiAdapter 1->4 as");			
+
+			DXGI_ADAPTER_DESC2 dxgiAdapterDesc2;
+			dxgiAdapter4->GetDesc2(&dxgiAdapterDesc2);
+
+			UINT operational = (dxgiAdapterDesc2.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0;
+
+			//megai2: temporary until all feature level deps found correctly and rewrited to CheckForNeededFeatureLevel()
+			const char* flText []= {
+				"not supported           ",
+				"FL_12_1 should work 100%",
+				"FL_12_0 should work  99%",
+				"FL_11_1 should work  80%",
+				"FL_11_0 expect problems "
+			};
+			
+			if (operational)
+			{
+				operational = SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr));
+				operational |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)) << 1;				
+				operational |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_1, __uuidof(ID3D12Device), nullptr)) << 2;
+				operational |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)) << 3;
+
+				switch (operational)
+				{
+					case 0xF:
+						operational = 1;
+						break;
+					case 0xE:
+						operational = 2;
+						break;
+					case 0xC:
+						operational = 3;
+						break;
+					case 0x8:
+						operational = 4;
+						break;
+					default:
+						operational = 0;
+						break;
+				}
+			}
+
+			LOG_INFO_DTDM("%u: VRAM: %06u Mb | FL: %S | %s", 
+				i, 
+				(DWORD)(dxgiAdapterDesc2.DedicatedVideoMemory >> 20llu), 
+				flText[operational],
+				dxgiAdapterDesc2.Description
+			);
+
+			if (operational && (maxVidmem < dxgiAdapterDesc2.DedicatedVideoMemory))
+			{
+				maxVidmem = dxgiAdapterDesc2.DedicatedVideoMemory;
+				gpu = dxgiAdapter4;
+
+				usingFeatures = featureToCreate[operational];
+			}
+		}
+	}
+	LOG_INFO_DTDM("Selecting DXGI adapter by vidmem size");
+
+	if (gpu == nullptr)
+	{
+		LOG_ERR_THROW2(-1, "No suitable GPU found. Exiting.");
+	}
 	
 	DXGI_ADAPTER_DESC2 pDesc;
 	LOG_ERR_THROW(gpu->GetDesc2(&pDesc));
 
-	gpu_totalVidmemMB = (DWORD)pDesc.DedicatedVideoMemory >> 20;
+	gpu_totalVidmemMB = (DWORD)(pDesc.DedicatedVideoMemory >> 20llu);
 	
 	m_log->P7_INFO(LGC_DEFAULT, TM("GPU name: %s vidmem: %u Mb"), pDesc.Description, gpu_totalVidmemMB);		
 
-	return gpu;
+	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
+	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
+
+	LOG_INFO_DTDM("Adapter local memory: BU %u AR %u CR %u CU %u",
+		vaMem.Budget >> 20, vaMem.AvailableForReservation >> 20, vaMem.CurrentReservation >> 20, vaMem.CurrentUsage >> 20
+	);
+
+	//megai2: create device actually
+
+	ComPtr<ID3D12Device> ret;
+	LOG_ERR_THROW2(D3D12CreateDevice(gpu.Get(), usingFeatures, IID_PPV_ARGS(&ret)), "D3D12CreateDevice");
+
+	// Enable debug messages in debug mode.
+#ifdef _DEBUG
+	ComPtr<ID3D12InfoQueue> pInfoQueue;
+	if (SUCCEEDED(ret.As(&pInfoQueue)))
+	{
+		pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+		pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+		//pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
+		// Suppress whole categories of messages
+		//D3D12_MESSAGE_CATEGORY Categories[] = {};
+
+		// Suppress messages based on their severity level
+		D3D12_MESSAGE_SEVERITY Severities[] =
+		{
+			D3D12_MESSAGE_SEVERITY_INFO
+		};
+
+		// Suppress individual messages by their ID
+		D3D12_MESSAGE_ID DenyIds[] = {
+			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,   // I'm really not sure how to avoid this message.
+			D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,                         // This warning occurs when using capture frame while graphics debugging.
+			D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE,                       // This warning occurs when using capture frame while graphics debugging.
+		};
+
+		D3D12_INFO_QUEUE_FILTER NewFilter = {};
+		//NewFilter.DenyList.NumCategories = _countof(Categories);
+		//NewFilter.DenyList.pCategoryList = Categories;
+		NewFilter.DenyList.NumSeverities = _countof(Severities);
+		NewFilter.DenyList.pSeverityList = Severities;
+		NewFilter.DenyList.NumIDs = _countof(DenyIds);
+		NewFilter.DenyList.pIDList = DenyIds;
+
+		LOG_ERR_THROW2(pInfoQueue->PushStorageFilter(&NewFilter), "D3D12CreateDevice dbg filters");
+	}
+#endif
+
+	return ret;
 }
 
-void d912pxy_device::SetupDevice(ComPtr<IDXGIAdapter3> gpu)
+void d912pxy_device::SetupDevice(ComPtr<ID3D12Device> device)
 {
-	m_d12evice = d912pxy_helper::CreateDevice(gpu);
+	m_d12evice = device;
 	m_d12evice_ptr = m_d12evice.Get();
 	d912pxy_s(DXDev) = m_d12evice_ptr;
 
 	D3D12_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT vaSizes;
 	m_d12evice->CheckFeatureSupport(D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT, &vaSizes, sizeof(vaSizes));
 
-	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
-
-	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
-
-	m_log->P7_INFO(LGC_DEFAULT, TM("VA BPR %lu VA BPP %lu BU %u AR %u CR %u CU %u"),
-		1 << (vaSizes.MaxGPUVirtualAddressBitsPerResource - 20), 1 << (vaSizes.MaxGPUVirtualAddressBitsPerProcess - 20),
-		vaMem.Budget >> 20, vaMem.AvailableForReservation >> 20, vaMem.CurrentReservation >> 20, vaMem.CurrentUsage >> 20
+	LOG_INFO_DTDM("Device virtual address info: BPR %lu BPP %lu",
+		1 << (vaSizes.MaxGPUVirtualAddressBitsPerResource - 20), 1 << (vaSizes.MaxGPUVirtualAddressBitsPerProcess - 20)
 	);
 
 	m_log->P7_INFO(LGC_DEFAULT, TM("Adapter Nodes: %u"), m_d12evice->GetNodeCount());
@@ -433,7 +560,7 @@ HRESULT WINAPI d912pxy_device::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS* 
 		if (swapchains[i])
 			continue;
 		
-		swapchains[i] = new d912pxy_swapchain(this, i, pPresentationParameters->hDeviceWindow, d912pxy_s(GPUque)->GetDXQue(), pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, pPresentationParameters->BackBufferCount, !pPresentationParameters->Windowed, pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, pPresentationParameters->FullScreen_RefreshRateInHz);
+		swapchains[i] = new d912pxy_swapchain(this, i, pPresentationParameters);
 
 		*pSwapChain = swapchains[i];
 
@@ -469,19 +596,13 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 	d912pxy_s(iframe)->End();
 	d912pxy_s(GPUque)->Flush(0);
 
-	//pPresentationParameters->Windowed = !pPresentationParameters->Windowed;
-	
-	//swapchains[0]->SetFullscreen(!pPresentationParameters->Windowed);
-	
-	swapchains[0]->SetRefreshRate(pPresentationParameters->FullScreen_RefreshRateInHz);
-
-	swapchains[0]->Resize(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, !initialPresentParameters.Windowed, (pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE));
+	HRESULT ret = swapchains[0]->SetPresentParameters(pPresentationParameters);
 	
 	d912pxy_s(iframe)->Start();
 
 	API_OVERHEAD_TRACK_END(0)
 		
-	return D3D_OK; 
+	return ret; 
 }
 
 HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
@@ -541,66 +662,7 @@ void WINAPI d912pxy_device::SetGammaRamp(UINT iSwapChain, DWORD Flags, CONST D3D
 
 	API_OVERHEAD_TRACK_START(0)
 
-	//megai2: should be handled after fullscreen changes, so skip it for now
-	//if (origD3D_create_call.pPresentationParameters->Windowed)
-		return;
-
-	//get output info to convert ramp formats
-	ComPtr<IDXGISwapChain4> d12sw = swapchains[iSwapChain]->GetD12swpc();
-	ComPtr<IDXGIOutput> odata;
-	LOG_ERR_THROW2(d12sw->GetContainingOutput(&odata), "set gamma ramp GetContainingOutput");
-
-	DXGI_GAMMA_CONTROL_CAPABILITIES gammaCaps;
-	LOG_ERR_THROW2(odata->GetGammaControlCapabilities(&gammaCaps), "set gamma ramp GetGammaControlCapabilities");
-
-	//0 = 0
-	//255 = 1.0f
-
-	DXGI_GAMMA_CONTROL newRamp;
-
-	newRamp.Scale.Red = 1.0f;
-	newRamp.Scale.Green = 1.0f;
-	newRamp.Scale.Blue = 1.0f;
-	newRamp.Offset.Red = 0.0f;
-	newRamp.Offset.Green = 0.0f;
-	newRamp.Offset.Blue = 0.0f;
-		
-	float dlt = (gammaCaps.MaxConvertedValue - gammaCaps.MinConvertedValue) / gammaCaps.NumGammaControlPoints;
-	float base = gammaCaps.MinConvertedValue;
-
-	for (int i = 0; i != gammaCaps.NumGammaControlPoints; ++i)
-	{
-		float dxgiFI = base + dlt * i;
-		for (int j = 0; j != 256; ++j)
-		{
-			float d9FI = j / 255.0f;
-			float d9FIn = (j+1) / 255.0f;
-
-			if ((dxgiFI >= d9FI) && (dxgiFI < d9FIn))
-			{
-				newRamp.GammaCurve[i].Red = pRamp->red[j] / 65535.0f;
-				newRamp.GammaCurve[i].Green = pRamp->green[j] / 65535.0f;
-				newRamp.GammaCurve[i].Blue = pRamp->blue[j] / 65535.0f;
-				break;
-			}
-		}
-
-		if (dxgiFI < 0)
-		{
-			newRamp.GammaCurve[i].Red = pRamp->red[0] / 65535.0f;
-			newRamp.GammaCurve[i].Green = pRamp->green[0] / 65535.0f;
-			newRamp.GammaCurve[i].Blue = pRamp->blue[0] / 65535.0f;
-		}
-		else if (dxgiFI > 1.0f) {
-			newRamp.GammaCurve[i].Red = pRamp->red[255] / 65535.0f;
-			newRamp.GammaCurve[i].Green = pRamp->green[255] / 65535.0f;
-			newRamp.GammaCurve[i].Blue = pRamp->blue[255] / 65535.0f;
-		}
-
-
-	}
-
-	LOG_ERR_THROW2(odata->SetGammaControl(&newRamp), "set gamma ramp SetGammaControl ");	
+	swapchains[iSwapChain]->SetGammaRamp(Flags, pRamp);
 
 	API_OVERHEAD_TRACK_END(0)
 }
@@ -611,41 +673,7 @@ void WINAPI d912pxy_device::GetGammaRamp(UINT iSwapChain, D3DGAMMARAMP* pRamp)
 
 	API_OVERHEAD_TRACK_START(0)
 
-	//if (origD3D_create_call.pPresentationParameters->Windowed)
-		return;
-
-	//get output info to convert ramp formats
-	ComPtr<IDXGISwapChain4> d12sw = swapchains[iSwapChain]->GetD12swpc();
-	ComPtr<IDXGIOutput> odata;
-	LOG_ERR_THROW2(d12sw->GetContainingOutput(&odata), "get gamma ramp GetContainingOutput");
-
-	DXGI_GAMMA_CONTROL_CAPABILITIES gammaCaps;
-	LOG_ERR_THROW2(odata->GetGammaControlCapabilities(&gammaCaps), "get gamma ramp GetGammaControlCapabilities");
-
-	DXGI_GAMMA_CONTROL curRamp;
-	LOG_ERR_THROW(odata->GetGammaControl(&curRamp));
-
-	float dlt = (gammaCaps.MaxConvertedValue - gammaCaps.MinConvertedValue) / gammaCaps.NumGammaControlPoints;
-	float base = gammaCaps.MinConvertedValue;
-
-	for (int j = 0; j != 256; ++j)
-	{
-		float d9FI = j / 255.0f;
-
-		for (int i = 0; i != gammaCaps.NumGammaControlPoints; ++i)
-		{
-			float dxgiFI = base + dlt * i;
-			
-			if ((dxgiFI >= d9FI) && ((dxgiFI + dlt) < d9FI))
-			{
-				pRamp->red[j] = (WORD)(curRamp.GammaCurve[i].Red * 65535);
-				pRamp->green[j] = (WORD)(curRamp.GammaCurve[i].Green * 65535);
-				pRamp->blue[j] = (WORD)(curRamp.GammaCurve[i].Blue * 65535);
-				break;
-			}
-
-		}
-	}
+	swapchains[iSwapChain]->GetGammaRamp(pRamp);
 
 	API_OVERHEAD_TRACK_END(0)
 }

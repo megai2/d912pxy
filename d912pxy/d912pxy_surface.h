@@ -82,8 +82,6 @@ public:
 	DXGI_FORMAT GetSRVFormat();
 	DXGI_FORMAT ConvertInnerDSVFormat();
 
-	d912pxy_surface* CheckRTV();
-
 	void DelayedLoad(void* mem, UINT lv);
 
 	void CreateUploadBuffer(UINT id, UINT size);

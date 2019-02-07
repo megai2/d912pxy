@@ -37,7 +37,7 @@ d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, UINT idx) : d912pxy_noncom(de
 
 	slots = desc->NumDescriptors;
 
-	m_log->P7_INFO(LGC_DEFAULT, TM("DHeap %016llX limit: %u"), this, slots);
+	m_log->P7_INFO(LGC_DEFAULT, TM("DHeap %u limit: %u"), idx, slots);
 
 	size_t alcSize = sizeof(UINT8)*slots;
 

@@ -118,6 +118,8 @@ public:
 
 	UINT IsCompileQueueFree();
 
+	void LockCompileQue(UINT lock);
+
 private:
 	d912pxy_memtree2* cacheIndexes;
 	UINT32 cacheIncID;
@@ -136,5 +138,7 @@ private:
 	d912pxy_ringbuffer<d912pxy_pso_cache_item*>* psoCompileBuffer;
 
 	ID3D12GraphicsCommandList* frameCl;
+
+	LONG externalLock;
 };
 

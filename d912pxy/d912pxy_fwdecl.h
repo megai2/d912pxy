@@ -102,6 +102,7 @@ SOFTWARE.
 //#define PERFORMANCE_GRAPH_WRITE_DX9
 //#define PERFORMANCE_GRAPH_WRITE
 //#define PER_BATCH_FLUSH_DEBUG 1
+//#define TRACK_SHADER_BUGS_PROFILE
 
 #ifdef PERFORMANCE_GRAPH_WRITE_DX9
 	#define PERFORMANCE_GRAPH_WRITE
@@ -145,7 +146,7 @@ SOFTWARE.
 #endif
 
 #define LOG_INFO_DTDM(fmt, ...) (m_log->P7_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#define LOG_ERR_DTDM(fmt, ...) (m_log->P7_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+#define LOG_ERR_DTDM(fmt, ...) (m_log->P7_ERROR(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 
 #define LOG_INFO_DTDM2(code, fmt, ...) code; LOG_INFO_DTDM(fmt, __VA_ARGS__)
 
@@ -164,8 +165,6 @@ SOFTWARE.
 #define LOG_DBG_DTDM2(fmt, ...) ;
 #define LOG_DBG_DTDM3(fmt, ...) ;
 #endif
-
-//#define TRACK_SHADER_BUGS_PROFILE
 
 #define LOG_ERR_THROW(hr) LOG_ERR_THROW2(hr, hr)
 #define LOG_ERR_THROW2(hr, hr2) ThrowErrorDbg(hr, #hr2 )

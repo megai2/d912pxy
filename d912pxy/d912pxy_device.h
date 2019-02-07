@@ -187,8 +187,8 @@ public:
 	void PrintInfoBanner();
 	void InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters);
 
-	ComPtr<IDXGIAdapter3> SelectSuitableGPU();
-	void SetupDevice(ComPtr<IDXGIAdapter3> gpu);
+	ComPtr<ID3D12Device> SelectSuitableGPU();
+	void SetupDevice(ComPtr<ID3D12Device> device);
 
 private:
 	LONG threadInterruptState;	

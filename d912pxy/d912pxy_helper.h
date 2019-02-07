@@ -35,22 +35,13 @@ using namespace Microsoft::WRL;
 
 namespace d912pxy_helper {
 
-	enum LogModuleIds {
-		
-	};
-
 	void ThrowIfFailed(HRESULT hr, const char* reason);
 
 	void d3d12_EnableDebugLayer();
 	void d3d12_ReportLeaks();
 
-	ComPtr<IDXGIAdapter3> GetAdapter();
-	ComPtr<ID3D12Device> CreateDevice(ComPtr<IDXGIAdapter3> adapter);
 	ComPtr<ID3D12CommandQueue> CreateCommandQueue(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type);
-	bool CheckTearingSupport();	
-
-	ComPtr<IDXGISwapChain4> CreateSwapChain(HWND hWnd, ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount, BOOL fullscreen);
-
+	
 	IP7_Trace* GetLogger();
 
 	DXGI_FORMAT DXGIFormatFromDX9FMT(D3DFORMAT fmt);

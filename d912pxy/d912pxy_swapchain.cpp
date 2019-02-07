@@ -25,82 +25,37 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_swapchain.h"
 
-#define LOG_DBG_DEV(fmt, ...) m_log->P7_DEBUG(LGC_SWPCHA, TM(fmt), __VA_ARGS__)
+#define DXGI_SOFT_THROW(a, msg, ...) if (!a) { LOG_ERR_DTDM(msg, __VA_ARGS__); state = SWCS_INIT_ERROR; return D3D_OK; }
 
-d912pxy_swapchain::d912pxy_swapchain(d912pxy_device* dev, int index, HWND hWnd, ComPtr<ID3D12CommandQueue> commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount_div2, BOOL Fullscreen, UINT i_vSync, UINT i_refreshHz):
-	d912pxy_comhandler(L"swap chain")
+d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT_PARAMETERS * in_pp) : d912pxy_comhandler(dev, L"swap chain")
 {
-	m_dev = dev;
-	m_idx = index;
-	m_hwnd = hWnd;
+	state = SWCS_SETUP;
+	depthStencilSurface = NULL;
+	backBufferSurface = NULL;
+	swapCheckValue = D3D_OK;
+	errorCount = 0;
 
-	m_refreshRateHz = i_vSync;
+	currentPP = *in_pp;
 
-	vSync = i_vSync;
+	swapHandlers[SWCS_SETUP] = &d912pxy_swapchain::SwapHandle_Setup;
+	swapHandlers[SWCS_INIT_ERROR] = &d912pxy_swapchain::SwapHandle_Init_Error;
+	swapHandlers[SWCS_SWAPPABLE] = &d912pxy_swapchain::SwapHandle_Swappable;
+	swapHandlers[SWCS_SWAPPABLE_EXCLUSIVE] = &d912pxy_swapchain::SwapHandle_Swappable_Exclusive;
+	swapHandlers[SWCS_RECONFIGURE] = &d912pxy_swapchain::SwapHandle_Reconfigure;
+	swapHandlers[SWCS_SWAP_ERROR] = &d912pxy_swapchain::SwapHandle_Swap_Error;
+	swapHandlers[SWCS_FOCUS_LOST] = &d912pxy_swapchain::SwapHandle_Focus_Lost;
+	swapHandlers[SWCS_FOCUS_LOST_SWITCH] = &d912pxy_swapchain::SwapHandle_Focus_Lost_Switch;
+	swapHandlers[SWCS_RESETUP] = &d912pxy_swapchain::SwapHandle_ReSetup;
+	swapHandlers[SWCS_FOCUS_PENDING] = &d912pxy_swapchain::SwapHandle_Focus_Pending;
+	swapHandlers[SWCS_SHUTDOWN] = &d912pxy_swapchain::SwapHandle_Default;
 
-	markedAsLostOnFullscreen = 0;
-
-	m_width = width;
-	m_height = height;
-
-	UINT bufferCount = bufferCount_div2 * 2;
-	
-	if (bufferCount == 0)
-		bufferCount = 2;
-
-	totalBackBuffers = bufferCount;
-
-	m_d12swp = d912pxy_helper::CreateSwapChain(hWnd, commandQueue, m_width, m_height, totalBackBuffers, Fullscreen);
-
-	m_log->P7_INFO(LGC_DEFAULT, TM("wnd %llX w %u h %u c %u"), m_hwnd, m_width, m_height, totalBackBuffers);
-
-	if (m_d12swp)
-	{
-		for (int i = 0; i != bufferCount; ++i)
-		{
-			ComPtr<ID3D12Resource> bbRes;
-
-			LOG_ERR_THROW2(m_d12swp->GetBuffer(i, IID_PPV_ARGS(&bbRes)), "swapchain getbuffer fail");
-
-			dxgiBackBuffer[i] = new d912pxy_surface(dev, bbRes, D3D12_RESOURCE_STATE_COMMON, this);
-		}
-	}
-	else {
-				
-		m_log->P7_ERROR(LGC_DEFAULT, TM("swapchain for wnd %llX w %u h %u c %u failed, but faking that's this is ok"), hWnd, width, height, bufferCount);
-
-		for (int i = 0; i != bufferCount; ++i)
-		{
-			UINT lret = 0;
-			dxgiBackBuffer[i] = new d912pxy_surface(dev, width, height, D3DFMT_A8R8G8B8, D3DUSAGE_RENDERTARGET, &lret, 1);
-		}
-	}
-
-	if (!Fullscreen)
-		m_flags = d912pxy_helper::CheckTearingSupport() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
-	else
-		m_flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-	
-	backBufferSurface = new d912pxy_surface(dev, width, height, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE, 0, 0, 0);	
-	depthStencilSurface = new d912pxy_surface(dev, width, height, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, 0, 1);
-
-	dev->SetRenderTarget(0, backBufferSurface);
-	dev->SetDepthStencilSurface(depthStencilSurface);
-
-	SetFullscreen(Fullscreen);
+	CacheDXGITearingSupport();
+	ResetFrameTargets();
 }
 
 d912pxy_swapchain::~d912pxy_swapchain()
 {
 	m_log->P7_INFO(LGC_DEFAULT, TM("Stopping swapchain"));
-
-	m_d12swp->SetFullscreenState(0, NULL);
-
-	for (int i = 0; i != totalBackBuffers; ++i)
-		dxgiBackBuffer[i]->Release();
-
-	backBufferSurface->Release();
-	depthStencilSurface->Release();
 }
 
 HRESULT d912pxy_swapchain::QueryInterface(REFIID riid, void ** ppvObj)
@@ -114,7 +69,19 @@ ULONG d912pxy_swapchain::AddRef(void)
 
 ULONG d912pxy_swapchain::Release(void)
 {
-	return d912pxy_comhandler::Release();
+	ULONG ret = d912pxy_comhandler::Release();
+
+	if (!ret)
+	{
+		ChangeState(SWCS_SHUTDOWN);
+		FreeFrameTargets();
+		FreeDXGISwapChain();
+
+		d912pxy_s(psoCache)->LockCompileQue(0);
+		swapCheckValue = D3DERR_DEVICELOST;		
+	}
+
+	return ret;
 }
 
 HRESULT d912pxy_swapchain::Present(CONST RECT * pSourceRect, CONST RECT * pDestRect, HWND hDestWindowOverride, CONST RGNDATA * pDirtyRegion, DWORD dwFlags)
@@ -136,10 +103,6 @@ HRESULT d912pxy_swapchain::GetBackBuffer(UINT iBackBuffer, D3DBACKBUFFER_TYPE Ty
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 	
-	//iBackBuffer represents a index of pair buffers?
-
-	//megai2: DX9 uses the same surface interface for various buffers, but we - not, so assming that app saving backbuffer for SetRenderTarget, we need to fake up acces to real back buffer
-
 	*ppBackBuffer = (IDirect3DSurface9 *)backBufferSurface;
 
 	backBufferSurface->AddRef();
@@ -172,39 +135,43 @@ HRESULT d912pxy_swapchain::GetPresentParameters(D3DPRESENT_PARAMETERS * pPresent
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	return E_NOTIMPL;
+	*pPresentationParameters = currentPP;
+
+	return D3D_OK;
 }
 
-void d912pxy_swapchain::SetRefreshRate(UINT hz)
+HRESULT d912pxy_swapchain::SetPresentParameters(D3DPRESENT_PARAMETERS * pp)
 {
-	m_refreshRateHz = hz;
-}
+	//megai2: be shure this is called when all pending operations are done
 
-void d912pxy_swapchain::SetFullscreen(UINT fullscreen)
-{
-	if (fullscreen)
+	//megai2: skip reconfiguration if parameters are same
+	if (!memcmp(pp, &currentPP, sizeof(D3DPRESENT_PARAMETERS)))
+		return D3D_OK;
+	
+	//megai2: error out if system is not ready for one more reset
+	while ((state != SWCS_SWAPPABLE) && ((state != SWCS_SWAPPABLE_EXCLUSIVE)))
 	{
+		Swap();		
+		if (state == SWCS_FOCUS_LOST)
+			return D3DERR_DEVICELOST;
+	}
+	
+	oldPP = currentPP;
+	currentPP = *pp;
+	
+	ResetFrameTargets();	
 
-		DXGI_MODE_DESC mdsc;
-		mdsc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		mdsc.Height = m_height;
-		mdsc.Width = m_width;
-		mdsc.RefreshRate.Denominator = 1;
-		mdsc.RefreshRate.Numerator = m_refreshRateHz;
-		mdsc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-		mdsc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	ChangeState(SWCS_RECONFIGURE);
 
-		m_d12swp->ResizeTarget(&mdsc);
+	//megai2: force state processing due to window message lockup
+	while ((state != SWCS_SWAPPABLE) && ((state != SWCS_SWAPPABLE_EXCLUSIVE)))
+	{
+		Swap();
+		if (state == SWCS_FOCUS_LOST)
+			return D3DERR_DEVICELOST;
 	}
 
-	isFullscreen = fullscreen;
-
-	m_d12swp->SetFullscreenState(isFullscreen, NULL);
-}
-
-ComPtr<IDXGISwapChain4> d912pxy_swapchain::GetD12swpc()
-{
-	return m_d12swp;
+	return D3D_OK;
 }
 
 void d912pxy_swapchain::StartFrame()
@@ -220,234 +187,539 @@ void d912pxy_swapchain::EndFrame()
 	backBufferSurface->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, CLG_SEQ);
 }
 
-d912pxy_surface * d912pxy_swapchain::GetRTBackBuffer()
-{
-	return backBufferSurface;
-}
-
-void d912pxy_swapchain::Resize(UINT width, UINT height, UINT fullscreen, UINT newVSync)
-{	
-	m_log->P7_INFO(LGC_DEFAULT, TM("swapchain resize width %u height %u"), width, height);
-
-	vSync = newVSync;
-
-	depthStencilSurface->Release();
-	backBufferSurface->Release();
-
-	for (int i = 0; i != totalBackBuffers; ++i)
-	{
-		dxgiBackBuffer[i]->Release();
-	}
-
-	d912pxy_s(iframe)->ClearBindedSurfaces();
-
-	//manual cleanup cuz buffers woulbe be referenced by this frame, but we need them d.e.d.
-	d912pxy_s(GPUcl)->CleanupAllReferenced();
-
-	/*m_d12swp = nullptr;
-
-	m_d12swp = d912pxy_helper::CreateSwapChain(m_hwnd, d912pxy_s(GPUque)->GetDXQue(), m_width, m_height, totalBackBuffers, fullscreen);
-
-	m_log->P7_INFO(LGC_DEFAULT, TM("wnd %llX w %u h %u c %u"), m_hwnd, m_width, m_height, totalBackBuffers);
-
-	if (m_d12swp)
-	{
-		currentBackBuffer = m_d12swp->GetCurrentBackBufferIndex();
-
-		for (int i = 0; i != totalBackBuffers; ++i)
-		{
-			ComPtr<ID3D12Resource> bbRes;
-
-			LOG_ERR_THROW2(m_d12swp->GetBuffer(i, IID_PPV_ARGS(&bbRes)), "swapchain getbuffer fail");
-
-			backBufferSurfaces[i] = new d912pxy_surface(m_dev, bbRes, D3D12_RESOURCE_STATE_COMMON, this);
-		}
-	}*/
-	
-	SetFullscreen(fullscreen && !markedAsLostOnFullscreen);
-
-	m_d12swp->ResizeBuffers(totalBackBuffers, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, m_flags);
-
-	for (int i = 0; i != totalBackBuffers; ++i)
-	{
-		ComPtr<ID3D12Resource> bbRes;
-
-		LOG_ERR_THROW2(m_d12swp->GetBuffer(i, IID_PPV_ARGS(&bbRes)), "swapchain getbuffer fail");
-
-		dxgiBackBuffer[i] = new d912pxy_surface(m_dev, bbRes, D3D12_RESOURCE_STATE_COMMON, this);
-	}
-
-	backBufferSurface = new d912pxy_surface(m_dev, width, height, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE, 0, 0, 0);
-	depthStencilSurface = new d912pxy_surface(m_dev, width, height, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, 0, 1);
-
-/*	m_dev->SetRenderTarget(0, backBufferSurfaces[0]);
-	m_dev->SetDepthStencilSurface(depthStencilSurface);*/
-
-	m_width = width;
-	m_height = height;	
-}
-
 HRESULT d912pxy_swapchain::TestCoopLevel()
-{
-	if (markedAsLostOnFullscreen)
+{	 
+	if ((state == SWCS_FOCUS_LOST) || (state == SWCS_FOCUS_PENDING) || (state == SWCS_FOCUS_LOST_SWITCH))
 	{
-		if (!isFullscreen)
-		{
-			markedAsLostOnFullscreen = 0;
-			return D3DERR_DEVICENOTRESET;
-		}
-
-		UINT isActiveWindow = (GetActiveWindow() == m_hwnd) && (markedAsLostOnFullscreen > 10);
-
-		if (!isActiveWindow)
-		{
-			ShowWindow(m_hwnd, SW_FORCEMINIMIZE);
-			++markedAsLostOnFullscreen;
-		}
-
-		if (isActiveWindow)
-			return D3DERR_DEVICENOTRESET;
-		else 
-			return D3DERR_DEVICELOST;
-		/*
-		UINT isActiveWindow = (GetActiveWindow() == m_hwnd) && (markedAsLostOnFullscreen > 10);
-		
-		if (isActiveWindow)
-		{
-			ShowWindow(m_hwnd, SW_RESTORE | SW_SHOW);
-
-			MSG msg;
-			if (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
-			{
-				if (::GetMessage(&msg, NULL, 0, 0))
-				{
-					::TranslateMessage(&msg);
-					::DispatchMessage(&msg);
-				}
-			}
-		}
-
-		HRESULT ret = m_d12swp->Present(0, DXGI_PRESENT_TEST);
-
-		if (ret == DXGI_STATUS_OCCLUDED)
-		{
-			if (!isActiveWindow)
-			{
-				ShowWindow(m_hwnd, SW_FORCEMINIMIZE);
-				++markedAsLostOnFullscreen;
-			}
-			//m_d12swp->SetFullscreenState(0, NULL);
-
-			//LOG_ERR_THROW2(ret, L"d912pxy_swapchain::TestCoopLevel() got occluded");
-
-			return D3DERR_DEVICELOST;
-		}
-		else {
-			LOG_ERR_THROW2(ret, L"d912pxy_swapchain::TestCoopLevel()");
-
-			markedAsLostOnFullscreen = 0;
-			
-			return D3DERR_DEVICENOTRESET;
-		}*/
+		Swap();
+		return D3DERR_DEVICELOST;
 	}
-	else
-		return D3D_OK;
-
+	else 
+		return swapCheckValue;
 }
 
 HRESULT d912pxy_swapchain::Swap()
 {
-	//do a swap with saved data from Present
-	if (m_d12swp)
-	{
-		HRESULT pret = S_OK;
-
-		if (markedAsLostOnFullscreen)
-		{
-			return D3DERR_DEVICELOST;
-		}
-
-		if (isFullscreen)
-		{
-			pret = m_d12swp->Present(0, DXGI_PRESENT_TEST);
-
-			if (pret == S_OK)
-				pret = m_d12swp->Present(vSync, 0);
-
-			if (pret == DXGI_STATUS_OCCLUDED)
-			{
-				while (!d912pxy_s(psoCache)->IsCompileQueueFree())
-					Sleep(0);
-
-				pret = D3DERR_DEVICELOST;
-				markedAsLostOnFullscreen = 1;
-			}
-			else {
-				LOG_ERR_THROW2(pret, "d912pxy_swapchain::Swap");
-				pret = D3D_OK;
-			}
-		}
-		else {
-			pret = m_d12swp->Present(0, 0);
-			LOG_ERR_THROW2(pret, "d912pxy_swapchain::Swap");			
-		}
-
-		return pret;
-	}
-	else
-		return D3D_OK;
+	return (this->*swapHandlers[state])();
 }
 
-HRESULT d912pxy_swapchain::AsyncSwapNote()
+HRESULT d912pxy_swapchain::SwapCheck()
 {
-	if (m_d12swp)
-	{
-		HRESULT pret = S_OK;
-		
-		if (markedAsLostOnFullscreen)
-		{
-			return D3DERR_DEVICELOST;
-		}
-
-		if (isFullscreen)
-			pret = m_d12swp->Present(0, DXGI_PRESENT_TEST);
-
-		if (pret == DXGI_STATUS_OCCLUDED)
-		{
-			while (!d912pxy_s(psoCache)->IsCompileQueueFree())
-				Sleep(0);
-
-			pret = D3DERR_DEVICELOST;
-			markedAsLostOnFullscreen = 1;
-		}
-		else {
-			LOG_ERR_THROW2(pret, "d912pxy_swapchain::Swap");			
-		}
-
-		return pret;
-	}
-	else
-		return 0;
+	return swapCheckValue;
 }
 
-HRESULT d912pxy_swapchain::AsyncSwapExec()
+void d912pxy_swapchain::CopyFrameToDXGI(ID3D12GraphicsCommandList * cl)
 {
-	HRESULT pret = Swap();
+	if ((state != SWCS_SWAPPABLE) && ((state != SWCS_SWAPPABLE_EXCLUSIVE)))
+		return;
 
-	return pret;
-}
+	UINT dxgiIdx = dxgiSwapchain->GetCurrentBackBufferIndex();
 
-void d912pxy_swapchain::CopyToDXGI(ID3D12GraphicsCommandList * cl)
-{
-	UINT dxgiIdx = m_d12swp->GetCurrentBackBufferIndex();
+	ComPtr<ID3D12Resource> dxgiBuf = dxgiBackBuffer[dxgiIdx];
 
-	d912pxy_surface* dxgiBuf = dxgiBackBuffer[dxgiIdx];
-	
-	dxgiBuf->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT, cl);
+	d912pxy_resource::IFrameBarrierTrans3(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT, cl, dxgiBuf);
 	backBufferSurface->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_PRESENT, cl);
 
-	backBufferSurface->CopyTo2(dxgiBuf, cl);
+	backBufferSurface->CopyTo3(dxgiBuf, cl);
 
 	backBufferSurface->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
-	dxgiBuf->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST, cl);
+	d912pxy_resource::IFrameBarrierTrans3(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST, cl, dxgiBuf);
+}
+
+void d912pxy_swapchain::SetGammaRamp(DWORD Flags, CONST D3DGAMMARAMP* pRamp)
+{
+	//get output info to convert ramp formats
+	ComPtr<IDXGISwapChain4> d12sw = dxgiSwapchain;
+	ComPtr<IDXGIOutput> odata;
+
+	if (FAILED(d12sw->GetContainingOutput(&odata)))
+		return;
+
+	DXGI_GAMMA_CONTROL_CAPABILITIES gammaCaps;
+	if (FAILED(odata->GetGammaControlCapabilities(&gammaCaps)))
+		return;
+
+	//0 = 0
+	//255 = 1.0f
+
+	DXGI_GAMMA_CONTROL newRamp;
+
+	newRamp.Scale.Red = 1.0f;
+	newRamp.Scale.Green = 1.0f;
+	newRamp.Scale.Blue = 1.0f;
+	newRamp.Offset.Red = 0.0f;
+	newRamp.Offset.Green = 0.0f;
+	newRamp.Offset.Blue = 0.0f;
+
+	float dlt = (gammaCaps.MaxConvertedValue - gammaCaps.MinConvertedValue) / gammaCaps.NumGammaControlPoints;
+	float base = gammaCaps.MinConvertedValue;
+
+	for (int i = 0; i != gammaCaps.NumGammaControlPoints; ++i)
+	{
+		float dxgiFI = base + dlt * i;
+		for (int j = 0; j != 256; ++j)
+		{
+			float d9FI = j / 255.0f;
+			float d9FIn = (j + 1) / 255.0f;
+
+			if ((dxgiFI >= d9FI) && (dxgiFI < d9FIn))
+			{
+				newRamp.GammaCurve[i].Red = pRamp->red[j] / 65535.0f;
+				newRamp.GammaCurve[i].Green = pRamp->green[j] / 65535.0f;
+				newRamp.GammaCurve[i].Blue = pRamp->blue[j] / 65535.0f;
+				break;
+			}
+		}
+
+		if (dxgiFI < 0)
+		{
+			newRamp.GammaCurve[i].Red = pRamp->red[0] / 65535.0f;
+			newRamp.GammaCurve[i].Green = pRamp->green[0] / 65535.0f;
+			newRamp.GammaCurve[i].Blue = pRamp->blue[0] / 65535.0f;
+		}
+		else if (dxgiFI > 1.0f) {
+			newRamp.GammaCurve[i].Red = pRamp->red[255] / 65535.0f;
+			newRamp.GammaCurve[i].Green = pRamp->green[255] / 65535.0f;
+			newRamp.GammaCurve[i].Blue = pRamp->blue[255] / 65535.0f;
+		}
+
+
+	}
+
+	odata->SetGammaControl(&newRamp);
+}
+
+void d912pxy_swapchain::GetGammaRamp(D3DGAMMARAMP* pRamp)
+{
+	//get output info to convert ramp formats
+	ComPtr<IDXGISwapChain4> d12sw = dxgiSwapchain;
+	ComPtr<IDXGIOutput> odata;
+
+	if (FAILED(d12sw->GetContainingOutput(&odata)))
+		return;
+
+	DXGI_GAMMA_CONTROL_CAPABILITIES gammaCaps;
+	if (FAILED(odata->GetGammaControlCapabilities(&gammaCaps)))
+		return;
+
+	DXGI_GAMMA_CONTROL curRamp;
+	if (FAILED(odata->GetGammaControl(&curRamp)))
+		return;
+
+	float dlt = (gammaCaps.MaxConvertedValue - gammaCaps.MinConvertedValue) / gammaCaps.NumGammaControlPoints;
+	float base = gammaCaps.MinConvertedValue;
+
+	for (int j = 0; j != 256; ++j)
+	{
+		float d9FI = j / 255.0f;
+
+		for (int i = 0; i != gammaCaps.NumGammaControlPoints; ++i)
+		{
+			float dxgiFI = base + dlt * i;
+
+			if ((dxgiFI >= d9FI) && ((dxgiFI + dlt) < d9FI))
+			{
+				pRamp->red[j] = (WORD)(curRamp.GammaCurve[i].Red * 65535);
+				pRamp->green[j] = (WORD)(curRamp.GammaCurve[i].Green * 65535);
+				pRamp->blue[j] = (WORD)(curRamp.GammaCurve[i].Blue * 65535);
+				break;
+			}
+
+		}
+	}
+}
+
+void d912pxy_swapchain::ChangeState(d912pxy_swapchain_state newState)
+{
+	LOG_DBG_DTDM3("swapchain state %S=>%S", d912pxy_swapchain_state_names[state], d912pxy_swapchain_state_names[newState]);
+	state = newState;
+
+	if (!currentPP.Windowed)
+	{
+		if (state == SWCS_SWAPPABLE_EXCLUSIVE)		
+			d912pxy_s(psoCache)->LockCompileQue(0);		
+		else
+			d912pxy_s(psoCache)->LockCompileQue(1);
+	}
+}
+
+void d912pxy_swapchain::ThrowCritialError(HRESULT ret, const char * msg)
+{
+	if (FAILED(ret))
+	{
+		LOG_ERR_DTDM("swapchain criterror: %S | state: %u ", msg, state);
+		LOG_ERR_THROW2(-1, msg);
+	}
+}
+
+void d912pxy_swapchain::ResetFrameTargets()
+{	
+	FixPresentParameters();
+
+	FreeFrameTargets();	
+
+	backBufferSurface = new d912pxy_surface(
+		m_dev, 
+		currentPP.BackBufferWidth,
+		currentPP.BackBufferHeight,
+		currentPP.BackBufferFormat, 
+		D3DMULTISAMPLE_NONE, 
+		0, 
+		0, 
+		0
+	);
+
+	d912pxy_s(iframe)->BindSurface(1, backBufferSurface);
+
+	if (currentPP.EnableAutoDepthStencil)
+	{
+		depthStencilSurface = new d912pxy_surface(
+			m_dev,
+			currentPP.BackBufferWidth,
+			currentPP.BackBufferHeight,
+			currentPP.AutoDepthStencilFormat,
+			D3DMULTISAMPLE_NONE,
+			0,
+			0,
+			1
+		);
+
+		d912pxy_s(iframe)->BindSurface(0, depthStencilSurface);
+	}	
+}
+
+void d912pxy_swapchain::FreeFrameTargets()
+{
+	if (backBufferSurface)
+	{
+		backBufferSurface->Release();
+		backBufferSurface = NULL;
+	}
+
+	if (depthStencilSurface)
+	{
+		depthStencilSurface->Release();
+		depthStencilSurface = NULL;
+	}
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Default()
+{
+	ThrowCritialError(-1, "default handle called in swapchain operation");
+	return D3DERR_INVALIDCALL;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Setup()
+{	
+	DXGI_SOFT_THROW(InitDXGISwapChain(), "Init");
+	DXGI_SOFT_THROW(SetDXGIFullscreen(), "Fullscreen");
+	DXGI_SOFT_THROW(ChangeDXGISwapChain(), "Resize");
+	DXGI_SOFT_THROW(GetDXGIBuffers(), "Buffers");
+
+	errorCount = 0;
+	swapCheckValue = D3D_OK;
+
+	if (currentPP.Windowed)
+		ChangeState(SWCS_SWAPPABLE);
+	else 
+		ChangeState(SWCS_SWAPPABLE_EXCLUSIVE);
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Init_Error()
+{
+	++errorCount;
+
+	LOG_ERR_DTDM("Init error, %u in sequence", errorCount);
+
+	if (errorCount > 9)
+	{
+		LOG_ERR_THROW2(-1, "swap chain 10 init errors, check display settings");		
+	}
+
+	ChangeState(SWCS_SETUP);
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Swappable()
+{
+	HRESULT ret = dxgiSwapchain->Present(0, dxgiPresentFlags);
+
+	if (!((ret == DXGI_ERROR_WAS_STILL_DRAWING) || (ret == S_OK)))
+	{
+		ChangeState(SWCS_SWAP_ERROR);
+	}
+		
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
+{
+	HRESULT ret = dxgiSwapchain->Present(0, DXGI_PRESENT_TEST);
+
+	if (ret == S_OK)
+		ret = dxgiSwapchain->Present(currentPP.PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, dxgiPresentFlags);
+
+	if (ret == DXGI_STATUS_OCCLUDED)
+	{
+		swapCheckValue = D3DERR_DEVICELOST;		
+		ChangeState(SWCS_FOCUS_LOST_SWITCH);
+	} else if (FAILED(ret))
+	{
+		ChangeState(SWCS_SWAP_ERROR);
+	}	
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Reconfigure()
+{
+	//megai2: if we change fullscreen state: need to recreate whole swapchain
+	if (oldPP.Windowed != currentPP.Windowed)
+	{
+		ChangeState(SWCS_RESETUP);
+	}
+	else //megai2: TODO add more conditions to RESETUP 
+	{		
+		FreeDXGISwapChainReferences();
+		DXGI_SOFT_THROW(SetDXGIFullscreen(), "Fullscreen");
+		DXGI_SOFT_THROW(ChangeDXGISwapChain(), "Resize");
+		DXGI_SOFT_THROW(GetDXGIBuffers(), "Buffers");
+
+		errorCount = 0;
+		swapCheckValue = D3D_OK;
+
+		if (currentPP.Windowed)
+			ChangeState(SWCS_SWAPPABLE);
+		else
+			ChangeState(SWCS_SWAPPABLE_EXCLUSIVE);
+	}
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Swap_Error()
+{
+	++errorCount;
+
+	LOG_ERR_DTDM("Swap error, %u in sequence", errorCount);
+
+	if (errorCount > 9)
+	{
+		LOG_ERR_THROW2(-1, "swap chain 10 swap errors, something go wrong");
+	}
+
+	ChangeState(SWCS_RESETUP);
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Focus_Lost()
+{
+	ShowWindow(currentPP.hDeviceWindow, SW_FORCEMINIMIZE);
+
+	if (GetForegroundWindow() != currentPP.hDeviceWindow)
+	{
+		ChangeState(SWCS_FOCUS_PENDING);
+	}
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_ReSetup()
+{
+	dxgiSwapchain->SetFullscreenState(0, NULL);
+	FreeDXGISwapChain();
+	ChangeState(SWCS_SETUP);
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Focus_Pending()
+{
+	if (GetForegroundWindow() == currentPP.hDeviceWindow)
+	{
+		swapCheckValue = D3DERR_DEVICENOTRESET;
+		ChangeState(SWCS_RECONFIGURE);
+	}
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Focus_Lost_Switch()
+{
+	dxgiSwapchain->SetFullscreenState(0, NULL);
+	ChangeState(SWCS_FOCUS_LOST);
+
+	return D3D_OK;
+}
+
+bool d912pxy_swapchain::InitDXGISwapChain()
+{
+	ComPtr<IDXGIFactory4> dxgiFactory4;
+	UINT createFactoryFlags = 0;
+#ifdef _DEBUG
+	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+#endif
+
+	ThrowCritialError(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4)), "DXGI factory @ InitDXGISwapChain");
+
+	dxgiBuffersCount = currentPP.BackBufferCount < 2 ? 2 : currentPP.BackBufferCount;
+
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+	swapChainDesc.Width = currentPP.BackBufferWidth;
+	swapChainDesc.Height = currentPP.BackBufferHeight;
+	swapChainDesc.Format = GetDXGIFormatForBackBuffer(currentPP.BackBufferFormat);
+	swapChainDesc.Stereo = FALSE;
+	swapChainDesc.SampleDesc = { 1, 0 };
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;	
+	swapChainDesc.BufferCount = dxgiBuffersCount;
+	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+
+	dxgiResizeFlags = 0;
+	dxgiPresentFlags = 0;
+	
+	if (currentPP.Windowed)
+	{
+		dxgiResizeFlags |= dxgiTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+		dxgiPresentFlags |= dxgiTearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;
+		dxgiPresentFlags |= DXGI_PRESENT_DO_NOT_WAIT;
+	}
+	else {
+		dxgiResizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	}
+
+	swapChainDesc.Flags = dxgiResizeFlags;	
+
+	DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDsc = {};
+	swapChainFullscreenDsc.RefreshRate.Numerator = currentPP.FullScreen_RefreshRateInHz;
+	swapChainFullscreenDsc.RefreshRate.Denominator = 1;
+	swapChainFullscreenDsc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	swapChainFullscreenDsc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	swapChainFullscreenDsc.Windowed = currentPP.Windowed;
+	
+	ComPtr<IDXGISwapChain1> swapChain1;
+
+	HRESULT swapRet = dxgiFactory4->CreateSwapChainForHwnd(
+		d912pxy_s(GPUque)->GetDXQue().Get(),
+		currentPP.hDeviceWindow,
+		&swapChainDesc,
+		nullptr,//currentPP.Windowed ? nullptr : &swapChainFullscreenDsc,
+		nullptr,
+		&swapChain1
+	);
+
+	if (FAILED(swapRet))
+	{
+		return false;
+	}
+	else {
+		// Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen will be handled manually.
+		ThrowCritialError(dxgiFactory4->MakeWindowAssociation(currentPP.hDeviceWindow, DXGI_MWA_NO_ALT_ENTER), "DXGI window assoc @ InitDXGISwapChain");
+		ThrowCritialError(swapChain1.As(&dxgiSwapchain), "DXGI swap chain 1->4 @ InitDXGISwapChain");
+		return true;
+	}	
+}
+
+void d912pxy_swapchain::FreeDXGISwapChain()
+{
+	FreeDXGISwapChainReferences();
+
+	if (!currentPP.Windowed && dxgiSwapchain)
+	{
+		dxgiSwapchain->SetFullscreenState(0, NULL);
+	}
+
+	dxgiSwapchain = nullptr;
+}
+
+bool d912pxy_swapchain::GetDXGIBuffers()
+{
+	ComPtr<ID3D12Resource> bbRes[4];
+
+	for (int i = 0; i != dxgiBuffersCount; ++i)
+	{
+		if (FAILED((dxgiSwapchain->GetBuffer(i, IID_PPV_ARGS(&bbRes[i])))))
+			return false;
+	}
+
+	for (int i = 0; i != dxgiBuffersCount; ++i)
+	{
+		dxgiBackBuffer[i] = bbRes[i];
+	}
+
+	return true;
+}
+
+void d912pxy_swapchain::FreeDXGISwapChainReferences()
+{
+	for (int i = 0; i != dxgiBuffersCount; ++i)
+	{
+		dxgiBackBuffer[i] = nullptr;
+	}
+}
+
+bool d912pxy_swapchain::ChangeDXGISwapChain()
+{
+	return !FAILED(dxgiSwapchain->ResizeBuffers(dxgiBuffersCount, currentPP.BackBufferWidth, currentPP.BackBufferHeight, GetDXGIFormatForBackBuffer(currentPP.BackBufferFormat), dxgiResizeFlags));
+}
+
+bool d912pxy_swapchain::SetDXGIFullscreen()
+{
+	if (!currentPP.Windowed)
+	{
+		DXGI_MODE_DESC mdsc;
+		mdsc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		mdsc.Height = currentPP.BackBufferHeight;
+		mdsc.Width = currentPP.BackBufferWidth;
+		mdsc.RefreshRate.Denominator = 1;
+		mdsc.RefreshRate.Numerator = currentPP.FullScreen_RefreshRateInHz;
+		mdsc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+		mdsc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+
+		if (FAILED(dxgiSwapchain->ResizeTarget(&mdsc)))
+			return false;
+	}
+
+	return !FAILED(dxgiSwapchain->SetFullscreenState(!currentPP.Windowed, NULL));
+}
+
+void d912pxy_swapchain::FixPresentParameters()
+{
+	switch (currentPP.BackBufferFormat)
+	{
+		case D3DFMT_X8R8G8B8:
+		case D3DFMT_UNKNOWN:
+			currentPP.BackBufferFormat = D3DFMT_A8R8G8B8;
+			break;
+	}
+}
+
+DXGI_FORMAT d912pxy_swapchain::GetDXGIFormatForBackBuffer(D3DFORMAT fmt)
+{
+	DXGI_FORMAT ret = d912pxy_helper::DXGIFormatFromDX9FMT(currentPP.BackBufferFormat);
+	return ret;
+}
+
+void d912pxy_swapchain::CacheDXGITearingSupport()
+{
+	dxgiTearingSupported = FALSE;
+
+	ComPtr<IDXGIFactory4> factory4;
+	if (SUCCEEDED(CreateDXGIFactory1(IID_PPV_ARGS(&factory4))))
+	{
+		ComPtr<IDXGIFactory5> factory5;
+		if (SUCCEEDED(factory4.As(&factory5)))
+		{
+			if (FAILED(factory5->CheckFeatureSupport(
+				DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+				&dxgiTearingSupported, sizeof(dxgiTearingSupported))))
+			{
+				dxgiTearingSupported = FALSE;
+			}
+		}
+	}
 }
