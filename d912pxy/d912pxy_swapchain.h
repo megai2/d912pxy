@@ -124,12 +124,12 @@ private:
 	HRESULT SwapHandle_Focus_Lost_Switch();
 	
 	//DXGI related
-	bool InitDXGISwapChain();
+	HRESULT InitDXGISwapChain();
 	void FreeDXGISwapChain();
-	bool GetDXGIBuffers();
+	HRESULT GetDXGIBuffers();
 	void FreeDXGISwapChainReferences();
-	bool ChangeDXGISwapChain();
-	bool SetDXGIFullscreen();	
+	HRESULT ChangeDXGISwapChain();
+	HRESULT SetDXGIFullscreen();
 	DXGI_FORMAT GetDXGIFormatForBackBuffer(D3DFORMAT fmt);
 
 	void CacheDXGITearingSupport();

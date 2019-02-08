@@ -25,7 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_swapchain.h"
 
-#define DXGI_SOFT_THROW(a, msg, ...) if (!a) { LOG_ERR_DTDM(msg, __VA_ARGS__); state = SWCS_INIT_ERROR; return D3D_OK; }
+#define DXGI_SOFT_THROW(a, msg, ...) if (FAILED(a)) { LOG_ERR_DTDM(msg, __VA_ARGS__); LOG_ERR_DTDM("HR: %08lX", a); state = SWCS_INIT_ERROR; return D3D_OK; }
 
 d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT_PARAMETERS * in_pp) : d912pxy_comhandler(dev, L"swap chain")
 {
@@ -555,7 +555,7 @@ HRESULT d912pxy_swapchain::SwapHandle_Focus_Lost_Switch()
 	return D3D_OK;
 }
 
-bool d912pxy_swapchain::InitDXGISwapChain()
+HRESULT d912pxy_swapchain::InitDXGISwapChain()
 {
 	ComPtr<IDXGIFactory4> dxgiFactory4;
 	UINT createFactoryFlags = 0;
@@ -603,6 +603,15 @@ bool d912pxy_swapchain::InitDXGISwapChain()
 	
 	ComPtr<IDXGISwapChain1> swapChain1;
 
+	LOG_INFO_DTDM("Window: %lX Width: %u Height: %u Fullscreen: %u Buffers: %u Format: %u", 
+		currentPP.hDeviceWindow, 
+		currentPP.BackBufferWidth, 
+		currentPP.BackBufferHeight, 
+		!currentPP.Windowed,
+		dxgiBuffersCount,
+		currentPP.BackBufferFormat
+	);
+
 	HRESULT swapRet = dxgiFactory4->CreateSwapChainForHwnd(
 		d912pxy_s(GPUque)->GetDXQue().Get(),
 		currentPP.hDeviceWindow,
@@ -611,16 +620,16 @@ bool d912pxy_swapchain::InitDXGISwapChain()
 		nullptr,
 		&swapChain1
 	);
-
+	
 	if (FAILED(swapRet))
-	{
-		return false;
+	{		
+		return swapRet;
 	}
 	else {
 		// Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen will be handled manually.
 		ThrowCritialError(dxgiFactory4->MakeWindowAssociation(currentPP.hDeviceWindow, DXGI_MWA_NO_ALT_ENTER), "DXGI window assoc @ InitDXGISwapChain");
 		ThrowCritialError(swapChain1.As(&dxgiSwapchain), "DXGI swap chain 1->4 @ InitDXGISwapChain");
-		return true;
+		return swapRet;
 	}	
 }
 
@@ -636,14 +645,15 @@ void d912pxy_swapchain::FreeDXGISwapChain()
 	dxgiSwapchain = nullptr;
 }
 
-bool d912pxy_swapchain::GetDXGIBuffers()
+HRESULT d912pxy_swapchain::GetDXGIBuffers()
 {
 	ComPtr<ID3D12Resource> bbRes[4];
 
 	for (int i = 0; i != dxgiBuffersCount; ++i)
 	{
-		if (FAILED((dxgiSwapchain->GetBuffer(i, IID_PPV_ARGS(&bbRes[i])))))
-			return false;
+		HRESULT cr = dxgiSwapchain->GetBuffer(i, IID_PPV_ARGS(&bbRes[i]));
+		if (FAILED(cr))
+			return cr;
 	}
 
 	for (int i = 0; i != dxgiBuffersCount; ++i)
@@ -651,7 +661,7 @@ bool d912pxy_swapchain::GetDXGIBuffers()
 		dxgiBackBuffer[i] = bbRes[i];
 	}
 
-	return true;
+	return S_OK;
 }
 
 void d912pxy_swapchain::FreeDXGISwapChainReferences()
@@ -662,12 +672,12 @@ void d912pxy_swapchain::FreeDXGISwapChainReferences()
 	}
 }
 
-bool d912pxy_swapchain::ChangeDXGISwapChain()
+HRESULT d912pxy_swapchain::ChangeDXGISwapChain()
 {
-	return !FAILED(dxgiSwapchain->ResizeBuffers(dxgiBuffersCount, currentPP.BackBufferWidth, currentPP.BackBufferHeight, GetDXGIFormatForBackBuffer(currentPP.BackBufferFormat), dxgiResizeFlags));
+	return dxgiSwapchain->ResizeBuffers(dxgiBuffersCount, currentPP.BackBufferWidth, currentPP.BackBufferHeight, GetDXGIFormatForBackBuffer(currentPP.BackBufferFormat), dxgiResizeFlags);
 }
 
-bool d912pxy_swapchain::SetDXGIFullscreen()
+HRESULT d912pxy_swapchain::SetDXGIFullscreen()
 {
 	if (!currentPP.Windowed)
 	{
@@ -680,11 +690,13 @@ bool d912pxy_swapchain::SetDXGIFullscreen()
 		mdsc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 		mdsc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 
-		if (FAILED(dxgiSwapchain->ResizeTarget(&mdsc)))
-			return false;
+		HRESULT cr = dxgiSwapchain->ResizeTarget(&mdsc);
+
+		if (FAILED(cr))
+			return cr;
 	}
 
-	return !FAILED(dxgiSwapchain->SetFullscreenState(!currentPP.Windowed, NULL));
+	return dxgiSwapchain->SetFullscreenState(!currentPP.Windowed, NULL);
 }
 
 void d912pxy_swapchain::FixPresentParameters()
