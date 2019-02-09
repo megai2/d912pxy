@@ -1553,29 +1553,71 @@ HRESULT WINAPI d912pxy_device::GetDirect3D(IDirect3D9 ** ppv)
 	return D3D_OK;
 }
 
-//UNIMPLEMENTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+HRESULT WINAPI d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
+{
+	LOG_DBG_DTDM3(__FUNCTION__);
 
-HRESULT WINAPI d912pxy_device::UpdateSurface(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, CONST POINT* pDestPoint) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
-HRESULT WINAPI d912pxy_device::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
-HRESULT WINAPI d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTarget, IDirect3DSurface9* pDestSurface) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
-HRESULT WINAPI d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurface9* pDestSurface) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
-HRESULT WINAPI d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
-{ 	
+	UINT levels = 1;
+	d912pxy_surface* ret = new d912pxy_surface(this, Width, Height, Format, 0, &levels, 1);
+
+	*ppSurface = (IDirect3DSurface9*)ret;
+
+	return D3D_OK;
+}
+
+HRESULT WINAPI d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurface9* pDestSurface) 
+{	
+	LOG_DBG_DTDM(__FUNCTION__);
+
 	API_OVERHEAD_TRACK_START(0)
-	d912pxy_s(CMDReplay)->StretchRect((d912pxy_surface*)pSourceSurface, (d912pxy_surface*)pDestSurface);
+
+	//TODO
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
+HRESULT WINAPI d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTarget, IDirect3DSurface9* pDestSurface) 
+{ 	
+	LOG_DBG_DTDM(__FUNCTION__);
+
+	API_OVERHEAD_TRACK_START(0)
+
+	//TODO
+
 	API_OVERHEAD_TRACK_END(0)
 
 	return D3D_OK; 
 }
-HRESULT WINAPI d912pxy_device::ColorFill(IDirect3DSurface9* pSurface, CONST RECT* pRect, D3DCOLOR color) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
-HRESULT WINAPI d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
 
-HRESULT WINAPI d912pxy_device::SetClipPlane(DWORD Index, CONST float* pPlane) 
-{ 
+HRESULT WINAPI d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
+{
 	API_OVERHEAD_TRACK_START(0)
+
+	d912pxy_s(CMDReplay)->StretchRect((d912pxy_surface*)pSourceSurface, (d912pxy_surface*)pDestSurface);
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
+HRESULT WINAPI d912pxy_device::SetClipPlane(DWORD Index, CONST float* pPlane)
+{
+	API_OVERHEAD_TRACK_START(0)
+
 	d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_MAX_SHADER_CONSTS_IDX - 2 - Index, 1, (float*)pPlane);  return D3D_OK;
+
 	API_OVERHEAD_TRACK_END(0)
 }
+
+
+
+//UNIMPLEMENTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+HRESULT WINAPI d912pxy_device::UpdateSurface(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, CONST POINT* pDestPoint) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
+HRESULT WINAPI d912pxy_device::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
+HRESULT WINAPI d912pxy_device::ColorFill(IDirect3DSurface9* pSurface, CONST RECT* pRect, D3DCOLOR color) { LOG_DBG_DTDM(__FUNCTION__); return D3DERR_INVALIDCALL; }
 
 //clipping
 //^ done in shaders

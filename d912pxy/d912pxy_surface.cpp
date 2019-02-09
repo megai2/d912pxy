@@ -285,14 +285,12 @@ D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
 
 D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
 { 
-	return D3D_OK;
+	return GetLayer(0, 0)->LockRect(pLockedRect, pRect, Flags);
 }
 
 D912PXY_METHOD_IMPL(UnlockRect)(THIS)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	return D3D_OK; 
+	return GetLayer(0, 0)->UnlockRect();	
 }
 
 D912PXY_METHOD_IMPL(GetDC)(THIS_ HDC *phdc)
