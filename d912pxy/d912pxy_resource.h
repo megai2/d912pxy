@@ -36,6 +36,7 @@ enum d912pxy_resource_typeid {
 	RTID_SURFACE,
 	RTID_UL_BUF,
 	RTID_CBUFFER,
+	RTID_RB_BUF,
 	RTID_UNK
 };
 
@@ -62,6 +63,7 @@ public:
 	HRESULT	d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width, UINT height, DXGI_FORMAT clearVFmt);
 	HRESULT	d12res_rtgt(DXGI_FORMAT fmt, float* clearV, UINT width, UINT height);
 	HRESULT	d12res_buffer(size_t size, D3D12_HEAP_TYPE heap);
+	HRESULT	d12res_readback_buffer(size_t size);
 	HRESULT	d12res_uav_buffer(size_t size, D3D12_HEAP_TYPE heap);
 	HRESULT d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt, UINT16* levels, UINT arrSz);
 

@@ -105,7 +105,12 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 	m_fmt = d912pxy_helper::DXGIFormatFromDX9FMT(Format);
 	LOG_DBG_DTDM("fmt %u => %u", Format, m_fmt);
 
-	d12res_tex2d(Width, Height, m_fmt, (UINT16*)levels, arrSz);
+	if (Usage == D3DUSAGE_D912PXY_FORCE_RT)
+	{
+		float white[4] = { 1.0f,1.0f,1.0f,1.0f };
+		d12res_rtgt(m_fmt, white, Width, Height);
+	} else 
+		d12res_tex2d(Width, Height, m_fmt, (UINT16*)levels, arrSz);
 
 	UpdateDescCache();
 
@@ -587,6 +592,56 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 d912pxy_surface_layer * d912pxy_surface::GetLayer(UINT32 mip, UINT32 ar)
 {
 	return layers[descCache.MipLevels * ar + mip];
+}
+
+void d912pxy_surface::CopySurfaceDataToCPU()
+{
+	d912pxy_resource* readbackBuffer = new d912pxy_resource(m_dev, RTID_RB_BUF, L"readback buffer");
+	readbackBuffer->d12res_readback_buffer(subresFootprints[0].Footprint.RowPitch*subresFootprints[0].Footprint.Height);
+	
+	ID3D12GraphicsCommandList* cq = d912pxy_s(GPUcl)->GID(CLG_SEQ).Get();
+
+	D3D12_RANGE offsetToSubres;
+
+	offsetToSubres.Begin = 0;
+	offsetToSubres.End = subresSizes[0];
+
+	D3D12_TEXTURE_COPY_LOCATION srcR, dstR;
+
+	dstR.pResource = readbackBuffer->GetD12Obj().Get();
+	dstR.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	UINT64 activeSize;
+	d912pxy_s(DXDev)->GetCopyableFootprints(&m_res->GetDesc(), 0, 1, offsetToSubres.Begin, &dstR.PlacedFootprint, 0, 0, &activeSize);
+
+	srcR.SubresourceIndex = 0;
+	srcR.pResource = m_res.Get();
+	srcR.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+
+	IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_COPY_SOURCE, stateCache, cq);
+
+	cq->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
+
+	IFrameBarrierTrans2(0, stateCache, D3D12_RESOURCE_STATE_COPY_SOURCE, cq);
+		
+	d912pxy_s(iframe)->StateSafeFlush();
+
+	intptr_t GPUdata = NULL;
+	LOG_ERR_THROW2(readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&GPUdata), "CopySurfaceDataToCPU map error");
+
+	intptr_t CPUdata = (intptr_t)GetLayer(0, 0)->SurfacePixel(0, 0);
+
+	UINT wPitch = GetWPitchDX9(0);
+
+	for (int i = 0; i != subresFootprints[0].Footprint.Height; ++i)
+	{
+		memcpy((void*)CPUdata, (void*)GPUdata, subresFootprints[0].Footprint.Width*mem_perPixel);
+
+		GPUdata += subresFootprints[0].Footprint.RowPitch;
+		CPUdata += wPitch;
+	}
+
+	readbackBuffer->Release();
+
 }
 
 UINT d912pxy_surface::GetSRVHeapId()

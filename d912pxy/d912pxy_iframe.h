@@ -78,6 +78,8 @@ public:
 
 	void NoteBindedSurfaceTransit(d912pxy_surface* surf, UINT slot);
 
+	void StateSafeFlush();
+
 private:	
 
 	void InitRootSignature();

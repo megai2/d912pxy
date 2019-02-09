@@ -485,11 +485,11 @@ HRESULT d912pxy_resource::d12res_buffer(size_t size, D3D12_HEAP_TYPE heap)
 	rsDesc.Format = DXGI_FORMAT_UNKNOWN;
 	rsDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	rsDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
+	
 	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
-		&rsDesc,
+		&rsDesc, 
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		0,
 		IID_PPV_ARGS(&m_res)
@@ -501,6 +501,37 @@ HRESULT d912pxy_resource::d12res_buffer(size_t size, D3D12_HEAP_TYPE heap)
 		m_res->SetName(L"vmem buffer");
 
 	stateCache = D3D12_RESOURCE_STATE_GENERIC_READ;
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_resource::d12res_readback_buffer(size_t size)
+{
+	D3D12_HEAP_PROPERTIES rhCfg = m_dev->GetResourceHeap(D3D12_HEAP_TYPE_READBACK);
+	D3D12_RESOURCE_DESC rsDesc;
+
+	rsDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	rsDesc.Alignment = 0;
+	rsDesc.Width = size;
+	rsDesc.Height = 1;
+	rsDesc.DepthOrArraySize = 1;
+	rsDesc.MipLevels = 1;	
+	rsDesc.SampleDesc.Count = 1;
+	rsDesc.SampleDesc.Quality = 0;
+	rsDesc.Format = DXGI_FORMAT_UNKNOWN;
+	rsDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	rsDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateCommittedResource(
+		&rhCfg,
+		D3D12_HEAP_FLAG_NONE,
+		&rsDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		0,
+		IID_PPV_ARGS(&m_res)
+	));
+
+	stateCache = D3D12_RESOURCE_STATE_COPY_DEST;
 
 	return D3D_OK;
 }

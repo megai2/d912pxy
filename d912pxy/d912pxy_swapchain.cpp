@@ -93,10 +93,15 @@ HRESULT d912pxy_swapchain::Present(CONST RECT * pSourceRect, CONST RECT * pDestR
 }
 
 HRESULT d912pxy_swapchain::GetFrontBufferData(IDirect3DSurface9 * pDestSurface)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
+{	
+	//megai2: not actual front buffer data, but should work 
 
-	return E_NOTIMPL;
+	d912pxy_surface * dst = (d912pxy_surface*)pDestSurface;
+	backBufferSurface->CopyTo(dst, 0, d912pxy_s(GPUcl)->GID(CLG_SEQ).Get());
+
+	dst->CopySurfaceDataToCPU();
+
+	return D3D_OK;
 }
 
 HRESULT d912pxy_swapchain::GetBackBuffer(UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9 ** ppBackBuffer)

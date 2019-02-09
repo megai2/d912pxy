@@ -1557,8 +1557,17 @@ HRESULT WINAPI d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Heig
 {
 	LOG_DBG_DTDM3(__FUNCTION__);
 
+	//megai2: hacky way to fix dxgi backbuffer format change
+	switch (Format)
+	{
+		case D3DFMT_X8R8G8B8:
+		case D3DFMT_UNKNOWN:
+			Format = D3DFMT_A8R8G8B8;
+		break;
+	}
+
 	UINT levels = 1;
-	d912pxy_surface* ret = new d912pxy_surface(this, Width, Height, Format, 0, &levels, 1);
+	d912pxy_surface* ret = new d912pxy_surface(this, Width, Height, Format, D3DUSAGE_D912PXY_FORCE_RT, &levels, 1);
 
 	*ppSurface = (IDirect3DSurface9*)ret;
 
@@ -1571,7 +1580,7 @@ HRESULT WINAPI d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurf
 
 	API_OVERHEAD_TRACK_START(0)
 
-	//TODO
+	swapchains[iSwapChain]->GetFrontBufferData(pDestSurface);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -1584,7 +1593,11 @@ HRESULT WINAPI d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTar
 
 	API_OVERHEAD_TRACK_START(0)
 
-	//TODO
+	d912pxy_surface* src = (d912pxy_surface*)pRenderTarget;
+	d912pxy_surface* dst = (d912pxy_surface*)pDestSurface;
+	src->CopyTo(dst, 0, d912pxy_s(GPUcl)->GID(CLG_SEQ).Get());
+	
+	dst->CopySurfaceDataToCPU();
 
 	API_OVERHEAD_TRACK_END(0)
 

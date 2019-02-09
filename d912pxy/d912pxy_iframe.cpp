@@ -186,41 +186,15 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	};
 
 	//bind vb/ib
-	UINT32 batchDF = batchCommisionDF;
-	batchCommisionDF = 0;
-
 	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 1))
 	{
 		m_log->P7_ERROR(LGC_DEFAULT, L"batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
-		if (indexBind)
-			indexBind->GetBase()->ThreadRef(1);
-
-		for (int i = 0; i != streamsActive; ++i)
-			if (streamBinds[i].buffer)
-				streamBinds[i].buffer->GetBase()->ThreadRef(1);
-						
-		End();
-		d912pxy_s(GPUque)->Flush(0);
-
-		Start();
-
-		if (indexBind)
-		{
-			indexBind->GetBase()->ThreadRef(-1);
-			SetIBuf(indexBind);
-		}
-
-		for (int i = 0; i != streamsActive; ++i)
-			if (streamBinds[i].buffer)
-			{
-				streamBinds[i].buffer->GetBase()->ThreadRef(-1);
-				SetVBuf(streamBinds[i].buffer, i, streamBinds[i].offset, streamBinds[i].stride);
-			}
-				
-		//megai2: force dirty to rebind all states
-		batchDF = 7;
+		StateSafeFlush();
 	}
+
+	UINT32 batchDF = batchCommisionDF;
+	batchCommisionDF = 0;
 	
 	d912pxy_s(textureState)->Use();
 
@@ -599,6 +573,37 @@ void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
 {
 	if (bindedSurfaces[slot] == surf)
 		batchCommisionDF |= 4;
+}
+
+void d912pxy_iframe::StateSafeFlush()
+{
+	if (indexBind)
+		indexBind->GetBase()->ThreadRef(1);
+
+	for (int i = 0; i != streamsActive; ++i)
+		if (streamBinds[i].buffer)
+			streamBinds[i].buffer->GetBase()->ThreadRef(1);
+
+	End();
+	d912pxy_s(GPUque)->Flush(0);
+
+	Start();
+
+	if (indexBind)
+	{
+		indexBind->GetBase()->ThreadRef(-1);
+		SetIBuf(indexBind);
+	}
+
+	for (int i = 0; i != streamsActive; ++i)
+		if (streamBinds[i].buffer)
+		{
+			streamBinds[i].buffer->GetBase()->ThreadRef(-1);
+			SetVBuf(streamBinds[i].buffer, i, streamBinds[i].offset, streamBinds[i].stride);
+		}
+
+	//megai2: force dirty to rebind all states
+	batchCommisionDF = 7;
 }
 
 void d912pxy_iframe::InitRootSignature()

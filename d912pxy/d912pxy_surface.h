@@ -94,6 +94,8 @@ public:
 
 	d912pxy_surface_layer* GetLayer(UINT32 mip, UINT32 ar);
 
+	void CopySurfaceDataToCPU();
+
 private:
 	BOOL lockDiscard;
 	UINT isPooled;
