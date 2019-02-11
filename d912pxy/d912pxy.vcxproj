@@ -162,7 +162,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>d3d9</TargetName>
-    <OutDir>$(SolutionDir)\bin\bin64\</OutDir>
+    <OutDir>$(SolutionDir)\bin\d912pxy\dll\debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -182,22 +182,22 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\bin\bin64\</OutDir>
+    <OutDir>$(SolutionDir)\bin\d912pxy\dll\release\</OutDir>
     <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ps|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\bin\bin64\</OutDir>
+    <OutDir>$(SolutionDir)\bin\d912pxy\dll\release_ps\</OutDir>
     <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_d|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\bin\bin64\</OutDir>
+    <OutDir>$(SolutionDir)\bin\d912pxy\dll\release_d\</OutDir>
     <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_pp|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\bin\bin64\</OutDir>
+    <OutDir>$(SolutionDir)\bin\d912pxy\dll\release_pp\</OutDir>
     <TargetName>d3d9</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -399,7 +399,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;FRAMEANALYZER_EXPORTS;_WINDOWS;_USRDLL;ENABLE_METRICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;FRAMEANALYZER_EXPORTS;_WINDOWS;_USRDLL;ENABLE_METRICS;PERFORMANCE_GRAPH_WRITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
