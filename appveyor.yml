@@ -16,8 +16,6 @@ configuration:
 
 platform: x64
 
-cache: bin\d912pxy\dll -> appveyor.yml
-
 before_build:
 
 - cmd: 'echo #define BUILD_VERSION_NAME "d912pxy version: %APPVEYOR_REPO_TAG_NAME% r%APPVEYOR_BUILD_NUMBER%"  > d912pxy\build_version.h'
@@ -34,4 +32,4 @@ artifacts:
 
 - path: bin\d912pxy
 
-  name: d912pxy_($APPVEYOR_REPO_TAG_NAME)_r($APPVEYOR_BUILD_NUMBER)
+  name: d912pxy_$(APPVEYOR_REPO_TAG_NAME)_r$(APPVEYOR_BUILD_NUMBER)
