@@ -267,6 +267,37 @@ void d912pxy_device::PrintInfoBanner()
 	LOG_INFO_DTDM("Streams Limit: %u", PXY_INNER_MAX_VBUF_STREAMS);
 	LOG_INFO_DTDM("!!!NOT INTENDED TO PERFORM ALL DIRECT3D9 FEATURES!!!");
 	LOG_INFO_DTDM("DX9: original display mode width %u height %u", cached_dx9displaymode.Width, cached_dx9displaymode.Height);
+
+	UINT64 memKb = 0;
+
+	if (GetPhysicallyInstalledSystemMemory(&memKb))
+	{
+		LOG_INFO_DTDM("System physical RAM size: %llu Gb", memKb >> 20llu);
+	}
+	
+	int CPUInfo[4] = { -1 };
+	unsigned   nExIds, i = 0;
+	char CPUBrandString[0x40];
+	// Get the information associated with each extended ID.
+	__cpuid(CPUInfo, 0x80000000);
+	nExIds = CPUInfo[0];
+	for (i = 0x80000000; i <= nExIds; ++i)
+	{
+		__cpuid(CPUInfo, i);
+		// Interpret CPU brand string
+		if (i == 0x80000002)
+			memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+		else if (i == 0x80000003)
+			memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+		else if (i == 0x80000004)
+			memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+	}
+	//string includes manufacturer, model and clockspeed
+	LOG_INFO_DTDM("CPU: %S", CPUBrandString);
+
+	SYSTEM_INFO sysInf = { 0 };
+	GetSystemInfo(&sysInf);
+	LOG_INFO_DTDM("CPU cores: %u", sysInf.dwNumberOfProcessors);
 }
 
 void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters)
