@@ -6,15 +6,17 @@ configuration:
 
 - Debug
 
-- Release
-
 - Release_d
-
-- Release_pp
 
 - Release_ps
 
+- Release_pp
+
+- Release
+
 platform: x64
+
+cache: bin\d912pxy\dll -> appveyor.yml
 
 before_build:
 
@@ -30,6 +32,6 @@ build:
 
 artifacts:
 
-- path: bin
+- path: bin\d912pxy
 
-  name: d912pxy
+  name: d912pxy_($APPVEYOR_REPO_TAG_NAME$)_r($APPVEYOR_BUILD_NUMBER)
