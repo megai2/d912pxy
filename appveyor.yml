@@ -34,4 +34,4 @@ artifacts:
 
 - path: bin\d912pxy
 
-  name: d912pxy_($APPVEYOR_REPO_TAG_NAME$)_r($APPVEYOR_BUILD_NUMBER)
+  name: d912pxy_($APPVEYOR_REPO_TAG_NAME)_r($APPVEYOR_BUILD_NUMBER)
