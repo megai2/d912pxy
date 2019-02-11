@@ -16,10 +16,13 @@ This project is in early development, expect bugs, crashes, hangs, stalls and so
 Profiling shows that API overhead for d912pxy is up to 70% less than for plain DirectX9.
 Real performance differs depending on the scene and the hardware.
 
-For example, running Mistlock Sanctuary in Guild Wars 2 on i7-7700/GTX960 results in:
+Benching results on i7-7700/GTX960:
+
+For CPU bound scenario
+(running Mistlock Sanctuary)
 
 ```
-@6.3k batches, all max, 1080p
+@6.3k batches, all max, 1080p, v0.9.5.8a
 
 dx9
   min FPS: 5,5
@@ -30,40 +33,78 @@ dx12
 boost:
   min FPS: +220%
   max FPS: +23%
+  
+```
+
+For GPU bound scenario
+(1h fractal runs)
+
+```
+@all max, 1080p, v0.9.6.2a
+
+16,4% to 2,5% less frame time
+
+calculated based on API profiling & metrics data
+
+This is affected by performance recording, should be better in normal situation
 ```
 
 DX12:
 
 https://cdn.discordapp.com/attachments/477036595019644928/539417113593380865/unknown.png 
 
-
 DX9:
 
 https://cdn.discordapp.com/attachments/477036595019644928/539417612501647360/unknown.png
 
+Video by reddit u/moriz0, running WvW in 4k https://www.youtube.com/watch?v=RQAB7Ma20Ow&
+
 # Requirements
 
-You will obviously need a DirectX12 capable GPU, with 12.1 feature level and 3GB+ VRAM.
-16 GB of RAM is recommended.
+**Minimal**:
+1. Windows 10 ([about wine](https://github.com/megai2/d912pxy/issues/25))
+2. DirectX12 capable GPU with at least feature level 11_0 support
+3. 1Gb VRAM
+4. 6Gb system RAM
 
-Requirements will become more precise in the future based on feedback and code optimization.
+**Proper work on minimal hardware specifications is NOT GUARANTIED!**
+
+**Recommended**:
+1. Windows 10
+2. DirectX12 capable GPU with feature level 11_1 support
+3. 4Gb VRAM
+4. 16Gb system RAM
+
+
+Performance results are depend on your hardware.
+*Do not expect huge performance benefit if your system is in overload on plain DX9*
+
 
 # Installing
 
-1. Recommended: Set your resolution to `Fullscreen Windowed` or `Windowed` mode.
-2. Disable all overlay software.
-3. Download latest release [from here](https://github.com/megai2/d912pxy/releases).
-4. Unpack it into the game folder, so d912pxy folder is in game root folder. (Next to Gw2-64.exe)
-5. Run the game.
+1. Disable all overlay software.
+2. Download latest release [from here](https://github.com/megai2/d912pxy/releases).
+3. Unpack it into the game folder, so d912pxy folder is in game root folder. (Next to Gw2-64.exe)
+4. Run d912pxy/install.exe
+5. Use default install by pressing "Enter" till programm exits or choose custom install according to programm output.
 
 # Uninstalling
 
-You can uninstall by simply deleting the `d912pxy` folder and `bin64/d3d9.dll`.
-Don't remove any files other than those specified above.
+1. Run d912pxy/install.exe
+2. Choose remove by entering 2
+3. Remove d912pxy folder
 
 # Known bugs
 
-- Screenshot functionality not working
+Bug: Fullscreen focus lost can hung the system videofeed
+Troubleshooting: If you encontered this, use Alt+Ctl+Delete -> Logout to soft reboot. Use windowed fullscreen as workaround.
+
+Bug: Squary image with artifacts on AMD cards
+Troubleshooting: Add valuable effort to this [issue](https://github.com/megai2/d912pxy/issues/52) and wait for fixes
+
+Bug: ArcDPS not working using chain load
+Workaround: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment-459956222) 
+
 
 # Troubleshooting
 
@@ -74,7 +115,7 @@ Don't remove any files other than those specified above.
 
   d912pxy loads shaders asynchrounosly, because there is no efficient way to load them instantly.
   
-  This can create some visual errors, but results in much better performance.
+  This can create some visual errors, but results in **much** better performance.
   
   
 ## Case 2
@@ -97,12 +138,13 @@ Don't remove any files other than those specified above.
     1. Log file form P7logs
     2. Crash.dmp and d912pxy_crash.txt if you have it    
     3. Version number of d912pxy you used
+	4. Way to reproduce crash
     
     
  If you are asked to run debug version do this
  
-   0. Debug version writes ton of data, do not run it for a long time!
-   1. Install Release_d version [from here](https://github.com/megai2/d912pxy/releases)
+   **0. Debug version writes ton of data, do not run it for a long time!**
+   1. Install Release_d by installer (Use standart release? N => 3)
    2. Run the game and reproduce the error
    3. Send the log file or/and Crash.dmp to github
 
@@ -112,12 +154,12 @@ Don't remove any files other than those specified above.
  
 **Solution**
 
-  0. Update GPU drivers first!
-  1. Install Release_ps version [from here](https://github.com/megai2/d912pxy/releases)
+  0. Update or install stable GPU drivers first! 
+  1. Install Release_ps by installer (Use standart release? N => 1)
   2. Run the game and reproduce the visual error
-  3. Exit the game and remove d912pxy/pck/shaders_cso.pck
+  3. Exit the game and clear shader cache by installer (Choose an action => 3, N, N)
   4. Install the regular version
-  5. Run the game again and wait for the shaders to recompile (this will take some time)
+  5. Run the game again and wait for the shaders to recompile (this will take 3-15 minutes depending on situation / hardware)
   6. If the error is not fixed post your issue [here](https://github.com/megai2/d912pxy/issues/15) with a description on how to reproduce the visual error
 
 # Support developer
