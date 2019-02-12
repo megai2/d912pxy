@@ -268,6 +268,10 @@ void d912pxy_device::PrintInfoBanner()
 	LOG_INFO_DTDM("!!!NOT INTENDED TO PERFORM ALL DIRECT3D9 FEATURES!!!");
 	LOG_INFO_DTDM("DX9: original display mode width %u height %u", cached_dx9displaymode.Width, cached_dx9displaymode.Height);
 
+#ifdef TRACK_SHADER_BUGS_PROFILE
+	LOG_INFO_DTDM("Running ps build, expect performance drops");
+#endif
+
 	UINT64 memKb = 0;
 
 	if (GetPhysicallyInstalledSystemMemory(&memKb))
