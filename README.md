@@ -161,6 +161,29 @@ Workaround: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment
   4. Install the regular version
   5. Run the game again and wait for the shaders to recompile (this will take 3-15 minutes depending on situation / hardware)
   6. If the error is not fixed post your issue [here](https://github.com/megai2/d912pxy/issues/15) with a description on how to reproduce the visual error
+  
+## Case 4
+
+  Unnatural performance drops
+  
+**Solution**
+
+  1. Check that you not hit VRAM or RAM limits. If you hit it, do not report anything about performance.
+  2. Test performance only on clean d912pxy, without any chainload / overlay. I can't take care about other code.
+  3. Check original DX9 first! If original setup have unnatural drop of performance in your suggested scanario, it may be dependent on game engine, not DX9 or DX12.
+  3. **Be shure that there is nothing on your system eating your own precious computational power.** 
+  3.1. Antiviruses - mostly working on a realtime, they eat ton of performance. Solution: turn them off when you testing performance
+  3.2. Windows 10 bloatware - updates,updates of updates, installer of updates, installer of modules that install modules installing updates, collectors, inner background tasks, faulty self restarting apps that generates reports and all other things.
+  Solution: Wait for a "quiet" time on your system or optimize it either by hand or by some tools.
+  3.3. Other programs in background - commonly there is something running, like web browser. Solution: turn this programms off when you testing performance.
+  4. **Be shure that your hardware is healthy**
+  4.1. Cooling systems are clean and effective.
+  4.2. HDD/SSD are working without hitches.
+  4.3. No other hardware related issues.
+  5. Install Release_pp by installer (Use standart release? N => 2)
+  6. Run game, try to repeat performance drop 2-3 times, better with a time markers from game start.
+  7. Exit game properly, with no crash.
+  8. Report [here](https://github.com/megai2/d912pxy/issues/67) with a logfile from P7logs and performance_graph.png from game root folder.
 
 # Support developer
 
