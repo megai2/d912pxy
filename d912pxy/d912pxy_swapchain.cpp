@@ -454,6 +454,7 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable()
 
 	if (!((ret == DXGI_ERROR_WAS_STILL_DRAWING) || (ret == S_OK)))
 	{
+		LOG_ERR_DTDM("error: %llX", ret);
 		ChangeState(SWCS_SWAP_ERROR);
 	}
 		
@@ -473,6 +474,7 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
 		ChangeState(SWCS_FOCUS_LOST_SWITCH);
 	} else if (FAILED(ret))
 	{
+		LOG_ERR_DTDM("error: %llX", ret);
 		ChangeState(SWCS_SWAP_ERROR);
 	}	
 
