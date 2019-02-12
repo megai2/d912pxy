@@ -90,6 +90,7 @@ int action_install()
 		std::cout << "2. Release_pp  - performance data collection \n";
 		std::cout << "3. Release_d   - in-depth debug logging \n";
 		std::cout << "4. Debug       - DXGI/DX12 debug output enabled build\n";
+		std::cout << "5. Release_pb  - DX9-DX12 performance bench enabled build\n";
 
 		std::cout << "\n[default: Release_ps]:";
 
@@ -108,6 +109,9 @@ int action_install()
 			break;
 		case 4:
 			installSource = "debug\\";
+			break;
+		case 5:
+			installSource = "release_pb\\";
 			break;
 		default:
 			std::cout << "incorrect parameter, exiting\n";

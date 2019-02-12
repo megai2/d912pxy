@@ -34,11 +34,13 @@ SOFTWARE.
 class d912pxy_performance_graph
 {
 public:
-	d912pxy_performance_graph();
+	d912pxy_performance_graph(UINT isDX9);
 	~d912pxy_performance_graph();
 	void RecordPresent(int batchCount);
 private:
 	Stopwatch frameTime;
+
+	UINT dx9;
 
 	UINT32 dataAcm[PXY_PERFGRPH_BATCH_PTS* PXY_PERFGRPH_FRAMETIME_PTS];
 };

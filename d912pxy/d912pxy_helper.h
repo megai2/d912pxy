@@ -25,6 +25,7 @@ SOFTWARE.
 */
 #pragma once
 #include "stdafx.h"
+#include <sys/stat.h>
 
 #define D3DFMT_ATI2 0x32495441
 #define D3DFMT_INTZ 0x5A544E49
@@ -35,6 +36,7 @@ using namespace Microsoft::WRL;
 
 namespace d912pxy_helper {
 
+	int IsFileExist(const char *name);
 	void ThrowIfFailed(HRESULT hr, const char* reason);
 
 	void d3d12_EnableDebugLayer();

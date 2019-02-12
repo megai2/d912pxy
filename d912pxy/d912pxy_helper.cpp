@@ -40,6 +40,13 @@ UINT s_crashLine = 0;
 
 D3D_FEATURE_LEVEL usingFeatures = D3D_FEATURE_LEVEL_11_0;
 
+int d912pxy_helper::IsFileExist(const char *name)
+{
+	struct stat   buffer;
+	return (stat(name, &buffer) == 0);
+}
+
+
 void d912pxy_helper::ThrowIfFailed(HRESULT hr, const char* reason)
 {
 	if (FAILED(hr))

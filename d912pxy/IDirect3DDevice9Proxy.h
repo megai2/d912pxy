@@ -173,6 +173,7 @@ public:
 	Direct3DDevice9Proxy_create_params* GetOrigD3D9Call() { return &origD3D_create_call; };
 
 	d912pxy_performance_graph* perfGraph;
+	void InitPerfGraph();
 	
 private:
 	IDirect3DDevice9 *origIDirect3DDevice9;

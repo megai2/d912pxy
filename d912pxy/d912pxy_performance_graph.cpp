@@ -24,8 +24,9 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_performance_graph::d912pxy_performance_graph()
+d912pxy_performance_graph::d912pxy_performance_graph(UINT isDX9)
 {
+	dx9 = isDX9;
 	frameTime.Reset();
 	ZeroMemory(dataAcm, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 4);	
 }
@@ -71,7 +72,10 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 		}
 	}
 
-	stbi_write_png("performance_graph.png", PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 3, imgData, 0);
+	if (dx9)
+		stbi_write_png("performance_graph_dx9.png", PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 3, imgData, 0);
+	else
+		stbi_write_png("performance_graph.png", PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 3, imgData, 0);
 }
 
 

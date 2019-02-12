@@ -54,8 +54,7 @@ IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevi
 	cp.pPresentationParameters = &origPP;
 
 #ifdef PERFORMANCE_GRAPH_WRITE
-	perfGraph = new d912pxy_performance_graph();
-	batchCnt = 0;
+	perfGraph = NULL;
 #endif
 }
 
@@ -63,7 +62,8 @@ IDirect3DDevice9Proxy::~IDirect3DDevice9Proxy(void){
 	log_trace->P7_DEBUG(log_module, TM("freed"));
 
 #ifdef PERFORMANCE_GRAPH_WRITE
-	delete perfGraph;
+	if (perfGraph)
+		delete perfGraph;
 #endif
 }
 
@@ -653,4 +653,10 @@ HRESULT IDirect3DDevice9Proxy::PostInit(IDirect3DDevice9** realDev)
 	log_trace->P7_DEBUG(log_module, TM("odev %016llX"), origIDirect3DDevice9);
 
 	return ret;
+}
+
+void IDirect3DDevice9Proxy::InitPerfGraph()
+{
+	perfGraph = new d912pxy_performance_graph(1);
+	batchCnt = 0;
 }

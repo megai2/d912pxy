@@ -43,7 +43,7 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comha
 #endif
 
 #ifdef PERFORMANCE_GRAPH_WRITE
-	perfGraph = new d912pxy_performance_graph();
+	perfGraph = new d912pxy_performance_graph(0);
 #endif
 
 	LOG_INFO_DTDM2(InitClassFields(),									"Startup step 1/9");
