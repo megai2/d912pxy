@@ -66,17 +66,17 @@ Video by reddit u/moriz0, running WvW in 4k https://www.youtube.com/watch?v=RQAB
 
 # Known bugs
 
-Bug: Fullscreen focus lost can hung the system videofeed
+**Bug**: Fullscreen focus lost can hung the system videofeed
 
-Troubleshooting: If you encontered this, use Alt+Ctl+Delete -> Logout to soft reboot. Use windowed fullscreen as workaround.
+*Troubleshooting*: If you encontered this, use Alt+Ctl+Delete -> Logout to soft reboot. Use windowed fullscreen as workaround.
 
-Bug: Squary image with artifacts on AMD cards
+**Bug**: Squary image with artifacts on AMD cards
 
-Troubleshooting: Add valuable effort to this [issue](https://github.com/megai2/d912pxy/issues/52) and wait for fixes
+*Troubleshooting*: Add valuable effort to this [issue](https://github.com/megai2/d912pxy/issues/52) and wait for fixes
 
-Bug: ArcDPS not working using chain load
+**Bug**: ArcDPS not working using chain load
 
-Workaround: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment-459956222) 
+*Workaround*: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment-459956222) 
 
 
 # Troubleshooting
