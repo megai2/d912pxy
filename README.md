@@ -8,6 +8,7 @@ You can try to use it in other games, it might work.
 This project is in early development, expect bugs, crashes, hangs, stalls and some other fun stuff.
  
 [![Build status](https://ci.appveyor.com/api/projects/status/gs8drlb0goyp6h28?svg=true)](https://ci.appveyor.com/project/megai2/d912pxy)
+[![](https://img.shields.io/discord/384735285197537290.svg?logo=discord&logoColor=f0f0f0)](https://discord.gg/y2MGJYr)
 
 **WARNING: USING OF THIS SOFTAWRE IS ENTIRELY AT YOUR OWN RISK!**
  
