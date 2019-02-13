@@ -137,6 +137,7 @@ private:
 	ComPtr<IDXGISwapChain4> dxgiSwapchain;
 	ComPtr<ID3D12Resource> dxgiBackBuffer[4];	
 	UINT dxgiResizeFlags;
+	UINT dxgiNoWaitFlag;
 	UINT dxgiPresentFlags;
 	UINT dxgiTearingSupported;
 	UINT dxgiBuffersCount;
