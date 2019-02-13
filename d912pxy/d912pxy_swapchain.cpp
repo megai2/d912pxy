@@ -25,7 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_swapchain.h"
 
-#define DXGI_SOFT_THROW(a, msg, ...) if (FAILED(a)) { LOG_ERR_DTDM(msg, __VA_ARGS__); LOG_ERR_DTDM("HR: %08lX", a); state = SWCS_INIT_ERROR; return D3D_OK; }
+#define DXGI_SOFT_THROW(a, msg, ...) { HRESULT eret = a; if (FAILED(eret)) { LOG_ERR_DTDM(msg, __VA_ARGS__); LOG_ERR_DTDM("HR: %08lX", eret); state = SWCS_INIT_ERROR; return D3D_OK; } }
 
 d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT_PARAMETERS * in_pp) : d912pxy_comhandler(dev, L"swap chain")
 {
