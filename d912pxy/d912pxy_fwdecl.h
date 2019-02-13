@@ -24,11 +24,39 @@ SOFTWARE.
 */
 #pragma once
 
+//D3D9 API extenders =======================
+
 #define D3DRS_ENABLE_D912PXY_API_HACKS (D3DRENDERSTATETYPE)220
 #define D3DRS_D912PXY_ENQUEUE_PSO_COMPILE (D3DRENDERSTATETYPE)221
 #define D3DRS_D912PXY_SETUP_PSO (D3DRENDERSTATETYPE)222
 #define D3DDECLMETHOD_PER_VERTEX_CONSTANT 8
 #define D3DUSAGE_D912PXY_FORCE_RT 0x0F000000L
+
+//configuration switches =======================
+
+#define UPLOAD_POOL_USE_AND_DISCARD 
+#define DX9_FRAME_SHADER_STATE_PERSISTENCY_GPUGPU_COPY
+//#define DX9_FRAME_SHADER_STATE_PERSISTENCY_CPU_TRACKING
+//#define ENABLE_METRICS
+//#define PERFORMANCE_GRAPH_WRITE_DX9
+//#define PERFORMANCE_GRAPH_WRITE
+//#define PER_BATCH_FLUSH_DEBUG 1
+//#define TRACK_SHADER_BUGS_PROFILE
+//#define LOCAL_NETWORK_LOGGING
+
+#ifdef PERFORMANCE_GRAPH_WRITE_DX9
+	#define PERFORMANCE_GRAPH_WRITE
+#endif
+
+#ifdef _DEBUG
+	//#define TRACK_SHADER_BUGS_PROFILE
+	#define ENABLE_METRICS
+	#define ENABLE_DEBUG_LOGGING
+#endif
+
+//inner max/structure defenitions =======================
+
+#define d912pxy_shader_uid UINT64
 
 #define PXY_INNER_MAX_SWAP_CHAINS 4
 #define PXY_INNER_MAX_RENDER_TARGETS 8
@@ -86,6 +114,8 @@ SOFTWARE.
 
 #define PXY_INNER_REPLAY_THREADS 1
 
+//shader profile defs =======================
+
 #define PXY_INNER_SHDR_BUG_PCF_SAMPLER 0
 #define PXY_INNER_SHDR_BUG_ALPHA_TEST 1
 #define PXY_INNER_SHDR_BUG_SRGB_READ 2
@@ -98,20 +128,7 @@ SOFTWARE.
 #define PXY_INNER_SHDR_BUG_COUNT 9
 #define PXY_INNER_SHDR_BUG_FILE_SIZE PXY_INNER_SHDR_BUG_COUNT * 4
 
-//#define ENABLE_METRICS
-//#define PERFORMANCE_GRAPH_WRITE_DX9
-//#define PERFORMANCE_GRAPH_WRITE
-//#define PER_BATCH_FLUSH_DEBUG 1
-//#define TRACK_SHADER_BUGS_PROFILE
-
-#ifdef PERFORMANCE_GRAPH_WRITE_DX9
-	#define PERFORMANCE_GRAPH_WRITE
-#endif
-
-#ifdef _DEBUG
-	//#define TRACK_SHADER_BUGS_PROFILE
-	#define ENABLE_METRICS
-#endif
+//metrics macros =======================
 
 #ifdef ENABLE_METRICS
 	#define FRAME_METRIC_CLEANUPS(a) d912pxy_s(metrics)->TrackCleanupCount(a);
@@ -131,55 +148,40 @@ SOFTWARE.
 	#define API_OVERHEAD_TRACK_END(a)
 #endif
 
-#define UPLOAD_POOL_USE_AND_DISCARD 
-
-#define DX9_FRAME_SHADER_STATE_PERSISTENCY_GPUGPU_COPY
-//#define DX9_FRAME_SHADER_STATE_PERSISTENCY_CPU_TRACKING
-
-#define d912pxy_shader_uid UINT64
-
-
-#ifdef _DEBUG
-#define ENABLE_DEBUG_LOGGING
-#else 
-//#define ENABLE_DEBUG_LOGGING
-#endif
+//logging macro =======================
 
 #define LOG_INFO_DTDM(fmt, ...) (m_log->P7_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 #define LOG_ERR_DTDM(fmt, ...) (m_log->P7_ERROR(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-
 #define LOG_INFO_DTDM2(code, fmt, ...) code; LOG_INFO_DTDM(fmt, __VA_ARGS__)
 
 #ifdef ENABLE_DEBUG_LOGGING
-#ifdef _DEBUG
-#define LOG_DBG_DTDM(fmt, ...) ;//(m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#define LOG_DBG_DTDM2(fmt, ...) ;//(m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#define LOG_DBG_DTDM3(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#else 
-#define LOG_DBG_DTDM(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#define LOG_DBG_DTDM2(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#define LOG_DBG_DTDM3(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#endif
+	#ifdef _DEBUG
+		#define LOG_DBG_DTDM(fmt, ...) ;//(m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM2(fmt, ...) ;//(m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM3(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+	#else 
+		#define LOG_DBG_DTDM(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM2(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM3(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+	#endif
 #else
-#define LOG_DBG_DTDM(fmt, ...) ;
-#define LOG_DBG_DTDM2(fmt, ...) ;
-#define LOG_DBG_DTDM3(fmt, ...) ;
+	#define LOG_DBG_DTDM(fmt, ...) ;
+	#define LOG_DBG_DTDM2(fmt, ...) ;
+	#define LOG_DBG_DTDM3(fmt, ...) ;
 #endif
 
 #define LOG_ERR_THROW(hr) LOG_ERR_THROW2(hr, hr)
 #define LOG_ERR_THROW2(hr, hr2) ThrowErrorDbg(hr, #hr2 )
 
-#define D912PXY_METHOD(meth) HRESULT WINAPI meth
-#define D912PXY_METHOD_(a,b) a WINAPI b
-
-#define D912PXY_METHOD_IMPL_(a,b) a D912PXY_METHOD_IMPL_CN :: b
-#define D912PXY_METHOD_IMPL(a) HRESULT D912PXY_METHOD_IMPL_CN :: a
+//paths to files =======================
 
 #define d912pxy_cs_hlsl_dir L"./d912pxy/shaders/cs"
 #define d912pxy_cs_cso_dir "cs/cso"
 #define d912pxy_shader_db_hlsl_dir L"./d912pxy/shaders/hlsl"
 #define d912pxy_shader_db_cso_dir "shaders/cso"
 #define d912pxy_shader_db_bugs_dir "shaders/bugs"
+
+//forward class defenitions =======================
 
 class d912pxy_vbuf;
 class d912pxy_ibuf;
@@ -241,6 +243,8 @@ typedef enum d912pxy_gpu_cmd_list_group {
 } d912pxy_gpu_cmd_list_group;
 
 #define PXY_INNER_MAX_GPU_CMD_LIST_GROUPS 5
+
+//global singletons =======================
 
 class d912pxy_global_objects {
 public:

@@ -27,6 +27,13 @@ SOFTWARE.
 #include "stdafx.h"
 
 //megai2: why nuke exist? cuz it do his job
+
+#define D912PXY_METHOD(meth) HRESULT WINAPI meth
+#define D912PXY_METHOD_(a,b) a WINAPI b
+
+#define D912PXY_METHOD_IMPL_(a,b) a D912PXY_METHOD_IMPL_CN :: b
+#define D912PXY_METHOD_IMPL(a) HRESULT D912PXY_METHOD_IMPL_CN :: a
+
 #define D912PXY_IUNK_IMPL \
 /*** IUnknown methods ***/ \
 D912PXY_METHOD_IMPL(QueryInterface)(THIS_ REFIID riid, void** ppvObj) \
