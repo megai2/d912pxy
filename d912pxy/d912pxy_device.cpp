@@ -256,7 +256,7 @@ void d912pxy_device::InitDescriptorHeaps()
 }
 
 void d912pxy_device::PrintInfoBanner()
-{
+{	
 	LOG_INFO_DTDM("d912pxy(Direct3D9 to Direct3D12 api proxy) loaded");
 	LOG_INFO_DTDM(BUILD_VERSION_NAME);
 	LOG_INFO_DTDM("Batch Limit: %u", PXY_INNER_MAX_IFRAME_BATCH_COUNT);
@@ -267,6 +267,11 @@ void d912pxy_device::PrintInfoBanner()
 	LOG_INFO_DTDM("Streams Limit: %u", PXY_INNER_MAX_VBUF_STREAMS);
 	LOG_INFO_DTDM("!!!NOT INTENDED TO PERFORM ALL DIRECT3D9 FEATURES!!!");
 	LOG_INFO_DTDM("DX9: original display mode width %u height %u", cached_dx9displaymode.Width, cached_dx9displaymode.Height);
+
+#ifdef _DEBUG
+	LOG_INFO_DTDM("Redirecting DX12 and DXGI debug messages to P7");	
+	d912pxy_helper::InstallVehHandler();
+#endif
 
 #ifdef TRACK_SHADER_BUGS_PROFILE
 	LOG_INFO_DTDM("Running ps build, expect performance drops");

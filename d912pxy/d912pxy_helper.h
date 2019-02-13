@@ -36,6 +36,10 @@ using namespace Microsoft::WRL;
 
 namespace d912pxy_helper {
 
+	LONG NTAPI VexHandler(PEXCEPTION_POINTERS ExceptionInfo);
+
+	void InstallVehHandler();
+
 	int IsFileExist(const char *name);
 	void ThrowIfFailed(HRESULT hr, const char* reason);
 

@@ -40,6 +40,67 @@ UINT s_crashLine = 0;
 
 D3D_FEATURE_LEVEL usingFeatures = D3D_FEATURE_LEVEL_11_0;
 
+
+//megai2: from https://stackoverflow.com/a/41480827
+LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
+{
+	PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+
+	switch (ExceptionRecord->ExceptionCode)
+	{
+	case DBG_PRINTEXCEPTION_WIDE_C:
+	case DBG_PRINTEXCEPTION_C:
+
+		if (ExceptionRecord->NumberParameters >= 2)
+		{
+			ULONG len = (ULONG)ExceptionRecord->ExceptionInformation[0];
+
+			union {
+				ULONG_PTR up;
+				PCWSTR pwz;
+				PCSTR psz;
+			};
+
+			up = ExceptionRecord->ExceptionInformation[1];
+
+			HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
+
+			if (ExceptionRecord->ExceptionCode == DBG_PRINTEXCEPTION_C)
+			{
+				// localized text will be incorrect displayed, if used not CP_OEMCP encoding 
+				// WriteConsoleA(hOut, psz, len, &len, 0);
+
+				// assume CP_ACP encoding
+				if (ULONG n = MultiByteToWideChar(CP_ACP, 0, psz, len, 0, 0))
+				{
+					PWSTR wz = (PWSTR)alloca(n * sizeof(WCHAR));
+
+					if (len = MultiByteToWideChar(CP_ACP, 0, psz, len, wz, n))
+					{
+						pwz = wz;
+					}
+				}
+			}
+
+			if (len)
+			{
+				GetLogger()->P7_ERROR(m_helperLGM, L"%s", pwz);
+
+//				WriteConsoleW(hOut, pwz, len - 1, &len, 0);
+			}
+
+		}
+		return EXCEPTION_CONTINUE_EXECUTION;
+	}
+
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+void d912pxy_helper::InstallVehHandler()
+{
+	AddVectoredExceptionHandler(TRUE, VexHandler);
+}
+
 int d912pxy_helper::IsFileExist(const char *name)
 {
 	struct stat   buffer;
