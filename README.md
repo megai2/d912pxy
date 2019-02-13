@@ -60,50 +60,22 @@ https://cdn.discordapp.com/attachments/477036595019644928/539417612501647360/unk
 
 Video by reddit u/moriz0, running WvW in 4k https://www.youtube.com/watch?v=RQAB7Ma20Ow&
 
-# Requirements
-
-**Minimal**:
-1. Windows 10 ([about wine](https://github.com/megai2/d912pxy/issues/25))
-2. DirectX12 capable GPU with at least feature level 11_0 support
-3. 1Gb VRAM
-4. 6Gb system RAM
-
-**Proper work on minimal hardware specifications is NOT GUARANTIED!**
-
-**Recommended**:
-1. Windows 10
-2. DirectX12 capable GPU with feature level 11_1 support
-3. 4Gb VRAM
-4. 16Gb system RAM
-
-
-Performance results are depend on your hardware.
-*Do not expect huge performance benefit if your system is in overload on plain DX9*
-
-
 # Installing
 
-1. Disable all overlay software.
-2. Download latest release [from here](https://github.com/megai2/d912pxy/releases).
-3. Unpack it into the game folder, so d912pxy folder is in game root folder. (Next to Gw2-64.exe)
-4. Run d912pxy/install.exe
-5. Use default install by pressing "Enter" till programm exits or choose custom install according to programm output.
-
-# Uninstalling
-
-1. Run d912pxy/install.exe
-2. Choose remove by entering 2
-3. Remove d912pxy folder
+[**Install instructions**(English)](https://github.com/megai2/d912pxy/wiki/Installing) 
 
 # Known bugs
 
 Bug: Fullscreen focus lost can hung the system videofeed
+
 Troubleshooting: If you encontered this, use Alt+Ctl+Delete -> Logout to soft reboot. Use windowed fullscreen as workaround.
 
 Bug: Squary image with artifacts on AMD cards
+
 Troubleshooting: Add valuable effort to this [issue](https://github.com/megai2/d912pxy/issues/52) and wait for fixes
 
 Bug: ArcDPS not working using chain load
+
 Workaround: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment-459956222) 
 
 
