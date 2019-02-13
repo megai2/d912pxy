@@ -120,7 +120,8 @@ int action_install()
 		}
 	}
 
-	std::cout << "Install as d3d9.dll? ";
+	std::cout << "Install as d3d9.dll? \n";
+	std::cout << "(Choose \"No\" if you use mods that modify d3d9.dll) ";
 
 	int mode = 0;
 	   
@@ -333,7 +334,40 @@ int main()
 {
 	std::cout << "d912pxy installer\n\n";
 
-	std::cout << "WARNING: USING OF THIS SOFTAWRE IS ENTIRELY AT YOUR OWN RISK!\n\n";
+	std::cout << "WARNING: USING OF THIS SOFTAWRE IS ENTIRELY AT YOUR OWN RISK!\n";
+
+	if (!ReadUserYN(1))
+	{
+		system("pause");
+		return -1;
+	}
+
+	std::cout << "WARNING: You should disable any overlay software installed \n";
+	std::cout << "Unless that software is not listed as compatible \n";
+
+	if (!ReadUserYN(1))
+	{
+		system("pause");
+		return -1;
+	}
+
+	std::cout << "If you use ArcDPS, GW2Radial, GW2Hook, GW2Reshade, \n";
+	std::cout << "or any other mod that uses \"d3d9.dll\" file, you SHOULD read this first! \n";
+	std::cout << "https://github.com/megai2/d912pxy/issues/38 \n";
+	   
+	if (!ReadUserYN(1))
+	{
+		system("pause");
+		return -1;
+	}
+
+	std::cout << "Use default answers if you don't understand prompt meanings! \n";
+
+	if (!ReadUserYN(1))
+	{
+		system("pause");
+		return -1;
+	}
 
 	if (!CheckLocation())
 	{
