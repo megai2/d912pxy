@@ -81,90 +81,13 @@ Workaround: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment
 
 # Troubleshooting
 
-## Case 1
-  Things are loading part-by-part.
-    
-**Solution**
+Case #1: [Things are loading part-by-part](https://github.com/megai2/d912pxy/wiki/HLSL-recompilation-and-loading#shader-loading)     
 
-  d912pxy loads shaders asynchrounosly, because there is no efficient way to load them instantly.
-  
-  This can create some visual errors, but results in **much** better performance.
-  
-  
-## Case 2
-  Game crashes/hangs
-  
-**Solution**
+Case #2: [Game crashes/hangs](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)  
 
-  Do not ask game support about these crashes!
-  
-  If your game crashes without d912pxy don't ask about this here because d912pxy does zero modification to the game data.
-  
-  Make sure that the game runs without d912pxy!
-  
-  Next, update your driver and directx9.
-  
-  (link to dx9 https://www.microsoft.com/en-us/download/details.aspx?id=34429)
-  
-  Then, if you are still here, post your issue [here](https://github.com/megai2/d912pxy/issues/13) with 
-  
-    1. Log file form P7logs
-    2. Crash.dmp and d912pxy_crash.txt if you have it    
-    3. Version number of d912pxy you used
-	4. Way to reproduce crash
-    
-    
- If you are asked to run debug version do this
- 
-   **0. Debug version writes ton of data, do not run it for a long time!**
-   1. Install Release_d by installer (Use standart release? N => 3)
-   2. Run the game and reproduce the error
-   3. Send the log file or/and Crash.dmp to github
+Case #3: [Visual errors](https://github.com/megai2/d912pxy/wiki/Reporting-visual-errors)
 
-## Case 3 
-
-  Visual errors
- 
-**Solution**
-
-  0. Update or install stable GPU drivers first! 
-  1. Install Release_ps by installer (Use standart release? N => 1)
-  2. Run the game and reproduce the visual error
-  3. Exit the game and clear shader cache by installer (Choose an action => 3, N, N)
-  4. Install the regular version
-  5. Run the game again and wait for the shaders to recompile (this will take 3-15 minutes depending on situation / hardware)
-  6. If the error is not fixed post your issue [here](https://github.com/megai2/d912pxy/issues/15) with a description on how to reproduce the visual error
-  
-## Case 4
-
-  Unnatural performance drops
-  
-**Solution**
-
-  1. Check that you not hit VRAM or RAM limits. If you hit it, do not report anything about performance.
-  2. Test performance only on clean d912pxy, without any chainload / overlay. I can't take care about other code.
-  3. Check original DX9 first! If original setup have unnatural drop of performance in your suggested scanario, it may be dependent on game engine, not DX9 or DX12.
-  4. **Be shure that there is nothing on your system eating your own precious computational power.** 
-  
-  4.1. Antiviruses - mostly working on a realtime, they eat ton of performance. Solution: turn them off when you testing performance  
-  
-  4.2. Windows 10 bloatware - updates,updates of updates, installer of updates, installer of modules that install modules installing updates, collectors, inner background tasks, faulty self restarting apps that generates reports and all other things.
-  Solution: Wait for a "quiet" time on your system or optimize it either by hand or by some tools.
-  
-  4.3. Other programs in background - commonly there is something running, like web browser. Solution: turn this programms off when you testing performance.
-  
-  5. **Be shure that your hardware is healthy**
-  
-  5.1. Cooling systems are clean and effective.
-  
-  5.2. HDD/SSD are working without hitches.
-  
-  5.3. No other hardware related issues.
-  
-  6. Install Release_pp by installer (Use standart release? N => 2)
-  7. Run game, try to repeat performance drop 2-3 times, better with a time markers from game start.
-  8. Exit game properly, with no crash.
-  9. Report [here](https://github.com/megai2/d912pxy/issues/67) with a logfile from P7logs and performance_graph.png from game root folder.
+Case #4: [Unnatural performance drops](https://github.com/megai2/d912pxy/wiki/Reporting-performance-issues)
 
 # Support developer
 
