@@ -106,8 +106,7 @@ private:
 
 protected:
 	ComPtr<ID3D12Resource> m_res;
-
-
+	
 	d912pxy_upload_item* uploadRes[2];
 	d912pxy_dheap* dHeap;
 
@@ -116,17 +115,14 @@ protected:
 
 	UINT subresCountCache;
 	D3D12_RESOURCE_DESC descCache;
-	D3D12_RESOURCE_STATES stateCache;
-
-	UINT opFlags;
-
-	UINT8 uploadResSel;
+	D3D12_RESOURCE_STATES stateCache;	
 
 	void* bufferContent;
 	void* mappedMem[2];
 	
-	UINT swapRef;
-
+	UINT8 swapRef;
+	UINT8 opFlags;
+	UINT8 uploadResSel;
 	UINT8 evicted;
 };
 
