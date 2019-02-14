@@ -24,15 +24,13 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d912pxy_shader_db* iDB, const DWORD * fun) : d912pxy_comhandler(shtName)
+d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, const DWORD * fun) : d912pxy_comhandler(shtName)
 {
 	m_dev = dev;
 
-	db = iDB;
-
 	maxVars = 4096;
 	
-	mUID = db->GetUID((DWORD*)fun, &oLen);
+	mUID = d912pxy_s(sdb)->GetUID((DWORD*)fun, &oLen);
 	oCode = (DWORD*)malloc(oLen*4);
 	memcpy(oCode, fun, oLen * 4);
 
@@ -56,7 +54,7 @@ D3D12_SHADER_BYTECODE * d912pxy_shader::GetCode()
 {
 	if (!bytecode.code)
 	{
-		bytecode = db->GetCode(mUID, this);
+		bytecode = d912pxy_s(sdb)->GetCode(mUID, this);
 
 		free(oCode);
 

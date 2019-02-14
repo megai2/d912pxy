@@ -30,7 +30,7 @@ SOFTWARE.
 class d912pxy_shader : public d912pxy_comhandler
 {
 public:
-	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, d912pxy_shader_db* iDB, const DWORD* fun);
+	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, const DWORD* fun);
 	~d912pxy_shader();
 
 	/*** IDirect3DVertexShader9 methods ***/
@@ -58,7 +58,6 @@ private:
 
 	d912pxy_ringbuffer<UINT32>* pairs;
 
-	d912pxy_shader_db* db;
 	d912pxy_shader_code bytecode;
 	d912pxy_shader_uid mUID;
 

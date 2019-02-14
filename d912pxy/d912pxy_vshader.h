@@ -28,7 +28,7 @@ SOFTWARE.
 class d912pxy_vshader : public IDirect3DVertexShader9, public d912pxy_shader
 {
 public:
-	d912pxy_vshader(d912pxy_device* dev, const DWORD* fun, d912pxy_shader_db* iDB);
+	d912pxy_vshader(d912pxy_device* dev, const DWORD* fun);
 	~d912pxy_vshader();
 
 	/*** IUnknown methods ***/

@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_vshader::d912pxy_vshader(d912pxy_device * dev, const DWORD * fun, d912pxy_shader_db* iDB) : d912pxy_shader(dev, L"vshader", iDB, fun)
+d912pxy_vshader::d912pxy_vshader(d912pxy_device * dev, const DWORD * fun) : d912pxy_shader(dev, L"vshader", fun)
 {
 }
 

@@ -28,7 +28,7 @@ SOFTWARE.
 class d912pxy_pshader : public IDirect3DPixelShader9, public d912pxy_shader
 {
 public:
-	d912pxy_pshader(d912pxy_device* dev, const DWORD* fun, d912pxy_shader_db* iDB);
+	d912pxy_pshader(d912pxy_device* dev, const DWORD* fun);
 	~d912pxy_pshader();
 
 	/*** IUnknown methods ***/

@@ -1391,7 +1391,7 @@ HRESULT WINAPI d912pxy_device::CreateVertexShader(CONST DWORD* pFunction, IDirec
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppShader = (IDirect3DVertexShader9*)(new d912pxy_vshader(this, pFunction, d912pxy_s(sdb)));
+	*ppShader = (IDirect3DVertexShader9*)(new d912pxy_vshader(this, pFunction));
 
 	API_OVERHEAD_TRACK_END(0)
 	
@@ -1429,7 +1429,7 @@ HRESULT WINAPI d912pxy_device::CreatePixelShader(CONST DWORD* pFunction, IDirect
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppShader = (IDirect3DPixelShader9*)(new d912pxy_pshader(this, pFunction, d912pxy_s(sdb)));
+	*ppShader = (IDirect3DPixelShader9*)(new d912pxy_pshader(this, pFunction));
 
 	API_OVERHEAD_TRACK_END(0)
 
