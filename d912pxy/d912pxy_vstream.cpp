@@ -216,6 +216,10 @@ void d912pxy_vstream::AsyncUploadDataCopy(UINT32 offset, UINT32 size, ID3D12Grap
 	IFrameBarrierTrans(0, D3D12_RESOURCE_STATE_GENERIC_READ, CLG_BUF);
 
 	++swapRef;
+
+	if (swapRef == 255)
+		swapRef = 2;
+
 	ThreadRef(-1);
 	
 }
