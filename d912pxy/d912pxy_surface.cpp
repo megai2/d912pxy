@@ -667,7 +667,7 @@ UINT d912pxy_surface::GetSRVHeapId()
 
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 			{				
-				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_DEPTH_READ))
+				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
 				{
 					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 0);
 				}			
@@ -683,7 +683,7 @@ UINT d912pxy_surface::GetSRVHeapId()
 		else {
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 			{
-				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_DEPTH_READ))
+				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
 				{
 					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 0);
 				}		
