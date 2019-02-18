@@ -35,14 +35,22 @@ d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, UINT idx) : d912pxy_noncom(de
 	cpuBase = heap->GetCPUDescriptorHandleForHeapStart();
 	gpuBase = heap->GetGPUDescriptorHandleForHeapStart();
 
-	slots = desc->NumDescriptors;
+	m_log->P7_INFO(LGC_DEFAULT, TM("DHeap %u limit: %u"), idx, desc->NumDescriptors);
 
-	m_log->P7_INFO(LGC_DEFAULT, TM("DHeap %u limit: %u"), idx, slots);
+	size_t alcSize = sizeof(UINT32)*desc->NumDescriptors;
 
-	size_t alcSize = sizeof(UINT8)*slots;
+	for (int i = 0; PXY_DHEAP_STACK_COUNT != i; ++i)
+	{
+		stacks[i].data = (UINT32*)malloc(alcSize);
+		stacks[i].top = 0;
+	}
 
-	slotFlags = (UINT8*)malloc(alcSize);
-	ZeroMemory(slotFlags, alcSize);
+	for (int i = 0; i != desc->NumDescriptors; ++i)
+	{
+		stacks[PXY_DHEAP_STACK_FREE].data[i] = (desc->NumDescriptors - 1) - i;
+	}
+
+	stacks[PXY_DHEAP_STACK_FREE].top = desc->NumDescriptors;
 
 	m_desc = desc;
 
@@ -50,83 +58,73 @@ d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, UINT idx) : d912pxy_noncom(de
 
 	LOG_DBG_DTDM("type %u cnt %u id %u", desc->Type, slots, selfIID);
 
-	writeIdx = 0;
-	cleanIdx = 0;
-	slotsToCleanup = 0;
-
 	heapStartCache = heap->GetGPUDescriptorHandleForHeapStart();
 }
 
 d912pxy_dheap::~d912pxy_dheap()
 {
-	free(slotFlags);
+	for (int i = 0; PXY_DHEAP_STACK_COUNT != i; ++i)
+		free(stacks[i].data);
 }
 
 UINT d912pxy_dheap::OccupySlot()
 {		
-	if (!slots)
+	LONG stackSlot = InterlockedDecrement(&stacks[PXY_DHEAP_STACK_FREE].top);
+
+	if (stackSlot < 0)	
 	{
-		m_log->P7_ERROR(LGC_DEFAULT, TM("DHeap %u imm limit exceeded"), selfIID);
+		m_log->P7_ERROR(LGC_DEFAULT, TM("DHeap %u slot limit exceeded"), selfIID);
 		LOG_ERR_THROW2(-1, "dheapslots == 0");
 	}
 
-	while (slots)
-	{
-		UINT slotFlag = slotFlags[writeIdx];
+	FRAME_METRIC_DHEAP(selfIID, stackSlot);
 
-		if (
-			(slotFlag == D912PXY_DHEAP_SLOT_FREE) //slot free
-		)
-		{
-			slotFlags[writeIdx] = D912PXY_DHEAP_SLOT_USED;
-			--slots;
-			FRAME_METRIC_DHEAP(selfIID, slots)
-			return writeIdx;
-		}
-
-		++writeIdx;
-		if (writeIdx >= m_desc->NumDescriptors)
-			writeIdx = 0;
-	}	
-
-	
-
-	return -1;
+	return stacks[PXY_DHEAP_STACK_FREE].data[stackSlot];
 }
 
 void d912pxy_dheap::FreeSlot(UINT slot)
 {
-	slotFlags[slot] = D912PXY_DHEAP_SLOT_CLEANUP2;	
-	++slotsToCleanup;	
-}
+	LONG stackSlot = InterlockedIncrement(&stacks[PXY_DHEAP_STACK_CLEANUP].top) - 1;
 
-void d912pxy_dheap::CleanupSlots(UINT count)
-{	 
-	//count = slotsToCleanup;
-	UINT preClean = 0;
-	while (slotsToCleanup && count && (preClean != slotsToCleanup))
+	if (stackSlot >= (LONG)m_desc->NumDescriptors)
 	{
-		if (slotFlags[cleanIdx] == D912PXY_DHEAP_SLOT_CLEANUP2)
-		{
-			--count;
-			++preClean;
-			slotFlags[cleanIdx] = D912PXY_DHEAP_SLOT_CLEANUP;
-		} else if (slotFlags[cleanIdx] == D912PXY_DHEAP_SLOT_CLEANUP)
-		{			
-			++slots;
-			--slotsToCleanup;
-			--count;
-			slotFlags[cleanIdx] = D912PXY_DHEAP_SLOT_FREE;
-		}		
-
-		++cleanIdx;		
-		if (cleanIdx >= m_desc->NumDescriptors)
-		{
-			cleanIdx = 0;
-		}
+		m_log->P7_ERROR(LGC_DEFAULT, TM("DHeap %u imm cleanup limit exceeded"), selfIID);
+		LOG_ERR_THROW2(-1, "dheapslots == 0 @ FreeSlot");
 	}
 
-	FRAME_METRIC_DHEAP(selfIID, slots)
+	stacks[PXY_DHEAP_STACK_CLEANUP].data[stackSlot] = slot;
+}
+
+void d912pxy_dheap::CleanupSlots(UINT maxCount)
+{
+	//megai2: should be safe to clean whole stack without thread safety, as this is called on "should-be" sync blocked conditions
+
+	LONG stackSlot = InterlockedAdd(&stacks[PXY_DHEAP_STACK_CLEANUP].top, 0);
+	UINT limit = 0;
+
+	while (stackSlot)
+	{
+		stackSlot = InterlockedDecrement(&stacks[PXY_DHEAP_STACK_CLEANUP].top);
+
+		UINT slot = stacks[PXY_DHEAP_STACK_CLEANUP].data[stackSlot];
+
+		LONG writeSlot = InterlockedIncrement(&stacks[PXY_DHEAP_STACK_FREE].top) - 1;
+
+		if (writeSlot >= (LONG)m_desc->NumDescriptors)
+		{
+			m_log->P7_ERROR(LGC_DEFAULT, TM("DHeap %u free slots limit exceeded"), selfIID);
+			LOG_ERR_THROW2(-1, "dheapslots == 0 @ CleanupSlots");
+		}
+
+		stacks[PXY_DHEAP_STACK_FREE].data[writeSlot] = slot;
+
+		FRAME_METRIC_DHEAP(selfIID, writeSlot)
+
+		if (limit >= maxCount)
+			break;
+		else
+			++limit;
+	}
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE d912pxy_dheap::GetDHeapHandle(UINT slot)

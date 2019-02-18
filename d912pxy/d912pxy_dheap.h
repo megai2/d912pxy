@@ -25,11 +25,14 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-#define D912PXY_DHEAP_SLOT_FREE 0
-#define D912PXY_DHEAP_SLOT_USED 1
-#define D912PXY_DHEAP_SLOT_CLEANUP 2
-#define D912PXY_DHEAP_SLOT_CLEANUP2 3
-#define D912PXY_DHEAP_SLOT_MASK 0xF
+typedef struct d912pxy_dheap_slot_stack {
+	UINT32* data;
+	LONG top;
+} d912pxy_dheap_slot_stack;
+
+#define PXY_DHEAP_STACK_FREE 0
+#define PXY_DHEAP_STACK_CLEANUP 1
+#define PXY_DHEAP_STACK_COUNT 2
 
 class d912pxy_dheap : public d912pxy_noncom
 {
@@ -38,9 +41,9 @@ public:
 	~d912pxy_dheap();
 
 	UINT OccupySlot();
+	void FreeSlot(UINT slot);	
 
-	void FreeSlot(UINT slot);
-	void CleanupSlots(UINT count);
+	void CleanupSlots(UINT maxCount);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDHeapHandle(UINT slot);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDHeapHandle(UINT slot);
@@ -65,15 +68,12 @@ private:
 	ComPtr<ID3D12DescriptorHeap> heap;
 	UINT handleSz;
 	UINT handleSzGPU;
-
-	//megai2: change it to bitfield when we fully decide with bit count on slot
-	UINT8* slotFlags;
-
+		
 	UINT selfIID;
-	UINT slots;
-	UINT slotsToCleanup;
-	UINT writeIdx;
-	UINT cleanIdx;
+	
+	d912pxy_dheap_slot_stack stacks[PXY_DHEAP_STACK_COUNT];
+
+
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuBase;
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuBase;
 
