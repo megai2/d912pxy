@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_pair::d912pxy_shader_pair(UINT32 nodeId, d912pxy_device* dev) : d912pxy_comhandler(dev, L"shader pair")
+d912pxy_shader_pair::d912pxy_shader_pair(UINT32 nodeId, d912pxy_device* dev) : d912pxy_noncom(dev, L"shader pair")
 {	
 	maxPsoId = 512;
 
@@ -40,7 +40,7 @@ d912pxy_shader_pair::~d912pxy_shader_pair()
 	{
 		if (psoItems[i] != 0)
 		{
-			delete psoItems[i];
+			psoItems[i]->Release();
 		}
 	}
 

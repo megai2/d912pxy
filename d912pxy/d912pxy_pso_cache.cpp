@@ -590,7 +590,8 @@ void d912pxy_pso_cache::ThreadJob()
 	{
 		d912pxy_pso_cache_item* it = psoCompileBuffer->GetElement();
 
-		it->Compile();
+ 		it->Compile();
+		it->Release();
 		
 		psoCompileBuffer->Next();
 	}
@@ -631,6 +632,7 @@ void d912pxy_pso_cache::ProcessShaderCleanup()
 
 void d912pxy_pso_cache::CompileItem(d912pxy_pso_cache_item * item)
 {
+	item->AddRef();
 	psoCompileBuffer->WriteElement(item);
 	SignalWork();
 }
@@ -645,7 +647,7 @@ void d912pxy_pso_cache::LockCompileQue(UINT lock)
 	InterlockedExchange(&externalLock, lock);
 }
 
-d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_trimmed_dx12_pso* sDsc) : d912pxy_noncom(dev, L"PSO item")
+d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_trimmed_dx12_pso* sDsc) : d912pxy_comhandler(dev, L"PSO item")
 {
 	//m_status = 0;
 	retPtr = NULL;

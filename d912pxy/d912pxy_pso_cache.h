@@ -41,7 +41,7 @@ typedef struct d912pxy_trimmed_dx12_pso {
 	UINT NumRenderTargets;
 } d912pxy_trimmed_dx12_pso;
 
-class d912pxy_pso_cache_item : public d912pxy_noncom {
+class d912pxy_pso_cache_item : public d912pxy_comhandler {
 
 public:
 	d912pxy_pso_cache_item(d912pxy_device* dev, d912pxy_trimmed_dx12_pso* sDsc);

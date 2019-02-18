@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_shader_pair : public d912pxy_comhandler
+class d912pxy_shader_pair : public d912pxy_noncom
 {
 public:
 	d912pxy_shader_pair(UINT32 nodeId, d912pxy_device* dev);
