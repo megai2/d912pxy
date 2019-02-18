@@ -70,10 +70,6 @@ Video by reddit u/moriz0, running WvW in 4k https://www.youtube.com/watch?v=RQAB
 
 *Troubleshooting*: If you encontered this, use Alt+Ctl+Delete -> Logout to soft reboot. Use windowed fullscreen as workaround.
 
-**Bug**: Squary image with artifacts on AMD cards
-
-*Troubleshooting*: Add valuable effort to this [issue](https://github.com/megai2/d912pxy/issues/52) and wait for fixes
-
 **Bug**: ArcDPS not working using chain load
 
 *Workaround*: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment-459956222) 
