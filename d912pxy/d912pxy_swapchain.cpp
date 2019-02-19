@@ -499,6 +499,15 @@ HRESULT d912pxy_swapchain::SwapHandle_Reconfigure()
 		DXGI_SOFT_THROW(ChangeDXGISwapChain(), "Resize");
 		DXGI_SOFT_THROW(GetDXGIBuffers(), "Buffers");
 
+		LOG_INFO_DTDM("Window: %lX Width: %u Height: %u Fullscreen: %u Buffers: %u Format: %u",
+			currentPP.hDeviceWindow,
+			currentPP.BackBufferWidth,
+			currentPP.BackBufferHeight,
+			!currentPP.Windowed,
+			dxgiBuffersCount,
+			currentPP.BackBufferFormat
+		);
+
 		errorCount = 0;
 		swapCheckValue = D3D_OK;
 
