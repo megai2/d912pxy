@@ -37,6 +37,78 @@ typedef HRESULT
 	ID3DXBuffer **ppDisassembly
 	);
 
+typedef HRESULT 
+(WINAPI *PD3DXAssembleShaderFromFile) (
+	_In_        LPCTSTR       pSrcFile,
+	_In_		void* pDefines,
+	_In_        void* pInclude,
+	_In_        DWORD         Flags,
+	_Out_       ID3DXBuffer** ppShader,
+	_Out_       ID3DXBuffer** ppErrorMsgs
+);
+
+HRESULT
+AssembleShader(const wchar_t* file)
+{
+	static BOOL firsttime = TRUE;
+
+	/*
+	* TODO: Consider using d3dcompile_xx.dll per
+	* http://msdn.microsoft.com/en-us/library/windows/desktop/ee663275.aspx
+	*/
+
+	static HMODULE hD3DXModule = NULL;
+	static PD3DXAssembleShaderFromFile pfnD3DXAssembleShaderFromFile = NULL;
+
+	if (firsttime) {
+		if (!hD3DXModule) {
+			unsigned release;
+			int version;
+			for (release = 0; release <= 1; ++release) {
+				/* Version 41 corresponds to Mar 2009 version of DirectX Runtime / SDK */
+				for (version = 41; version >= 0; --version) {
+					char filename[256];
+					_snprintf(filename, sizeof(filename),
+						"d3dx9%s%s%u.dll", release ? "" : "d", version ? "_" : "", version);
+					hD3DXModule = LoadLibraryA(filename);
+					if (hD3DXModule)
+						goto found;
+				}
+			}
+		found:
+			;
+		}
+
+		if (hD3DXModule) {
+			if (!pfnD3DXAssembleShaderFromFile) {
+				pfnD3DXAssembleShaderFromFile = (PD3DXAssembleShaderFromFile)GetProcAddress(hD3DXModule, "D3DXAssembleShaderFromFileW");
+			}
+		}
+
+		firsttime = FALSE;
+	}
+
+	ID3DXBuffer* pAssembly;
+	ID3DXBuffer** ppAssembly = &pAssembly;
+
+	HRESULT hr = E_FAIL;
+	if (pfnD3DXAssembleShaderFromFile) {
+		hr = pfnD3DXAssembleShaderFromFile(file, NULL, NULL, 0, reinterpret_cast<ID3DXBuffer **>(ppAssembly), NULL);
+
+		int len = pAssembly->GetBufferSize();
+
+		FILE* f = fopen("tmp.dxbc", "wb");
+
+		fwrite(pAssembly->GetBufferPointer(), len, 1, f);
+
+		fflush(f);
+		fclose(f);
+
+		pAssembly->Release();
+	}
+	return hr;
+}
+
 
 HRESULT
 DisassembleShader(const DWORD *tokens, ID3DXBuffer**ppDisassembly)
@@ -158,6 +230,7 @@ const char* d912pxy_hlsl_generator_reg_names_proc_vs[20] = {
 
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : d912pxy_noncom(0, L"hlsl generator")
 {
+
 	maxShaderPassedVars = 0;
 	oCode = src;
 	oLen = len;
@@ -397,9 +470,11 @@ void d912pxy_hlsl_generator::Process()
 		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x;
 	else if (majVer == 2)
 		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x;
-	else if (majVer == 1) 
+	else 
+		//FIXME sm 1_x support
+		/*if (majVer == 1) 
 		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x;
-	else {
+	else*/ {
 		m_log->P7_ERROR(LGC_DEFAULT, TM("hlsl generator not support %u_%u shader model"), majVer, minVer);
 		LOG_ERR_THROW2(-1, "hlsl generator not support shader model specified");
 	}
@@ -424,6 +499,8 @@ void d912pxy_hlsl_generator::Process()
 		//For pixel and vertex shader versions 2_0 and later, bits 24 through 27 specify the size in DWORDs of the instruction 
 		//excluding the instruction token itself(that is, the number of tokens that comprise the instruction excluding the instruction token).
 
+		//FIXME sm 1_x support
+		
 		ocIdx += 1 + (oCode[ocIdx] >> 24) & 0xF;
 	}
 
@@ -797,7 +874,7 @@ UINT64 d912pxy_hlsl_generator::FormatCmpString(DWORD op)
 
 UINT d912pxy_hlsl_generator::GetDstModifier(DWORD op)
 {
-	return (op >> 20) & 0x7;
+	return (op >> 20) & 0xF;
 }
 
 void d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)
