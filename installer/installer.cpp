@@ -41,9 +41,9 @@ bool ReadUserYN(bool defaultY)
 {
 	if (defaultY)
 	{
-		std::cout << "Yes/No \n[default: Yes]:";
-	} else 
-		std::cout << "Yes/No \n[default: No]:";
+		std::cout << "Yes/No \n[default: Yes]: ";
+	} else
+		std::cout << "Yes/No \n[default: No]: ";
 
 	std::string str;
 
@@ -74,25 +74,25 @@ int action_install()
 
 	if (!ReadUserYN(1))
 	{
-		std::cout << "Installing in game root folder \n";
+		std::cout << "Installing in game root folder. \n";
 		std::cout << "Please note that this typically is not needed! \n";
-		std::cout << "And you probably have to troubleshoot yourself on running this correctly \n";
-		std::cout << "Report on this issue here https://github.com/megai2/d912pxy/issues/64 \n\n";
+		std::cout << "You will probably have to troubleshoot this configuration yourself. \n";
+		std::cout << "Report on this issue here: https://github.com/megai2/d912pxy/issues/64 \n\n";
 		installPath = "..\\";
 	}
 
-	std::cout << "Use standart release? ";
+	std::cout << "Use standard release? ";
 
 	if (!ReadUserYN(1))
 	{
-		std::cout << "Select configuration \n\n";
+		std::cout << "Select configuration: \n\n";
 		std::cout << "1. Release_ps  - troubleshoot shader profiles \n";
 		std::cout << "2. Release_pp  - performance data collection \n";
 		std::cout << "3. Release_d   - in-depth debug logging \n";
 		std::cout << "4. Debug       - DXGI/DX12 debug output enabled build\n";
 		std::cout << "5. Release_pb  - DX9-DX12 performance bench enabled build\n";
 
-		std::cout << "\n[default: Release_ps]:";
+		std::cout << "\n[default: Release_ps]: ";
 
 		int mode = read_user_integer(1);
 
@@ -114,7 +114,7 @@ int action_install()
 			installSource = "release_pb\\";
 			break;
 		default:
-			std::cout << "incorrect parameter, exiting\n";
+			std::cout << "Incorrect parameter; exiting.\n";
 			system("pause");
 			return -1;
 		}
@@ -124,15 +124,15 @@ int action_install()
 	std::cout << "(Choose \"No\" if you use mods that modify d3d9.dll) ";
 
 	int mode = 0;
-	   
+
 	if (!ReadUserYN(1))
 	{
-		std::cout << "Select install variant \n\n";
+		std::cout << "Select name variant: \n\n";
 		std::cout << "1. d3d9_chainload.dll \n";
 		std::cout << "2. d3d9_mchain.dll \n";
 		std::cout << "3. d912pxy.dll \n";//megai2: who knows?
 
-		std::cout << "\n[default: d3d9_chainload.dll]:";
+		std::cout << "\n[default: d3d9_chainload.dll]: ";
 
 		mode = read_user_integer(1);
 
@@ -148,16 +148,16 @@ int action_install()
 			installFile = "d912pxy.dll";
 			break;
 		default:
-			std::cout << "incorrect parameter, exiting\n";
+			std::cout << "Incorrect parameter; exiting.\n";
 			system("pause");
 			return -1;
 		}
 	}
 
-	std::string fCpy = "";		
+	std::string fCpy = "";
 	std::string fBkp = "";
 	std::string fIfn = installPath + installFile;
-	
+
 	fCpy += "copy dll\\";
 	fCpy += installSource;
 	fCpy += "d3d9.dll";
@@ -172,7 +172,7 @@ int action_install()
 
 	if (IsFileExist(fIfn.c_str()))
 	{
-		std::cout << "Backing up old " << fBkp << " file \n";
+		std::cout << "Backing up old file: " << fBkp << " \n";
 		if (system(fBkp.c_str()) != 0)
 		{
 			std::cout << "Backup failed! Exiting.\n";
@@ -181,17 +181,17 @@ int action_install()
 		}
 	}
 
-	std::cout << "\nInstalling \n";
-		
+	std::cout << "\nInstalling... \n";
+
 	if (system(fCpy.c_str()) != 0)
 	{
-		std::cout << "Install to " << fIfn << " from dll\\" << installSource <<  "d3d9.dll failed! Exiting.\n";
+		std::cout << "Installation to " << fIfn << " from dll\\" << installSource << "d3d9.dll failed! Exiting.\n";
 		system("pause");
 		return -1;
 	}
 
 
-	FILE* f = NULL;		
+	FILE* f = NULL;
 	if (!fopen_s(&f, "installed.flag", "wb"))
 	{
 		fwrite(&mode, sizeof(int), 1, f);
@@ -202,10 +202,10 @@ int action_install()
 		fflush(f);
 		fclose(f);
 
-		std::cout << "Done \n";
+		std::cout << "Installation complete. \n";
 	}
 	else {
-		std::cout << "Failed to write install info, you should remove " << fIfn << " file by hand if you want to remove this programm \n";
+		std::cout << "Failed to write installation info. You should remove the file '" << fIfn << "' by hand if you want to remove this program. \n";
 	}
 
 	system("pause");
@@ -216,17 +216,17 @@ int action_install()
 int action_remove()
 {
 	FILE* f = NULL;
-			
+
 	if (fopen_s(&f, "installed.flag", "rb"))
 	{
-		std::cout << "No install found, remove installed d3d9.dll(or other) and this folder by hand \n";
+		std::cout << "No installation found. Remove the installed d3d9.dll (or other) file and this folder by hand to uninstall manually. \n";
 
 		system("pause");
 		return 0;
 	}
 
 	int installData[2] = { 0, 0 };
-	
+
 	fread(&installData[0], sizeof(int), 2, f);
 	fclose(f);
 
@@ -253,8 +253,8 @@ int action_remove()
 	case 3:
 		installFile = "d912pxy.dll";
 		break;
-	default:		
-		std::cout << "incorrect install data, remove installed d3d9.dll(or other) and this folder by hand, exiting\n";
+	default:
+		std::cout << "Incorrect installation data. Remove the installed d3d9.dll (or other) file and this folder by hand to uninstall manually. Exiting.\n";
 		system("pause");
 		return -1;
 	}
@@ -264,7 +264,7 @@ int action_remove()
 
 	if (IsFileExist(fBkp.c_str()))
 	{
-		std::cout << "Found backup, restoring \n";
+		std::cout << "Found backup. Restoring: \n";
 
 		std::string fRst = "";
 
@@ -324,7 +324,7 @@ int action_clear_shader_cache()
 
 int action_exit()
 {
-	std::cout << "exiting \n";
+	std::cout << "Exiting \n";
 	system("pause");
 
 	return 0;
@@ -334,7 +334,7 @@ int main()
 {
 	std::cout << "d912pxy installer\n\n";
 
-	std::cout << "WARNING: USING OF THIS SOFTAWRE IS ENTIRELY AT YOUR OWN RISK!\n";
+	std::cout << "WARNING: USE OF THIS SOFTWARE IS ENTIRELY AT YOUR OWN RISK!\n";
 
 	if (!ReadUserYN(1))
 	{
@@ -343,7 +343,7 @@ int main()
 	}
 
 	std::cout << "WARNING: You should disable any overlay software installed \n";
-	std::cout << "Unless that software is not listed as compatible \n";
+	std::cout << "unless that software is listed as compatible. \n";
 
 	if (!ReadUserYN(1))
 	{
@@ -354,14 +354,14 @@ int main()
 	std::cout << "If you use ArcDPS, GW2Radial, GW2Hook, GW2Reshade, \n";
 	std::cout << "or any other mod that uses \"d3d9.dll\" file, you SHOULD read this first! \n";
 	std::cout << "https://github.com/megai2/d912pxy/issues/38 \n";
-	   
+
 	if (!ReadUserYN(1))
 	{
 		system("pause");
 		return -1;
 	}
 
-	std::cout << "Use default answers if you don't understand prompt meanings! \n";
+	std::cout << "Use default answers if you don't understand the prompts! \n";
 
 	if (!ReadUserYN(1))
 	{
@@ -379,7 +379,7 @@ int main()
 		if (!ReadUserYN(0))
 		{
 
-			std::cout << "You should put d912pxy folder in game root directory \n";
+			std::cout << "You should put the d912pxy folder into the game's root directory. \n";
 			std::cout << "Example: \n\n";
 
 			std::cout << "X:/games/GuildWars2/ \n";
@@ -391,7 +391,7 @@ int main()
 			system("pause");
 
 			return -1;
-		}		
+		}
 	}
 
 	std::cout << "Choose an action: \n"
@@ -400,14 +400,14 @@ int main()
 		<< "3. Clear shader cache \n"
 		<< "4. Exit \n";
 
-	std::cout << "\n[default: Install]:";
+	std::cout << "\n[default: Install]: ";
 
 	int mode = read_user_integer(1);
 
 	switch (mode)
 	{
 		case 1:
-			return action_install();			
+			return action_install();
 		case 2:
 			return action_remove();
 		case 3:
@@ -415,7 +415,7 @@ int main()
 		case 4:
 			return action_exit();
 		default:
-			std::cout << "incorrect parameter, exiting\n";
+			std::cout << "Incorrect parameter; exiting.\n";
 			return -1;
 	}
 
