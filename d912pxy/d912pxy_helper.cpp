@@ -24,7 +24,7 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
-#include "d912pxy_helper.h"
+#include "d912pxy_stackwalker.h"
 
 #ifdef _DEBUG
 	#define _DEBUG_DX 
@@ -40,9 +40,29 @@ UINT s_crashLine = 0;
 
 D3D_FEATURE_LEVEL usingFeatures = D3D_FEATURE_LEVEL_11_0;
 
+LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
+{
+	PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+
+	GetLogger()->P7_ERROR(m_helperLGM, L"Exception: %u", ExceptionRecord->ExceptionCode);
+
+	switch (ExceptionRecord->ExceptionCode)
+	{
+	case EXCEPTION_ACCESS_VIOLATION:
+	case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+	case EXCEPTION_STACK_OVERFLOW:		
+	{
+		d912pxy_StackWalker sw;		
+		sw.ShowCallstack();
+		return EXCEPTION_CONTINUE_SEARCH;
+	}		
+	default:		
+		return EXCEPTION_CONTINUE_SEARCH;
+	}	
+}
 
 //megai2: from https://stackoverflow.com/a/41480827
-LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
+LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 {
 	PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
 
@@ -91,14 +111,18 @@ LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
 
 		}
 		return EXCEPTION_CONTINUE_EXECUTION;
-	}
-
-	return EXCEPTION_CONTINUE_SEARCH;
+	default:
+		return VexHandler(ExceptionInfo);
+	}	
 }
 
 void d912pxy_helper::InstallVehHandler()
 {
+#ifdef _DEBUG
+	AddVectoredExceptionHandler(TRUE, VexDbgHandler);
+#else
 	AddVectoredExceptionHandler(TRUE, VexHandler);
+#endif
 }
 
 int d912pxy_helper::IsFileExist(const char *name)

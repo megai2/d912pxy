@@ -502,6 +502,7 @@
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3d9.h" />
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3dx9.h" />
     <ClInclude Include="..\thirdparty\D3D9Proxy\defines.h" />
+    <ClInclude Include="..\thirdparty\StackWalker\StackWalker.h" />
     <ClInclude Include="d3d9_proxy_dll.h" />
     <ClInclude Include="d912pxy_linked_list.h" />
     <ClInclude Include="d912pxy_basetexture.h" />
@@ -541,6 +542,7 @@
     <ClInclude Include="d912pxy_shader_db.h" />
     <ClInclude Include="d912pxy_shader_pair.h" />
     <ClInclude Include="d912pxy_shader_replacer.h" />
+    <ClInclude Include="d912pxy_stackwalker.h" />
     <ClInclude Include="d912pxy_surface.h" />
     <ClInclude Include="d912pxy_surface_layer.h" />
     <ClInclude Include="d912pxy_surface_pool.h" />
@@ -567,6 +569,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\thirdparty\StackWalker\StackWalker.cpp" />
     <ClCompile Include="d3d9_proxy_dll.cpp" />
     <ClCompile Include="d912pxy_fwdecl.cpp" />
     <ClCompile Include="d912pxy_linked_list.cpp" />
@@ -606,6 +609,7 @@
     <ClCompile Include="d912pxy_shader_db.cpp" />
     <ClCompile Include="d912pxy_shader_pair.cpp" />
     <ClCompile Include="d912pxy_shader_replacer.cpp" />
+    <ClCompile Include="d912pxy_stackwalker.cpp" />
     <ClCompile Include="d912pxy_surface.cpp" />
     <ClCompile Include="d912pxy_surface_layer.cpp" />
     <ClCompile Include="d912pxy_surface_pool.cpp" />

@@ -37,6 +37,7 @@ using namespace Microsoft::WRL;
 namespace d912pxy_helper {
 
 	LONG NTAPI VexHandler(PEXCEPTION_POINTERS ExceptionInfo);
+	LONG NTAPI VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo);
 
 	void InstallVehHandler();
 

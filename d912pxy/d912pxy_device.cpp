@@ -270,8 +270,11 @@ void d912pxy_device::PrintInfoBanner()
 
 #ifdef _DEBUG
 	LOG_INFO_DTDM("Redirecting DX12 and DXGI debug messages to P7");	
-	d912pxy_helper::InstallVehHandler();
 #endif
+
+	LOG_INFO_DTDM("Adding vectored exception handler");
+	d912pxy_helper::InstallVehHandler();
+
 
 #ifdef TRACK_SHADER_BUGS_PROFILE
 	LOG_INFO_DTDM("Running ps build, expect performance drops");
