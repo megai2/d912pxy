@@ -98,7 +98,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_CS(const wchar_t* b
 	}
 }
 
-d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfolder)
+d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfolder, UINT keepSource)
 {
 	wchar_t replFn[1024];
 
@@ -156,7 +156,8 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfol
 		ret2.blob = ret;
 
 #ifndef _DEBUG
-		DeleteFile(replFn);
+		if (!keepSource)
+			DeleteFile(replFn);
 #endif
 
 		return ret2;
@@ -225,22 +226,16 @@ void d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)
 	wsprintf(replFn, L"%s/%08lX%08lX.hlsl", bfolder, (UINT32)(mUID >> 32), (UINT32)(mUID & 0xFFFFFFFF));
 
 	d912pxy_hlsl_generator* gen = new d912pxy_hlsl_generator(oCode, oLen, replFn, mUID);
-	gen->Process();
-	/*
-	wchar_t replFn2[4096];
-	wsprintf(replFn2, L"%s_v/%08lX%08lX.vf", bfolder, mUID >> 32, mUID & 0xFFFFFFFF);
-	FILE* f = _wfopen(replFn2, L"wb");
 
-	UINT32 maxVars = gen->GetMaxShaderPassedVars();
+	try {
 
-	if (f)
-	{		
-		fwrite(&maxVars, 4, 1, f);		
-		fflush(f);
-		fclose(f);
+		gen->Process();
+
 	}
-	
-	LOG_DBG_DTDM2("writed %u readed %u test %u", maxVars*16, GetMaxVars(), (maxVars * 16) > (GetMaxVars()));*/
+	catch (...)
+	{
+		LOG_ERR_DTDM("hlsl generator got error for shader: %016llX", mUID);
+	}
 
 	delete gen;
 }
@@ -251,11 +246,11 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 
 	if (!ret.code)
 	{
-		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_dir);
+		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_custom_dir, 1);
 		if (!ret.code)
 		{
 			GenerateHLSL(d912pxy_shader_db_hlsl_dir);
-			ret = CompileFromHLSL(d912pxy_shader_db_hlsl_dir);
+			ret = CompileFromHLSL(d912pxy_shader_db_hlsl_dir, 0);
 			if (!ret.code)
 			{
 				m_log->P7_ERROR(LGC_DEFAULT, TM("Failed to replace shader with UID = %016llX"), mUID);
