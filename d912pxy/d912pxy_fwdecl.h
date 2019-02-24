@@ -178,6 +178,7 @@ SOFTWARE.
 #define d912pxy_cs_hlsl_dir L"./d912pxy/shaders/cs"
 #define d912pxy_cs_cso_dir "cs/cso"
 #define d912pxy_shader_db_hlsl_dir L"./d912pxy/shaders/hlsl"
+#define d912pxy_shader_db_hlsl_custom_dir L"./d912pxy/shaders/hlsl/custom"
 #define d912pxy_shader_db_cso_dir "shaders/cso"
 #define d912pxy_shader_db_bugs_dir "shaders/bugs"
 
