@@ -159,17 +159,19 @@ HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt,
 	rsDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	rsDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-	if (d912pxy_s(DXDev)->CreateCommittedResource(
+	HRESULT hr = d912pxy_s(DXDev)->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
 		&rsDesc,
 		D3D12_RESOURCE_STATE_COMMON,
 		NULL,
 		IID_PPV_ARGS(&m_res)
-	) != S_OK)
+	);
+
+	if (hr != S_OK)
 	{
 		m_log->P7_ERROR(LGC_DEFAULT, TM("d12res_tex2d w %u h %u arsz %u lvls %u fmt %u"), width, height, arrSz, *levels, fmt);
-		LOG_ERR_THROW2(-1, "texture object create failed");
+		LOG_ERR_THROW2(hr, "texture object create failed");
 	}
 
 	m_res->SetName(L"texture obj");
