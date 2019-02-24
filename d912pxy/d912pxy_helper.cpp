@@ -49,6 +49,7 @@ LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
 	switch (ExceptionRecord->ExceptionCode)
 	{
 	case EXCEPTION_ACCESS_VIOLATION:
+	case EXCEPTION_INT_DIVIDE_BY_ZERO:
 	case EXCEPTION_FLT_DIVIDE_BY_ZERO:
 	case EXCEPTION_STACK_OVERFLOW:		
 	{
