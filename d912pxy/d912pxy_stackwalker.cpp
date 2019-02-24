@@ -14,6 +14,11 @@ void d912pxy_StackWalker::OnOutput(LPCSTR szText)
 	m_log->P7_ERROR(LGC_DEFAULT, L"%S", szText);
 
 	FILE* f = fopen("d912pxy_crash.txt", "ab");
-	fwrite(szText, 1, lstrlenA(szText), f);
+
+	fwrite(szText, 1, lstrlenA(szText)-1, f);
+
+	const char* nlv = "\r\n";
+	fwrite(nlv, 1, 2, f);
+
 	fclose(f);
 }
