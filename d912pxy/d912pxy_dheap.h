@@ -31,8 +31,9 @@ typedef struct d912pxy_dheap_slot_stack {
 } d912pxy_dheap_slot_stack;
 
 #define PXY_DHEAP_STACK_FREE 0
-#define PXY_DHEAP_STACK_CLEANUP 1
-#define PXY_DHEAP_STACK_COUNT 2
+#define PXY_DHEAP_STACK_GPU_HOLDUP 1
+#define PXY_DHEAP_STACK_CLEANUP 2
+#define PXY_DHEAP_STACK_COUNT 3
 
 class d912pxy_dheap : public d912pxy_noncom
 {

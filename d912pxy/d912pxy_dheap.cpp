@@ -84,7 +84,7 @@ UINT d912pxy_dheap::OccupySlot()
 
 void d912pxy_dheap::FreeSlot(UINT slot)
 {
-	LONG stackSlot = InterlockedIncrement(&stacks[PXY_DHEAP_STACK_CLEANUP].top) - 1;
+	LONG stackSlot = InterlockedIncrement(&stacks[PXY_DHEAP_STACK_GPU_HOLDUP].top) - 1;
 
 	if (stackSlot >= (LONG)m_desc->NumDescriptors)
 	{
@@ -92,7 +92,7 @@ void d912pxy_dheap::FreeSlot(UINT slot)
 		LOG_ERR_THROW2(-1, "dheapslots == 0 @ FreeSlot");
 	}
 
-	stacks[PXY_DHEAP_STACK_CLEANUP].data[stackSlot] = slot;
+	stacks[PXY_DHEAP_STACK_GPU_HOLDUP].data[stackSlot] = slot;
 }
 
 void d912pxy_dheap::CleanupSlots(UINT maxCount)
@@ -117,6 +117,33 @@ void d912pxy_dheap::CleanupSlots(UINT maxCount)
 		}
 
 		stacks[PXY_DHEAP_STACK_FREE].data[writeSlot] = slot;
+
+		FRAME_METRIC_DHEAP(selfIID, writeSlot)
+
+		if (limit >= maxCount)
+			break;
+		else
+			++limit;
+	}
+
+	stackSlot = InterlockedAdd(&stacks[PXY_DHEAP_STACK_GPU_HOLDUP].top, 0);
+	limit = 0;
+
+	while (stackSlot)
+	{
+		stackSlot = InterlockedDecrement(&stacks[PXY_DHEAP_STACK_GPU_HOLDUP].top);
+
+		UINT slot = stacks[PXY_DHEAP_STACK_GPU_HOLDUP].data[stackSlot];
+
+		LONG writeSlot = InterlockedIncrement(&stacks[PXY_DHEAP_STACK_CLEANUP].top) - 1;
+
+		if (writeSlot >= (LONG)m_desc->NumDescriptors)
+		{
+			m_log->P7_ERROR(LGC_DEFAULT, TM("DHeap %u free slots limit exceeded"), selfIID);
+			LOG_ERR_THROW2(-1, "dheapslots == 0 @ CleanupSlots 2");
+		}
+
+		stacks[PXY_DHEAP_STACK_CLEANUP].data[writeSlot] = slot;
 
 		FRAME_METRIC_DHEAP(selfIID, writeSlot)
 
