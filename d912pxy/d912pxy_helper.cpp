@@ -119,11 +119,7 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 
 void d912pxy_helper::InstallVehHandler()
 {
-#ifdef _DEBUG
 	AddVectoredExceptionHandler(TRUE, VexDbgHandler);
-#else
-	AddVectoredExceptionHandler(TRUE, VexHandler);
-#endif
 }
 
 int d912pxy_helper::IsFileExist(const char *name)

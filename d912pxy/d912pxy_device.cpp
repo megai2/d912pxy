@@ -268,10 +268,7 @@ void d912pxy_device::PrintInfoBanner()
 	LOG_INFO_DTDM("!!!NOT INTENDED TO PERFORM ALL DIRECT3D9 FEATURES!!!");
 	LOG_INFO_DTDM("DX9: original display mode width %u height %u", cached_dx9displaymode.Width, cached_dx9displaymode.Height);
 
-#ifdef _DEBUG
-	LOG_INFO_DTDM("Redirecting DX12 and DXGI debug messages to P7");	
-#endif
-
+	LOG_INFO_DTDM("Redirecting debug messages to P7");	
 	LOG_INFO_DTDM("Adding vectored exception handler");
 	d912pxy_helper::InstallVehHandler();
 
