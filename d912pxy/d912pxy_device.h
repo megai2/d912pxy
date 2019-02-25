@@ -220,6 +220,9 @@ private:
 
 	void* initPtr;
 
+	//dx9 api hacks
+	UINT32 gpuWriteDsc;
+
 #ifdef PERFORMANCE_GRAPH_WRITE	
 	d912pxy_performance_graph* perfGraph;
 #endif

@@ -942,6 +942,21 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 		case D3DRS_ENABLE_D912PXY_API_HACKS:
 			return 343434;
 		break;
+		case D3DRS_D912PXY_SETUP_PSO:
+			d912pxy_s(psoCache)->MarkDirty(0);
+		break;
+		case D3DRS_D912PXY_GPU_WRITE:
+			gpuWriteDsc = Value;
+		break;
+		case D3DRS_D912PXY_DRAW:
+			if (Value == 0)
+			{
+				d912pxy_s(textureState)->Use();
+			}
+			else {
+				mTextureState.dirty |= Value;
+			}
+		break;
 		case D3DRS_STENCILREF:
 			d912pxy_s(CMDReplay)->OMStencilRef(Value);
 		break; //57,   /* Reference value used in stencil test */
@@ -1048,6 +1063,13 @@ HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* p
 		break;
 	case D3DRS_D912PXY_SETUP_PSO:
 		d912pxy_s(psoCache)->UseCompiled((d912pxy_pso_cache_item*)pValue);
+		break;
+	case D3DRS_D912PXY_GPU_WRITE:
+		d912pxy_s(batch)->GPUWrite((void*)pValue, gpuWriteDsc & 0xFFFF, (gpuWriteDsc >> 16));
+		break;
+	case D3DRS_D912PXY_SAMPLER_ID:
+		d912pxy_s(textureState)->Use();
+		*pValue = mTextureState.splHeapID[*pValue];
 		break;
 	default:
 		*pValue = d912pxy_s(psoCache)->GetDX9RsValue(State);
