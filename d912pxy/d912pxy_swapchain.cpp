@@ -564,6 +564,10 @@ HRESULT d912pxy_swapchain::SwapHandle_Focus_Pending()
 		ChangeState(SWCS_RECONFIGURE);
 	}
 
+	d912pxy_s(iframe)->End();
+	d912pxy_s(GPUque)->Flush(0);	
+	d912pxy_s(iframe)->Start();
+
 	return D3D_OK;
 }
 
