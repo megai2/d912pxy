@@ -18,7 +18,7 @@ void d912pxy_StackWalker::OnOutput(LPCSTR szText)
 
 	FILE* f = fopen("d912pxy_crash.txt", "ab");
 	
-	fwrite(szText, 2, lstrlen(buf)-1, f);
+	fwrite(buf, 2, lstrlenW(buf)-1, f);
 
 	const wchar_t* nlv = L"\r\n";
 	fwrite(nlv, 2, 2, f);
