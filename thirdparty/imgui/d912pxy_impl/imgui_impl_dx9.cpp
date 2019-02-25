@@ -41,11 +41,29 @@ static IDirect3DPixelShader9* g_pPS = NULL;
 static IDirect3DVertexDeclaration9* g_pVDecl = NULL;
 static void* g_pPSO = NULL;
 static IDirect3DVertexBuffer9*  g_pVB2 = NULL;
+static DWORD g_d912pxy_texture[4] = { 0,0,0,0 };
+static DWORD g_d912pxy_sampler[4] = { 0,0,0,0 };
+
+//D3D9 API extenders =======================
+
 #define D3DRS_ENABLE_D912PXY_API_HACKS (D3DRENDERSTATETYPE)220
 #define D3DRS_D912PXY_ENQUEUE_PSO_COMPILE (D3DRENDERSTATETYPE)221
 #define D3DRS_D912PXY_SETUP_PSO (D3DRENDERSTATETYPE)222
+#define D3DRS_D912PXY_GPU_WRITE (D3DRENDERSTATETYPE)223
+#define D3DRS_D912PXY_DRAW (D3DRENDERSTATETYPE)224
+#define D3DRS_D912PXY_SAMPLER_ID (D3DRENDERSTATETYPE)225
 
 #define D3DDECLMETHOD_PER_VERTEX_CONSTANT 8
+#define D3DUSAGE_D912PXY_FORCE_RT 0x0F000000L
+
+#define D912PXY_ENCODE_GPU_WRITE_DSC(sz, offset) ((sz & 0xFFFF) | ((offset & 0xFFFF) << 16))
+
+#define D912PXY_GPU_WRITE_OFFSET_TEXBIND 0
+#define D912PXY_GPU_WRITE_OFFSET_SAMPLER 8 
+#define D912PXY_GPU_WRITE_OFFSET_VS_VARS 16
+#define D912PXY_GPU_WRITE_OFFSET_PS_VARS 16 + 256
+
+//========
 
 DWORD g_pVS_function[] = {
 	0xFFFE0300, 0x0014FFFE, 0x42415443, 0x0000001C, 0x00000023, 0xFFFE0300, 0x00000000, 0x00000000, 0x00000100, 0x0000001C,
@@ -117,7 +135,19 @@ void ImGui_ImplDX9_RenderDrawLists_d912pxy(ImDrawData* draw_data)
 	}
 	g_pVB->Unlock();
 	g_pIB->Unlock();
+
+	//megai2: mark draw start so we can see that app is issuing some not default dx9 api approach
+	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_DRAW, 0);
+
+	//setup saved sampler by writing directly into gpu buffer
+	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_GPU_WRITE, D912PXY_ENCODE_GPU_WRITE_DSC(1, D912PXY_GPU_WRITE_OFFSET_SAMPLER));
+	g_pd3dDevice->GetRenderState(D3DRS_D912PXY_GPU_WRITE, &g_d912pxy_sampler[0]);
+
+	//prepare to write texture id for draws
+	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_GPU_WRITE, D912PXY_ENCODE_GPU_WRITE_DSC(1, D912PXY_GPU_WRITE_OFFSET_TEXBIND));
+
 	g_pd3dDevice->SetStreamSource(0, g_pVB, 0, sizeof(ImDrawVert));
+	//use additional vertex buffer as shader constant for proj matrix
 	g_pd3dDevice->SetStreamSource(1, g_pVB2, 0, 8);
 	g_pd3dDevice->SetIndices(g_pIB);
 	
@@ -129,10 +159,6 @@ void ImGui_ImplDX9_RenderDrawLists_d912pxy(ImDrawData* draw_data)
 	vp.MinZ = 0.0f;
 	vp.MaxZ = 1.0f;
 	g_pd3dDevice->SetViewport(&vp);
-
-	// Setup render state: fixed-pipeline, alpha-blending, no face culling, no depth testing
-	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 
 	DWORD rs_atOld, rs_sctOld;
 
@@ -180,9 +206,12 @@ void ImGui_ImplDX9_RenderDrawLists_d912pxy(ImDrawData* draw_data)
 			else
 			{
 				const RECT r = { (LONG)pcmd->ClipRect.x, (LONG)pcmd->ClipRect.y, (LONG)pcmd->ClipRect.z, (LONG)pcmd->ClipRect.w };
-				g_pd3dDevice->SetTexture(0, (LPDIRECT3DTEXTURE9)pcmd->TextureId);
 				g_pd3dDevice->SetScissorRect(&r);
 
+				//megai2: this will get us texture id 
+				g_d912pxy_texture[0] = ((LPDIRECT3DTEXTURE9)pcmd->TextureId)->GetPriority();
+
+				g_pd3dDevice->GetRenderState(D3DRS_D912PXY_GPU_WRITE, &g_d912pxy_texture[0]);							
 				g_pd3dDevice->GetRenderState(D3DRS_D912PXY_SETUP_PSO, (DWORD*)g_pPSO);
 
 				g_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, vtx_offset, 0, (UINT)cmd_list->VtxBuffer.Size, idx_offset, pcmd->ElemCount / 3);
@@ -196,6 +225,10 @@ void ImGui_ImplDX9_RenderDrawLists_d912pxy(ImDrawData* draw_data)
 	g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, rs_sctOld);
 
 	g_pd3dDevice->SetStreamSource(1, NULL, 0, 0);
+
+	//megai2: update dirty flags so we transfer to dx9 mode safely
+	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_DRAW, 0x101);
+	g_pd3dDevice->SetRenderState(D3DRS_D912PXY_SETUP_PSO, 0);
 }
 
 static bool ImGui_ImplDX9_Release_d912pxy_objects()
@@ -271,6 +304,15 @@ static bool ImGui_ImplDX9_Create_d912pxy_objects()
 	
 	if (g_pd3dDevice->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&g_pPSO) < 0)
 		return false;
+
+	//megai2: set and save desired sampler
+
+	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+
+	g_d912pxy_sampler[0] = 0;
+	g_pd3dDevice->GetRenderState(D3DRS_D912PXY_SAMPLER_ID, &g_d912pxy_sampler[0]);
+
 
 	return true;
 }
