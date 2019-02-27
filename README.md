@@ -88,3 +88,4 @@ Case #4: [Unnatural performance drops](https://github.com/megai2/d912pxy/wiki/Re
 # Support the developer
 
 WMZ 442298672293
+Bitcoin 1B46eQtKUcvSLyz1F8QxKcdHACAXbuXGgM
