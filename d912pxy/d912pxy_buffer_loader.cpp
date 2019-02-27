@@ -32,6 +32,8 @@ d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_non
 	buffer = new d912pxy_ringbuffer<d912pxy_buffer_load_item*>(PXY_INNER_MAX_ASYNC_BUFFERLOADS, 0);
 	swapBuffer = new d912pxy_ringbuffer<d912pxy_vstream*>(PXY_INNER_MAX_ASYNC_BUFFERLOADS, 0);
 
+	InitializeCriticalSection(&writeLock);
+
 	d912pxy_s(bufloadThread) = this;
 }
 
@@ -58,8 +60,10 @@ void d912pxy_buffer_loader::IssueUpload(d912pxy_vstream * dst, d912pxy_upload_it
 		poolPtr = 0;
 
 	//megai2: as ringbufer is not growing, we hit overrun and crash if we overwriting pool data
+	EnterCriticalSection(&writeLock);
 	buffer->WriteElement(it);
-
+	LeaveCriticalSection(&writeLock);
+	
 	++needSignal;
 
 	if ((needSignal % 10) == 0)

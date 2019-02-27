@@ -53,5 +53,7 @@ private:
 
 	d912pxy_ringbuffer<d912pxy_buffer_load_item*>* buffer;
 	d912pxy_ringbuffer<d912pxy_vstream*>* swapBuffer;
+
+	CRITICAL_SECTION writeLock;
 };
 

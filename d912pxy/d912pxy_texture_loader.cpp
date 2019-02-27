@@ -29,16 +29,16 @@ d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_no
 	poolPtr = 0;
 
 	buffer = new d912pxy_ringbuffer<d912pxy_texture_load_item*>(PXY_INNER_MAX_ASYNC_TEXLOADS, 0);
-	swapBuffer = new d912pxy_ringbuffer<d912pxy_resource*>(PXY_INNER_MAX_ASYNC_TEXLOADS, 0);
 
 	d912pxy_s(texloadThread) = this;
+
+	InitializeCriticalSection(&writeLock);
 }
 
 d912pxy_texture_loader::~d912pxy_texture_loader()
 {
 	Stop();
-
-	delete swapBuffer;
+	
 	delete buffer;
 }
 
@@ -56,7 +56,10 @@ void d912pxy_texture_loader::IssueUpload(d912pxy_surface * surf, void* mem, UINT
 	
 	//megai2: as ringbufer is not growing, we hit overrun and crash if we overwriting pool data
 	surf->ThreadRef(1);
-	buffer->WriteElement(it);
+
+	EnterCriticalSection(&writeLock);
+	buffer->WriteElement(it);	
+	LeaveCriticalSection(&writeLock);
 //	it->surf->DelayedLoad(it->ul, it->subRes);
 
 

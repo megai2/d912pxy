@@ -53,6 +53,7 @@ private:
 	UINT poolPtr;
 
 	d912pxy_ringbuffer<d912pxy_texture_load_item*>* buffer;
-	d912pxy_ringbuffer<d912pxy_resource*>* swapBuffer;
+	
+	CRITICAL_SECTION writeLock;
 };
 
