@@ -37,7 +37,3 @@ void D3D9ProxyCb_set_OnDevDestroy(d3d9ProxyCB_OnDevDestroy pxFun);
 
 d3d9ProxyCB_OnDevCreate D3D9ProxyCb_get_OnDevCreate();
 d3d9ProxyCB_OnDevDestroy D3D9ProxyCb_get_OnDevDestroy();
-
-
-//IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion);
-//HRESULT WINAPI Direct3DCreate9Ex(_In_  UINT SDKVersion, _Out_ IDirect3D9Ex **ppD3D);
