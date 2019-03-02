@@ -571,6 +571,18 @@
   <ItemGroup>
     <ClCompile Include="..\thirdparty\StackWalker\StackWalker.cpp" />
     <ClCompile Include="d3d9_proxy_dll.cpp" />
+    <ClCompile Include="d912pxy_device_clipping.cpp" />
+    <ClCompile Include="d912pxy_device_drawing.cpp" />
+    <ClCompile Include="d912pxy_device_constructors.cpp" />
+    <ClCompile Include="d912pxy_device_init.cpp" />
+    <ClCompile Include="d912pxy_device_mt.cpp" />
+    <ClCompile Include="d912pxy_device_pso.cpp" />
+    <ClCompile Include="d912pxy_device_shaders.cpp" />
+    <ClCompile Include="d912pxy_device_streams.cpp" />
+    <ClCompile Include="d912pxy_device_surface.cpp" />
+    <ClCompile Include="d912pxy_device_swapchain.cpp" />
+    <ClCompile Include="d912pxy_device_texstate.cpp" />
+    <ClCompile Include="d912pxy_device_unimpl.cpp" />
     <ClCompile Include="d912pxy_fwdecl.cpp" />
     <ClCompile Include="d912pxy_linked_list.cpp" />
     <ClCompile Include="d912pxy_basetexture.cpp" />

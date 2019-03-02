@@ -26,9 +26,18 @@ SOFTWARE.
 #include "stdafx.h"
 
 #define PXY_METRICS_API_OVERHEAD_DEVICE 0
-#define PXY_METRICS_API_OVERHEAD_VSTREAM 1
-#define PXY_METRICS_API_OVERHEAD_TEXTURE 2
-#define PXY_METRICS_API_OVERHEAD_COUNT 3
+#define PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING 1
+#define PXY_METRICS_API_OVERHEAD_DEVICE_CLIPPING 2
+#define PXY_METRICS_API_OVERHEAD_DEVICE_CONSTRUCTORS 3
+#define PXY_METRICS_API_OVERHEAD_DEVICE_PSO 4
+#define PXY_METRICS_API_OVERHEAD_DEVICE_SHADERS 5
+#define PXY_METRICS_API_OVERHEAD_DEVICE_STREAMS 6
+#define PXY_METRICS_API_OVERHEAD_DEVICE_SURFACE 7
+#define PXY_METRICS_API_OVERHEAD_DEVICE_SWAPCHAIN 8
+#define PXY_METRICS_API_OVERHEAD_DEVICE_TEXSTATE 9
+#define PXY_METRICS_API_OVERHEAD_VSTREAM 10
+#define PXY_METRICS_API_OVERHEAD_TEXTURE 11
+#define PXY_METRICS_API_OVERHEAD_COUNT 12
 
 #define PXY_METRICS_IFRAME_PREP 0
 #define PXY_METRICS_IFRAME_EXEC 1
@@ -36,7 +45,16 @@ SOFTWARE.
 #define PXY_METRICS_IFRAME_COUNT 3
 
 static const wchar_t* PXY_METRICS_API_OVERHEAD_NAMES[] = {
-	L"overhead / device",
+	L"overhead / dev",
+	L"overhead / dev / draw",
+	L"overhead / dev / clip",
+	L"overhead / dev / ctrs",
+	L"overhead / dev / pso",
+	L"overhead / dev / shd",
+	L"overhead / dev / strm",
+	L"overhead / dev / surf",
+	L"overhead / dev / swpc",
+	L"overhead / dev / texs",
 	L"overhead / vstream",
 	L"overhead / texture",
 	L"overhead / total"
