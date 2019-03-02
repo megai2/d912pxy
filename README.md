@@ -5,7 +5,7 @@ d912pxy is a way to make games that use DirectX 9 use DirectX 12 instead, withou
 This is specifically designed for Guild Wars 2.
 You can try to use it with other games; it might work.
 
-This project is in early development. Expect bugs, crashes, hangs, stalls and some other fun stuff.
+This project is in beta. Expect some bugs, crashes, hangs, stalls and some other fun stuff.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/gs8drlb0goyp6h28?svg=true)](https://ci.appveyor.com/project/megai2/d912pxy)
 [![](https://img.shields.io/discord/384735285197537290.svg?logo=discord&logoColor=f0f0f0)](https://discord.gg/y2MGJYr)
@@ -73,6 +73,10 @@ Video by reddit u/moriz0, running WvW in 4k: https://www.youtube.com/watch?v=RQA
 **Bug**: ArcDPS doesn't work using chainloading
 
 *Workaround*: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment-459956222).
+
+**Bug**: Long load times
+
+*Note*: Long load times on install/uninstall are expected as shader cache is not included in release package.
 
 
 # Troubleshooting
