@@ -26,7 +26,7 @@ SOFTWARE.
 
 d912pxy_shader_db::d912pxy_shader_db(d912pxy_device* dev) : d912pxy_noncom(dev, L"shader database")
 {
-	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_uid)*2, 0xFF, 2, 0);
+	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_uid)*2, 0xFF, 2);
 	shaderCodes = new d912pxy_memtree(sizeof(d912pxy_shader_uid), 0xFF, 2, 0);
 
 	InitializeCriticalSection(&treeAcCS);
@@ -125,7 +125,7 @@ d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_ps
 	
 	EnterCriticalSection(&treeAcCS);
 
-	shaderPairs->PointAtNH(&ha);
+	shaderPairs->PointAtMem(&ha, 4);
 
 	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->CurrentCID();
 
@@ -151,7 +151,7 @@ d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_ps
 void d912pxy_shader_db::DeletePair(UINT32 ha)
 {
 	EnterCriticalSection(&treeAcCS);
-	shaderPairs->PointAtNH(&ha);
+	shaderPairs->PointAtMem(&ha, 4);
 
 	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->CurrentCID();
 	

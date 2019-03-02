@@ -24,10 +24,6 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-UINT16 pso_desc_memjmp_map[] = {
-	8,0,0,0,0,3,0,6,0,0,0,0,3,0,0,93,7,3,3,3,3,3,7,291,15,0,0,0,20,3,3,3,15,3,23,0,0,0,0,3,15,3,31,44
-};
-
 D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_pso_cache::cDscBase;
 UINT d912pxy_pso_cache::vsMaxVars;
 UINT d912pxy_pso_cache::psMaxVars;
@@ -36,7 +32,7 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 {
 	d912pxy_s(psoCache) = this;
 
-	cacheIndexes = new d912pxy_memtree2(sizeof(d912pxy_trimmed_dx12_pso) - d912pxy_trimmed_dx12_pso_hash_offset, PXY_INNER_MAX_PSO_CACHE_NODES, 2, 0);
+	cacheIndexes = new d912pxy_memtree2(sizeof(d912pxy_trimmed_dx12_pso) - d912pxy_trimmed_dx12_pso_hash_offset, PXY_INNER_MAX_PSO_CACHE_NODES, 2);
 	cacheIncID = 0;
 
 	d912pxy_pso_cache::vsMaxVars = 0;
@@ -538,7 +534,7 @@ d912pxy_pso_cache_item* d912pxy_pso_cache::UseByDesc(d912pxy_trimmed_dx12_pso* d
 {
 	dsc->vdeclHash = dsc->InputLayout->GetHash();
 
-	cacheIndexes->PointAt((void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset));
+	cacheIndexes->PointAt32((void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset));
 
 	UINT64 id = cacheIndexes->CurrentCID();
 

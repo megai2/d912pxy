@@ -30,7 +30,7 @@ d912pxy_surface_pool::d912pxy_surface_pool(d912pxy_device* dev) : d912pxy_pool<d
 
 	InitializeCriticalSection(&mtMutex);
 
-	table = new d912pxy_memtree2(4, 4096, 2, 0);
+	table = new d912pxy_memtree2(4, 4096, 2);
 
 	this->rwMutex = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION)*1);
 	InitializeCriticalSection(&this->rwMutex[0]);
@@ -104,7 +104,7 @@ d912pxy_ringbuffer<d912pxy_surface*>* d912pxy_surface_pool::GetCatBuffer(UINT32 
 
 	EnterCriticalSection(&mtMutex);
 
-	table->PointAtNH(&cat);
+	table->PointAtMem(&cat, 4);
 	ret = (d912pxy_ringbuffer<d912pxy_surface*>*)table->CurrentCID();
 
 	if (!ret)

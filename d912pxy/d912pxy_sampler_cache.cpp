@@ -24,17 +24,13 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-UINT16 sampler_dsc_memjmp_map[] = {
-	0,3,3,3,7, 33
-};
-
 d912pxy_sampler_cache::d912pxy_sampler_cache(d912pxy_device* dev, d912pxy_dheap* sviewHeap, UINT maxCacheNodes) : d912pxy_noncom(dev, L"sampler bulk data")
 {
 	d912pxy_s(samplerState) = this;
 
 	samplerHeap = sviewHeap;
 
-	mtree = new d912pxy_memtree2(sizeof(D3D12_SAMPLER_DESC), maxCacheNodes, 0, sampler_dsc_memjmp_map);
+	mtree = new d912pxy_memtree2(sizeof(D3D12_SAMPLER_DESC), maxCacheNodes, 0);
 
 	for (int i = 0; i != PXY_INNER_MAX_API_SAMPLERS; ++i)
 	{
@@ -69,7 +65,7 @@ UINT d912pxy_sampler_cache::GetDirtyDHeapId(UINT stage)
 	UINT ret = 0;
 	D3D12_SAMPLER_DESC* cDsc = &samplers[stage];
 	
-	ret = (UINT32)mtree->PointAt(cDsc);
+	ret = (UINT32)mtree->PointAt32(cDsc);
 
 	if (ret != 0)
 	{
@@ -90,7 +86,7 @@ UINT d912pxy_sampler_cache::GetDHeapId(UINT stage)
 	D3D12_SAMPLER_DESC* cDsc = &samplers[stage];
 
 	if (gDirty & (1 << stage))
-		ret = (UINT32)mtree->PointAt(cDsc);
+		ret = (UINT32)mtree->PointAt32(cDsc);
 	else 
 	{
 		ret = lastDHeapId[stage];
@@ -118,7 +114,7 @@ UINT d912pxy_sampler_cache::GetDHeapId2(D3D12_SAMPLER_DESC * dsc)
 	UINT ret = 0;
 	D3D12_SAMPLER_DESC* cDsc = dsc;
 
-	ret = (UINT32)mtree->PointAt(cDsc);
+	ret = (UINT32)mtree->PointAt32(cDsc);
 
 	if (ret != 0)
 	{
