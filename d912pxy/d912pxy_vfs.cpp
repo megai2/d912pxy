@@ -95,7 +95,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 
 	fseek(m_vfsBlocks[id], 0, SEEK_SET);
 
-	m_vfsFileOffsets[id] = new d912pxy_memtree(4, PXY_VFS_MAX_FILES_PER_BID, 2, 0);
+	m_vfsFileOffsets[id] = new d912pxy_memtree2(4, PXY_VFS_MAX_FILES_PER_BID, 2);
 
 	m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE;
 	
@@ -119,7 +119,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 
 			if (s_headerTable[i].hash != 0)
 			{
-				m_vfsFileOffsets[id]->PointAtNH(s_headerTable[i].hash);
+				m_vfsFileOffsets[id]->PointAtMem(&s_headerTable[i].hash, 8);
 				m_vfsFileOffsets[id]->SetValue(s_headerTable[i].offset);
 			}
 		}
@@ -163,34 +163,50 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 	return m_vfsBlocks[id];
 }
 
-UINT64 d912pxy_vfs::IsPresent(char * fnpath, UINT32 vfsId)
-{
-	UINT32 fnHash = d912pxy_memtree2::memHash32s(fnpath, (UINT32)strlen(fnpath));
+UINT64 d912pxy_vfs::IsPresentN(char * fnpath, UINT32 vfsId)
+{	
+	return IsPresentH(HashFromName(fnpath), vfsId);
+}
 
+UINT64 d912pxy_vfs::IsPresentH(UINT64 fnHash, UINT32 vfsId)
+{
 	int i = vfsId;
 	{
 		if (m_vfsBlocks[i] != NULL)
 		{
-			m_vfsFileOffsets[i]->PointAtNH(fnHash);
+			m_vfsFileOffsets[i]->PointAtMem(&fnHash, 8);
 			UINT64 offset = m_vfsFileOffsets[i]->CurrentCID();
 
 			if (offset)
-			{			
+			{
 				return offset;
 			}
-
 		}
 	}
 
 	return 0;
 }
 
-void * d912pxy_vfs::LoadFile(char * fnpath, UINT * sz, UINT id)
-{	
+void * d912pxy_vfs::LoadFileN(char * fnpath, UINT * sz, UINT id)
+{
+	return LoadFileH(HashFromName(fnpath), sz, id);
+}
 
+void d912pxy_vfs::WriteFileN(char * fnpath, void * data, UINT sz, UINT id)
+{
+	WriteFileH(HashFromName(fnpath), data, sz, id);
+}
+
+void d912pxy_vfs::ReWriteFileN(char * fnpath, void * data, UINT sz, UINT id)
+{
+	ReWriteFileH(HashFromName(fnpath), data, sz, id);
+}
+
+void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
+{
 	EnterCriticalSection(&lock);
 
-	UINT64 offset = IsPresent(fnpath, id);
+	UINT64 offset = IsPresentH(namehash, id);
 
 	if (!offset)
 	{
@@ -226,20 +242,18 @@ void * d912pxy_vfs::LoadFile(char * fnpath, UINT * sz, UINT id)
 	return ret;
 }
 
-void d912pxy_vfs::WriteFile(char * fnpath, void * data, UINT sz, UINT id)
-{	
+void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
+{
 	EnterCriticalSection(&lock);
 
 	fseek(m_vfsBlocks[id], (UINT32)m_vfsLastFileOffset[id], SEEK_SET);
-	
+
 	fwrite(&sz, 1, 4, m_vfsBlocks[id]);
 	fwrite(data, 1, sz, m_vfsBlocks[id]);
 	fwrite(&sz, 1, 4, m_vfsBlocks[id]);
 	fflush(m_vfsBlocks[id]);
-	
-	UINT32 fnHash = d912pxy_memtree2::memHash32s(fnpath, (UINT32)strlen(fnpath));
 
-	m_vfsFileOffsets[id]->PointAtNH(fnHash);
+	m_vfsFileOffsets[id]->PointAtMem(&namehash, 8);
 	m_vfsFileOffsets[id]->SetValue(m_vfsLastFileOffset[id]);
 
 	m_vfsLastFileOffset[id] += sz + 4;
@@ -247,15 +261,15 @@ void d912pxy_vfs::WriteFile(char * fnpath, void * data, UINT sz, UINT id)
 	LeaveCriticalSection(&lock);
 }
 
-void d912pxy_vfs::ReWriteFile(char * fnpath, void * data, UINT sz, UINT id)
+void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 {
 	EnterCriticalSection(&lock);
 
-	UINT64 offset = IsPresent(fnpath, id);
+	UINT64 offset = IsPresentH(namehash, id);
 
 	if (offset)
 	{
-		fseek(m_vfsBlocks[id], (UINT32)offset+4, SEEK_SET);		
+		fseek(m_vfsBlocks[id], (UINT32)offset + 4, SEEK_SET);
 		fwrite(data, 1, sz, m_vfsBlocks[id]);
 		fflush(m_vfsBlocks[id]);
 
@@ -263,7 +277,12 @@ void d912pxy_vfs::ReWriteFile(char * fnpath, void * data, UINT sz, UINT id)
 			memcpy((void*)((intptr_t)m_vfsCache[id] + (offset - PXY_VFS_BID_TABLE_SIZE) + 4), data, sz);
 	}
 	else
-		WriteFile(fnpath, data, sz, id);
+		WriteFileH(namehash, data, sz, id);
 
 	LeaveCriticalSection(&lock);
+}
+
+UINT64 d912pxy_vfs::HashFromName(char * fnpath)
+{
+	return d912pxy_memtree2::memHash64s(fnpath, (UINT32)strlen(fnpath));
 }
