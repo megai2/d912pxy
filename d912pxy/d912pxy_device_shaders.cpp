@@ -84,11 +84,8 @@ HRESULT WINAPI d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST
 
 void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId)
 {
-	char buf[1024];
-	sprintf(buf, "%s/%016llX.bin", d912pxy_shader_db_bugs_dir, faultyId);
-
 	UINT32 size;
-	UINT32* data = (UINT32*)d912pxy_s(vfs)->LoadFile(buf, &size, PXY_VFS_BID_SHADER_PROFILE);
+	UINT32* data = (UINT32*)d912pxy_s(vfs)->LoadFileH(faultyId, &size, PXY_VFS_BID_SHADER_PROFILE);
 
 	if (data == NULL)
 	{
@@ -96,7 +93,7 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 		ZeroMemory(data, PXY_INNER_SHDR_BUG_FILE_SIZE);
 		data[type] = val;
 
-		d912pxy_s(vfs)->WriteFile(buf, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
+		d912pxy_s(vfs)->WriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
 	}
 	else {
 
@@ -109,53 +106,11 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 		{
 			data[type] = val;
 
-			d912pxy_s(vfs)->ReWriteFile(buf, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
+			d912pxy_s(vfs)->ReWriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
 		}
 	}
 
 	free(data);
-
-	/*
-	FILE* bf = fopen(buf, "rb");
-
-	//have a bug file, check for contents
-	if (bf)
-	{
-		fseek(bf, 0, SEEK_END);
-		int sz = ftell(bf);
-		fseek(bf, 0, SEEK_SET);
-		sz = sz >> 3;
-
-		for (int i = 0; i != sz; ++i)
-		{
-			UINT bty;
-			fread(&bty, 1, 4, bf);
-
-			if (type == bty)
-			{
-				UINT bva;
-				fread(&bva, 1, 4, bf);
-
-				if (bva == val)
-				{
-					fclose(bf);
-					return;
-				}
-			}
-			else
-				fseek(bf, 4, SEEK_CUR);
-		}
-
-		fclose(bf);
-	}
-
-	bf = fopen(buf, "ab");
-
-	fwrite(&type, 1, 4, bf);
-	fwrite(&val, 1, 4, bf);
-
-	fflush(bf);
-	fclose(bf);*/
 }
 
 #endif
