@@ -1307,11 +1307,8 @@ void d912pxy_hlsl_generator::DefineIOReg(DWORD op)
 
 void d912pxy_hlsl_generator::LoadBugDefs()
 {
-	char buf[1024];
-	sprintf(buf, "%s/%016llX.bin", d912pxy_shader_db_bugs_dir, mUID);
-
 	UINT32 sz;
-	UINT32* data = (UINT32*)d912pxy_s(vfs)->LoadFile(buf, &sz, PXY_VFS_BID_SHADER_PROFILE);
+	UINT32* data = (UINT32*)d912pxy_s(vfs)->LoadFileH(mUID, &sz, PXY_VFS_BID_SHADER_PROFILE);
 
 	if (data)
 	{

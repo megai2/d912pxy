@@ -171,11 +171,8 @@ d912pxy_shader_code d912pxy_shader_replacer::LoadFromCSO(const char* bfolder)
 	ret.code = 0;
 	ret.sz = 0;
 	ret.blob = nullptr;
-
-	char replFn[1024];
-	sprintf(replFn, "%s/%08lX%08lX.cso", bfolder, (UINT32)(mUID >> 32), (UINT32)(mUID & 0xFFFFFFFF));
 		
-	ret.code = d912pxy_s(vfs)->LoadFile(replFn, (UINT*)&ret.sz, PXY_VFS_BID_CSO);
+	ret.code = d912pxy_s(vfs)->LoadFileH(mUID, (UINT*)&ret.sz, PXY_VFS_BID_CSO);
 
 	/*FILE* f = _wfopen(replFn, L"rb");
 
@@ -205,19 +202,7 @@ d912pxy_shader_code d912pxy_shader_replacer::LoadFromCSO(const char* bfolder)
 
 void d912pxy_shader_replacer::SaveCSO(d912pxy_shader_code code, const char * bfolder)
 {
-	char replFn[1024];
-	sprintf(replFn, "%s/%08lX%08lX.cso", bfolder, (UINT32)(mUID >> 32), (UINT32)(mUID & 0xFFFFFFFF));
-
-	d912pxy_s(vfs)->WriteFile(replFn, code.code, (UINT32)code.sz, PXY_VFS_BID_CSO);
-
-	/*FILE* f = _wfopen(replFn, L"wb");
-
-	if (f)
-	{
-		fwrite(code.code, 1, code.sz, f);
-		fflush(f);
-		fclose(f);
-	}*/
+	d912pxy_s(vfs)->WriteFileH(mUID, code.code, (UINT32)code.sz, PXY_VFS_BID_CSO);
 }
 
 void d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)
