@@ -29,11 +29,13 @@ SOFTWARE.
 #define PXY_VFS_MAX_FILES_PER_BID 0x80000
 #define PXY_VFS_FILE_HEADER_SIZE 16
 #define PXY_VFS_BID_TABLE_SIZE (PXY_VFS_MAX_FILES_PER_BID * PXY_VFS_FILE_HEADER_SIZE)
+#define PXY_VFS_BID_TABLE_START 16
 
 #define PXY_VFS_BID_CSO 0
 #define PXY_VFS_BID_SHADER_PROFILE 1
 
-
+#define PXY_VFS_SIGNATURE 0x443931325043b46
+#define PXY_VFS_VER 1
 
 #pragma pack(push, 1)
 typedef struct d912pxy_vfs_file_header {
@@ -71,6 +73,7 @@ private:
 	FILE* m_vfsBlocks[PXY_VFS_MAX_BID];
 	void* m_vfsCache[PXY_VFS_MAX_BID];
 	UINT32 m_vfsCacheSize[PXY_VFS_MAX_BID];
+	UINT32 m_vfsFileCount[PXY_VFS_MAX_BID];
 
 	d912pxy_memtree2* m_vfsFileOffsets[PXY_VFS_MAX_BID];
 	UINT64 m_vfsLastFileOffset[PXY_VFS_MAX_BID];

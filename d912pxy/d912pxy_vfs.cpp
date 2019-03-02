@@ -44,22 +44,6 @@ d912pxy_vfs::~d912pxy_vfs()
 	{
 		if (m_vfsBlocks[i] != NULL)
 		{
-			fseek(m_vfsBlocks[i], 0, SEEK_SET);
-
-			m_vfsFileOffsets[i]->Begin();
-
-			while (!m_vfsFileOffsets[i]->IterEnd())
-			{
-				UINT64 cid = m_vfsFileOffsets[i]->CurrentCID();
-				if (cid)
-				{
-					UINT32 key = m_vfsFileOffsets[i]->CurrentKey();
-					fwrite(&key, 1, 4, m_vfsBlocks[i]);
-					fwrite(&cid, 1, 8, m_vfsBlocks[i]);
-				}
-				m_vfsFileOffsets[i]->Next();
-			}
-
 			fflush(m_vfsBlocks[i]);
 			fclose(m_vfsBlocks[i]);
 
@@ -97,18 +81,32 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 
 	m_vfsFileOffsets[id] = new d912pxy_memtree2(4, PXY_VFS_MAX_FILES_PER_BID, 2);
 
-	m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE;
+	m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
+	m_vfsFileCount[id] = 0;
 	
 	ZeroMemory(s_headerTable, PXY_VFS_BID_TABLE_SIZE);
 
-	if (sz < PXY_VFS_BID_TABLE_SIZE)
-	{												
+	UINT64 signature[2] = { PXY_VFS_SIGNATURE, PXY_VFS_VER };
+
+	if (sz < PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START)
+	{					
+		fwrite(signature, 8, 2, m_vfsBlocks[id]);
+		
 		fwrite(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, m_vfsBlocks[id]);
 		fwrite(&sz, 1, 4, m_vfsBlocks[id]);
 
 		fflush(m_vfsBlocks[id]);
 	}
 	else {
+
+		UINT64 readedSignature[2] = { 0,0 };
+
+		fread(readedSignature, 8, 2, m_vfsBlocks[id]);
+
+		if (memcmp(signature, readedSignature, 16))
+		{
+			return NULL;
+		}
 
 		fread(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, m_vfsBlocks[id]);
 		
@@ -121,6 +119,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 			{
 				m_vfsFileOffsets[id]->PointAtMem(&s_headerTable[i].hash, 8);
 				m_vfsFileOffsets[id]->SetValue(s_headerTable[i].offset);
+				++m_vfsFileCount[id];
 			}
 		}
 
@@ -136,7 +135,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 			m_vfsLastFileOffset[id] += lastFileSize + 4;
 		}
 		else
-			m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE;
+			m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
 
 		if (m_vfsLastFileOffset[id] == sz)
 		{
@@ -145,13 +144,13 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 			fflush(m_vfsBlocks[id]);
 		}
 		
-		m_vfsCacheSize[id] = (UINT32)m_vfsLastFileOffset[id] - PXY_VFS_BID_TABLE_SIZE;
+		m_vfsCacheSize[id] = (UINT32)m_vfsLastFileOffset[id] - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START;
 
 		if (m_vfsCacheSize[id])
 		{
 			m_vfsCache[id] = malloc(m_vfsCacheSize[id]);
 
-			fseek(m_vfsBlocks[id], PXY_VFS_BID_TABLE_SIZE, SEEK_SET);
+			fseek(m_vfsBlocks[id], PXY_VFS_BID_TABLE_SIZE+PXY_VFS_BID_TABLE_START, SEEK_SET);
 
 			fread(m_vfsCache[id], 1, m_vfsCacheSize[id], m_vfsBlocks[id]);
 		}
@@ -214,9 +213,9 @@ void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 		return nullptr;
 	}
 
-	if (m_vfsCache[id] && ((offset - PXY_VFS_BID_TABLE_SIZE) < m_vfsCacheSize[id]))
+	if (m_vfsCache[id] && ((offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START) < m_vfsCacheSize[id]))
 	{
-		offset -= PXY_VFS_BID_TABLE_SIZE;
+		offset -= PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
 
 		LeaveCriticalSection(&lock);
 
@@ -246,6 +245,12 @@ void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 {
 	EnterCriticalSection(&lock);
 
+	fseek(m_vfsBlocks[id], PXY_VFS_FILE_HEADER_SIZE*m_vfsFileCount[id] + PXY_VFS_BID_TABLE_START, SEEK_SET);
+
+	fwrite(&namehash, 8, 1, m_vfsBlocks[id]);
+	fwrite(&m_vfsLastFileOffset[id], 8, 1, m_vfsBlocks[id]);
+	++m_vfsFileCount[id];
+
 	fseek(m_vfsBlocks[id], (UINT32)m_vfsLastFileOffset[id], SEEK_SET);
 
 	fwrite(&sz, 1, 4, m_vfsBlocks[id]);
@@ -273,8 +278,8 @@ void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 		fwrite(data, 1, sz, m_vfsBlocks[id]);
 		fflush(m_vfsBlocks[id]);
 
-		if (m_vfsCache[id] && (m_vfsCacheSize[id] > (offset - PXY_VFS_BID_TABLE_SIZE)))
-			memcpy((void*)((intptr_t)m_vfsCache[id] + (offset - PXY_VFS_BID_TABLE_SIZE) + 4), data, sz);
+		if (m_vfsCache[id] && (m_vfsCacheSize[id] > (offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START)))
+			memcpy((void*)((intptr_t)m_vfsCache[id] + (offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START) + 4), data, sz);
 	}
 	else
 		WriteFileH(namehash, data, sz, id);

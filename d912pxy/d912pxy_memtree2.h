@@ -61,8 +61,6 @@ public:
 
 	d912pxy_memtree2_node* AsyncIterBase(UINT32* mi) { *mi = nodePoolIdx; return nodePool; };
 
-	UINT32 CurrentKey() { return itrNPI; };
-
 private:
 	
 	d912pxy_memtree2_node base;
