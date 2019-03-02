@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_memtree2::d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow, const UINT16* iJmpMap) : d912pxy_noncom(NULL, L"memtree2")
+d912pxy_memtree2::d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow) : d912pxy_noncom(NULL, L"memtree2")
 {
 	maxNodes = iMaxNodes;
 	grow = iGrow;
@@ -36,21 +36,6 @@ d912pxy_memtree2::d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow, cons
 	nodePool = (d912pxy_memtree2_node*)malloc(memSz);
 	ZeroMemory(nodePool, memSz);
 	ZeroMemory(&base, sizeof(d912pxy_memtree2_node));
-
-	sync = CreateMutex(0, 0, 0);
-
-#ifdef CAPTURE_JMP_MAP
-	if (!iJmpMap)
-	{
-		memDiffData = (UINT8*)malloc(nMemSz);
-		ZeroMemory(memDiffData, nMemSz);
-		memDiffCnt = (UINT64*)malloc(nMemSz * 8);
-		ZeroMemory(memDiffCnt, nMemSz * 8);
-		jmpMap = 0;
-	}
-#endif
-
-	jmpMap = (UINT16*)iJmpMap;
 }
 
 
@@ -86,24 +71,18 @@ d912pxy_memtree2::~d912pxy_memtree2()
 	free(nodePool);
 }
 
-UINT64 d912pxy_memtree2::PointAt(void * mem)
+UINT64 d912pxy_memtree2::PointAt32(void * mem)
 {
-#ifndef CAPTURE_JMP_MAP
-	UINT64 hv = memHash32(mem);
+	UINT32 hv = memHash32(mem);
 
-	return PointAt2(&hv);
-#else
-	return PointAt2(mem);
-#endif	
+	return PointAtMem(&hv, 4);
 }
 
-UINT64 d912pxy_memtree2::PointAtNH(void * mem)
+UINT64 d912pxy_memtree2::PointAt64(void * mem)
 {
-#ifndef CAPTURE_JMP_MAP
-	return PointAt2(mem);
-#else
-	return PointAt2(mem);
-#endif	
+	UINT64 hv = memHash64(mem);
+
+	return PointAtMem(&hv, 8);
 }
 
 UINT32 d912pxy_memtree2::memHash32s(void * mem, UINT msz)
@@ -122,39 +101,34 @@ UINT32 d912pxy_memtree2::memHash32s(void * mem, UINT msz)
 	return hash;
 }
 
-UINT64 d912pxy_memtree2::PointAt2(void * mem)
+UINT64 d912pxy_memtree2::memHash64s(void * mem, UINT msz)
+{
+	UINT64 hash = 0xcbf29ce484222325;
+	UINT ctr = 0;
+
+	while (ctr != msz)
+	{
+		UINT8 dataByte = ((UINT8*)mem)[ctr];
+
+		hash = hash ^ dataByte;
+		hash = hash * 1099511628211;
+		++ctr;
+	}
+	return hash;
+}
+
+UINT64 d912pxy_memtree2::PointAtMem(void * mem, UINT32 dataMemSz2)
 {
 	UINT32 depth = 0;
 	d912pxy_memtree2_node* root = &base;
 
 	UINT8* byteAc = (UINT8*)mem;
-	UINT16 jmpMapId = 0;
-
-#ifndef CAPTURE_JMP_MAP
-	UINT16 dataMemSz2 = 4;
-#else
-	UINT16 dataMemSz2 = dataMemSz;
-#endif
 
 	while (depth < dataMemSz2)
 	{
 
 		UINT8 ci = byteAc[depth];
 		
-#ifdef CAPTURE_JMP_MAP
-		if (!jmpMap)
-		{
-			if ((memDiffData[depth] ^ ci) > 0)
-			{
-				++memDiffCnt[depth];
-				memDiffData[depth] = ci;
-			}
-			else {
-				;// LOG_DBG_DTDM("ok");
-			}
-		}
-#endif
-
 		UINT32 npi = root->childs[ci];
 		if (npi == 0)
 		{
@@ -225,7 +199,7 @@ UINT d912pxy_memtree2::IterEnd()
 	return (itrNPI == nodePoolIdx);
 }
 
-UINT64 d912pxy_memtree2::memHash(void* mem)
+UINT64 d912pxy_memtree2::memHash64(void* mem)
 {
 	UINT64 hash = 0xcbf29ce484222325;
 	UINT ctr = 0;
@@ -249,14 +223,6 @@ UINT32 d912pxy_memtree2::memHash32(void* mem)
 
 	while (ctr < dataMemSz)
 	{
-		if (jmpMap)
-		{
-			ctr += jmpMap[jmpMapId];
-			if (ctr > dataMemSz)
-				break;
-			++jmpMapId;
-		}
-
 		UINT8 dataByte = ((UINT8*)mem)[ctr];
 
 		hash = hash ^ dataByte;

@@ -35,15 +35,19 @@ typedef struct d912pxy_memtree2_node {
 class d912pxy_memtree2 : public d912pxy_noncom
 {
 public:
-	d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow, const UINT16* iJmpMap);
+	d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow);
 	~d912pxy_memtree2();
 
-	UINT64 PointAt2(void* mem);
-	UINT64 PointAt(void* mem);
-	UINT64 PointAtNH(void* mem);
+	UINT64 PointAtMem(void* mem, UINT32 dataMemSz2);
+
+	UINT64 PointAt32(void* mem);
+	UINT64 PointAt64(void* mem);
 
 	static UINT32 memHash32s(void* mem, UINT msz);
+	static UINT64 memHash64s(void* mem, UINT msz);
+
 	UINT32 memHash32(void* mem);
+	UINT64 memHash64(void* mem);
 
 	void SetValue(UINT64 val);
 	
@@ -57,10 +61,10 @@ public:
 
 	d912pxy_memtree2_node* AsyncIterBase(UINT32* mi) { *mi = nodePoolIdx; return nodePool; };
 
-private:
-	UINT64 memHash(void* mem);
-	
+	UINT32 CurrentKey() { return itrNPI; };
 
+private:
+	
 	d912pxy_memtree2_node base;
 	d912pxy_memtree2_node* selectedNode;	
 
@@ -72,10 +76,6 @@ private:
 	UINT32 dataMemSz;
 
 	UINT32 grow;
-
-	UINT16* jmpMap;
-
-	HANDLE sync;
 
 #ifdef CAPTURE_JMP_MAP
 	UINT8* memDiffData;
