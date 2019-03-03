@@ -558,6 +558,7 @@
     <ClInclude Include="d912pxy_texture.h" />
     <ClInclude Include="d912pxy_texture_loader.h" />
     <ClInclude Include="d912pxy_thread.h" />
+    <ClInclude Include="d912pxy_thread_lock.h" />
     <ClInclude Include="d912pxy_upload_pool.h" />
     <ClInclude Include="d912pxy_vbuf.h" />
     <ClInclude Include="d912pxy_vdecl.h" />
@@ -637,6 +638,7 @@
     <ClCompile Include="d912pxy_texture.cpp" />
     <ClCompile Include="d912pxy_texture_loader.cpp" />
     <ClCompile Include="d912pxy_thread.cpp" />
+    <ClCompile Include="d912pxy_thread_lock.cpp" />
     <ClCompile Include="d912pxy_upload_pool.cpp" />
     <ClCompile Include="d912pxy_vbuf.cpp" />
     <ClCompile Include="d912pxy_vdecl.cpp" />

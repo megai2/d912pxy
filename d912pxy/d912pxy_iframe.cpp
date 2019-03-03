@@ -60,7 +60,7 @@ d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d9
 		if (mHeaps[i]->GetDesc()->Type > 1)
 			continue;
 
-		mSetHeapArr[mSetHeapArrCnt] = mHeaps[i]->GetHeapObj().Get();
+		mSetHeapArr[mSetHeapArrCnt] = mHeaps[i]->GetHeapObj();
 		++mSetHeapArrCnt;
 	}
 

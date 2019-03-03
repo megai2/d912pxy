@@ -25,15 +25,30 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-typedef struct d912pxy_dheap_slot_stack {
-	UINT32* data;
+#define d912pxy_dheap_slot_type UINT32
+
+class d912pxy_dheap_slot_stack {
+
+public: 
+	d912pxy_dheap_slot_stack(UINT32 size);
+	~d912pxy_dheap_slot_stack();
+
+	void Push(d912pxy_dheap_slot_type val);
+	d912pxy_dheap_slot_type Pop();
+
+	LONG Count() { return top; };
+
+private:
+
+	d912pxy_dheap_slot_type* data;
 	LONG top;
-} d912pxy_dheap_slot_stack;
+
+	d912pxy_thread_lock lock;
+};
 
 #define PXY_DHEAP_STACK_FREE 0
-#define PXY_DHEAP_STACK_GPU_HOLDUP 1
-#define PXY_DHEAP_STACK_CLEANUP 2
-#define PXY_DHEAP_STACK_COUNT 3
+#define PXY_DHEAP_STACK_CLEANUP 1
+#define PXY_DHEAP_STACK_COUNT 2
 
 class d912pxy_dheap : public d912pxy_noncom
 {
@@ -57,7 +72,7 @@ public:
 	UINT CreateUAV(D3D12_UNORDERED_ACCESS_VIEW_DESC* dsc, ID3D12Resource* iRes);
 	UINT CreateSampler(D3D12_SAMPLER_DESC* dsc);
 
-	ComPtr<ID3D12DescriptorHeap> GetHeapObj() { 
+	ID3D12DescriptorHeap* GetHeapObj() { 
 		return heap; 
 	};
 
@@ -66,20 +81,17 @@ public:
 	}
 
 private:
-	ComPtr<ID3D12DescriptorHeap> heap;
-	UINT handleSz;
-	UINT handleSzGPU;
-		
 	UINT selfIID;
 	
-	d912pxy_dheap_slot_stack stacks[PXY_DHEAP_STACK_COUNT];
-
-
-	D3D12_CPU_DESCRIPTOR_HANDLE cpuBase;
-	D3D12_GPU_DESCRIPTOR_HANDLE gpuBase;
+	//megai2: slot status filled in stacks
+	d912pxy_dheap_slot_stack* stacks[PXY_DHEAP_STACK_COUNT];
+	
+	ID3D12DescriptorHeap* heap;
 
 	const D3D12_DESCRIPTOR_HEAP_DESC* m_desc;
+	UINT handleSz;	
 	
-	D3D12_GPU_DESCRIPTOR_HANDLE heapStartCache;
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuBase;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuBase;		
 };
 
