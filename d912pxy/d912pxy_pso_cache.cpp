@@ -714,7 +714,7 @@ void d912pxy_pso_cache_item::Compile()
 
 	if (!ignoreShader)*/
 	{
-		try {
+		try { 
 			LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj)), "PSO item are not created");
 		}
 		catch (...)
