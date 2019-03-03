@@ -12,6 +12,8 @@ Please read [troubleshooting](https://github.com/megai2/d912pxy#troubleshooting)
 
 Please remove/disable all possible interfering software before reporting anything, so you are sure that bug comes from this project.
 
+If this section is not removed by issue creator, issue will be closed without any comment.
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
@@ -29,13 +31,13 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Usefull information on hardware**
-
-You can add logfile from d912pxy or add details listed below:
+**Standard information**
 
 1. Windows 10 update ver
 2. Hardware info: CPU, RAM, GPU
 3. GPU Driver version
+4. Version of d912pxy used
+5. Log file from <game root>/P7logs folder and/or d912pxy_crash.txt
 
 **Additional context**
 Add any other context about the problem here.
