@@ -30,12 +30,11 @@ using namespace Microsoft::WRL;
 
 d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(L"device")
 {
-	d912pxy_s(dev) = this;
-	initPtr = par;
-
-	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);	
-
+	d912pxy_s(dev) = this;	
 	PrintInfoBanner();
+
+	initPtr = par;
+	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);	
 
 #ifdef ENABLE_METRICS
 	new d912pxy_metrics(this);

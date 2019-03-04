@@ -23,11 +23,10 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "d912pxy_surface_pool.h"
 
-d912pxy_surface_pool::d912pxy_surface_pool(d912pxy_device* dev) : d912pxy_pool<d912pxy_surface*>(dev)
+d912pxy_surface_pool::d912pxy_surface_pool(d912pxy_device* dev) : d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>(dev, &d912pxy_s(pool_surface))
 {
-	d912pxy_s(pool_surface) = this;
-
 	InitializeCriticalSection(&mtMutex);
 
 	table = new d912pxy_memtree2(4, 4096, 2);
@@ -136,7 +135,7 @@ void d912pxy_surface_pool::PoolRW(UINT32 cat, d912pxy_surface ** val, UINT8 rw)
 
 			(*val)->AddRef();
 
-			d912pxy_s(thread_cleanup)->Watch(*val);
+			PoolUnloadProc(*val, cat);
 
 			EnterCriticalSection(&rwMutex[0]);
 
@@ -158,4 +157,8 @@ void d912pxy_surface_pool::PoolRW(UINT32 cat, d912pxy_surface ** val, UINT8 rw)
 
 		LeaveCriticalSection(&rwMutex[0]);
 	}
+}
+
+void d912pxy_surface_pool::EarlyInitProc()
+{
 }

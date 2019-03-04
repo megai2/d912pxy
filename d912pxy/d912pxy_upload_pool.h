@@ -35,7 +35,6 @@ public:
 	void UploadTarget(ID3D12Resource* res, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList* cl);
 	
 	void* MapDPtr();
-	void* MapRPtr();
 
 	void Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, const D3D12_RANGE* wofs);
 
@@ -45,37 +44,40 @@ public:
 
 	UINT32 PooledAction(UINT32 use);
 
-	UINT IsRecon() { return (recon != NULL); };
-
 private:	
 	intptr_t mappedMemWofs;
-	void* recon;
 
 	ID3D12Resource* mRes;
 
 	UINT8 cat;
 };
 
-//start with 2^9 (512) end with 2^28(1gig)
-//this will allow creating buffers with size up to 256mb
-#define PXY_INNDER_UPLOAD_POOL_BITIGNORE 9
+//start with 2^16 (64kB) end with 2^28(256mB)
+//this will allow creating buffers with size up to 256mB
+#define PXY_INNDER_UPLOAD_POOL_BITIGNORE 16
 #define PXY_INNDER_UPLOAD_POOL_BITLIMIT 28
 #define PXY_INNDER_UPLOAD_POOL_BITCNT PXY_INNDER_UPLOAD_POOL_BITLIMIT - PXY_INNDER_UPLOAD_POOL_BITIGNORE
 
 
-class d912pxy_upload_pool : public d912pxy_pool_memcat<d912pxy_upload_item*>
+class d912pxy_upload_pool : public d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>
 {
 public:
 	d912pxy_upload_pool(d912pxy_device* dev);
 	~d912pxy_upload_pool();
 
 	d912pxy_upload_item* GetUploadObject(UINT size);
-	
-	d912pxy_upload_item* AllocProc(UINT32 cat);
-
 	ID3D12Resource* MakeUploadBuffer(UINT maxSize);
 
+	d912pxy_upload_item* AllocProc(UINT32 cat);	
+
+	void EarlyInitProc();
 private:		
-	d912pxy_resource* dxBuffer;	
+	void CreateMemPool();
+
+	d912pxy_thread_lock* ctorLock;
+
+	ID3D12Heap* memPool;
+	UINT64 memPoolOffset;
+	UINT64 memPoolSize;
 };
 

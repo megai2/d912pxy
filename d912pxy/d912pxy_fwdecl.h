@@ -53,7 +53,7 @@ SOFTWARE.
 //#define PERFORMANCE_GRAPH_WRITE
 //#define PER_BATCH_FLUSH_DEBUG 1
 //#define TRACK_SHADER_BUGS_PROFILE
-//#define LOCAL_NETWORK_LOGGING
+#define LOCAL_NETWORK_LOGGING
 
 #ifdef PERFORMANCE_GRAPH_WRITE_DX9
 	#define PERFORMANCE_GRAPH_WRITE
@@ -168,7 +168,7 @@ SOFTWARE.
 #ifdef ENABLE_DEBUG_LOGGING
 	#ifdef _DEBUG
 		#define LOG_DBG_DTDM(fmt, ...) ;//(m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM2(fmt, ...) ;//(m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM2(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 		#define LOG_DBG_DTDM3(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 	#else 
 		#define LOG_DBG_DTDM(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))

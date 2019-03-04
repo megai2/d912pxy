@@ -24,12 +24,40 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-template<class ElementType>
-d912pxy_pool_memcat<ElementType>::d912pxy_pool_memcat(d912pxy_device * dev, UINT32 iBitIgnore, UINT32 iBitLimit) : d912pxy_pool<ElementType>(dev)
+template<class ElementType, class ProcImpl>
+d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device * dev, UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg, ProcImpl* singleton) : d912pxy_pool<ElementType, ProcImpl>(dev, singleton)
 {
 	bitIgnore = iBitIgnore;
 	bitLimit = iBitLimit;
 	bitCnt = iBitLimit - iBitIgnore;
+
+	limits = (UINT16*)malloc(sizeof(UINT16)*bitCnt);
+	ZeroMemory(limits, sizeof(UINT16)*bitCnt);
+
+	UINT performaWarmUp = 0;
+
+	if (limitCfg != PXY_CFG_CNT)
+	{
+		wchar_t* vals = d912pxy_s(config)->GetValueRaw(limitCfg);
+
+		if ((vals[1] != L'x') || (vals[bitCnt * 5 + 2] != L'L'))
+		{
+			this->LOG_ERR_THROW2(-1, "Wrong pooling limit config value");
+		}
+		else {
+			wchar_t tmp[5];
+			tmp[4] = 0;
+
+			performaWarmUp = vals[bitCnt * 5 + 3] == L'1';
+
+			for (int i = 0; i != bitCnt; ++i)
+			{
+				*((UINT64*)&tmp[0]) = *((UINT64*)&vals[2 + i * 5]);
+
+				swscanf(&tmp[0], L"%hX", &limits[i]);
+			}
+		}		
+	}
 
 	memTable = (d912pxy_ringbuffer<ElementType>**)malloc(sizeof(void*)*bitCnt);
 	this->rwMutex = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION)*bitCnt);
@@ -39,25 +67,45 @@ d912pxy_pool_memcat<ElementType>::d912pxy_pool_memcat(d912pxy_device * dev, UINT
 		memTable[i] = new d912pxy_ringbuffer<ElementType>(64, 2);
 		InitializeCriticalSection(&this->rwMutex[i]);
 	}
+
+	if (performaWarmUp)
+	{
+		for (int i = 0; i != bitCnt; ++i)
+		{		
+			for (int j = 0; j != limits[i]; ++j)
+				this->WarmUp(i);
+		}
+	}
 }
 
-template<class ElementType>
-d912pxy_pool_memcat<ElementType>::~d912pxy_pool_memcat()
+template<class ElementType, class ProcImpl>
+d912pxy_pool_memcat<ElementType, ProcImpl>::~d912pxy_pool_memcat()
 {
 	free(memTable);
 	free(this->rwMutex);
 }
 
-template<class ElementType>
-d912pxy_ringbuffer<ElementType>* d912pxy_pool_memcat<ElementType>::GetCatBuffer(UINT32 cat)
+template<class ElementType, class ProcImpl>
+d912pxy_ringbuffer<ElementType>* d912pxy_pool_memcat<ElementType, ProcImpl>::GetCatBuffer(UINT32 cat)
 {
 	return memTable[cat];
 }
 
-template<class ElementType>
-UINT d912pxy_pool_memcat<ElementType>::MemCatFromSize(UINT sz)
+template<class ElementType, class ProcImpl>
+void d912pxy_pool_memcat<ElementType, ProcImpl>::PoolUnloadProc(ElementType val, UINT32 cat)
 {
-	UINT64 iv = (sz >> bitIgnore) + 1 * ((sz & ((1 << (bitIgnore + 1)) - 1)) != 0);
+	if (GetCatBuffer(cat)->TotalElements() >= limits[cat])
+	{
+		val->NoteDeletion(GetTickCount());
+		//val->PooledAction(0);
+		d912pxy_s(thread_cleanup)->Watch(val);
+	}
+}
+
+template<class ElementType, class ProcImpl>
+UINT d912pxy_pool_memcat<ElementType, ProcImpl>::MemCatFromSize(UINT sz)
+{
+	UINT64 iv = (sz >> bitIgnore) + 1 * ((sz & ((1 << (bitIgnore)) - 1)) != 0);
 	if (!iv)
 		return 0;
 	UINT ret = 0;
@@ -69,11 +117,11 @@ UINT d912pxy_pool_memcat<ElementType>::MemCatFromSize(UINT sz)
 	return ret;
 }
 
-template<class ElementType>
-UINT d912pxy_pool_memcat<ElementType>::MemCatToSize(UINT cat)
+template<class ElementType, class ProcImpl>
+UINT d912pxy_pool_memcat<ElementType, ProcImpl>::MemCatToSize(UINT cat)
 {
 	return 1 << (cat + bitIgnore);
 }
 
-template class d912pxy_pool_memcat<d912pxy_vstream*>;
-template class d912pxy_pool_memcat<d912pxy_upload_item*>;
+template class d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>;
+template class d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>;

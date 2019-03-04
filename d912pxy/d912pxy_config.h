@@ -4,6 +4,7 @@
 typedef enum d912pxy_config_value {
 	PXY_CFG_POOLING_UPLOAD_ALLOC_STEP = 0,
 	PXY_CFG_POOLING_UPLOAD_LIMITS = 1,
+	PXY_CFG_POOLING_VSTREAM_LIMITS,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -28,7 +29,8 @@ private:
 
 	d912pxy_config_value_dsc data[PXY_CFG_CNT] = {
 		{L"pooling", L"upload_alloc_step", L"128"},//PXY_CFG_POOLING_UPLOAD_ALLOC_STEP
-		{L"pooling", L"upload_limits", L"0x0100 0050 0050 0010 0010 0005 0005 0005 0000 0000 0000 0000 L0"}//PXY_CFG_POOLING_UPLOAD_LIMITS		
+		{L"pooling", L"upload_limits", L"0x0100 0050 0050 0010 0010 0005 0005 0005 0000 0000 0000 0000 L0"},//PXY_CFG_POOLING_UPLOAD_LIMITS		
+		{L"pooling", L"vstream_limits", L"0x0100 0050 0050 0010 0010 0005 0005 0005 0000 0000 0000 0000 L0"}//PXY_CFG_POOLING_VSTREAM_LIMITS
 	};
 };
 

@@ -55,6 +55,7 @@ d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom(dev, L"m
 
 	iframeMetrics->Create(TM("counters / draws"), 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT, PXY_INNER_MAX_IFRAME_BATCH_COUNT / 2, 1, &metricIFrameDraws);
 	iframeMetrics->Create(TM("counters / cleans"), 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT*3, PXY_INNER_MAX_IFRAME_BATCH_COUNT, 1, &metricIFrameCleans);
+	iframeMetrics->Create(TM("counters / upload offset"), 0, 1ULL << 10, 1ULL <<10, 1, &metricIFrameUploadOffset);
 
 	iframeMetrics->Create(TM("derived / prep per batch"), 0, 3000, 2000, 1, &metricIFramePerBatchPrep);
 	iframeMetrics->Create(TM("derived / overhead per batch"), 0, 3000, 2000, 1, &metricIFramePerBatchOverhead);
@@ -108,6 +109,11 @@ void d912pxy_metrics::TrackDrawCount(UINT draws)
 void d912pxy_metrics::TrackCleanupCount(UINT cleanups)
 {
 	iframeMetrics->Add(metricIFrameCleans, cleanups);
+}
+
+void d912pxy_metrics::TrackUploadPoolUsage(UINT64 usage)
+{
+	iframeMetrics->Add(metricIFrameUploadOffset, usage);
 }
 
 void d912pxy_metrics::FlushIFrameValues()

@@ -25,14 +25,16 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-template <class ElementType>
-class d912pxy_pool_memcat : public d912pxy_pool<ElementType>
+template <class ElementType, class ProcImpl>
+class d912pxy_pool_memcat : public d912pxy_pool<ElementType, ProcImpl>
 {
 public:
-	d912pxy_pool_memcat(d912pxy_device* dev, UINT32 iBitIgnore, UINT32 iBitLimit);
+	d912pxy_pool_memcat(d912pxy_device* dev, UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg, ProcImpl* singleton);
 	~d912pxy_pool_memcat();
 
 	d912pxy_ringbuffer<ElementType>* GetCatBuffer(UINT32 cat);
+
+	void PoolUnloadProc(ElementType val, UINT32 cat);
 
 	UINT MemCatFromSize(UINT sz);
 	UINT MemCatToSize(UINT cat);
@@ -41,6 +43,8 @@ private:
 	UINT32 bitIgnore;
 	UINT32 bitLimit;
 	UINT32 bitCnt;
+
+	UINT16* limits;
 
 protected:
 	d912pxy_ringbuffer<ElementType>** memTable;

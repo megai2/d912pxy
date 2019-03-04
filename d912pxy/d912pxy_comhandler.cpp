@@ -85,8 +85,6 @@ UINT d912pxy_comhandler::FinalReleaseTest()
 	else {
 		if (FinalReleaseCB())
 			return 3;
-		else
-			NoteDeletion(GetTickCount());
 		return 1;
 	}
 }
@@ -101,8 +99,6 @@ UINT d912pxy_comhandler::FinalRelease()
 	else {		
 		if (FinalReleaseCB())
 			delete this;
-		else
-			NoteDeletion(GetTickCount());
 		return 1;
 	}
 }

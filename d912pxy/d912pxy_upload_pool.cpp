@@ -23,19 +23,26 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "d912pxy_upload_pool.h"
 
-d912pxy_upload_pool::d912pxy_upload_pool(d912pxy_device * dev) : d912pxy_pool_memcat<d912pxy_upload_item*>(dev, PXY_INNDER_UPLOAD_POOL_BITIGNORE, PXY_INNDER_UPLOAD_POOL_BITLIMIT)
+d912pxy_upload_pool::d912pxy_upload_pool(d912pxy_device * dev) : 
+	d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>(
+		dev, 
+		PXY_INNDER_UPLOAD_POOL_BITIGNORE, 
+		PXY_INNDER_UPLOAD_POOL_BITLIMIT, 
+		PXY_CFG_POOLING_UPLOAD_LIMITS, 
+		&d912pxy_s(pool_upload)
+	)
 {
-	d912pxy_s(pool_upload) = this;
 
-	dxBuffer = new d912pxy_resource(m_dev, RTID_UL_BUF, L"upload pool data");
 }
 
 d912pxy_upload_pool::~d912pxy_upload_pool()
 {
 	d912pxy_s(pool_upload) = NULL;
 
-	dxBuffer->Release();	
+	if (memPool)
+		memPool->Release();
 
 	for (int i = 0; i != PXY_INNDER_UPLOAD_POOL_BITCNT; ++i)
 	{
@@ -53,6 +60,8 @@ d912pxy_upload_pool::~d912pxy_upload_pool()
 		delete memTable[i];		
 	}
 
+
+	delete ctorLock;
 }
 
 d912pxy_upload_item * d912pxy_upload_pool::GetUploadObject(UINT size)
@@ -77,36 +86,125 @@ d912pxy_upload_item * d912pxy_upload_pool::AllocProc(UINT32 cat)
 {
 	d912pxy_upload_item * ret;
 
-	EnterCriticalSection(&allocMutex);
-
 	ret = new d912pxy_upload_item(m_dev, cat);
-
-	LeaveCriticalSection(&allocMutex);
 
 	return ret;
 }
 
+void d912pxy_upload_pool::EarlyInitProc()
+{
+	memPoolSize = d912pxy_s(config)->GetValueUI64(PXY_CFG_POOLING_UPLOAD_ALLOC_STEP) << 20;
+	memPool = NULL;
+
+	if (memPoolSize)
+		CreateMemPool();
+
+	ctorLock = new d912pxy_thread_lock();
+}
 
 ID3D12Resource * d912pxy_upload_pool::MakeUploadBuffer(UINT maxSize)
 {
 	maxSize = MemCatToSize(maxSize);
-	dxBuffer->d12res_buffer(maxSize, D3D12_HEAP_TYPE_UPLOAD);
-	dxBuffer->GetD12Obj().Get()->AddRef();
-	return dxBuffer->GetD12Obj().Get();
+
+	ID3D12Resource* ret = NULL;
+
+	if (!memPool)
+	{
+fallback:
+		d912pxy_resource* dxBuffer = new d912pxy_resource(m_dev, RTID_UL_BUF, L"upload pool data");
+		dxBuffer->d12res_buffer(maxSize, D3D12_HEAP_TYPE_UPLOAD);
+		dxBuffer->Release();
+
+		ret = dxBuffer->GetD12Obj().Get();
+		ret->AddRef();
+	}
+	else {
+
+		const D3D12_RESOURCE_DESC rsDesc = {
+			D3D12_RESOURCE_DIMENSION_BUFFER,
+			0,
+			maxSize,
+			1,
+			1,
+			1,
+			DXGI_FORMAT_UNKNOWN,
+			{1, 0},
+			D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+			D3D12_RESOURCE_FLAG_NONE
+		};
+
+		ctorLock->Hold();
+		
+		if (memPoolOffset + maxSize >= memPoolSize)
+		{
+
+#ifdef ENABLE_METRICS		
+			d912pxy_s(metrics)->TrackUploadPoolUsage(memPoolSize >> 20);
+			d912pxy_s(metrics)->TrackUploadPoolUsage(0);
+#endif
+			CreateMemPool();
+
+			memPoolOffset = 0;
+		}
+
+		HRESULT cprHR = d912pxy_s(DXDev)->CreatePlacedResource(
+			memPool,
+			memPoolOffset,
+			&rsDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			0,
+			IID_PPV_ARGS(&ret)
+		);
+
+		if (FAILED(cprHR))
+		{
+			LOG_ERR_DTDM("CreatePlacedResource failed with po %llX ps %llX", memPoolOffset, memPoolSize);
+			ctorLock->Release();
+			goto fallback;
+		}
+
+		memPoolOffset += maxSize;
+
+		ctorLock->Release();
+
+#ifdef ENABLE_METRICS		
+		d912pxy_s(metrics)->TrackUploadPoolUsage(memPoolOffset >> 20);
+#endif
+	}
+
+	return ret;
+}
+
+void d912pxy_upload_pool::CreateMemPool()
+{
+	if (memPool)
+		memPool->Release();
+
+	memPoolOffset = 0;
+
+	const D3D12_HEAP_DESC heapDsc = {
+		memPoolSize,
+		m_dev->GetResourceHeap(D3D12_HEAP_TYPE_UPLOAD),
+		1 << PXY_INNDER_UPLOAD_POOL_BITIGNORE,
+		D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS
+	};
+
+	d912pxy_s(DXDev)->CreateHeap(
+		&heapDsc,
+		IID_PPV_ARGS(&memPool)
+	);
 }
 
 d912pxy_upload_item::d912pxy_upload_item(d912pxy_device * dev, UINT8 icat) : d912pxy_comhandler(dev, L"upload item")
 {
-	cat = icat;
-	recon = 0;
+	cat = icat;	
 	mRes = d912pxy_s(pool_upload)->MakeUploadBuffer(cat);
 	LOG_ERR_THROW2(mRes->Map(0, 0, (void**)&mappedMemWofs), "upload pool memory map error on creation");
 }
 
 d912pxy_upload_item::~d912pxy_upload_item()
 {
-	if (recon)
-		free(recon);
+
 }
 
 void d912pxy_upload_item::UploadTarget(ID3D12Resource * res, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList * cl)
@@ -119,14 +217,6 @@ void * d912pxy_upload_item::MapDPtr()
 	//d912pxy_s(DXDev)->MakeResident(1, (ID3D12Pageable**)&mRes);
 
 	return (void*)(mappedMemWofs);
-}
-
-void * d912pxy_upload_item::MapRPtr()
-{
-	if (!recon)
-		recon = malloc(d912pxy_s(pool_upload)->MemCatToSize(cat));
-
-	return recon;
 }
 
 void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, const D3D12_RANGE * wofs)
@@ -155,6 +245,7 @@ UINT d912pxy_upload_item::FinalReleaseCB()
 		return 0;
 	}
 	else {
+
 		if (mRes)
 			mRes->Release();		
 		return 1;
@@ -178,12 +269,6 @@ UINT32 d912pxy_upload_item::PooledAction(UINT32 use)
 		LOG_ERR_THROW2(mRes->Map(0, 0, (void**)&mappedMemWofs), "upload pool memory map error");
 	}
 	else {
-
-		if (recon)
-		{
-			free(recon);
-			recon = 0;
-		}
 
 		mRes->Release();
 		mRes = NULL;

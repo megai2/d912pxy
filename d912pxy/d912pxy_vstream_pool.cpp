@@ -23,10 +23,17 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "d912pxy_vstream_pool.h"
 
-d912pxy_vstream_pool::d912pxy_vstream_pool(d912pxy_device * dev) : d912pxy_pool_memcat<d912pxy_vstream*>(dev, PXY_INNDER_VSTREAM_POOL_BITIGNORE, PXY_INNDER_VSTREAM_POOL_BITLIMIT)
-{
-	d912pxy_s(pool_vstream) = this;
+d912pxy_vstream_pool::d912pxy_vstream_pool(d912pxy_device * dev) : 
+	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>(
+		dev, 
+		PXY_INNDER_VSTREAM_POOL_BITIGNORE, 
+		PXY_INNDER_VSTREAM_POOL_BITLIMIT,
+		PXY_CFG_POOLING_VSTREAM_LIMITS,
+		&d912pxy_s(pool_vstream)
+	)
+{	 
 }
 
 d912pxy_vstream_pool::~d912pxy_vstream_pool()
@@ -55,7 +62,7 @@ d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UI
 	d912pxy_vstream* ret = NULL;
 	UINT mc = MemCatFromSize(size);
 
-	LOG_DBG_DTDM2("mc %02X sz %08lX szc %08lX", mc, size, MemCatFromSize(MemCatToSize(mc)));
+	LOG_DBG_DTDM2("mc %02X sz %08lX szc %08lX mcs %08lX", mc, size, MemCatFromSize(MemCatToSize(mc)), MemCatToSize(mc));
 
 	PoolRW(mc, &ret, 0);
 
@@ -75,4 +82,8 @@ d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UI
 d912pxy_vstream * d912pxy_vstream_pool::AllocProc(UINT32 cat)
 {
 	return new d912pxy_vstream(m_dev, MemCatToSize(cat) , 0, 0, 0);
+}
+
+void d912pxy_vstream_pool::EarlyInitProc()
+{
 }

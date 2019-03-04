@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_surface_pool : public d912pxy_pool<d912pxy_surface*>
+class d912pxy_surface_pool : public d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>
 {
 public:
 	d912pxy_surface_pool(d912pxy_device* dev);
@@ -37,6 +37,8 @@ public:
 	d912pxy_ringbuffer<d912pxy_surface*>* GetCatBuffer(UINT32 cat);
 
 	void PoolRW(UINT32 cat, d912pxy_surface** val, UINT8 rw);
+
+	void EarlyInitProc();
 
 private:
 	d912pxy_memtree2* table;

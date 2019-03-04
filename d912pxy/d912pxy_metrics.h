@@ -87,6 +87,7 @@ public:
 
 	void TrackDrawCount(UINT draws);
 	void TrackCleanupCount(UINT cleanups);
+	void TrackUploadPoolUsage(UINT64 usage);
 
 	void FlushIFrameValues();
 
@@ -96,6 +97,7 @@ private:
 	tUINT8 metricIFrameAPIOverhead[PXY_METRICS_API_OVERHEAD_COUNT + 1];
 	tUINT8 metricIFrameDraws;
 	tUINT8 metricIFrameCleans;
+	tUINT8 metricIFrameUploadOffset;
 	tUINT8 metricIFramePerBatchPrep;
 	tUINT8 metricIFramePerBatchOverhead;
 	tUINT8 metricIFrameAppPrep;	

@@ -23,22 +23,27 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "d912pxy_pool.h"
 
-template<class ElementType>
-d912pxy_pool<ElementType>::d912pxy_pool(d912pxy_device* dev) : d912pxy_noncom(dev, L"object pool")
+template<class ElementType, class ProcImpl>
+d912pxy_pool<ElementType, ProcImpl>::d912pxy_pool(d912pxy_device* dev, ProcImpl* singleton) : d912pxy_noncom(dev, L"object pool")
 {
+	if (singleton)
+		*singleton = static_cast<ProcImpl>(this);
+
+	static_cast<ProcImpl>(this)->EarlyInitProc();
+
 	InitializeCriticalSection(&pooledActionCS);	
-	InitializeCriticalSection(&allocMutex);	
 }
 
-template<class ElementType>
-d912pxy_pool<ElementType>::~d912pxy_pool()
+template<class ElementType, class ProcImpl>
+d912pxy_pool<ElementType, ProcImpl>::~d912pxy_pool()
 {
 
 }
 
-template<class ElementType>
-void d912pxy_pool<ElementType>::PoolRW(UINT32 cat, ElementType * val, UINT8 rw)
+template<class ElementType, class ProcImpl>
+void d912pxy_pool<ElementType, ProcImpl>::PoolRW(UINT32 cat, ElementType * val, UINT8 rw)
 {
 	d912pxy_ringbuffer<ElementType>* tbl = GetCatBuffer(cat);
 	
@@ -46,17 +51,13 @@ void d912pxy_pool<ElementType>::PoolRW(UINT32 cat, ElementType * val, UINT8 rw)
 	{
 		if (!*val)
 		{
-//			EnterCriticalSection(&allocMutex);
-
-			*val = AllocProc(cat);
-
-//			LeaveCriticalSection(&allocMutex);
+			*val = static_cast<ProcImpl>(this)->AllocProc(cat);
 		}
 		else {
 
 			(*val)->AddRef();
 
-			d912pxy_s(thread_cleanup)->Watch(*val);
+			PoolUnloadProc(*val, cat);
 
 			EnterCriticalSection(&rwMutex[cat]);
 
@@ -80,30 +81,39 @@ void d912pxy_pool<ElementType>::PoolRW(UINT32 cat, ElementType * val, UINT8 rw)
 	}
 }
 
-template<class ElementType>
-void d912pxy_pool<ElementType>::PooledActionLock()
+template<class ElementType, class ProcImpl>
+void d912pxy_pool<ElementType, ProcImpl>::PooledActionLock()
 {
 	EnterCriticalSection(&pooledActionCS);
 }
 
-template<class ElementType>
-void d912pxy_pool<ElementType>::PooledActionUnLock()
+template<class ElementType, class ProcImpl>
+void d912pxy_pool<ElementType, ProcImpl>::PooledActionUnLock()
 {
 	LeaveCriticalSection(&pooledActionCS);
 }
 
-template<class ElementType>
-d912pxy_ringbuffer<ElementType>* d912pxy_pool<ElementType>::GetCatBuffer(UINT32 cat)
+template<class ElementType, class ProcImpl>
+d912pxy_ringbuffer<ElementType>* d912pxy_pool<ElementType, ProcImpl>::GetCatBuffer(UINT32 cat)
 {
 	return NULL;
 }
 
-template<class ElementType>
-ElementType d912pxy_pool<ElementType>::AllocProc(UINT32 cat)
+template<class ElementType, class ProcImpl>
+void d912pxy_pool<ElementType, ProcImpl>::PoolUnloadProc(ElementType val, UINT32 cat)
 {
-	return NULL;
+	val->NoteDeletion(GetTickCount());
+	d912pxy_s(thread_cleanup)->Watch(val);
 }
 
-template class d912pxy_pool<d912pxy_vstream*>;
-template class d912pxy_pool<d912pxy_upload_item*>;
-template class d912pxy_pool<d912pxy_surface*>;
+template<class ElementType, class ProcImpl>
+void d912pxy_pool<ElementType, ProcImpl>::WarmUp(UINT cat)
+{
+	ElementType v = static_cast<ProcImpl>(this)->AllocProc(cat);
+	PoolRW(cat, &v, 1);	
+	v->Release();	
+}
+
+template class d912pxy_pool<d912pxy_vstream*, d912pxy_vstream_pool*>;
+template class d912pxy_pool<d912pxy_upload_item*, d912pxy_upload_pool*>;
+template class d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>;

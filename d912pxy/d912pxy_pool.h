@@ -25,12 +25,12 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-template <class ElementType>
+template <class ElementType, class ProcImpl>
 class d912pxy_pool : public d912pxy_noncom
 {
 public:
 
-	d912pxy_pool(d912pxy_device* dev);
+	d912pxy_pool(d912pxy_device* dev, ProcImpl* singleton);
 	~d912pxy_pool();
 
 	virtual void PoolRW(UINT32 cat, ElementType* val, UINT8 rw);
@@ -38,11 +38,11 @@ public:
 	void PooledActionLock();
 	void PooledActionUnLock();
 
-	virtual d912pxy_ringbuffer<ElementType>* GetCatBuffer(UINT32 cat);
-	virtual ElementType AllocProc(UINT32 cat);
+	virtual d912pxy_ringbuffer<ElementType>* GetCatBuffer(UINT32 cat);	
+	virtual void PoolUnloadProc(ElementType val, UINT32 cat);
+	virtual void WarmUp(UINT cat);
 	
 protected:
-	CRITICAL_SECTION pooledActionCS;
-	CRITICAL_SECTION allocMutex;
+	CRITICAL_SECTION pooledActionCS;	
 	CRITICAL_SECTION* rwMutex;
 };
