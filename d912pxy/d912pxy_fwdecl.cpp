@@ -43,3 +43,4 @@ d912pxy_s_dcl(psoCache, d912pxy_pso_cache);
 d912pxy_s_dcl(vfs, d912pxy_vfs);
 d912pxy_s_dcl(dev, d912pxy_device);
 d912pxy_s_dcl(metrics, d912pxy_metrics);
+d912pxy_s_dcl(config, d912pxy_config);

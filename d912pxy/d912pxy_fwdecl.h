@@ -228,6 +228,7 @@ class d912pxy_batch;
 class d912pxy_pso_cache_item;
 class d912pxy_vfs;
 class d912pxy_metrics;
+class d912pxy_config;
 struct d912pxy_trimmed_dx12_pso;
 
 typedef struct d912pxy_device_texture_state {
@@ -282,6 +283,7 @@ public:
 	static d912pxy_vfs* vfs;
 	static d912pxy_device* dev;
 	static d912pxy_metrics* metrics;
+	static d912pxy_config* config;
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a

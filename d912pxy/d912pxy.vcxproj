@@ -191,6 +191,7 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetName>d3d9</TargetName>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\debug\</OutDir>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -216,6 +217,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\release\</OutDir>
     <TargetName>d3d9</TargetName>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ps|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -279,6 +281,12 @@
       <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
       <ObjectFileOutput>$(OutDir)\cso\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
+    <PostBuildEvent>
+      <Command>copy $(SolutionDir)\bin\d912pxy\dll\debug\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>debug dll copy</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -400,6 +408,12 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>$(SolutionDir)\bin\d912pxy\dll\release\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>copy release dll</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_ps|x64'">
     <ClCompile>
@@ -511,6 +525,7 @@
     <ClInclude Include="..\thirdparty\D3D9Proxy\defines.h" />
     <ClInclude Include="..\thirdparty\StackWalker\StackWalker.h" />
     <ClInclude Include="d3d9_proxy_dll.h" />
+    <ClInclude Include="d912pxy_config.h" />
     <ClInclude Include="d912pxy_linked_list.h" />
     <ClInclude Include="d912pxy_basetexture.h" />
     <ClInclude Include="d912pxy_batch.h" />
@@ -579,6 +594,7 @@
   <ItemGroup>
     <ClCompile Include="..\thirdparty\StackWalker\StackWalker.cpp" />
     <ClCompile Include="d3d9_proxy_dll.cpp" />
+    <ClCompile Include="d912pxy_config.cpp" />
     <ClCompile Include="d912pxy_device_clipping.cpp" />
     <ClCompile Include="d912pxy_device_drawing.cpp" />
     <ClCompile Include="d912pxy_device_constructors.cpp" />
