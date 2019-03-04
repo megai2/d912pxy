@@ -74,9 +74,13 @@ public:
 	UINT CheckExpired(UINT32 nt);
 	virtual UINT32 PooledAction(UINT32 use);
 
+	int Watching(LONG v);
+
 private:
 	LONG thrdRefc;
 	LONG refc;
 	UINT32 timestamp;
+
+	LONG beingWatched;
 };
 

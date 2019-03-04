@@ -52,10 +52,11 @@ void d912pxy_cleanup_thread::ThreadJob()
 		if (obj->CheckExpired(GetTickCount()))
 		{
 			if (obj->PooledAction(0))
-			{
 				Sleep(250);
-			}
+
 			buffer->IterRemove();
+			obj->Watching(-1);
+			
 		}
 		else {
 			buffer->IterNext();
@@ -91,6 +92,10 @@ void d912pxy_cleanup_thread::ThreadJob()
 }
 
 void d912pxy_cleanup_thread::Watch(d912pxy_comhandler * obj)
-{
-	buffer->Insert(obj);
+{	
+	if (obj->Watching(0) < 2)
+	{
+		buffer->Insert(obj);
+		obj->Watching(1);
+	}
 }

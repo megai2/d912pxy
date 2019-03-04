@@ -28,6 +28,7 @@ d912pxy_comhandler::d912pxy_comhandler(const wchar_t* moduleText) : d912pxy_nonc
 {
 	refc = 1;
 	thrdRefc = 0;
+	beingWatched = 0;
 }
 
 d912pxy_comhandler::d912pxy_comhandler(d912pxy_device * dev, const wchar_t * moduleText) : d912pxy_noncom(dev, moduleText)
@@ -152,4 +153,9 @@ UINT32 d912pxy_comhandler::PooledAction(UINT32 use)
 		else
 			return 0;
 	}
+}
+
+int d912pxy_comhandler::Watching(LONG v)
+{
+	return InterlockedAdd(&beingWatched, v);
 }
