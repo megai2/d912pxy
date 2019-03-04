@@ -97,6 +97,9 @@ d912pxy_device::~d912pxy_device(void)
 #ifdef PERFORMANCE_GRAPH_WRITE
 	delete perfGraph;
 #endif
+
+	if (initPtr)
+		((IDirect3D9*)initPtr)->Release();
 	
 	LOG_INFO_DTDM("d912pxy exited");
 

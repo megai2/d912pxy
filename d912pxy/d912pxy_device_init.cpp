@@ -27,6 +27,8 @@ void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATI
 		LOG_ERR_THROW(dev->GetDeviceCaps(&cached_dx9caps));
 		LOG_ERR_THROW(dev->GetDisplayMode(0, &cached_dx9displaymode));
 
+		((IDirect3D9*)initPtr)->AddRef();//megai2: keep original d3d9 object
+
 		dev->Release();
 	}
 	else {
