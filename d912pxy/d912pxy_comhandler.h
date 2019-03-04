@@ -71,7 +71,7 @@ public:
 	void ThreadRef(INT ic);
 
 	void NoteDeletion(UINT32 time);
-	UINT CheckExpired(UINT32 nt);
+	UINT CheckExpired(UINT32 nt, UINT32 lifetime);
 	virtual UINT32 PooledAction(UINT32 use);
 
 	int Watching(LONG v);

@@ -121,9 +121,9 @@ void d912pxy_comhandler::NoteDeletion(UINT32 time)
 	timestamp = time;
 }
 
-UINT d912pxy_comhandler::CheckExpired(UINT32 nt)
+UINT d912pxy_comhandler::CheckExpired(UINT32 nt, UINT32 lifetime)
 {
-	return ((timestamp + PXY_INNER_GC_LIFETIME) <= nt);	
+	return ((timestamp + lifetime) <= nt);
 }
 
 UINT32 d912pxy_comhandler::PooledAction(UINT32 use)

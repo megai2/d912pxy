@@ -40,9 +40,13 @@ public:
 
 	void EarlyInitProc();
 
+	void PoolUnloadProc(d912pxy_surface* val, d912pxy_ringbuffer<d912pxy_surface*>* tbl);
+
 private:
 	d912pxy_memtree2* table;
 
 	CRITICAL_SECTION mtMutex;
+
+	UINT64 config;
 };
 

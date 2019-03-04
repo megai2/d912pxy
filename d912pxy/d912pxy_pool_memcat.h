@@ -43,8 +43,10 @@ private:
 	UINT32 bitIgnore;
 	UINT32 bitLimit;
 	UINT32 bitCnt;
+	UINT32 instantUnload;
 
 	UINT16* limits;
+	
 
 protected:
 	d912pxy_ringbuffer<ElementType>** memTable;

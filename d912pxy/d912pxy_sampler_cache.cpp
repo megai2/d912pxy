@@ -32,6 +32,8 @@ d912pxy_sampler_cache::d912pxy_sampler_cache(d912pxy_device* dev, d912pxy_dheap*
 
 	mtree = new d912pxy_memtree2(sizeof(D3D12_SAMPLER_DESC), maxCacheNodes, 0);
 
+	float defaultMinLOD = d912pxy_s(config)->GetValueUI64(PXY_CFG_SAMPLERS_MIN_LOD) * 1.0f;
+
 	for (int i = 0; i != PXY_INNER_MAX_API_SAMPLERS; ++i)
 	{
 		samplers[i].ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
@@ -39,6 +41,7 @@ d912pxy_sampler_cache::d912pxy_sampler_cache(d912pxy_device* dev, d912pxy_dheap*
 		samplers[i].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplers[i].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplers[i].MaxLOD = 1e5;
+		samplers[i].MinLOD = defaultMinLOD;
 	}
 
 	gDirty = 0xFFFFFFFF;

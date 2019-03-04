@@ -78,6 +78,13 @@ d912pxy_config::~d912pxy_config()
 {
 }
 
+UINT64 d912pxy_config::GetValueXI64(d912pxy_config_value val)
+{
+	UINT64 ret = 0;
+	swscanf(&data[val].value[0], L"%llX", &ret);
+	return ret;
+}
+
 UINT64 d912pxy_config::GetValueUI64(d912pxy_config_value val)
 {
 	return _wtoi64(&data[val].value[0]);

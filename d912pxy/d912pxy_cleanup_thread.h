@@ -37,5 +37,8 @@ public:
 private:
 	d912pxy_linked_list<d912pxy_comhandler*>* buffer;
 	
+	UINT iterationPeriod;
+	UINT iterationSubsleep;
+	UINT lifetime;
 };
 

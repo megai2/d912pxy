@@ -28,6 +28,10 @@ d912pxy_cleanup_thread::d912pxy_cleanup_thread(d912pxy_device* dev) : d912pxy_no
 {
 	d912pxy_s(thread_cleanup) = this;
 
+	iterationPeriod = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_CLEANUP_PERIOD);
+	iterationSubsleep = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_CLEANUP_SUBSLEEP);
+	lifetime = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_POOLING_LIFETIME);
+
 	buffer = new d912pxy_linked_list<d912pxy_comhandler*>();
 	SignalWork();
 }
@@ -49,10 +53,10 @@ void d912pxy_cleanup_thread::ThreadJob()
 	{
 		d912pxy_comhandler* obj = buffer->Value();
 		
-		if (obj->CheckExpired(GetTickCount()))
+		if (obj->CheckExpired(GetTickCount(), lifetime))
 		{
 			if (obj->PooledAction(0))
-				Sleep(250);
+				Sleep(iterationSubsleep);
 
 			buffer->IterRemove();
 			obj->Watching(-1);
@@ -74,9 +78,9 @@ void d912pxy_cleanup_thread::ThreadJob()
 
 	if (etime > time)
 	{
-		if ((etime - time) < 10000)
+		if ((etime - time) < iterationPeriod)
 		{
-			INT32 sleepTime = 10000 - (etime - time);
+			INT32 sleepTime = iterationPeriod - (etime - time);
 
 			//Sleep(sleepTime);
 

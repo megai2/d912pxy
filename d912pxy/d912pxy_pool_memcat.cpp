@@ -30,6 +30,7 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 	bitIgnore = iBitIgnore;
 	bitLimit = iBitLimit;
 	bitCnt = iBitLimit - iBitIgnore;
+	instantUnload = 0;
 
 	limits = (UINT16*)malloc(sizeof(UINT16)*bitCnt);
 	ZeroMemory(limits, sizeof(UINT16)*bitCnt);
@@ -49,6 +50,7 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 			tmp[4] = 0;
 
 			performaWarmUp = vals[bitCnt * 5 + 3] == L'1';
+			instantUnload = vals[bitCnt * 5 + 4] == L'1';
 
 			for (int i = 0; i != bitCnt; ++i)
 			{
@@ -97,8 +99,10 @@ void d912pxy_pool_memcat<ElementType, ProcImpl>::PoolUnloadProc(ElementType val,
 	if (GetCatBuffer(cat)->TotalElements() >= limits[cat])
 	{
 		val->NoteDeletion(GetTickCount());
-		//val->PooledAction(0);
-		d912pxy_s(thread_cleanup)->Watch(val);
+		if (instantUnload)
+			val->PooledAction(0);
+		else 
+			d912pxy_s(thread_cleanup)->Watch(val);
 	}
 }
 

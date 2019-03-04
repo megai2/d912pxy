@@ -165,7 +165,8 @@ void d912pxy_shader_db::DeletePair(UINT32 ha)
 
 void d912pxy_shader_db::CleanUnusedPairs()
 {
-	UINT32 time = GetTickCount();
+	//megai2: this is not used yet
+	/*UINT32 time = GetTickCount();
 	UINT32 cnt;
 	d912pxy_memtree2_node* pool = shaderPairs->AsyncIterBase(&cnt);
 	
@@ -184,7 +185,7 @@ void d912pxy_shader_db::CleanUnusedPairs()
 		LeaveCriticalSection(&treeAcCS);
 		//megai2: make sleep on this thread, cuz we need make this huge cleanup on background
 		Sleep(0);
-	}
+	}*/
 }
 
 d912pxy_shader_code_item::d912pxy_shader_code_item(d912pxy_shader_uid mUID) : d912pxy_noncom(NULL, L"shader code cache item")
