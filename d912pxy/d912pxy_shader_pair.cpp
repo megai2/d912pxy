@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_pair::d912pxy_shader_pair(UINT32 nodeId, d912pxy_device* dev) : d912pxy_noncom(dev, L"shader pair")
+d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_device* dev) : d912pxy_noncom(dev, L"shader pair")
 {	
 	maxPsoId = 512;
 

@@ -8,9 +8,6 @@ HRESULT WINAPI d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
 
 	API_OVERHEAD_TRACK_START(0)
 
-//	if (!pShader)
-	//	return D3D_OK;
-
 	d912pxy_vshader* shd = (d912pxy_vshader*)pShader;
 
 	d912pxy_s(psoCache)->VShader(shd);
@@ -25,9 +22,6 @@ HRESULT WINAPI d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader)
 	LOG_DBG_DTDM(__FUNCTION__);
 
 	API_OVERHEAD_TRACK_START(0)
-
-//	if (!pShader)
-	//	return D3D_OK;
 
 	d912pxy_pshader* shd = (d912pxy_pshader*)pShader;
 

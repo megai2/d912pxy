@@ -39,30 +39,20 @@ public:
 
 	D3D12_SHADER_BYTECODE* GetCode();
 
-	DWORD* GetOCode() { return oCode; };
-	UINT GetOLen() { return oLen; };
+	d912pxy_shader_uid GetID();
 
-	void SetMaxVars(UINT v);
-
-	UINT GetMaxVars() { return maxVars; };
-
-	d912pxy_shader_uid GetID() { return mUID; };
-
-	void NotePairUsage(UINT32 pairHash);
-	d912pxy_ringbuffer<UINT32>* GetPairs() { return pairs; };
+	void NotePairUsage(d912pxy_shader_pair_hash_type pairHash);
+	d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>* GetPairs() { return pairs; };
 
 	UINT FinalReleaseCB();
 
 private:
-	D3D12_SHADER_BYTECODE dx12code;
-
-	d912pxy_ringbuffer<UINT32>* pairs;
+	d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>* pairs;
 
 	d912pxy_shader_code bytecode;
 	d912pxy_shader_uid mUID;
 
-	UINT oLen;
-	UINT maxVars;
+	UINT oLen;	
 	DWORD* oCode;
 };
 

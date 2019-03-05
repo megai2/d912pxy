@@ -610,12 +610,12 @@ void d912pxy_pso_cache::ProcessShaderCleanup()
 	while (shaderCleanupBuffer->HaveElements())
 	{
 		d912pxy_shader* it = shaderCleanupBuffer->GetElement();
-		d912pxy_ringbuffer<UINT32>* pairs = it->GetPairs();
+		d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>* pairs = it->GetPairs();
 		shaderCleanupBuffer->Next();
 
 		while (pairs->HaveElements())
 		{
-			UINT32 ha = pairs->GetElement();
+			d912pxy_shader_pair_hash_type ha = pairs->GetElement();
 
 			d912pxy_s(sdb)->DeletePair(ha);
 

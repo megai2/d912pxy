@@ -27,19 +27,16 @@ SOFTWARE.
 d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, const DWORD * fun) : d912pxy_comhandler(shtName)
 {
 	m_dev = dev;
-
-	maxVars = 4096;
 	
 	mUID = d912pxy_s(sdb)->GetUID((DWORD*)fun, &oLen);
+
 	oCode = (DWORD*)malloc(oLen*4);
 	memcpy(oCode, fun, oLen * 4);
 
 	bytecode.code = 0;
 	bytecode.blob = nullptr;
 
-//	GetCode();
-
-	pairs = new d912pxy_ringbuffer<UINT32>(0x10, 2);
+	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
 }
 
 d912pxy_shader::~d912pxy_shader()
@@ -53,24 +50,25 @@ d912pxy_shader::~d912pxy_shader()
 D3D12_SHADER_BYTECODE * d912pxy_shader::GetCode()
 {
 	if (!bytecode.code)
-	{
-		bytecode = d912pxy_s(sdb)->GetCode(mUID, this);
+	{	
+		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID);
 
-		free(oCode);
+		bytecode = replacer->GetCode();
 
-		dx12code.pShaderBytecode = bytecode.code;
-		dx12code.BytecodeLength = bytecode.sz;
+		delete replacer;
+
+		free(oCode);		
 	}
 
-	return &dx12code;
+	return (D3D12_SHADER_BYTECODE*)&bytecode;
 }
 
-void d912pxy_shader::SetMaxVars(UINT v)
+d912pxy_shader_uid d912pxy_shader::GetID()
 {
-	maxVars = v;
+	return mUID;
 }
 
-void d912pxy_shader::NotePairUsage(UINT32 pairHash)
+void d912pxy_shader::NotePairUsage(d912pxy_shader_pair_hash_type pairHash)
 {
 	pairs->WriteElement(pairHash);
 }

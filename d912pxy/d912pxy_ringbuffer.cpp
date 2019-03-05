@@ -150,4 +150,5 @@ template class d912pxy_ringbuffer<d912pxy_vstream*>;
 template class d912pxy_ringbuffer<d912pxy_surface*>;
 template class d912pxy_ringbuffer<d912pxy_shader*>;
 template class d912pxy_ringbuffer<UINT32>;
+template class d912pxy_ringbuffer<UINT64>;
 template class d912pxy_ringbuffer<d912pxy_linked_list_element*>;

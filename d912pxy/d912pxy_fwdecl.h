@@ -68,6 +68,7 @@ SOFTWARE.
 //inner max/structure defenitions =======================
 
 #define d912pxy_shader_uid UINT64
+#define d912pxy_shader_pair_hash_type UINT64
 
 #define PXY_INNER_MAX_SWAP_CHAINS 4
 #define PXY_INNER_MAX_RENDER_TARGETS 8

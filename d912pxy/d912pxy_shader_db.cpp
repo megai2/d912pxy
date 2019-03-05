@@ -26,11 +26,8 @@ SOFTWARE.
 
 d912pxy_shader_db::d912pxy_shader_db(d912pxy_device* dev) : d912pxy_noncom(dev, L"shader database")
 {
-	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_uid)*2, 0xFF, 2);
-	shaderCodes = new d912pxy_memtree(sizeof(d912pxy_shader_uid), 0xFF, 2, 0);
-
-	InitializeCriticalSection(&treeAcCS);
-
+	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_pair_hash_type), 0xFF, 2);
+	
 	d912pxy_s(sdb) = this;
 }
 
@@ -52,23 +49,6 @@ d912pxy_shader_db::~d912pxy_shader_db()
 	}
 
 	delete shaderPairs;
-
-	shaderCodes->Begin();
-
-	while (!shaderCodes->IterEnd())
-	{
-		UINT64 cid = shaderCodes->CurrentCID();
-		if (cid)
-		{
-			d912pxy_shader_code_item* item = (d912pxy_shader_code_item*)cid;
-
-			delete item;
-		}
-		shaderCodes->Next();
-	}
-
-	delete shaderCodes;
-
 }
 
 d912pxy_shader_uid d912pxy_shader_db::GetUID(DWORD * code, UINT32* len)
@@ -90,48 +70,23 @@ d912pxy_shader_uid d912pxy_shader_db::GetUID(DWORD * code, UINT32* len)
 	return hash;
 }
 
-d912pxy_shader_code d912pxy_shader_db::GetCode(d912pxy_shader_uid UID, d912pxy_shader * shader)
-{
-/*	shaderCodes->PointAt(&UID);
-
-	d912pxy_shader_code_item* it = (d912pxy_shader_code_item*)shaderCodes->CurrentCID();
-
-	if (it)
-	{
-		return it->GetCode();
-	}
-	else*/ {
-
-		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(shader->GetOCode(), shader->GetOLen(), UID);
-
-		d912pxy_shader_code ret = replacer->GetCode();
-
-		shader->SetMaxVars(replacer->GetMaxVars());
-
-		delete replacer;
-
-		return ret;
-	}
-}
-
 d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_pshader* ps)
-{
-	//d912pxy_shader_uid pdc[2] = { (UINT64)vs, (UINT64)ps };
+{	
 	d912pxy_shader_uid pdc[2] = { vs->GetID(), ps->GetID() };
 
 	LOG_DBG_DTDM2("ShaderPair %016llX %016llX", pdc[0], pdc[1]);
 	
- 	UINT32 ha = shaderPairs->memHash32(pdc);
+	d912pxy_shader_pair_hash_type ha = (d912pxy_shader_pair_hash_type)(pdc[0] ^ pdc[1]);
 	
-	EnterCriticalSection(&treeAcCS);
+	treeLock.Hold();
 
-	shaderPairs->PointAtMem(&ha, 4);
+	shaderPairs->PointAtMem(&ha, sizeof(d912pxy_shader_pair_hash_type));
 
 	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->CurrentCID();
 
 	if (it)
 	{
-		LeaveCriticalSection(&treeAcCS);
+		treeLock.Release();
 		return it;
 	}
 	else {
@@ -142,62 +97,24 @@ d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_ps
 
 		shaderPairs->SetValue((intptr_t)it);
 
-		LeaveCriticalSection(&treeAcCS);
+		treeLock.Release();
 
 		return it;
 	}
 }
 
-void d912pxy_shader_db::DeletePair(UINT32 ha)
+void d912pxy_shader_db::DeletePair(d912pxy_shader_pair_hash_type ha)
 {
-	EnterCriticalSection(&treeAcCS);
-	shaderPairs->PointAtMem(&ha, 4);
+	treeLock.Hold();
+
+	shaderPairs->PointAtMem(&ha, sizeof(d912pxy_shader_pair_hash_type));
 
 	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->CurrentCID();
-	
-	if (it)
-		delete it;
 
 	shaderPairs->SetValue(0);
-
-	LeaveCriticalSection(&treeAcCS);
-}
-
-void d912pxy_shader_db::CleanUnusedPairs()
-{
-	//megai2: this is not used yet
-	/*UINT32 time = GetTickCount();
-	UINT32 cnt;
-	d912pxy_memtree2_node* pool = shaderPairs->AsyncIterBase(&cnt);
 	
-	for (UINT32 i =0; i!=cnt;++i)
-	{		
-		EnterCriticalSection(&treeAcCS);
-		d912pxy_shader_pair* it = (d912pxy_shader_pair*)pool[i].contentId;
-		if (it)
-		{
-			if ((it->GetLastAccessTime() + PXY_INNER_SHADER_PAIR_LIFETIME) < time)
-			{
-				delete it;
-				pool[i].contentId = 0;
-			}			
-		}
-		LeaveCriticalSection(&treeAcCS);
-		//megai2: make sleep on this thread, cuz we need make this huge cleanup on background
-		Sleep(0);
-	}*/
-}
+	treeLock.Release();
 
-d912pxy_shader_code_item::d912pxy_shader_code_item(d912pxy_shader_uid mUID) : d912pxy_noncom(NULL, L"shader code cache item")
-{
-	//TODO load CSO and other needed stuff from disk
-}
-
-d912pxy_shader_code_item::~d912pxy_shader_code_item()
-{
-}
-
-d912pxy_shader_code d912pxy_shader_code_item::GetCode()
-{
-	return code;
+	if (it)
+		delete it;		
 }

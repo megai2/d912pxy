@@ -29,7 +29,7 @@ struct ID3DXBuffer;
 
 typedef struct d912pxy_shader_code {
 	void* code;
-	UINT64 sz;
+	size_t sz;
 
 	ComPtr<ID3DBlob> blob;
 } d912pxy_shader_code;

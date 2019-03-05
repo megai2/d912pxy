@@ -25,39 +25,20 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_shader_code_item : public d912pxy_noncom
-{
-public:
-	d912pxy_shader_code_item(d912pxy_shader_uid mUID);
-	~d912pxy_shader_code_item();
-	
-	d912pxy_shader_code GetCode();
-
-private:
-	d912pxy_shader_code code;
-
-};
-
 class d912pxy_shader_db : public d912pxy_noncom
 {
 public:
 	d912pxy_shader_db(d912pxy_device* dev);
 	~d912pxy_shader_db();
 
-	d912pxy_shader_uid GetUID(DWORD* code, UINT32* len);
+	d912pxy_shader_uid GetUID(DWORD* code, UINT32* len);		
 
-	//this must be called from PSO compile thread
-
-	d912pxy_shader_code GetCode(d912pxy_shader_uid UID, d912pxy_shader* shader);
 	d912pxy_shader_pair* GetPair(d912pxy_vshader* vs, d912pxy_pshader* ps);
-	void DeletePair(UINT32 ha);
-
-	void CleanUnusedPairs();
+	void DeletePair(d912pxy_shader_pair_hash_type ha);
 
 private:
-	CRITICAL_SECTION treeAcCS;
+	d912pxy_thread_lock treeLock;
 
-	d912pxy_memtree* shaderCodes;
 	d912pxy_memtree2* shaderPairs;
 };
 
