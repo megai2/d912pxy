@@ -560,7 +560,7 @@ void d912pxy_pso_cache::SetRootSignature(ComPtr<ID3D12RootSignature> sig)
 
 void d912pxy_pso_cache::MarkDirty(UINT force)
 {
-	frameCl = d912pxy_s(GPUcl)->GID(CLG_SEQ).Get();
+	frameCl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
 
 	dirty |= 1 | (force < 1);
 }

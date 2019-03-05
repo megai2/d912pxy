@@ -72,7 +72,7 @@ void d912pxy_buffer_loader::IssueUpload(d912pxy_vstream * dst, d912pxy_upload_it
 
 void d912pxy_buffer_loader::ThreadJob()
 {
-	ID3D12GraphicsCommandList* cq = d912pxy_s(GPUcl)->GID(CLG_BUF).Get();	
+	ID3D12GraphicsCommandList* cq = d912pxy_s(GPUcl)->GID(CLG_BUF);	
 
 	while (buffer->HaveElements())
 	{

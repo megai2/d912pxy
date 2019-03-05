@@ -69,7 +69,7 @@ HRESULT d912pxy_gpu_que::ExecuteCurrentGPUWork(UINT doSwap)
 
 	if (doSwap)
 	{
-		mSwp->CopyFrameToDXGI(mCurrentGPUWork->GID(CLG_SEQ).Get());
+		mSwp->CopyFrameToDXGI(mCurrentGPUWork->GID(CLG_SEQ));
 	}
 
 	mCurrentGPUWork->Execute();

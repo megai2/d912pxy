@@ -137,7 +137,7 @@ void d912pxy_cbuffer::Upload()
 {
 	//mappedData = NULL;
 	//uploadRes->GetD12Obj()->Unmap(0, 0);
-	uploadRes->CopyTo(this, 1, d912pxy_s(GPUcl)->GID(CLG_TOP).Get());	
+	uploadRes->CopyTo(this, 1, d912pxy_s(GPUcl)->GID(CLG_TOP));	
 }
 
 void d912pxy_cbuffer::UploadTarget(d912pxy_cbuffer * target, UINT offset, UINT size)

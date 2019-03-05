@@ -95,8 +95,6 @@ private:
 	ID3D12DescriptorHeap* mSetHeapArr[PXY_INNER_MAX_DSC_HEAPS];
 	UINT mSetHeapArrCnt;
 	d912pxy_swapchain* mSwapChain;
-
-	float* halfPixelFixWriteAdr;
 	
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	UINT batchesIssued;

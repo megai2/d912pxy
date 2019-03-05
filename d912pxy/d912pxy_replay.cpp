@@ -267,9 +267,7 @@ D912PXY_REPLAY_HA_IMPL(void, DIIP, d912pxy_replay_draw_indexed_instanced)
 		it->StartIndexLocation,
 		it->BaseVertexLocation,
 		0
-	);
-
-	d912pxy_s(batch)->PostDIP(cl);
+	);	
 }
 
 D912PXY_REPLAY_HA_IMPL(void, OMRT, d912pxy_replay_om_render_target)
@@ -463,7 +461,7 @@ void d912pxy_replay::Replay(UINT start, UINT end, d912pxy_gpu_cmd_list_group lis
 {
 //	UINT32 startTime = GetTickCount();
 
-	ID3D12GraphicsCommandList * cl = d912pxy_s(GPUcl)->GID(listGrp).Get();
+	ID3D12GraphicsCommandList * cl = d912pxy_s(GPUcl)->GID(listGrp);
 
 	ID3D12PipelineState* psoPtr = NULL;
 

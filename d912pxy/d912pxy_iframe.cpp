@@ -28,8 +28,6 @@ d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d9
 {
 	d912pxy_s(iframe) = this;
 
-	halfPixelFixWriteAdr = 0;
-
 	mHeaps = heaps;
 	
 	new d912pxy_texstage_cache(dev);
@@ -260,9 +258,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	d912pxy_s(psoCache)->Use();
 
-	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, d912pxy_s(batch)->ExecReplay2());
-
-	//halfPixelFixWriteAdr = 0;
+	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, d912pxy_s(batch)->NextBatch());
 
 	instanceCount = 1;
 
@@ -507,13 +503,8 @@ void d912pxy_iframe::SetViewport(D3D12_VIEWPORT * pViewport)
 			fixupfv[0] = 0;
 			fixupfv[1] = 0;
 		}
-
-		//if (!halfPixelFixWriteAdr)
-		halfPixelFixWriteAdr = (float*)d912pxy_s(batch)->SetShaderConstFRewritable(0, PXY_INNER_MAX_SHADER_CONSTS_IDX * 2 - 1, 1, fixupfv);
-		//else {
-			//halfPixelFixWriteAdr[0] = fixupfv[0];
-			//halfPixelFixWriteAdr[1] = fixupfv[1];
-		//}
+		
+		d912pxy_s(batch)->SetShaderConstF(0, PXY_INNER_MAX_SHADER_CONSTS_IDX * 2 - 1, 1, fixupfv);
 	}
 
 	main_viewport = *pViewport;
@@ -550,7 +541,7 @@ void d912pxy_iframe::IgnoreScissor()
 
 void d912pxy_iframe::SetRSigOnList(d912pxy_gpu_cmd_list_group lstID)
 {
-	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(lstID).Get();
+	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(lstID);
 		
 	cl->SetDescriptorHeaps(mSetHeapArrCnt, mSetHeapArr);
 
@@ -560,8 +551,6 @@ void d912pxy_iframe::SetRSigOnList(d912pxy_gpu_cmd_list_group lstID)
 	cl->SetGraphicsRootDescriptorTable(1, mHeaps[PXY_INNER_HEAP_SRV]->GetGPUDHeapHandle(0));
 	cl->SetGraphicsRootDescriptorTable(2, mHeaps[PXY_INNER_HEAP_SPL]->GetGPUDHeapHandle(0));
 	cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	d912pxy_s(batch)->SetRSigOnList(lstID);
 }
 
 void d912pxy_iframe::TransitStates(d912pxy_gpu_cmd_list_group tgtList)

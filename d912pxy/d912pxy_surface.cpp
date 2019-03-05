@@ -599,7 +599,7 @@ void d912pxy_surface::CopySurfaceDataToCPU()
 	d912pxy_resource* readbackBuffer = new d912pxy_resource(m_dev, RTID_RB_BUF, L"readback buffer");
 	readbackBuffer->d12res_readback_buffer(subresFootprints[0].Footprint.RowPitch*subresFootprints[0].Footprint.Height);
 	
-	ID3D12GraphicsCommandList* cq = d912pxy_s(GPUcl)->GID(CLG_SEQ).Get();
+	ID3D12GraphicsCommandList* cq = d912pxy_s(GPUcl)->GID(CLG_SEQ);
 
 	D3D12_RANGE offsetToSubres;
 

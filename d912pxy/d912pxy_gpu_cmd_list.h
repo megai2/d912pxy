@@ -41,7 +41,7 @@ public:
 	void CleanupAllReferenced();
 	void CleanupReferenced(UINT items);
 
-	ComPtr<ID3D12GraphicsCommandList> GID(d912pxy_gpu_cmd_list_group id) { return mCL[id]; }
+	ID3D12GraphicsCommandList* GID(d912pxy_gpu_cmd_list_group id) { return mCL[id].Get(); }
 
 private:	
 	ComPtr<ID3D12GraphicsCommandList> mCL[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];

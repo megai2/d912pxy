@@ -98,7 +98,7 @@ HRESULT d912pxy_swapchain::GetFrontBufferData(IDirect3DSurface9 * pDestSurface)
 	//megai2: not actual front buffer data, but should work 
 
 	d912pxy_surface * dst = (d912pxy_surface*)pDestSurface;
-	backBufferSurface->CopyTo(dst, 0, d912pxy_s(GPUcl)->GID(CLG_SEQ).Get());
+	backBufferSurface->CopyTo(dst, 0, d912pxy_s(GPUcl)->GID(CLG_SEQ));
 
 	dst->CopySurfaceDataToCPU();
 

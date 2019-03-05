@@ -31,32 +31,26 @@ d912pxy_batch::d912pxy_batch(d912pxy_device* dev): d912pxy_noncom(dev, L"draw ba
 	mCStreamCnt = 0;
 	batchNum = 0;
 	lastBatchCount = 0;
-
-	mDataDltRef = (UINT32*)malloc(PXY_INNER_BATCH_BUFSZ_D16 * 4);
-	memset(mDataDltRef, 0xFF, PXY_INNER_BATCH_BUFSZ_D16 * 4);
-
-	stream = new d912pxy_cbuffer(dev, 32 * PXY_INNER_BATCH_BUFSZ_D16  * PXY_INNER_MAX_IFRAME_BATCH_COUNT * 2, 0, 0);
-	drawCBuf = new d912pxy_cbuffer(dev, PXY_INNER_BATCH_BUFSZ*PXY_INNER_MAX_IFRAME_BATCH_COUNT, 0, 0);
+	oddFrame = 0;
+	
+	stream = new d912pxy_cbuffer(dev, PXY_BATCH_STREAM_SIZE, 0, 0);
+	drawCBuf = new d912pxy_cbuffer(dev, PXY_BATCH_GPU_BUFFER_SIZE, 0, 0);
 
 	streamR = stream->GetD12Obj().Get();
 	drawCBufR = drawCBuf->GetD12Obj().Get();
 
 	mStreamBaseGPUPtr = streamR->GetGPUVirtualAddress();
 	mDrawCBufferGPUPtr = drawCBufR->GetGPUVirtualAddress();
-
-	heap = dev->GetDHeap(PXY_INNER_HEAP_CBV);
-
-	D3D12_GPU_VIRTUAL_ADDRESS basePtr = drawCBuf->GetD12Obj()->GetGPUVirtualAddress();
-
-	oddFrame = 0;
-
-	mStreamDivPoint = PXY_INNER_MAX_IFRAME_BATCH_COUNT * PXY_INNER_BATCH_BUFSZ_D16 * 32;
+	
 	mStreamOfDlt[0] = 0;
-	mStreamOfDlt[1] = mStreamDivPoint;
-	mStreamBase = stream->OffsetWritePoint(0);
-	mStreamPointBase = (intptr_t)mStreamBase;
+	mStreamOfDlt[1] = PXY_BATCH_STREAM_PER_FRAME_SIZE;
+	mStreamBase = (intptr_t)stream->OffsetWritePoint(0);
 
-	ZeroMemory(stateTransfer, PXY_INNER_BATCH_BUFSZ);
+	streamData = (d912pxy_batch_stream_data_entry*)mStreamBase;
+	streamControl = (d912pxy_batch_stream_control_entry*)(mStreamBase + PXY_BATCH_STREAM_CONTROL_OFFSET);
+
+	ZeroMemory(stateTransfer, PXY_BATCH_GPU_DRAW_BUFFER_SIZE);
+	memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
 
 	InitCopyCS();
 }
@@ -66,161 +60,119 @@ d912pxy_batch::~d912pxy_batch()
 {
 	drawCBuf->Release();
 	stream->Release();
+
+	copyPSO->Release();
+	copyRS->Release();
 }
 
-UINT d912pxy_batch::ExecReplay2()
+UINT d912pxy_batch::NextBatch()
 {
 	return batchNum++;
 }
 
-void d912pxy_batch::ReplayRSIG(UINT64 i1, UINT64 i2, ID3D12GraphicsCommandList* cl)
-{
-	cl->SetGraphicsRootConstantBufferView(2, drawCBufR->GetGPUVirtualAddress());
-	cl->SetGraphicsRootConstantBufferView(3, (drawCBufR->GetGPUVirtualAddress() + PXY_INNER_BATCH_CONSTANT_OFFSET));
-	stream->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
-}
-
-void d912pxy_batch::Cleanup()
-{
-
-}
-
-void* d912pxy_batch::SetShaderConstFRewritable(UINT type, UINT start, UINT cnt4, float * data)
-{
-	void* ret = (void*)(mStreamPointBase + mCStreamCnt * 16);
-
-	GPUWrite(data, cnt4, start + type * PXY_INNER_MAX_SHADER_CONSTS_IDX + PXY_INNER_BATCH_CONSTANT_OFFSET_IDX);
-
-	return 0;
-}
-
 void d912pxy_batch::SetShaderConstF(UINT type, UINT start, UINT cnt4, float * data)
 {
-	GPUWrite(data, cnt4, start + type * PXY_INNER_MAX_SHADER_CONSTS_IDX + PXY_INNER_BATCH_CONSTANT_OFFSET_IDX);
+	GPUWrite(data, cnt4, start + ((type != 0) ? PXY_BATCH_GPU_ELEMENT_OFFSET_SHADER_VARS_PIXEL : PXY_BATCH_GPU_ELEMENT_OFFSET_SHADER_VARS_VERTEX));
 }
 
 void d912pxy_batch::FrameStart()
 {
-	memset(mDataDltRef, 0, PXY_INNER_BATCH_BUFSZ_D16 * 4);
-	GPUWrite(stateTransfer, PXY_INNER_BATCH_BUFSZ_D16, 0);
+	topCl = d912pxy_s(GPUcl)->GID(CLG_TOP);
+
+	memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
+	GPUWrite(stateTransfer, PXY_BATCH_GPU_ELEMENT_COUNT, 0);
+
+	topCl->SetComputeRootSignature(copyRS);
+	topCl->SetComputeRootUnorderedAccessView(0, mDrawCBufferGPUPtr);
 }
 
 void d912pxy_batch::FrameEnd()
 {
 	++batchNum;
 
-	GPUCSCpy(mCStreamCnt, d912pxy_s(GPUcl)->GID(CLG_TOP).Get());
+	GPUCSCpy();
 
 	oddFrame = !oddFrame;
 
-	mStreamPointBase = (intptr_t)mStreamBase + mStreamOfDlt[oddFrame];
-
-	mCStreamCnt = 0;
+	intptr_t streamPoint = mStreamBase + mStreamOfDlt[oddFrame];
+	streamData = (d912pxy_batch_stream_data_entry*)streamPoint;
+	streamControl = (d912pxy_batch_stream_control_entry*)(streamPoint + PXY_BATCH_STREAM_CONTROL_OFFSET);
+	
 	lastBatchCount = batchNum - 1;
 	batchNum = 0;
 }
 
-void d912pxy_batch::GPUCSCpy(intptr_t parBind, ID3D12GraphicsCommandList * cl)
-{
-	UINT32* streamUI32 = (UINT32*)(mStreamPointBase);
-	UINT bn = batchNum;
-
-	for (int i = 0; i != PXY_INNER_BATCH_BUFSZ_D16; ++i)
-	{
-		UINT32 dltEp = mDataDltRef[i];
-		streamUI32[dltEp + 2] = bn;
+void d912pxy_batch::GPUCSCpy()
+{	
+	for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
+	{		
+		streamControl[mDataDltRef[i]].endBatch = batchNum;
 	}
 
-	if (parBind & 0x1F)
+	if (mCStreamCnt & PXY_BATCH_GPU_THREAD_BLOCK_MASK)
 	{
-		UINT32 npb = (parBind & ~0x1F) + 0x20;
+		UINT32 npb = (mCStreamCnt & ~PXY_BATCH_GPU_THREAD_BLOCK_MASK) + PXY_BATCH_GPU_THREAD_BLOCK_FIX;
 
-		for (intptr_t i = parBind; i != npb; ++i)
+		for (intptr_t i = mCStreamCnt; i != npb; ++i)
 		{
-			streamUI32[i * 4 + PXY_INNER_MAX_IFRAME_BATCH_COUNT * 4 * PXY_INNER_BATCH_BUFSZ_D16 + 1] = 0;
-			streamUI32[i * 4 + PXY_INNER_MAX_IFRAME_BATCH_COUNT * 4 * PXY_INNER_BATCH_BUFSZ_D16 + 2] = 0;
-			++mCStreamCnt;
+			streamControl[i].batchNums = 0;
 		}
 
-		parBind = npb;
+		mCStreamCnt = npb;
 	}
 
-	parBind = parBind >> 5;
-
+	
 	UINT ofDlt = mStreamOfDlt[oddFrame];
 
 	stream->IFrameBarrierTrans(0, D3D12_RESOURCE_STATE_COPY_DEST, CLG_TOP);
+	
+	stream->UploadOffsetNB(topCl, ofDlt, mCStreamCnt * PXY_BATCH_STREAM_DATA_SIZE);
+	stream->UploadOffsetNB(topCl, ofDlt + PXY_BATCH_STREAM_CONTROL_OFFSET, mCStreamCnt * PXY_BATCH_STREAM_CONTROL_SIZE);
 
-	stream->UploadOffsetNB(cl, ofDlt, mCStreamCnt << 4);
-	stream->UploadOffsetNB(cl, ofDlt + (PXY_INNER_MAX_IFRAME_BATCH_COUNT * 16 * PXY_INNER_BATCH_BUFSZ_D16), (mCStreamCnt << 4));
-
-#ifdef DX9_FRAME_SHADER_STATE_PERSISTENCY_GPUGPU_COPY	
-	drawCBuf->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
-
-	cl->CopyBufferRegion(streamR, ofDlt, drawCBufR, PXY_INNER_BATCH_BUFSZ * lastBatchCount, PXY_INNER_BATCH_BUFSZ);
-
-	drawCBuf->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
-#endif
+	drawCBuf->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_GENERIC_READ, topCl);
+	topCl->CopyBufferRegion(streamR, ofDlt, drawCBufR, PXY_BATCH_GPU_DRAW_BUFFER_SIZE * lastBatchCount, PXY_BATCH_GPU_DRAW_BUFFER_SIZE);
+	drawCBuf->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE, topCl);
 
 	stream->IFrameBarrierTrans(0, D3D12_RESOURCE_STATE_GENERIC_READ, CLG_TOP);
 
-	cl->SetPipelineState(copyPSO.Get());
+	topCl->SetPipelineState(copyPSO);
+	topCl->SetComputeRootUnorderedAccessView(1, mStreamBaseGPUPtr + ofDlt);
+	topCl->Dispatch(mCStreamCnt >> PXY_BATCH_GPU_THREAD_BLOCK_SHIFT, 1, 1);
 
-	cl->SetComputeRootUnorderedAccessView(1, mStreamBaseGPUPtr + ofDlt);
+	drawCBuf->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, topCl);
 
-	cl->Dispatch((UINT)parBind, 1, 1);
-
-	drawCBuf->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, cl);
+	mCStreamCnt = 0;
 }
 
 void d912pxy_batch::PreDIP(ID3D12GraphicsCommandList* cl, UINT bid)
 {
-	cl->SetGraphicsRootConstantBufferView(3, mDrawCBufferGPUPtr + PXY_INNER_BATCH_BUFSZ * bid);
-}
-
-void d912pxy_batch::PostDIP(ID3D12GraphicsCommandList* cl)
-{
-
-}
-
-void d912pxy_batch::SetRSigOnList(d912pxy_gpu_cmd_list_group lstID)
-{
-	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(lstID).Get();
-
-	cl->SetComputeRootSignature(copyRS.Get());
-	cl->SetComputeRootUnorderedAccessView(0, mDrawCBufferGPUPtr);
+	cl->SetGraphicsRootConstantBufferView(3, mDrawCBufferGPUPtr + PXY_BATCH_GPU_DRAW_BUFFER_SIZE * bid);
 }
 
 void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 {
-	intptr_t streamAc = mStreamPointBase;
 	UINT32* mDataDltRefL = mDataDltRef;
-
-	UINT32 CStreamCntM4 = mCStreamCnt << 2;
-	mCStreamCnt += size;
+		
 	UINT32 bn = batchNum;
 
-	memcpy(&((float*)streamAc)[CStreamCntM4], src, size << 4);
-#ifdef DX9_FRAME_SHADER_STATE_PERSISTENCY_CPU_TRACKING
-	memcpy(&stateTransfer[offset * 4], src, size << 4);
-#endif
-
-	CStreamCntM4 += PXY_INNER_MAX_IFRAME_BATCH_COUNT * 4 * PXY_INNER_BATCH_BUFSZ_D16;
+	memcpy(&streamData[mCStreamCnt], src, size << 4);
 
 	UINT32 i = offset;
 	while (i != (offset + size))
 	{
-		((UINT32*)streamAc)[CStreamCntM4 + 0] = i;
-		((UINT32*)streamAc)[CStreamCntM4 + 1] = bn;
+		d912pxy_batch_stream_control_entry* ctl = &streamControl[mCStreamCnt];
 
-		UINT32 oldDlt = mDataDltRefL[i];
-		((UINT32*)streamAc)[oldDlt + 2] = bn;
+		ctl->dstOffset = i;
+		ctl->startBatch = bn;
 
-		mDataDltRefL[i] = CStreamCntM4;
+		streamControl[mDataDltRefL[i]].endBatch = bn;				
+		mDataDltRefL[i] = mCStreamCnt;
 
-		CStreamCntM4 += 4;
+		++mCStreamCnt;
+
 		++i;
 	}
+	
 }
 
 void d912pxy_batch::InitCopyCS()
@@ -274,7 +226,7 @@ void d912pxy_batch::InitCopyCS()
 	//copy cs PSO
 	D3D12_COMPUTE_PIPELINE_STATE_DESC dsc;
 
-	dsc.pRootSignature = copyRS.Get();
+	dsc.pRootSignature = copyRS;
 
 	dsc.CachedPSO.CachedBlobSizeInBytes = 0;
 	dsc.CachedPSO.pCachedBlob = NULL;
