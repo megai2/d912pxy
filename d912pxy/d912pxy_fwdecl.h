@@ -71,7 +71,6 @@ SOFTWARE.
 #define PXY_INNER_MAX_SWAP_CHAINS 4
 #define PXY_INNER_MAX_RENDER_TARGETS 8
 #define PXY_INNER_MAX_TEXTURE_STAGES 32
-#define PXY_INNER_MAX_API_SAMPLERS 512
 #define PXY_INNER_MAX_SHADER_SAMPLERS 32
 #define PXY_INNER_MAX_SHADER_SAMPLERS_SZ 1664
 #define PXY_INNER_MAX_SHADER_CONSTS_IDX 256
@@ -197,11 +196,10 @@ class d912pxy_surface_pool;
 class d912pxy_cleanup_thread;
 class d912pxy_gpu_que;
 class d912pxy_gpu_cmd_list;
-class d912pxy_texstage_cache;
+class d912pxy_texture_state;
 class d912pxy_surface_layer;
 class d912pxy_texture_loader;
 class d912pxy_buffer_loader;
-class d912pxy_sampler_cache;
 class d912pxy_pso_cache;
 class d912pxy_batch;
 class d912pxy_pso_cache_item;
@@ -210,11 +208,6 @@ class d912pxy_metrics;
 class d912pxy_config;
 struct d912pxy_trimmed_dx12_pso;
 
-typedef struct d912pxy_device_texture_state {
-	UINT32 dirty;
-	UINT texHeapID[PXY_INNER_MAX_TEXTURE_STAGES];
-	UINT splHeapID[PXY_INNER_MAX_SHADER_SAMPLERS];
-} d912pxy_device_texture_state;
 
 typedef struct d912pxy_device_streamsrc {
 	d912pxy_vbuf* buffer;
@@ -253,8 +246,7 @@ public:
 	static d912pxy_gpu_cmd_list* GPUcl;
 	static ID3D12Device* DXDev;
 	static d912pxy_replay* CMDReplay;
-	static d912pxy_texstage_cache* textureState;
-	static d912pxy_sampler_cache* samplerState;
+	static d912pxy_texture_state* textureState;
 	static d912pxy_pso_cache* psoCache;
 	static d912pxy_texture_loader* texloadThread;
 	static d912pxy_buffer_loader* bufloadThread;

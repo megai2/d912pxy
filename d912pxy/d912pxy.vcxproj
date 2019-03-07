@@ -409,7 +409,7 @@
       <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)\bin\d912pxy\dll\release\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
+      <Command>copy $(SolutionDir)\bin\d912pxy\dll\release\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copy release dll</Message>
@@ -558,7 +558,6 @@
     <ClInclude Include="d912pxy_replay_thread.h" />
     <ClInclude Include="d912pxy_resource.h" />
     <ClInclude Include="d912pxy_ringbuffer.h" />
-    <ClInclude Include="d912pxy_sampler_cache.h" />
     <ClInclude Include="d912pxy_sblock.h" />
     <ClInclude Include="d912pxy_shader.h" />
     <ClInclude Include="d912pxy_shader_db.h" />
@@ -569,9 +568,9 @@
     <ClInclude Include="d912pxy_surface_layer.h" />
     <ClInclude Include="d912pxy_surface_pool.h" />
     <ClInclude Include="d912pxy_swapchain.h" />
-    <ClInclude Include="d912pxy_texstage_cache.h" />
     <ClInclude Include="d912pxy_texture.h" />
     <ClInclude Include="d912pxy_texture_loader.h" />
+    <ClInclude Include="d912pxy_texture_state.h" />
     <ClInclude Include="d912pxy_thread.h" />
     <ClInclude Include="d912pxy_thread_lock.h" />
     <ClInclude Include="d912pxy_upload_pool.h" />
@@ -639,7 +638,6 @@
     <ClCompile Include="d912pxy_replay_thread.cpp" />
     <ClCompile Include="d912pxy_resource.cpp" />
     <ClCompile Include="d912pxy_ringbuffer.cpp" />
-    <ClCompile Include="d912pxy_sampler_cache.cpp" />
     <ClCompile Include="d912pxy_sblock.cpp" />
     <ClCompile Include="d912pxy_shader.cpp" />
     <ClCompile Include="d912pxy_shader_db.cpp" />
@@ -650,9 +648,9 @@
     <ClCompile Include="d912pxy_surface_layer.cpp" />
     <ClCompile Include="d912pxy_surface_pool.cpp" />
     <ClCompile Include="d912pxy_swapchain.cpp" />
-    <ClCompile Include="d912pxy_texstage_cache.cpp" />
     <ClCompile Include="d912pxy_texture.cpp" />
     <ClCompile Include="d912pxy_texture_loader.cpp" />
+    <ClCompile Include="d912pxy_texture_state.cpp" />
     <ClCompile Include="d912pxy_thread.cpp" />
     <ClCompile Include="d912pxy_thread_lock.cpp" />
     <ClCompile Include="d912pxy_upload_pool.cpp" />

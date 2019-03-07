@@ -25,28 +25,55 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_texstage_cache : public d912pxy_noncom
+#pragma pack(push, 1)
+
+typedef struct d912pxy_device_texture_state {
+	UINT64 dirty;
+	UINT texHeapID[PXY_INNER_MAX_TEXTURE_STAGES];
+	UINT splHeapID[PXY_INNER_MAX_SHADER_SAMPLERS];
+} d912pxy_device_texture_state;
+
+typedef struct d912pxy_trimmed_sampler_dsc {
+	UINT16 Dsc0;
+	UINT16 Dsc1;
+	UINT16 MipLODBias;
+	UINT16 MinLOD;	
+	//UINT32 borderColor;
+} d912pxy_trimmed_sampler_dsc;
+
+#pragma pack(pop)
+
+class d912pxy_texture_state : public d912pxy_noncom
 {
 public:
-	d912pxy_texstage_cache(d912pxy_device* dev);
-	~d912pxy_texstage_cache();
+	d912pxy_texture_state(d912pxy_device* dev);
+	~d912pxy_texture_state();
 
-	void SetTexStage(UINT stage, UINT srv);
-	void SetTexStageBit(UINT stage, UINT bit, UINT set);
+	void SetTexture(UINT stage, UINT srv);
+	void ModStageBit(UINT stage, UINT bit, UINT set);
+	void ModSampler(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value);
 
 	UINT Use();
+	
+	UINT GetTexStage(UINT stage) { return current.texHeapID[stage]; };
 
-	void Cleanup();
+	void AddDirtyFlag(DWORD val);
 
-	UINT GetTexStage(UINT stage) { return current->texHeapID[stage]; };
-
-	d912pxy_device_texture_state* GetStatePointer() { return current; };
-	void SetStatePointer(void* ptr) { current = (d912pxy_device_texture_state*)ptr; };
+	d912pxy_device_texture_state* GetCurrent() { return &current; };
 
 private:
+	UINT LookupSamplerId(UINT stage);
 
-	d912pxy_device_texture_state* current;
+	void UpdateFullSplDsc(UINT from);
 
-	d912pxy_device_texture_state currentBase;
+	UINT CreateNewSampler();
+
+	d912pxy_device_texture_state current;	
+
+	d912pxy_dheap* samplerHeap;	
+	d912pxy_memtree2* splLookup;
+
+	D3D12_SAMPLER_DESC splDsc;
+	d912pxy_trimmed_sampler_dsc trimmedSpl[PXY_INNER_MAX_TEXTURE_STAGES];
 };
 

@@ -208,8 +208,7 @@ private:
 	d912pxy_dheap* m_dheaps[PXY_INNER_MAX_DSC_HEAPS];
 	
 	d912pxy_swapchain* swapchains[PXY_INNER_MAX_SWAP_CHAINS];
-
-	d912pxy_device_texture_state mTextureState;
+	
 	d912pxy_surface* mNullTexture;
 	UINT mNullTextureSRV;
 

@@ -30,14 +30,12 @@ d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d9
 
 	mHeaps = heaps;
 	
-	new d912pxy_texstage_cache(dev);
+	new d912pxy_texture_state(dev);
 
 	new d912pxy_batch(dev);
 
 	new d912pxy_pso_cache(dev);
-	
-	new d912pxy_sampler_cache(dev, mHeaps[PXY_INNER_HEAP_SPL], PXY_INNER_MAX_CACHE_NODES_SAMPLERS);	
-
+		
 	//mBatches->WriteElement(new d912pxy_batch(m_dev, mGPUque));
 
 	mRBarrierStkPointer = 0;
@@ -69,7 +67,6 @@ d912pxy_iframe::~d912pxy_iframe()
 {
 	delete d912pxy_s(batch);
 
-	delete d912pxy_s(samplerState);
 	delete d912pxy_s(textureState);
 	delete d912pxy_s(psoCache);
 }

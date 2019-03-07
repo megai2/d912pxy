@@ -42,9 +42,8 @@ HRESULT WINAPI d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pT
 			srvId = pTexture->GetPriority();
 		}
 	}
-		
-	mTextureState.dirty |= (1 << (Stage >> 2));
-	mTextureState.texHeapID[Stage] = (UINT32)srvId;
+
+	d912pxy_s(textureState)->SetTexture(Stage, (UINT32)srvId);
 
 #ifdef TRACK_SHADER_BUGS_PROFILE
 	if (pTexture)
@@ -68,7 +67,9 @@ HRESULT WINAPI d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYP
 
 	LOG_DBG_DTDM("Sampler[%u][%u] = %u", Sampler, Type, Value);
 
-	d912pxy_s(samplerState)->ModSampler(Sampler, Type, Value);
+	Sampler = (Sampler & 0xF) + 16 * (Sampler >= D3DDMAPSAMPLER);
+
+	d912pxy_s(textureState)->ModSampler(Sampler, Type, Value);
 
 	API_OVERHEAD_TRACK_END(0)
 

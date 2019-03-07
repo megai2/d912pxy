@@ -1,0 +1,245 @@
+#include "stdafx.h"
+
+d912pxy_texture_state::d912pxy_texture_state(d912pxy_device * dev) : d912pxy_noncom(dev, L"texture state")
+{
+	d912pxy_s(textureState) = this;
+
+	samplerHeap = m_dev->GetDHeap(PXY_INNER_HEAP_SPL);
+
+	splLookup = new d912pxy_memtree2(sizeof(d912pxy_trimmed_sampler_dsc), 20, 2);
+
+	UINT16 defaultMinLOD = (UINT16)d912pxy_s(config)->GetValueUI64(PXY_CFG_SAMPLERS_MIN_LOD);
+
+	ZeroMemory(&splDsc, sizeof(D3D12_SAMPLER_DESC));
+	splDsc.ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;	
+	splDsc.MaxLOD = 1e9;
+
+	ZeroMemory(&current, sizeof(d912pxy_device_texture_state));
+
+	for (int i = 0; i != PXY_INNER_MAX_TEXTURE_STAGES; ++i)
+	{
+		trimmedSpl[i].Dsc0 = 0x49;
+		trimmedSpl[i].Dsc1 = 0x49;		
+		trimmedSpl[i].MinLOD = (UINT16)defaultMinLOD;
+	}
+
+	current.dirty = 0xFFFFFFFFFF;
+}
+
+d912pxy_texture_state::~d912pxy_texture_state()
+{
+	splLookup->Begin();
+
+	while (!splLookup->IterEnd())
+	{
+		UINT32 cid = splLookup->CurrentCID() & 0xFFFFFFFF;
+		if (cid)
+			samplerHeap->FreeSlot(cid - 1);
+
+		splLookup->Next();
+	}
+
+	delete splLookup;
+}
+
+void d912pxy_texture_state::SetTexture(UINT stage, UINT srv)
+{
+	current.dirty |= 1ULL << (stage >> 2);
+	current.texHeapID[stage] = srv;
+}
+
+void d912pxy_texture_state::ModStageBit(UINT stage, UINT bit, UINT set)
+{
+	UINT ov = current.texHeapID[stage];
+	UINT val;
+
+	if (set)
+		val = (1 << bit) | ov;
+	else
+		val = (~(1 << bit)) & ov;
+
+	current.dirty |= 1ULL << (stage >> 2);
+
+	current.texHeapID[stage] = val;
+}
+
+void d912pxy_texture_state::ModSampler(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value)
+{
+	d912pxy_trimmed_sampler_dsc* cDesc = &trimmedSpl[stage];
+	current.dirty |= 1ULL << (stage + 8);		
+
+	switch (state)
+	{
+	case D3DSAMP_ADDRESSU:		
+	case D3DSAMP_ADDRESSV:				
+	case D3DSAMP_ADDRESSW:		
+		state = (D3DSAMPLERSTATETYPE)((state - D3DSAMP_ADDRESSU)*3);
+		cDesc->Dsc1 = (UINT16)((value << state) | (cDesc->Dsc1 & (~(0x7 << state))));
+		break;
+	case D3DSAMP_MAXMIPLEVEL:		
+		cDesc->MinLOD = (UINT16)value;
+		break;
+	case D3DSAMP_MIPMAPLODBIAS:		
+		cDesc->MipLODBias = (UINT16)value;
+		break;
+	case D3DSAMP_SRGBTEXTURE:
+	    ModStageBit(30, stage, value);
+		break;	
+	case D3DSAMP_MAGFILTER: //5
+	case D3DSAMP_MINFILTER: //6
+	case D3DSAMP_MIPFILTER: //7
+	{
+		state = (D3DSAMPLERSTATETYPE)((state - D3DSAMP_MAGFILTER) * 3);
+		UINT16 nFilter = (UINT16)((cDesc->Dsc0 & (~(0x7 << state))) | (value << state));//megai2: ignore dx12 filter type for now and deal with it later		
+		cDesc->Dsc0 = nFilter;
+		break;
+	}
+	case D3DSAMP_MAXANISOTROPY:		
+		cDesc->Dsc1 = (UINT16)((value << 9) | (cDesc->Dsc1 & 0x1FF));
+		break;
+	/*case D3DSAMP_BORDERCOLOR:
+		cDesc->borderColor = value;
+		break;*/
+	default:
+		;
+	}
+}
+
+UINT d912pxy_texture_state::Use()
+{	
+	if (!current.dirty)
+		return 0;
+	
+	UINT64 df = 0;
+	UINT64 splDf = current.dirty >> 8ULL;	
+	
+	int i = 0;
+
+	while (splDf)
+	{
+		if (splDf & 1)
+		{			
+			current.splHeapID[i] = LookupSamplerId(i);
+			df |= 1ULL << (i >> 2);					
+		}		
+		++i;
+		splDf = splDf >> 1;		
+	}
+
+	df = (df << 8) | (current.dirty & 0xFF);
+
+	i = 0;
+
+	while (df)
+	{
+		if (df & 1)
+			d912pxy_s(batch)->GPUWrite((void*)((intptr_t)&current.texHeapID[0] + i * 16), 1, i);
+		++i;
+		df = df >> 1;
+	}
+
+	current.dirty = df;
+
+	return 0;
+}
+
+void d912pxy_texture_state::AddDirtyFlag(DWORD val)
+{
+	current.dirty |= val;
+}
+
+UINT d912pxy_texture_state::LookupSamplerId(UINT stage)
+{
+	UINT ret = (UINT32)splLookup->PointAt32(&trimmedSpl[stage]);
+
+	if (ret != 0)
+	{		
+		return ret - 1;
+	}
+
+	UpdateFullSplDsc(stage);
+	ret = CreateNewSampler();
+	
+	return ret;
+}
+
+void d912pxy_texture_state::UpdateFullSplDsc(UINT from)
+{
+	//megai2: handle filter type for real
+
+	UINT16 dx9FilterName = trimmedSpl[from].Dsc0;
+
+	D3D12_FILTER dx12Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+
+	if (
+		((dx9FilterName & 0x3) == 0x3) |
+		((dx9FilterName & 0x18) == 0x18) |
+		((dx9FilterName & 0xC0) == 0xC0)   //3 for aniso
+		)
+	{
+		dx12Filter = D3D12_ENCODE_ANISOTROPIC_FILTER(D3D12_FILTER_REDUCTION_TYPE_STANDARD);
+	}
+	else {
+		//0 1 is POINT and LINEAR
+		//but in dx9 1 is point and 2 is linear
+
+		UINT minF = ((0x2 & dx9FilterName) != 0);
+		UINT magF = ((0x10 & dx9FilterName) != 0);
+		UINT mipF = (((0x40 & dx9FilterName) != 0));
+
+		//special hack for PCF filter
+		if ((0x7 & dx9FilterName) == 0)
+		{
+			dx12Filter = D3D12_ENCODE_BASIC_FILTER(
+				D3D12_FILTER_TYPE_LINEAR,
+				D3D12_FILTER_TYPE_LINEAR,
+				D3D12_FILTER_TYPE_LINEAR,
+				D3D12_FILTER_REDUCTION_TYPE_COMPARISON
+			);
+		}
+		else {
+
+			dx12Filter = D3D12_ENCODE_BASIC_FILTER(
+				minF,
+				magF,
+				mipF,
+				D3D12_FILTER_REDUCTION_TYPE_STANDARD
+			);
+		}
+	}
+
+	splDsc.Filter = dx12Filter;
+
+	UINT16 dx9FilterAWA = trimmedSpl[from].Dsc1;
+
+	splDsc.AddressU = (D3D12_TEXTURE_ADDRESS_MODE)((dx9FilterAWA) & 0x7);
+	splDsc.AddressV = (D3D12_TEXTURE_ADDRESS_MODE)((dx9FilterAWA >> 3) & 0x7);
+	splDsc.AddressW = (D3D12_TEXTURE_ADDRESS_MODE)((dx9FilterAWA >> 6) & 0x7);
+	splDsc.MaxAnisotropy = dx9FilterAWA >> 9;
+
+	/*DWORD Color = trimmedSpl[from].borderColor;
+
+	float bTmp = 0;
+
+	for (int i = 0; i != 4; ++i)
+	{
+		bTmp = ((Color >> (i << 3)) & 0xFF) / 255.0f;		
+		splDsc.BorderColor[i] = bTmp;
+	}*/
+
+	splDsc.MipLODBias = trimmedSpl[from].MipLODBias;
+	splDsc.MinLOD = trimmedSpl[from].MinLOD;
+}
+
+UINT d912pxy_texture_state::CreateNewSampler()
+{
+	LOG_DBG_DTDM("new sampler f %08lX lmi %.2f lma %.2f lbi %.2f U %u V %u W %u A %u B0 %.3f B1 %.3f B2 %.3f B3 %.3f",
+		splDsc.Filter, splDsc.MinLOD, splDsc.MaxLOD, splDsc.MipLODBias, splDsc.AddressU, splDsc.AddressV, splDsc.AddressW, splDsc.MaxAnisotropy,
+		splDsc.BorderColor[0], splDsc.BorderColor[1], splDsc.BorderColor[2], splDsc.BorderColor[3]);
+
+	UINT ret = samplerHeap->CreateSampler(&splDsc);
+	
+	splLookup->SetValue(ret + 1);
+
+	return ret;
+}

@@ -113,8 +113,7 @@ void d912pxy_device::InitSingletons()
 	new d912pxy_shader_db(this);
 
 	new d912pxy_iframe(this, m_dheaps);
-	d912pxy_s(textureState)->SetStatePointer(&mTextureState);
-
+	
 	new d912pxy_texture_loader(this);
 	new d912pxy_buffer_loader(this);
 	new d912pxy_upload_pool(this);

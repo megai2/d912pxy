@@ -52,7 +52,7 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 				d912pxy_s(textureState)->Use();
 			}
 			else {
-				mTextureState.dirty |= Value;
+				d912pxy_s(textureState)->AddDirtyFlag(Value);
 			}
 		break;
 		case D3DRS_STENCILREF:
@@ -167,7 +167,7 @@ HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* p
 		break;
 	case D3DRS_D912PXY_SAMPLER_ID:
 		d912pxy_s(textureState)->Use();
-		*pValue = mTextureState.splHeapID[*pValue];
+		*pValue = d912pxy_s(textureState)->GetCurrent()->splHeapID[*pValue];
 		break;
 	default:
 		*pValue = d912pxy_s(psoCache)->GetDX9RsValue(State);

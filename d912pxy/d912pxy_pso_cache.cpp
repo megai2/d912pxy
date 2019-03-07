@@ -367,7 +367,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 #ifdef TRACK_SHADER_BUGS_PROFILE
 		DX9RSvalues[State] = Value;
 #endif
-		;//d912pxy_s(iframe)->TST()->SetTexStage(29, Value);
+		//d912pxy_s(iframe)->TST()->SetTexStage(29, Value);
 		break;
 
 	case D3DRS_DEPTHBIAS:
@@ -399,14 +399,14 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	case D3DRS_ALPHAREF:
 	case D3DRS_ALPHAFUNC:
 		DX9RSvalues[State] = Value;
-		d912pxy_s(textureState)->SetTexStage(31, (DX9RSvalues[D3DRS_ALPHATESTENABLE] & 1) | (DX9RSvalues[D3DRS_ALPHAFUNC] << 1) | (DX9RSvalues[D3DRS_ALPHAREF] << 5));
+		d912pxy_s(textureState)->SetTexture(31, (DX9RSvalues[D3DRS_ALPHATESTENABLE] & 1) | (DX9RSvalues[D3DRS_ALPHAFUNC] << 1) | (DX9RSvalues[D3DRS_ALPHAREF] << 5));
 		break;
 	case D3DRS_CLIPPLANEENABLE:
 	{
 #ifdef TRACK_SHADER_BUGS_PROFILE
 		DX9RSvalues[State] = Value;
 #endif
-		d912pxy_s(textureState)->SetTexStage(29, Value);
+		d912pxy_s(textureState)->SetTexture(29, Value);
 		if (!Value)
 		{
 			float zvf4[4] = { 0, 0, 0, 0 };
