@@ -50,8 +50,8 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOn
 	uploadRes = new d912pxy_resource(dev, RTID_UL_BUF, L"constant upload buffer");
 	uploadRes->d12res_buffer(length, D3D12_HEAP_TYPE_UPLOAD);
 
-//	mappedData = NULL;
-	LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, &mappedData));
+//	pointers.host = NULL;
+	LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, (void**)&pointers.host));
 }
 
 d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, UINT length, UINT uploadOnly, void* n2) : d912pxy_resource(dev, RTID_CBUFFER, L"uav const buffer")
@@ -71,10 +71,8 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, UINT length, UINT uploadO
 	uploadRes = new d912pxy_resource(dev, RTID_UL_BUF, L"constant upload buffer");
 	uploadRes->d12res_buffer(length, D3D12_HEAP_TYPE_UPLOAD);
 
-	//	mappedData = NULL;
-	LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, &mappedData));
-
-
+	LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, (void**)&pointers.host));
+	pointers.dev = uploadRes->GetVA_GPU();
 }
 
 d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, d912pxy_cbuffer * oBuf, UINT offset, UINT iSz) : d912pxy_resource(dev, RTID_CBUFFER, L"const buffer offset")
@@ -91,7 +89,7 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, d912pxy_cbuffer * oBuf, U
 	dHeap = dev->GetDHeap(PXY_INNER_HEAP_CBV);
 	heapId = dHeap->CreateCBV(&viDsc);
 	
-	mappedData = oBuf->OffsetWritePoint(offset);
+	pointers.host = (intptr_t)oBuf->OffsetWritePoint(offset);
 }
 
 d912pxy_cbuffer::~d912pxy_cbuffer()
@@ -105,20 +103,20 @@ d912pxy_cbuffer::~d912pxy_cbuffer()
 
 void d912pxy_cbuffer::WriteUINT32(UINT index, UINT32* val, UINT count)
 {
-	if (!mappedData)
-		LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, &mappedData));
+	if (!pointers.host)
+		LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, (void**)&pointers.host));
 
-	void* startMem = (void*)((intptr_t)mappedData + index * 4);
+	void* startMem = (void*)((intptr_t)pointers.host + index * 4);
 
 	memcpy(startMem, val, count * 4);
 }
 
 void d912pxy_cbuffer::WriteFloat(UINT index, float* val, UINT count)
 {
-	if (!mappedData)
-		LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, &mappedData));
+	if (!pointers.host)
+		LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, (void**)&pointers.host));
 
-	void* startMem = (void*)((intptr_t)mappedData + index * 4);
+	void* startMem = (void*)((intptr_t)pointers.host + index * 4);
 
 	memcpy(startMem, val, count * 4);
 }
@@ -135,7 +133,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE d912pxy_cbuffer::GetDHeapGPUHandle()
 
 void d912pxy_cbuffer::Upload()
 {
-	//mappedData = NULL;
+	//pointers.host = NULL;
 	//uploadRes->GetD12Obj()->Unmap(0, 0);
 	uploadRes->CopyTo(this, 1, d912pxy_s(GPUcl)->GID(CLG_TOP));	
 }
@@ -146,7 +144,7 @@ void d912pxy_cbuffer::UploadTarget(d912pxy_cbuffer * target, UINT offset, UINT s
 
 	target->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, CLG_SEQ);
 
-	cq->CopyBufferRegion(target->GetD12Obj().Get(), offset, uploadRes->GetD12Obj().Get(), offset, size);
+	cq->CopyBufferRegion(target->GetD12Obj(), offset, uploadRes->GetD12Obj(), offset, size);
 }
 
 void d912pxy_cbuffer::UploadOffset(UINT offset, UINT size)
@@ -155,19 +153,19 @@ void d912pxy_cbuffer::UploadOffset(UINT offset, UINT size)
 
 	IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, CLG_TOP);
 
-	cq->CopyBufferRegion(m_res.Get(), offset, uploadRes->GetD12Obj().Get(), offset, size);
+	cq->CopyBufferRegion(m_res.Get(), offset, uploadRes->GetD12Obj(), offset, size);
 
 	IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_GENERIC_READ, CLG_TOP);
 }
 
 void d912pxy_cbuffer::UploadOffsetNB(ID3D12GraphicsCommandList* cq, UINT offset, UINT size)
 {
-	cq->CopyBufferRegion(m_res.Get(), offset, uploadRes->GetD12Obj().Get(), offset, size);
+	cq->CopyBufferRegion(m_res.Get(), offset, uploadRes->GetD12Obj(), offset, size);
 }
 
 void * d912pxy_cbuffer::OffsetWritePoint(UINT offset)
 {
-	return (void*)((intptr_t)mappedData + offset);
+	return (void*)((intptr_t)pointers.host + offset);
 }
 
 d912pxy_resource * d912pxy_cbuffer::GetUploadRes()

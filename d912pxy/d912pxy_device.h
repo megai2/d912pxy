@@ -190,6 +190,8 @@ public:
 	ComPtr<ID3D12Device> SelectSuitableGPU();
 	void SetupDevice(ComPtr<ID3D12Device> device);
 
+	ID3D12RootSignature* ConstructRootSignature(D3D12_ROOT_SIGNATURE_DESC* rootSignatureDesc);
+
 private:
 	LONG threadInterruptState;	
 	CRITICAL_SECTION threadLockdEvents[PXY_INNER_THREADID_MAX];

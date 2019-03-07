@@ -50,11 +50,13 @@ public:
 
 	d912pxy_resource* GetUploadRes();
 
+	intptr_t DevPtr() { return pointers.dev; };
+	intptr_t HostPtr() { return pointers.host; };
+
 private:
-	
+	d912pxy_resource_ptr pointers;
+
 	d912pxy_resource * uploadRes;
 	UINT heapId;
-
-	void* mappedData;
 };
 

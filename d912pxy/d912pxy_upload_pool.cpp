@@ -115,7 +115,7 @@ fallback:
 		dxBuffer->d12res_buffer(maxSize, D3D12_HEAP_TYPE_UPLOAD);
 		dxBuffer->Release();
 
-		ret = dxBuffer->GetD12Obj().Get();
+		ret = dxBuffer->GetD12Obj();
 		ret->AddRef();
 	}
 	else {

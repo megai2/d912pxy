@@ -98,6 +98,31 @@ HRESULT WINAPI d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST
 	return D3D_OK;
 }
 
+ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATURE_DESC* rootSignatureDesc)
+{
+	ComPtr<ID3DBlob> signature;
+	ComPtr<ID3DBlob> error;
+
+	ID3D12RootSignature* rsObj;
+
+	HRESULT ret;
+
+	ret = D3D12SerializeRootSignature(rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+
+	if (FAILED(ret))
+	{
+		if ((error != NULL) && (error->GetBufferSize()))
+		{
+			LOG_ERR_DTDM("error: %S", error->GetBufferPointer());
+		}
+		LOG_ERR_THROW2(ret, "SerializeRootSignature failed");
+	}
+
+	LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rsObj)), "CreateRootSignature failed");
+
+	return rsObj;
+}
+
 #ifdef TRACK_SHADER_BUGS_PROFILE
 
 void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId)

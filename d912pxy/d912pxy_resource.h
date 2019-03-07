@@ -29,6 +29,11 @@ SOFTWARE.
 
 class d912pxy_device;
 
+typedef struct d912pxy_resource_ptr {
+	intptr_t host;
+	intptr_t dev;
+} d912pxy_resource_ptr;
+
 enum d912pxy_resource_typeid {
 	RTID_TEXTURE,
 	RTID_VBUF,
@@ -74,7 +79,7 @@ public:
 	void EvictFromGPU();
 	void MakeGPUResident();
 
-	ComPtr<ID3D12Resource> GetD12Obj() { return m_res; };
+	ID3D12Resource* GetD12Obj() { return m_res.Get(); };
 
 	void AsyncBufferCopy(d912pxy_upload_item* src, UINT offset, UINT size, ID3D12GraphicsCommandList* cl);
 	void AsyncBufferCopyPrepared(d912pxy_upload_item* src, UINT offset, UINT size, ID3D12GraphicsCommandList* cl);
@@ -98,6 +103,8 @@ public:
 
 	void IFrameEndRefSwap();
 	UINT IsFirstFrameUploadRef() { return swapRef; };
+
+	intptr_t GetVA_GPU();
 
 	virtual void CreateUploadBuffer(UINT id, UINT size);
 

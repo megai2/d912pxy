@@ -608,7 +608,7 @@ void d912pxy_surface::CopySurfaceDataToCPU()
 
 	D3D12_TEXTURE_COPY_LOCATION srcR, dstR;
 
-	dstR.pResource = readbackBuffer->GetD12Obj().Get();
+	dstR.pResource = readbackBuffer->GetD12Obj();
 	dstR.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	UINT64 activeSize;
 	d912pxy_s(DXDev)->GetCopyableFootprints(&m_res->GetDesc(), 0, 1, offsetToSubres.Begin, &dstR.PlacedFootprint, 0, 0, &activeSize);

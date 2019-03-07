@@ -77,7 +77,6 @@ typedef struct d912pxy_batch_stream_entry {
 } d912pxy_batch_stream_entry;
 #pragma pack(pop)
 
-
 class d912pxy_batch : public d912pxy_noncom
 {
 public:
@@ -99,32 +98,22 @@ private:
 	void InitCopyCS();
 
 	ID3D12GraphicsCommandList* topCl;
-
-	d912pxy_cbuffer* drawCBuf;
+	ID3D12PipelineState* copyPSO;
+	ID3D12RootSignature* copyRS;
+		
+	d912pxy_cbuffer* buffer;
 	d912pxy_cbuffer* stream;
-
-	ID3D12Resource* streamR;
-	ID3D12Resource* drawCBufR;
-
-	intptr_t mDrawCBufferGPUPtr;
 
 	d912pxy_batch_stream_data_entry* streamData;
 	d912pxy_batch_stream_control_entry* streamControl;
-
-	intptr_t mStreamBaseGPUPtr;	
-	intptr_t mStreamBase;	
-	BYTE* stateTransfer[PXY_BATCH_GPU_DRAW_BUFFER_SIZE];
-
-	UINT mStreamOfDlt[2];
-
-	UINT32 mCStreamCnt;
-
-	UINT32 mDataDltRef[PXY_BATCH_GPU_ELEMENT_COUNT];
+	
+	UINT streamOfDlt[2];
+	UINT32 oddFrame;
+		
+	UINT32 streamIdx;
 	UINT32 batchNum;
 	UINT32 lastBatchCount;
 
-	UINT32 oddFrame;
-
-	ID3D12PipelineState* copyPSO;
-	ID3D12RootSignature* copyRS;
+	UINT32 mDataDltRef[PXY_BATCH_GPU_ELEMENT_COUNT];
+	BYTE* stateTransfer[PXY_BATCH_GPU_DRAW_BUFFER_SIZE];	
 };

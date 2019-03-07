@@ -347,7 +347,7 @@ void d912pxy_resource::IFrameTrans(D3D12_RESOURCE_STATES to)
 
 void d912pxy_resource::CopyTo2(d912pxy_resource * dst, ID3D12GraphicsCommandList * cq)
 {
-	cq->CopyResource(dst->GetD12Obj().Get(), m_res.Get());
+	cq->CopyResource(dst->GetD12Obj(), m_res.Get());
 }
 
 void d912pxy_resource::CopyTo3(ComPtr<ID3D12Resource> dst, ID3D12GraphicsCommandList * cq)
@@ -367,7 +367,7 @@ void d912pxy_resource::CopyTo(d912pxy_resource * dst, UINT srcIsReady, ID3D12Gra
 	bar[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 
 	bar[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	bar[1].Transition.pResource = dst->GetD12Obj().Get();
+	bar[1].Transition.pResource = dst->GetD12Obj();
 	bar[1].Transition.StateBefore = dst->GetCurrentState();
 	bar[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
 	bar[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
@@ -378,7 +378,7 @@ void d912pxy_resource::CopyTo(d912pxy_resource * dst, UINT srcIsReady, ID3D12Gra
 	else
 		cq->ResourceBarrier(2, bar);
 
-	cq->CopyResource(dst->GetD12Obj().Get(), m_res.Get());
+	cq->CopyResource(dst->GetD12Obj(), m_res.Get());
 
 	bar[0].Transition.StateAfter = stateCache;
 	bar[0].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
@@ -406,7 +406,7 @@ void d912pxy_resource::CopyBuffer(d912pxy_resource * dst, UINT srcIsReady, UINT 
 	bar[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 
 	bar[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	bar[1].Transition.pResource = dst->GetD12Obj().Get();
+	bar[1].Transition.pResource = dst->GetD12Obj();
 	bar[1].Transition.StateBefore = dst->GetCurrentState();
 	bar[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
 	bar[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
@@ -417,7 +417,7 @@ void d912pxy_resource::CopyBuffer(d912pxy_resource * dst, UINT srcIsReady, UINT 
 	else
 		cq->ResourceBarrier(2, bar);
 
-	cq->CopyBufferRegion(dst->GetD12Obj().Get(), offset, m_res.Get(), offset, size);
+	cq->CopyBufferRegion(dst->GetD12Obj(), offset, m_res.Get(), offset, size);
 
 	bar[0].Transition.StateAfter = stateCache;
 	bar[0].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
@@ -584,6 +584,11 @@ void d912pxy_resource::IFrameEndRefSwap()
 	uploadResSel = !uploadResSel;
 	swapRef = 0;
 	ClearDirtyFlag();	
+}
+
+intptr_t d912pxy_resource::GetVA_GPU()
+{
+	return m_res->GetGPUVirtualAddress();
 }
 
 void d912pxy_resource::CreateUploadBuffer(UINT id, UINT size)
