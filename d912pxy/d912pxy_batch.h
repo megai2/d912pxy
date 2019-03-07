@@ -69,12 +69,6 @@ typedef struct d912pxy_batch_stream_data_entry {
 	float f3;
 } d912pxy_batch_stream_data_entry;
 
-typedef struct d912pxy_batch_stream_entry {
-	union {
-		d912pxy_batch_stream_control_entry control;
-		d912pxy_batch_stream_data_entry data;
-	};
-} d912pxy_batch_stream_entry;
 #pragma pack(pop)
 
 class d912pxy_batch : public d912pxy_noncom

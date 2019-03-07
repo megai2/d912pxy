@@ -86,6 +86,7 @@ public:
 	
 	void IFrameBarrierTrans(UINT subres, D3D12_RESOURCE_STATES to, d912pxy_gpu_cmd_list_group id);
 	void IFrameBarrierTrans2(UINT subres, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from, ID3D12GraphicsCommandList* cl);
+	void IFrameBarrierTrans4(UINT subres, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* cl);
 	static void IFrameBarrierTrans3(UINT subres, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from, ID3D12GraphicsCommandList * cl, ComPtr<ID3D12Resource> res);
 	void IFrameTrans(D3D12_RESOURCE_STATES to);
 

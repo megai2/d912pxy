@@ -325,6 +325,27 @@ void d912pxy_resource::IFrameBarrierTrans2(UINT subres, D3D12_RESOURCE_STATES to
 	cl->ResourceBarrier(1, &bar);	
 }
 
+void d912pxy_resource::IFrameBarrierTrans4(UINT subres, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList * cl)
+{
+	if (to == stateCache)
+		return;
+
+	D3D12_RESOURCE_BARRIER bar;
+
+	bar.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	bar.Transition.pResource = m_res.Get();
+	bar.Transition.StateBefore = stateCache;
+	bar.Transition.StateAfter = to;
+	bar.Transition.Subresource = subres;
+	bar.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+	LOG_DBG_DTDM("dbarrier %016llX to %u from %u", m_res.Get(), to, stateCache);
+
+	stateCache = to;
+
+	cl->ResourceBarrier(1, &bar);
+}
+
 void d912pxy_resource::IFrameBarrierTrans3(UINT subres, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from, ID3D12GraphicsCommandList * cl, ComPtr<ID3D12Resource> res)
 {
 	D3D12_RESOURCE_BARRIER bar;
