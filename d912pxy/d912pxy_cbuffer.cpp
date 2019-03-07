@@ -72,7 +72,7 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, UINT length, UINT uploadO
 	uploadRes->d12res_buffer(length, D3D12_HEAP_TYPE_UPLOAD);
 
 	LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, (void**)&pointers.host));
-	pointers.dev = uploadRes->GetVA_GPU();
+	pointers.dev = GetVA_GPU();
 }
 
 d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, d912pxy_cbuffer * oBuf, UINT offset, UINT iSz) : d912pxy_resource(dev, RTID_CBUFFER, L"const buffer offset")
