@@ -99,14 +99,14 @@ typedef struct d912pxy_replay_om_render_target {
 } d912pxy_replay_om_render_target;
 
 typedef struct d912pxy_replay_vbuf_bind {
-	d912pxy_vbuf* buf;
+	d912pxy_vstream* buf;
 	UINT stride;
 	UINT slot;
 	UINT offset;
 } d912pxy_replay_vbuf_bind;
 
 typedef struct d912pxy_replay_ibuf_bind {
-	d912pxy_ibuf* buf;
+	d912pxy_vstream* buf;
 } d912pxy_replay_ibuf_bind;
 
 typedef struct d912pxy_replay_clear_rt {
@@ -179,8 +179,8 @@ public:
 	void PSOCompiled(d912pxy_pso_cache_item* dsc);
 	void PSORaw(d912pxy_trimmed_dx12_pso* dsc);
 	void PSORawFeedback(d912pxy_trimmed_dx12_pso* dsc, void** ptr);
-	void VBbind(d912pxy_vbuf* buf, UINT stride,	UINT slot, UINT offset);
-	void IBbind(d912pxy_ibuf* buf);
+	void VBbind(d912pxy_vstream* buf, UINT stride,	UINT slot, UINT offset);
+	void IBbind(d912pxy_vstream* buf);
 	void DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation);
 	
 	void RT(d912pxy_surface* rtv, d912pxy_surface* dsv);

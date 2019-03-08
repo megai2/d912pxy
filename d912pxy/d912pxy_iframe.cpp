@@ -119,7 +119,7 @@ void d912pxy_iframe::SetStreamFreq(UINT StreamNumber, UINT Divider)
 	}*/
 }
 
-void d912pxy_iframe::SetVBuf(d912pxy_vbuf * vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride)
+void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride)
 {
 	if (vb && !streamBinds[StreamNumber].buffer)
 		++streamsActive;
@@ -131,7 +131,7 @@ void d912pxy_iframe::SetVBuf(d912pxy_vbuf * vb, UINT StreamNumber, UINT OffsetIn
 
 	batchCommisionDF |= 1;
 
-	streamBinds[StreamNumber].buffer = (d912pxy_vbuf*)vb;
+	streamBinds[StreamNumber].buffer = vb;
 	streamBinds[StreamNumber].offset = OffsetInBytes;
 	streamBinds[StreamNumber].stride = Stride;
 
@@ -142,15 +142,15 @@ void d912pxy_iframe::SetVBuf(d912pxy_vbuf * vb, UINT StreamNumber, UINT OffsetIn
 	//streamBinds[StreamNumber].buffer->IFrameBind(Stride, StreamNumber);
 }
 
-void d912pxy_iframe::SetIBuf(d912pxy_ibuf * ib)
+void d912pxy_iframe::SetIBuf(d912pxy_vstream* ib)
 {
 	indexBind = ib;
 	//batchCommisionDF |= 2;
 	if (ib)
-		d912pxy_s(CMDReplay)->IBbind((d912pxy_ibuf*)ib);
+		d912pxy_s(CMDReplay)->IBbind(ib);
 }
 
-d912pxy_ibuf * d912pxy_iframe::GetIBuf()
+d912pxy_vstream* d912pxy_iframe::GetIBuf()
 {
 	return indexBind;
 }
@@ -197,7 +197,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	{
 		for (int i = 0; i != streamsActive; ++i)
 		{
-			d912pxy_vbuf* sb = streamBinds[i].buffer;
+			d912pxy_vstream* sb = streamBinds[i].buffer;
 			if (sb)
 			{
 				if (streamBinds[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
@@ -564,11 +564,11 @@ void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
 void d912pxy_iframe::StateSafeFlush()
 {
 	if (indexBind)
-		indexBind->GetBase()->ThreadRef(1);
+		indexBind->ThreadRef(1);
 
 	for (int i = 0; i != streamsActive; ++i)
 		if (streamBinds[i].buffer)
-			streamBinds[i].buffer->GetBase()->ThreadRef(1);
+			streamBinds[i].buffer->ThreadRef(1);
 
 	End();
 	d912pxy_s(GPUque)->Flush(0);
@@ -577,14 +577,14 @@ void d912pxy_iframe::StateSafeFlush()
 
 	if (indexBind)
 	{
-		indexBind->GetBase()->ThreadRef(-1);
+		indexBind->ThreadRef(-1);
 		SetIBuf(indexBind);
 	}
 
 	for (int i = 0; i != streamsActive; ++i)
 		if (streamBinds[i].buffer)
 		{
-			streamBinds[i].buffer->GetBase()->ThreadRef(-1);
+			streamBinds[i].buffer->ThreadRef(-1);
 			SetVBuf(streamBinds[i].buffer, i, streamBinds[i].offset, streamBinds[i].stride);
 		}
 

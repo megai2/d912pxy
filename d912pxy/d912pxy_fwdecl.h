@@ -173,8 +173,6 @@ SOFTWARE.
 
 //forward class defenitions =======================
 
-class d912pxy_vbuf;
-class d912pxy_ibuf;
 class d912pxy_basetexture;
 class d912pxy_vtexture;
 class d912pxy_texture;
@@ -192,6 +190,7 @@ class d912pxy_iframe;
 class d912pxy_upload_pool;
 class d912pxy_upload_item;
 class d912pxy_vstream_pool;
+class d912pxy_vstream;
 class d912pxy_surface_pool;
 class d912pxy_cleanup_thread;
 class d912pxy_gpu_que;
@@ -210,7 +209,7 @@ struct d912pxy_trimmed_dx12_pso;
 
 
 typedef struct d912pxy_device_streamsrc {
-	d912pxy_vbuf* buffer;
+	d912pxy_vstream* buffer;
 	UINT offset;
 	UINT stride;
 	UINT divider;

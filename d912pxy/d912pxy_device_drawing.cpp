@@ -148,12 +148,12 @@ HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, U
 	memcpy(dstPtr, pVertexStreamZeroData, VertexStreamZeroStride * 3 * PrimitiveCount);
 	mDrawUPVbuf->Unlock();
 
-	d912pxy_ibuf* oi = d912pxy_s(iframe)->GetIBuf();
+	d912pxy_vstream* oi = d912pxy_s(iframe)->GetIBuf();
 	d912pxy_device_streamsrc oss = d912pxy_s(iframe)->GetStreamSource(0);
 	d912pxy_device_streamsrc ossi = d912pxy_s(iframe)->GetStreamSource(1);
-
-	d912pxy_s(iframe)->SetIBuf((d912pxy_ibuf*)mDrawUPIbuf);
-	d912pxy_s(iframe)->SetVBuf((d912pxy_vbuf*)mDrawUPVbuf, 0, mDrawUPStreamPtr, VertexStreamZeroStride);
+	
+	d912pxy_s(iframe)->SetIBuf(d912pxy_vstream_from_index(mDrawUPIbuf));
+	d912pxy_s(iframe)->SetVBuf((d912pxy_vstream*)mDrawUPVbuf, 0, mDrawUPStreamPtr, VertexStreamZeroStride);
 	d912pxy_s(iframe)->SetStreamFreq(0, 1);
 	d912pxy_s(iframe)->SetStreamFreq(1, 0);
 

@@ -37,10 +37,10 @@ public:
 	void RBarrierStk(UINT cnt, D3D12_RESOURCE_BARRIER* bar);
 
 	void SetStreamFreq(UINT StreamNumber, UINT Divider);
-	void SetVBuf(d912pxy_vbuf* vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride);
-	void SetIBuf(d912pxy_ibuf* ib);
+	void SetVBuf(d912pxy_vstream* vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride);
+	void SetIBuf(d912pxy_vstream* ib);
 
-	d912pxy_ibuf* GetIBuf();
+	d912pxy_vstream* GetIBuf();
 	d912pxy_device_streamsrc GetStreamSource(UINT StreamNumber);
 		
 	void CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
@@ -113,7 +113,7 @@ private:
 	UINT batchCommisionDF;
 	UINT instanceCount;
 	d912pxy_device_streamsrc streamBinds[PXY_INNER_MAX_VBUF_STREAMS];
-	d912pxy_ibuf* indexBind;
+	d912pxy_vstream* indexBind;
 
 	UINT mCurrentFrameIndex;
 

@@ -39,7 +39,7 @@ HRESULT WINAPI d912pxy_device::SetStreamSource(UINT StreamNumber, IDirect3DVerte
 	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
 		return D3DERR_INVALIDCALL;
 
-	d912pxy_s(iframe)->SetVBuf((d912pxy_vbuf*)pStreamData, StreamNumber, OffsetInBytes, Stride);
+	d912pxy_s(iframe)->SetVBuf((d912pxy_vstream*)pStreamData, StreamNumber, OffsetInBytes, Stride);
 
 	API_OVERHEAD_TRACK_END(0)
 	
@@ -69,7 +69,7 @@ HRESULT WINAPI d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 	API_OVERHEAD_TRACK_START(0)
 
 	if (pIndexData)
-		d912pxy_s(iframe)->SetIBuf((d912pxy_ibuf*)pIndexData);
+		d912pxy_s(iframe)->SetIBuf(d912pxy_vstream_from_index(pIndexData));
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -84,14 +84,14 @@ HRESULT WINAPI d912pxy_device::SetVertexDeclaration(IDirect3DVertexDeclaration9*
 
 	API_OVERHEAD_TRACK_START(0)
 
-		if (pDecl)
-		{
-			d912pxy_s(psoCache)->IAFormat((d912pxy_vdecl*)pDecl);
-		}
+	if (pDecl)
+	{
+		d912pxy_s(psoCache)->IAFormat((d912pxy_vdecl*)pDecl);
+	}
 
 	API_OVERHEAD_TRACK_END(0)
 
-		return D3D_OK;
+	return D3D_OK;
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

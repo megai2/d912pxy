@@ -169,7 +169,7 @@ void d912pxy_replay::RT(d912pxy_surface * rtv, d912pxy_surface * dsv)
 	++stackTop;
 }
 
-void d912pxy_replay::VBbind(d912pxy_vbuf * buf, UINT stride, UINT slot, UINT offset)
+void d912pxy_replay::VBbind(d912pxy_vstream * buf, UINT stride, UINT slot, UINT offset)
 {
 	REPLAY_STACK_GET(DRPL_IFVB);
 
@@ -181,7 +181,7 @@ void d912pxy_replay::VBbind(d912pxy_vbuf * buf, UINT stride, UINT slot, UINT off
 	++stackTop;
 }
 
-void d912pxy_replay::IBbind(d912pxy_ibuf * buf)
+void d912pxy_replay::IBbind(d912pxy_vstream * buf)
 {
 	REPLAY_STACK_GET(DRPL_IFIB);
 
@@ -432,12 +432,12 @@ void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12Graphic
 
 void d912pxy_replay::RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl)
 {
-	it->buf->GetBase()->IFrameBindVB(it->stride, it->slot, it->offset, cl);
+	it->buf->IFrameBindVB(it->stride, it->slot, it->offset, cl);
 }
 
 void d912pxy_replay::RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsCommandList * cl)
 {
-	it->buf->GetBase()->IFrameBindIB(cl);
+	it->buf->IFrameBindIB(cl);
 }
 
 void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl)

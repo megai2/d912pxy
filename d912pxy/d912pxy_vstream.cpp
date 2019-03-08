@@ -25,6 +25,26 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_vstream.h"
 
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_VSTREAM
+#define D912PXY_METHOD_IMPL_CN d912pxy_vstream
+
+D912PXY_IUNK_IMPL
+
+/*** IDirect3DResource9 methods ***/
+D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) { return GetDevice(ppDevice); }
+D912PXY_METHOD_IMPL(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) { return SetPrivateData(refguid, pData, SizeOfData, Flags); }
+D912PXY_METHOD_IMPL(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) { return GetPrivateData(refguid, pData, pSizeOfData); }
+D912PXY_METHOD_IMPL(FreePrivateData)(THIS_ REFGUID refguid) { return FreePrivateData(refguid); }
+D912PXY_METHOD_IMPL_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) { return SetPriority(PriorityNew); }
+D912PXY_METHOD_IMPL_(DWORD, GetPriority)(THIS) { return GetPriority(); }
+D912PXY_METHOD_IMPL_(void, PreLoad)(THIS) { return PreLoad(); }
+D912PXY_METHOD_IMPL_(D3DRESOURCETYPE, GetType)(THIS) { return GetType(); }
+
+D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC *pDesc)
+{
+	return D3DERR_INVALIDCALL;
+}
+
 d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(dev, isIB ? RTID_IBUF : RTID_VBUF, isIB ? L"vstream i" : L"vstream v")
 {
 	d12res_buffer(Length, D3D12_HEAP_TYPE_DEFAULT);
@@ -48,24 +68,17 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 	uploadResSel = 0;
 
 	opFlags = 0;
-
-	vbR = new d912pxy_vbuf(this);
-	ibR = new d912pxy_ibuf(this);
 }
 
 d912pxy_vstream::~d912pxy_vstream()
 {
 	if (data)
 		free(data);
-
-	delete vbR;
-	delete ibR;
 }
 
-void d912pxy_vstream::Lock(UINT OffsetToLock, UINT SizeToLock, void ** ppbData, DWORD Flags)
+D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 {
-	//if (!uploadRes[uploadResSel])
-		//CreateUploadBuffer(uploadResSel, dx9desc.Size);
+	API_OVERHEAD_TRACK_START(2)
 
 	if (!SizeToLock)
 	{
@@ -82,16 +95,25 @@ void d912pxy_vstream::Lock(UINT OffsetToLock, UINT SizeToLock, void ** ppbData, 
 	{
 		LOG_ERR_THROW2(-1, "lockDepth >= PXY_INNER_MAX_LOCK_DEPTH");
 	}
-
-	//*ppbData = (void*)((intptr_t)(mappedMem[uploadResSel]) + OffsetToLock);	
+	
 	*ppbData = (void*)((intptr_t)(data) + OffsetToLock);
+
+	API_OVERHEAD_TRACK_END(2)
+
+	return D3D_OK;
 }
 
-void d912pxy_vstream::Unlock()
+D912PXY_METHOD_IMPL(Unlock)(THIS)
 {
+	API_OVERHEAD_TRACK_START(2)
+
 	opFlags |= PXY_INNER_BUFFER_FLAG_DIRTY;
 	--lockDepth;
 	d912pxy_s(bufloadThread)->IssueUpload(this, uploadRes[uploadResSel], lockOffsets[lockDepth], lockSizes[lockDepth]);
+
+	API_OVERHEAD_TRACK_END(2)
+
+	return D3D_OK;
 }
 
 void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12GraphicsCommandList * cl)
@@ -152,12 +174,12 @@ UINT d912pxy_vstream::FinalReleaseCB()
 
 IDirect3DVertexBuffer9 * d912pxy_vstream::AsDX9VB()
 {
-	return vbR;
+	return this;
 }
 
 IDirect3DIndexBuffer9 * d912pxy_vstream::AsDX9IB()
 {
-	return ibR;
+	return d912pxy_vstream_to_index(this);
 }
 
 UINT32 d912pxy_vstream::PooledAction(UINT32 use)
@@ -223,3 +245,6 @@ void d912pxy_vstream::AsyncUploadDataCopy(UINT32 offset, UINT32 size, ID3D12Grap
 	ThreadRef(-1);
 	
 }
+
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE
+#undef D912PXY_METHOD_IMPL_CN
