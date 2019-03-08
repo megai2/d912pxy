@@ -1,3 +1,3 @@
-*.c     text
-*.cpp   text
-*.h     text
+*.c     diff
+*.cpp   diff
+*.h     diff
