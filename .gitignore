@@ -385,3 +385,8 @@ bin/performance_graph.png
 bin/d912pxy_crash.txt
 *.hlsl
 *.cap
+
+
+# config files
+
+bin/d912pxy/config.ini

@@ -30,8 +30,28 @@ d912pxy_config::d912pxy_config()
 
 	FILE* f = fopen(PXY_CFG_FILE_NAME, "r");
 
-	if (!f)
+	if (!f) {
+		f = fopen(PXY_CFG_FILE_NAME, "w");
+
+		wchar_t csection[256] = L"0";
+
+
+		for (int i = 0; i != PXY_CFG_CNT; ++i)
+		{
+			if (lstrcmpW(csection, data[i].section))
+			{
+				fwprintf(f, L"\r\n[%s]\r\n", data[i].section);
+				lstrcpyW(csection, data[i].section);
+			}
+
+			fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].value);		
+		}
+
+		fflush(f);
+		fclose(f);
+		
 		return;
+	}
 
 	wchar_t section[256];
 	wchar_t param[256];
