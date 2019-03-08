@@ -542,7 +542,6 @@
     <ClInclude Include="d912pxy_gpu_que.h" />
     <ClInclude Include="d912pxy_helper.h" />
     <ClInclude Include="d912pxy_hlsl_generator.h" />
-    <ClInclude Include="d912pxy_ibuf.h" />
     <ClInclude Include="d912pxy_iframe.h" />
     <ClInclude Include="d912pxy_memtree.h" />
     <ClInclude Include="d912pxy_memtree2.h" />
@@ -574,7 +573,6 @@
     <ClInclude Include="d912pxy_thread.h" />
     <ClInclude Include="d912pxy_thread_lock.h" />
     <ClInclude Include="d912pxy_upload_pool.h" />
-    <ClInclude Include="d912pxy_vbuf.h" />
     <ClInclude Include="d912pxy_vdecl.h" />
     <ClInclude Include="d912pxy_vfs.h" />
     <ClInclude Include="d912pxy_vshader.h" />
@@ -622,7 +620,6 @@
     <ClCompile Include="d912pxy_gpu_que.cpp" />
     <ClCompile Include="d912pxy_helper.cpp" />
     <ClCompile Include="d912pxy_hlsl_generator.cpp" />
-    <ClCompile Include="d912pxy_ibuf.cpp" />
     <ClCompile Include="d912pxy_iframe.cpp" />
     <ClCompile Include="d912pxy_memtree.cpp" />
     <ClCompile Include="d912pxy_memtree2.cpp" />
@@ -654,7 +651,6 @@
     <ClCompile Include="d912pxy_thread.cpp" />
     <ClCompile Include="d912pxy_thread_lock.cpp" />
     <ClCompile Include="d912pxy_upload_pool.cpp" />
-    <ClCompile Include="d912pxy_vbuf.cpp" />
     <ClCompile Include="d912pxy_vdecl.cpp" />
     <ClCompile Include="d912pxy_vfs.cpp" />
     <ClCompile Include="d912pxy_vshader.cpp" />
