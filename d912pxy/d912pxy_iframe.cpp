@@ -570,10 +570,26 @@ void d912pxy_iframe::StateSafeFlush()
 		if (streamBinds[i].buffer)
 			streamBinds[i].buffer->ThreadRef(1);
 
+	d912pxy_surface* refSurf[2];
+
+	for (int i = 0; i != 2; ++i)
+	{
+		refSurf[i] = bindedSurfaces[i];
+		if (refSurf[i])
+			refSurf[i]->ThreadRef(1);
+	}
+
 	End();
 	d912pxy_s(GPUque)->Flush(0);
-
 	Start();
+
+	for (int i = 0; i != 2; ++i)
+	{
+		BindSurface(i, refSurf[i]);
+
+		if (refSurf[i])
+			refSurf[i]->ThreadRef(-1);
+	}
 
 	if (indexBind)
 	{
@@ -586,7 +602,10 @@ void d912pxy_iframe::StateSafeFlush()
 		{
 			streamBinds[i].buffer->ThreadRef(-1);
 			SetVBuf(streamBinds[i].buffer, i, streamBinds[i].offset, streamBinds[i].stride);
+			SetStreamFreq(i, streamBinds[i].divider);
 		}
+
+	d912pxy_s(CMDReplay)->RSViewScissor(main_viewport, main_scissor);
 
 	//megai2: force dirty to rebind all states
 	batchCommisionDF = 7;
