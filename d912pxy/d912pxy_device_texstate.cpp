@@ -36,7 +36,7 @@ HRESULT WINAPI d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pT
 
 	if (pTexture)
 	{
-		srvId = *(UINT64*)((intptr_t)pTexture - 0x8);
+		srvId = *(UINT64*)((intptr_t)pTexture - 0x8);//megai2: HOT
 		if (srvId & 0x100000000)
 		{
 			srvId = pTexture->GetPriority();

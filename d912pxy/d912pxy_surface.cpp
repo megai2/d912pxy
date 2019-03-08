@@ -667,14 +667,14 @@ UINT d912pxy_surface::GetSRVHeapId()
 
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 			{				
-				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+				if (d912pxy_s(CMDReplay)->StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
 				{
 					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 0);
 				}			
 			}
 			else {
 				//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but some drivers handle this bad
-				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+				if (d912pxy_s(CMDReplay)->StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
 				{
 					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 1);
 				}			
@@ -683,14 +683,14 @@ UINT d912pxy_surface::GetSRVHeapId()
 		else {
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 			{
-				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+				if (d912pxy_s(CMDReplay)->StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
 				{
 					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 0);
 				}		
 			}
 			else {
 				//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but some drivers handle this bad
-				if (d912pxy_s(CMDReplay)->ViewTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+				if (d912pxy_s(CMDReplay)->StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
 				{
 					d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 1);
 				}

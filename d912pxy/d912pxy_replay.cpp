@@ -26,6 +26,8 @@ SOFTWARE.
 
 #define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[stackTop]; it->type = x
 
+__declspec(thread) static ID3D12PipelineState* replay_thread_pso;
+
 d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")
 {
 	d912pxy_s(CMDReplay) = this;
@@ -41,7 +43,21 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"rep
 
 	ReRangeThreads(PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
 
-	ignoreDIIP = 0;
+	replay_handlers[DRPL_TRAN] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_TRAN;
+	replay_handlers[DRPL_OMSR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMSR;
+	replay_handlers[DRPL_OMBF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMBF;
+	replay_handlers[DRPL_RSVP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RSVP;
+	replay_handlers[DRPL_RSSR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RSSR;
+	replay_handlers[DRPL_DIIP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DIIP;
+	replay_handlers[DRPL_OMRT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMRT;
+	replay_handlers[DRPL_IFVB] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_IFVB;
+	replay_handlers[DRPL_IFIB] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_IFIB;
+	replay_handlers[DRPL_RCLR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RCLR;
+	replay_handlers[DRPL_DCLR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DCLR;
+	replay_handlers[DRPL_RPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSO;
+	replay_handlers[DRPL_RPSF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSF;
+	replay_handlers[DRPL_CPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_CPSO;
+	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;
 }
 
 d912pxy_replay::~d912pxy_replay()
@@ -53,7 +69,7 @@ d912pxy_replay::~d912pxy_replay()
 	}		
 }
 
-UINT d912pxy_replay::ViewTransit(d912pxy_surface * res, D3D12_RESOURCE_STATES to)
+UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
 {
 	REPLAY_STACK_GET(DRPL_TRAN);
 
@@ -179,8 +195,8 @@ void d912pxy_replay::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
 	D3D12_RESOURCE_STATES prevS = src->GetCurrentState();
 	D3D12_RESOURCE_STATES prevD = dst->GetCurrentState();
 
-	ViewTransit(src, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	ViewTransit(dst, D3D12_RESOURCE_STATE_COPY_DEST);
+	StateTransit(src, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	StateTransit(dst, D3D12_RESOURCE_STATE_COPY_DEST);
 
 	REPLAY_STACK_GET(DRPL_RECT);
 
@@ -189,14 +205,14 @@ void d912pxy_replay::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
 
 	++stackTop;
 
-	ViewTransit(src, prevS);
-	ViewTransit(dst, prevD);
+	StateTransit(src, prevS);
+	StateTransit(dst, prevD);
 }
 
 void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr)
 {
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
-	ViewTransit(tgt, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	StateTransit(tgt, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	REPLAY_STACK_GET(DRPL_RCLR);
 
@@ -208,13 +224,13 @@ void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr)
 
 	++stackTop;
 
-	ViewTransit(tgt, prevState);
+	StateTransit(tgt, prevState);
 }
 
 void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag)
 {
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
-	ViewTransit(tgt, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	StateTransit(tgt, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 	REPLAY_STACK_GET(DRPL_DCLR);
 
@@ -225,236 +241,12 @@ void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, 
 
 	++stackTop;
 
-	ViewTransit(tgt, prevState);
+	StateTransit(tgt, prevState);
 }
 
-D912PXY_REPLAY_HA_IMPL(void, TRAN, d912pxy_replay_view_transit)
+void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList * cl)
 {
-	it->res->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->to, it->from, cl);
-}
-
-D912PXY_REPLAY_HA_IMPL(void, OMSR, d912pxy_replay_om_sr)
-{
-	cl->OMSetStencilRef(it->dRef);
-}
-
-D912PXY_REPLAY_HA_IMPL(void, OMBF, d912pxy_replay_om_bf)
-{
-	cl->OMSetBlendFactor(it->color);
-}
-
-D912PXY_REPLAY_HA_IMPL(void, RSVP, d912pxy_replay_rs_viewscissor)
-{
-	cl->RSSetViewports(1, &it->viewport);
-	cl->RSSetScissorRects(1, &it->scissor);
-}
-
-D912PXY_REPLAY_HA_IMPL(void, RSSR, d912pxy_replay_rs_viewscissor)
-{
-	cl->RSSetScissorRects(1, &it->scissor);
-}
-
-D912PXY_REPLAY_HA_IMPL(void, DIIP, d912pxy_replay_draw_indexed_instanced)
-{
-	//LOG_DBG_DTDM2("DIIP SIL %u ICPI %u IC %u SI %u BV %u", it->dip.StartInstanceLocation, it->dip.IndexCountPerInstance, it->dip.InstanceCount, it->dip.StartIndexLocation, it->dip.BaseVertexLocation);
-
-	d912pxy_s(batch)->PreDIP(cl, it->StartInstanceLocation);
-
-	cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	cl->DrawIndexedInstanced(
-		it->IndexCountPerInstance,
-		it->InstanceCount,
-		it->StartIndexLocation,
-		it->BaseVertexLocation,
-		0
-	);	
-}
-
-D912PXY_REPLAY_HA_IMPL(void, OMRT, d912pxy_replay_om_render_target)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[2];
-	D3D12_CPU_DESCRIPTOR_HANDLE* bindedRTV = 0;
-	D3D12_CPU_DESCRIPTOR_HANDLE* bindedDSV = 0;
-
-	if (it->rtv)
-	{
-		bindedRTV = &bindedSurfacesDH[0];
-		bindedSurfacesDH[0] = it->rtv->GetDHeapHandle();
-	}
-
-	if (it->dsv)
-	{
-		bindedDSV = &bindedSurfacesDH[1];
-		bindedSurfacesDH[1] = it->dsv->GetDHeapHandle();
-	}
-
-	if (it->rtv)
-		cl->OMSetRenderTargets(1, bindedRTV, 0, bindedDSV);
-	else
-		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);
-}
-
-D912PXY_REPLAY_HA_IMPL(void, IFVB, d912pxy_replay_vbuf_bind)
-{
-	/*if (!it->buf)
-	{
-		//LOG_ERR_THROW2(-1, "DRPL_IFVB buf == null");
-		ignoreDIIP |= 2;
-		return;
-	} else 
-		ignoreDIIP &= ~2;*/
-
-	try {
-		it->buf->GetBase()->IFrameBindVB(it->stride, it->slot, it->offset, cl);
-	} catch (...)
-	{
-		try {
-			LOG_ERR_THROW2(-1, "DRPL_IFVB error, but trying to continue");
-		}
-		catch (...)
-		{
-			;
-		}
-	}
-}
-
-D912PXY_REPLAY_HA_IMPL(void, IFIB, d912pxy_replay_ibuf_bind)
-{
-/*	if (!it->buf)
-	{
-		//LOG_ERR_THROW2(-1, "DRPL_IFIB buf == null");
-		ignoreDIIP |= 1;
-		return;
-	}
-	else
-		ignoreDIIP &= ~1;*/
-	try {
-		it->buf->GetBase()->IFrameBindIB(cl);
-	}
-	catch (...)
-	{
-		try {
-			LOG_ERR_THROW2(-1, "DRPL_IFIB error, but trying to continue");
-		}
-		catch (...)
-		{
-			;
-		}
-	}
-}
-
-D912PXY_REPLAY_HA_IMPL(void, RCLR, d912pxy_replay_clear_rt)
-{
-	it->tgt->d912_rtv_clear2(it->clr, cl);
-}
-
-D912PXY_REPLAY_HA_IMPL(void, DCLR, d912pxy_replay_clear_ds)
-{
-	it->tgt->d912_dsv_clear2(it->depth, it->stencil, it->flag, cl);
-}
-
-D912PXY_REPLAY_HA_IMPL(ID3D12PipelineState*, RPSO, d912pxy_replay_pso_raw)
-{
-	ID3D12PipelineState* psoPtr = d912pxy_s(psoCache)->UseByDesc(&it->rawState, 0)->GetPtr();
-
-	if (psoPtr)
-		cl->SetPipelineState(psoPtr);
-
-	return psoPtr;
-}
-
-D912PXY_REPLAY_HA_IMPL(ID3D12PipelineState*, RPSF, d912pxy_replay_pso_raw_feedback)
-{
-	*it->feedbackPtr = d912pxy_s(psoCache)->UseByDesc(&it->rawState, 0);
-
-	return NULL;
-}
-
-D912PXY_REPLAY_HA_IMPL(void, RECT, d912pxy_replay_rect)
-{
-	d912pxy_surface* sSrc = it->src;
-	d912pxy_surface* sDst = it->dst;
-
-	sSrc->CopyTo2(sDst, cl);
-}
-
-void d912pxy_replay::PlayId(UINT id, ID3D12GraphicsCommandList * cl)
-{
-	d912pxy_replay_item* it = &stack[id];
-
-	switch (it->type)
-	{
-	case DRPL_TRAN:
-	{
-		RHA_TRAN(&it->transit, cl);
-	}
-	break;
-	case DRPL_OMSR:
-	{
-		RHA_OMSR(&it->omsr, cl);
-	}
-	break;
-	case DRPL_OMBF:
-	{
-		RHA_OMBF(&it->ombf, cl);
-	}
-	break;
-	case DRPL_RSVP:
-	{
-		RHA_RSVP(&it->rs, cl);
-	}
-	break;
-	case DRPL_RSSR:
-	{
-		RHA_RSSR(&it->rs, cl);
-	}
-	break;
-	case DRPL_DIIP:
-	{
-		RHA_DIIP(&it->dip, cl);
-	}
-	break;
-	case DRPL_OMRT:
-	{
-		RHA_OMRT(&it->rt, cl);
-	}
-	break;
-	case DRPL_IFVB:
-	{
-		RHA_IFVB(&it->vb, cl);
-	}
-	break;
-	case DRPL_IFIB:
-	{
-		RHA_IFIB(&it->ib, cl);
-	}
-	break;
-	case DRPL_RCLR:
-	{
-		RHA_RCLR(&it->clrRt, cl);
-	}
-	break;
-	case DRPL_DCLR:
-	{
-		RHA_DCLR(&it->clrDs, cl);
-	}
-	break;
-	case DRPL_RECT:
-	{
-		RHA_RECT(&it->srect, cl);
-	}
-	break;
-	case DRPL_RPSF:
-	{
-		RHA_RPSF(&it->rawPsoFeedback, cl);
-	}
-	break;
-	default:
-	{
-		LOG_ERR_THROW2(-1, "replay type error");
-	}
-	break;
-	}
+	(this->*replay_handlers[it->type])(&it->ptr, cl);
 }
 
 void d912pxy_replay::Replay(UINT start, UINT end, d912pxy_gpu_cmd_list_group listGrp, d912pxy_replay_thread* thrd)
@@ -489,43 +281,7 @@ void d912pxy_replay::Replay(UINT start, UINT end, d912pxy_gpu_cmd_list_group lis
 			}			
 		}
 
-		switch (stack[i].type) 
-		{
-		case DRPL_CPSO:
-		{
-			d912pxy_pso_cache_item* it = stack[i].compiledPso.psoItem;
-
-			psoPtr = it->GetPtr();
-
-			if (psoPtr)
-				cl->SetPipelineState(psoPtr);
-
-			break;
-		}
-		case DRPL_RPSO:
-		{
-			d912pxy_pso_cache_item* it = d912pxy_s(psoCache)->UseByDesc(&stack[i].rawPso.rawState, 0);
-			
-			if (it)
-			{
-				psoPtr = it->GetPtr();
-
-				if (psoPtr)
-					cl->SetPipelineState(psoPtr);
-			}
-			else
-				psoPtr = NULL;
-		}
-		break;
-		case DRPL_DIIP:
-		{
-			if (!psoPtr)
-				break;
-		}
-		default:
-			PlayId(i, cl);
-			break;
-		}
+		PlayId(&stack[i], cl);
 	}
 }
 
@@ -605,4 +361,120 @@ d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type
 	}
 
 	return nullptr;
+}
+
+void d912pxy_replay::RHA_TRAN(d912pxy_replay_state_transit * it, ID3D12GraphicsCommandList * cl)
+{
+	it->res->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->to, it->from, cl);
+}
+
+void d912pxy_replay::RHA_OMSR(d912pxy_replay_om_sr* it, ID3D12GraphicsCommandList * cl)
+{
+	cl->OMSetStencilRef(it->dRef);	
+}
+
+void d912pxy_replay::RHA_OMBF(d912pxy_replay_om_bf* it, ID3D12GraphicsCommandList * cl) 
+{
+	cl->OMSetBlendFactor(it->color);
+}
+
+void d912pxy_replay::RHA_RSVP(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl)
+{
+	cl->RSSetViewports(1, &it->viewport);
+	cl->RSSetScissorRects(1, &it->scissor);
+}
+
+void d912pxy_replay::RHA_RSSR(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl)
+{	
+	cl->RSSetScissorRects(1, &it->scissor);	
+}
+
+void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12GraphicsCommandList * cl)
+{
+	if (!replay_thread_pso)
+		return;
+
+	d912pxy_s(batch)->PreDIP(cl, it->StartInstanceLocation);
+
+	cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cl->DrawIndexedInstanced(
+		it->IndexCountPerInstance,
+		it->InstanceCount,
+		it->StartIndexLocation,
+		it->BaseVertexLocation,
+		0
+	);
+}
+
+void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl)
+{
+	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[2];
+	D3D12_CPU_DESCRIPTOR_HANDLE* bindedRTV = 0;
+	D3D12_CPU_DESCRIPTOR_HANDLE* bindedDSV = 0;
+
+	if (it->rtv)
+	{
+		bindedRTV = &bindedSurfacesDH[0];
+		bindedSurfacesDH[0] = it->rtv->GetDHeapHandle();
+	}
+
+	if (it->dsv)
+	{
+		bindedDSV = &bindedSurfacesDH[1];
+		bindedSurfacesDH[1] = it->dsv->GetDHeapHandle();
+	}
+
+	if (it->rtv)
+		cl->OMSetRenderTargets(1, bindedRTV, 0, bindedDSV);
+	else
+		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);
+}
+
+void d912pxy_replay::RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl)
+{
+	it->buf->GetBase()->IFrameBindVB(it->stride, it->slot, it->offset, cl);
+}
+
+void d912pxy_replay::RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsCommandList * cl)
+{
+	it->buf->GetBase()->IFrameBindIB(cl);
+}
+
+void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl)
+{
+	it->tgt->d912_rtv_clear2(it->clr, cl);
+}
+
+void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl)
+{
+	it->tgt->d912_dsv_clear2(it->depth, it->stencil, it->flag, cl);
+}
+
+void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl)
+{
+	replay_thread_pso = d912pxy_s(psoCache)->UseByDesc(&it->rawState, 0)->GetPtr();
+
+	if (replay_thread_pso)
+		cl->SetPipelineState(replay_thread_pso);	
+}
+
+void d912pxy_replay::RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCommandList * cl)
+{	
+	replay_thread_pso = it->psoItem->GetPtr();
+
+	if (replay_thread_pso)
+		cl->SetPipelineState(replay_thread_pso);
+}
+
+void d912pxy_replay::RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl)
+{
+	*it->feedbackPtr = d912pxy_s(psoCache)->UseByDesc(&it->rawState, 0);
+}
+
+void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl)
+{
+	d912pxy_surface* sSrc = it->src;
+	d912pxy_surface* sDst = it->dst;
+
+	sSrc->CopyTo2(sDst, cl);
 }

@@ -225,7 +225,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 		if (bindedSurfaces[1])
 		{
 			d912pxy_s(psoCache)->RTVFormat(bindedSurfaces[1]->GetSRVFormat(), 0);
-			d912pxy_s(CMDReplay)->ViewTransit(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
+			d912pxy_s(CMDReplay)->StateTransit(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
 			bindedRTVcount = 1;
 		}
 		else {
@@ -237,7 +237,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 		if (bindedSurfaces[0])
 		{
 			d912pxy_s(psoCache)->DSVFormat(bindedSurfaces[0]->GetDSVFormat());
-			d912pxy_s(CMDReplay)->ViewTransit(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
+			d912pxy_s(CMDReplay)->StateTransit(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
 		}
 		else {
 			bindedDSV = 0;
