@@ -35,7 +35,27 @@ d912pxy_pshader::~d912pxy_pshader()
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_pshader
 
-D912PXY_IUNK_IMPL
+D912PXY_METHOD_IMPL(QueryInterface)(THIS_ REFIID riid, void** ppvObj)
+{
+	return ((d912pxy_comhandler*)this)->QueryInterface(riid, ppvObj);
+}
+
+D912PXY_METHOD_IMPL_(ULONG, AddRef)(THIS)
+{
+	return ((d912pxy_comhandler*)this)->AddRef();
+}
+
+D912PXY_METHOD_IMPL_(ULONG, Release)(THIS)
+{
+	ULONG ret = ((d912pxy_comhandler*)this)->Release();
+
+	if (!ret)
+	{
+		RemovePairs();
+	}
+
+	return ret;
+}
 
 /*** IDirect3DVertexShader9 methods ***/
 D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice)

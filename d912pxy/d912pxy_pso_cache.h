@@ -107,7 +107,6 @@ public:
 	void ThreadJob();
 
 	void QueueShaderCleanup(d912pxy_shader* v);
-	void ProcessShaderCleanup();
 
 	static D3D12_GRAPHICS_PIPELINE_STATE_DESC cDscBase;
 

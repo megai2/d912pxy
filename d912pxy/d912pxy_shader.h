@@ -42,9 +42,10 @@ public:
 	d912pxy_shader_uid GetID();
 
 	void NotePairUsage(d912pxy_shader_pair_hash_type pairHash);
-	d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>* GetPairs() { return pairs; };
-
+	
 	UINT FinalReleaseCB();
+
+	void RemovePairs();
 
 private:
 	d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>* pairs;

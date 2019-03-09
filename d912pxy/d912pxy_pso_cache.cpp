@@ -591,39 +591,11 @@ void d912pxy_pso_cache::ThreadJob()
 		
 		psoCompileBuffer->Next();
 	}
-
-	ProcessShaderCleanup();
-	
-	/*if (m_dev->InterruptThreads())
-	{
-		m_dev->LockThread(PXY_INNER_THREADID_PSO_COMPILER);
-	}*/
 }
 
 void d912pxy_pso_cache::QueueShaderCleanup(d912pxy_shader * v)
 {
 	shaderCleanupBuffer->WriteElement(v);
-}
-
-void d912pxy_pso_cache::ProcessShaderCleanup()
-{
-	while (shaderCleanupBuffer->HaveElements())
-	{
-		d912pxy_shader* it = shaderCleanupBuffer->GetElement();
-		d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>* pairs = it->GetPairs();
-		shaderCleanupBuffer->Next();
-
-		while (pairs->HaveElements())
-		{
-			d912pxy_shader_pair_hash_type ha = pairs->GetElement();
-
-			d912pxy_s(sdb)->DeletePair(ha);
-
-			pairs->Next();
-		}
-
-		delete it;
-	}
 }
 
 void d912pxy_pso_cache::CompileItem(d912pxy_pso_cache_item * item)

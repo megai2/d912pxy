@@ -75,9 +75,19 @@ void d912pxy_shader::NotePairUsage(d912pxy_shader_pair_hash_type pairHash)
 
 UINT d912pxy_shader::FinalReleaseCB()
 {
-	d912pxy_s(psoCache)->QueueShaderCleanup(this);
-	d912pxy_s(psoCache)->SignalWork();
-	return 0;
+	return 1;
+}
+
+void d912pxy_shader::RemovePairs()
+{
+	while (pairs->HaveElements())
+	{
+		d912pxy_shader_pair_hash_type ha = pairs->GetElement();
+
+		d912pxy_s(sdb)->DeletePair(ha);
+
+		pairs->Next();
+	}
 }
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_shader
