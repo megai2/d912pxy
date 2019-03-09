@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread()
+d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread("d912pxy replay")
 {
 	listGrp = iListGrp;
 }

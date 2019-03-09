@@ -56,13 +56,9 @@ d912pxy_gpu_cmd_list::~d912pxy_gpu_cmd_list()
 	//megai2: be shure to perform all pending ops
 	Execute();
 	Signal();
-	Wait();
-	mCleanupThread->SignalWork();
-
-	mCleanupThread->IssueItems(this,-1);
-	mCleanupThread->SignalWork();
-	mCleanupThread->IssueItems(this, 0);
-	mCleanupThread->SignalWork();
+	WaitNoCleanup();
+	
+	CleanupAllReferenced();
 
 	delete mGpuRefs;
 }
@@ -90,6 +86,14 @@ void d912pxy_gpu_cmd_list::Execute()
 
 void d912pxy_gpu_cmd_list::Wait()
 {
+	WaitNoCleanup();
+
+	//we have some objects that was possibly referenced by this command list and they was deleted, so we must delete them when this list is finished
+	mCleanupThread->IssueItems(this, mGpuRefs->TotalElements());
+}
+
+void d912pxy_gpu_cmd_list::WaitNoCleanup()
+{
 	LOG_DBG_DTDM("wait %016llX", this);
 
 	if (fence->GetCompletedValue() < fenceId)
@@ -105,17 +109,6 @@ void d912pxy_gpu_cmd_list::Wait()
 		mALC[i]->Reset();
 		mCL[i]->Reset(mALC[i].Get(), 0);
 	}
-
-	/*
-	D3D12_SAMPLE_POSITION spos;
-	spos.X = -7;
-	spos.Y = -7;
-
-	for (int i = 0; i != PXY_INNER_MAX_GPU_CMD_LIST_GROUPS; ++i)
-		mCL[i]->SetSamplePositions(1, 1, &spos);*/
-
-	//we have some objects that was possibly referenced by this command list and they was deleted, so we must delete them when this list is finished
-	mCleanupThread->IssueItems(this, mGpuRefs->TotalElements());
 }
 
 void d912pxy_gpu_cmd_list::Signal()
@@ -132,11 +125,6 @@ void d912pxy_gpu_cmd_list::EnqueueCleanup(d912pxy_comhandler * obj)
 
 void d912pxy_gpu_cmd_list::CleanupAllReferenced()
 {
-	mCleanupThread->IssueItems(this,-1);
-	mCleanupThread->SignalWork();
-	mCleanupThread->IssueItems(this, 0);
-	mCleanupThread->SignalWork();
-
 	while (mGpuRefs->HaveElements())
 	{
 		d912pxy_comhandler* obj = mGpuRefs->GetElement();		

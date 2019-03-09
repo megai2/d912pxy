@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iQueues, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom(dev, L"GPU queue"), d912pxy_thread()
+d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iQueues, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom(dev, L"GPU queue"), d912pxy_thread("d912pxy gpu exec")
 {
 	d912pxy_s(GPUque) = this;
 
@@ -52,6 +52,10 @@ d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iQueues, UINT iMaxCl
 d912pxy_gpu_que::~d912pxy_gpu_que()
 {
 	//clear all command lists and exec pending work
+
+	mGPUCleanupThread->SignalWork();
+	mGPUCleanupThread->IssueItems(NULL, 0);
+
 	while (mLists->HaveElements()) //but do get->next cuz we using one that is current
 	{
 		delete mLists->GetElement();
@@ -175,6 +179,9 @@ void d912pxy_gpu_que::Flush(UINT doSwap)
 
 	WaitForGPU(); //and wait
 
+	//megai2: as DXGI cleanup is not using default com-based cleanup, we kinda safe to skip extra cleanup code
+	//but if this needed again for some reason, it must be done with proper d912pxy_s(GPUcl) swapping
+	/*
 	mGPUCleanupThread->SignalWork();
 
 	//clean all referenced objects from prev frame
@@ -182,6 +189,7 @@ void d912pxy_gpu_que::Flush(UINT doSwap)
 
 	//and from this set too
 	CleanAllReferenced();
+	*/
 }
 
 void d912pxy_gpu_que::WaitForGPU()
@@ -206,11 +214,6 @@ void d912pxy_gpu_que::EnqueueCleanup(d912pxy_comhandler * obj)
 d912pxy_gpu_cmd_list * d912pxy_gpu_que::GetCommandList()
 {
 	return mLists->GetElement();
-}
-
-void d912pxy_gpu_que::CleanAllReferenced()
-{
-	mLists->GetElement()->CleanupAllReferenced();
 }
 
 void d912pxy_gpu_que::ThreadJob()

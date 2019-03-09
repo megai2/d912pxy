@@ -35,6 +35,7 @@ public:
 
 	void Execute();
 	void Wait();
+	void WaitNoCleanup();
 	void Signal();	
 	void EnqueueCleanup(d912pxy_comhandler* obj);
 

@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_noncom(dev, L"texture loader"), d912pxy_thread()
+d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_noncom(dev, L"texture loader"), d912pxy_thread("d912pxy texld")
 {
 	poolPtr = 0;
 

@@ -47,8 +47,6 @@ public:
 	
 	ComPtr<ID3D12CommandQueue> GetDXQue() { return mDXQue; };
 
-	void CleanAllReferenced();
-
 	void ThreadJob();
 
 private:

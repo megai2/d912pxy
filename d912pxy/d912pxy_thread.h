@@ -31,7 +31,7 @@ DWORD WINAPI d912pxy_thread_main(void* arg);
 class d912pxy_thread
 {
 public:
-	d912pxy_thread();
+	d912pxy_thread(const char* threadName);
 	~d912pxy_thread();
 
 	void Stop();

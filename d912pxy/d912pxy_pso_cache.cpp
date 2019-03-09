@@ -28,7 +28,7 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_pso_cache::cDscBase;
 UINT d912pxy_pso_cache::vsMaxVars;
 UINT d912pxy_pso_cache::psMaxVars;
 
-d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev, L"PSO cache"), d912pxy_thread()
+d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev, L"PSO cache"), d912pxy_thread("d912pxy pso compile")
 {
 	d912pxy_s(psoCache) = this;
 

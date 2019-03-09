@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_noncom(dev, L"buffer loader"), d912pxy_thread()
+d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_noncom(dev, L"buffer loader"), d912pxy_thread("d912pxy bufld")
 {
 	poolPtr = 0;
 	needSignal = 0;
