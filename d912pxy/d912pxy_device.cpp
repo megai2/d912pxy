@@ -196,6 +196,7 @@ HRESULT WINAPI d912pxy_device::ValidateDevice(DWORD* pNumPasses)
 HRESULT WINAPI d912pxy_device::GetDirect3D(IDirect3D9 ** ppv)
 {
 	*ppv = (IDirect3D9*)initPtr;
+	(*ppv)->AddRef();
 	return D3D_OK;
 }
 
