@@ -27,6 +27,8 @@ SOFTWARE.
 d912pxy_shader_db::d912pxy_shader_db(d912pxy_device* dev) : d912pxy_noncom(dev, L"shader database")
 {
 	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_pair_hash_type), 0xFF, 2);
+
+	precompileFlag = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_SDB_USE_PSO_PRECOMPILE);
 	
 	d912pxy_s(sdb) = this;
 }
@@ -90,7 +92,7 @@ d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_ps
 		return it;
 	}
 	else {
-		it = new d912pxy_shader_pair(ha, m_dev);
+		it = new d912pxy_shader_pair(ha, pdc, m_dev);
 
 		vs->NotePairUsage(ha);
 		ps->NotePairUsage(ha);

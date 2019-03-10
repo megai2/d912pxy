@@ -79,7 +79,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 
 	fseek(m_vfsBlocks[id], 0, SEEK_SET);
 
-	m_vfsFileOffsets[id] = new d912pxy_memtree2(4, PXY_VFS_MAX_FILES_PER_BID, 2);
+	m_vfsFileOffsets[id] = new d912pxy_memtree2(8, PXY_VFS_MAX_FILES_PER_BID, 2);
 
 	m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
 	m_vfsFileCount[id] = 0;
@@ -162,7 +162,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 	return m_vfsBlocks[id];
 }
 
-UINT64 d912pxy_vfs::IsPresentN(char * fnpath, UINT32 vfsId)
+UINT64 d912pxy_vfs::IsPresentN(const char * fnpath, UINT32 vfsId)
 {	
 	return IsPresentH(HashFromName(fnpath), vfsId);
 }
@@ -186,17 +186,17 @@ UINT64 d912pxy_vfs::IsPresentH(UINT64 fnHash, UINT32 vfsId)
 	return 0;
 }
 
-void * d912pxy_vfs::LoadFileN(char * fnpath, UINT * sz, UINT id)
+void * d912pxy_vfs::LoadFileN(const char * fnpath, UINT * sz, UINT id)
 {
 	return LoadFileH(HashFromName(fnpath), sz, id);
 }
 
-void d912pxy_vfs::WriteFileN(char * fnpath, void * data, UINT sz, UINT id)
+void d912pxy_vfs::WriteFileN(const char * fnpath, void * data, UINT sz, UINT id)
 {
 	WriteFileH(HashFromName(fnpath), data, sz, id);
 }
 
-void d912pxy_vfs::ReWriteFileN(char * fnpath, void * data, UINT sz, UINT id)
+void d912pxy_vfs::ReWriteFileN(const char * fnpath, void * data, UINT sz, UINT id)
 {
 	ReWriteFileH(HashFromName(fnpath), data, sz, id);
 }
@@ -287,7 +287,18 @@ void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 	LeaveCriticalSection(&lock);
 }
 
-UINT64 d912pxy_vfs::HashFromName(char * fnpath)
+UINT64 d912pxy_vfs::HashFromName(const char * fnpath)
 {
-	return d912pxy_memtree2::memHash64s(fnpath, (UINT32)strlen(fnpath));
+	return d912pxy_memtree2::memHash64s((void*)fnpath, (UINT32)strlen(fnpath));
+}
+
+d912pxy_memtree2 * d912pxy_vfs::GetHeadTree(UINT id)
+{
+	return m_vfsFileOffsets[id];
+}
+
+void * d912pxy_vfs::GetCachePointer(UINT32 offset, UINT id)
+{
+	offset -= PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
+	return ((void*)((intptr_t)m_vfsCache[id] + offset + 4));
 }

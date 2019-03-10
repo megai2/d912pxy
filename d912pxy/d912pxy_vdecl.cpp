@@ -157,6 +157,12 @@ d912pxy_vdecl::d912pxy_vdecl(d912pxy_device * dev, const D3DVERTEXELEMENT9 * dat
 			declData12[i].InstanceDataStepRate = -1;
 		}
 
+		if (data[i].Method == D3DDECLMETHOD_PER_INSTANCE_CONSTANT)
+		{
+			declData12[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+			declData12[i].InstanceDataStepRate = 1;
+		}
+
 		//doubt are here
 		declData12[i].AlignedByteOffset = data[i].Offset;
 
@@ -190,6 +196,7 @@ void d912pxy_vdecl::ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICAT
 			else {
 				declData12[i].InputSlotClass = newMode;
 				declData12[i].InstanceDataStepRate = 1;
+				declData[i].Method = D3DDECLMETHOD_PER_INSTANCE_CONSTANT;
 			}
 		}
 	}

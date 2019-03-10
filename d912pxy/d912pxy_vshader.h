@@ -29,6 +29,7 @@ class d912pxy_vshader : public IDirect3DVertexShader9, public d912pxy_shader
 {
 public:
 	d912pxy_vshader(d912pxy_device* dev, const DWORD* fun);
+	d912pxy_vshader(d912pxy_device* dev, d912pxy_shader_uid uid);
 	~d912pxy_vshader();
 
 	/*** IUnknown methods ***/

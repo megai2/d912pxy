@@ -89,6 +89,18 @@ void d912pxy_device::InitVFS()
 		m_log->P7_ERROR(LGC_DEFAULT, TM("shader_profiles VFS not loaded"));
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
+
+	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_CACHE_KEYS, "pso_cache"))
+	{
+		m_log->P7_ERROR(LGC_DEFAULT, TM("pso_cache VFS not loaded"));
+		LOG_ERR_THROW2(-1, "VFS error");
+	}
+
+	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_PRECOMPILE_LIST, "pso_precompile"))
+	{
+		m_log->P7_ERROR(LGC_DEFAULT, TM("pso_precompile VFS not loaded"));
+		LOG_ERR_THROW2(-1, "VFS error");
+	}
 }
 
 void d912pxy_device::InitClassFields()

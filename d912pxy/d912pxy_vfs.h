@@ -33,6 +33,8 @@ SOFTWARE.
 
 #define PXY_VFS_BID_CSO 0
 #define PXY_VFS_BID_SHADER_PROFILE 1
+#define PXY_VFS_BID_PSO_CACHE_KEYS 2
+#define PXY_VFS_BID_PSO_PRECOMPILE_LIST 3
 
 #define PXY_VFS_SIGNATURE 0x443931325043b46
 #define PXY_VFS_VER 1
@@ -53,18 +55,21 @@ public:
 	void SetRoot(const char* rootPath);
 	void* LoadVFS(UINT id, const char* name);
 
-	UINT64 IsPresentN(char* fnpath, UINT32 vfsId);
+	UINT64 IsPresentN(const char* fnpath, UINT32 vfsId);
 	UINT64 IsPresentH(UINT64 fnHash, UINT32 vfsId);
 
-	void* LoadFileN(char* fnpath, UINT* sz, UINT id);
-	void WriteFileN(char* fnpath, void* data, UINT sz, UINT id);
-	void ReWriteFileN(char* fnpath, void* data, UINT sz, UINT id);
+	void* LoadFileN(const char* fnpath, UINT* sz, UINT id);
+	void WriteFileN(const char* fnpath, void* data, UINT sz, UINT id);
+	void ReWriteFileN(const char* fnpath, void* data, UINT sz, UINT id);
 
 	void* LoadFileH(UINT64 namehash, UINT* sz, UINT id);
 	void WriteFileH(UINT64 namehash, void* data, UINT sz, UINT id);
 	void ReWriteFileH(UINT64 namehash, void* data, UINT sz, UINT id);
 
-	UINT64 HashFromName(char* fnpath);
+	UINT64 HashFromName(const char* fnpath);
+
+	d912pxy_memtree2* GetHeadTree(UINT id);
+	void* GetCachePointer(UINT32 offset, UINT id);
 		
 private:
 	CRITICAL_SECTION lock;

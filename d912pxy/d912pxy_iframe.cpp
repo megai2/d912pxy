@@ -61,6 +61,8 @@ d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d9
 	}
 
 	mCurrentFrameIndex = 0;
+
+	d912pxy_s(psoCache)->LoadCachedData();
 }
 
 d912pxy_iframe::~d912pxy_iframe()

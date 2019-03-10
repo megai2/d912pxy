@@ -25,6 +25,9 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
+#define PXY_SDB_PSO_PRECOMPILE_SAVE 1
+#define PXY_SDB_PSO_PRECOMPILE_LOAD 2
+
 class d912pxy_shader_db : public d912pxy_noncom
 {
 public:
@@ -36,9 +39,13 @@ public:
 	d912pxy_shader_pair* GetPair(d912pxy_vshader* vs, d912pxy_pshader* ps);
 	void DeletePair(d912pxy_shader_pair_hash_type ha);
 
+	UINT GetPrecompileFlag() { return precompileFlag; };
+
 private:
 	d912pxy_thread_lock treeLock;
 
 	d912pxy_memtree2* shaderPairs;
+
+	UINT precompileFlag;
 };
 

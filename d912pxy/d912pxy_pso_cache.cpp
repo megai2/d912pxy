@@ -35,6 +35,8 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 	cacheIndexes = new d912pxy_memtree2(sizeof(d912pxy_trimmed_dx12_pso) - d912pxy_trimmed_dx12_pso_hash_offset, PXY_INNER_MAX_PSO_CACHE_NODES, 2);
 	cacheIncID = 0;
 
+	fileCacheFlags = (UINT8)d912pxy_s(config)->GetValueUI64(PXY_CFG_SDB_USE_PSO_KEY_CACHE);
+
 	d912pxy_pso_cache::vsMaxVars = 0;
 	d912pxy_pso_cache::psMaxVars = 0;
 	
@@ -534,7 +536,9 @@ d912pxy_pso_cache_item* d912pxy_pso_cache::UseByDesc(d912pxy_trimmed_dx12_pso* d
 {
 	dsc->vdeclHash = dsc->InputLayout->GetHash();
 
-	cacheIndexes->PointAt32((void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset));
+	void* dscMem = (void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset);
+
+	cacheIndexes->PointAt32(dscMem);
 
 	UINT64 id = cacheIndexes->CurrentCID();
 
@@ -542,6 +546,19 @@ d912pxy_pso_cache_item* d912pxy_pso_cache::UseByDesc(d912pxy_trimmed_dx12_pso* d
 	{
 		cacheIndexes->SetValue(++cacheIncID);
 		id = cacheIncID;
+
+		if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_WRITE)
+		{
+			d912pxy_serialized_pso_key cacheEntry;
+
+			UINT unused;
+
+			memcpy(cacheEntry.declData, dsc->InputLayout->GetDeclarationPtr(&unused), sizeof(D3DVERTEXELEMENT9) * PXY_INNER_MAX_VDECL_LEN);
+			memcpy(cacheEntry.staticPsoDesc, dscMem, d912pxy_trimmed_pso_static_data_size);
+
+			d912pxy_s(vfs)->ReWriteFileH(id+1, &cacheEntry, sizeof(d912pxy_serialized_pso_key), PXY_VFS_BID_PSO_CACHE_KEYS);
+			d912pxy_s(vfs)->ReWriteFileH(PXY_PSO_CACHE_KEYFILE_NAME, &cacheIncID, 4, PXY_VFS_BID_PSO_CACHE_KEYS);
+		}
 	}
 
 	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
@@ -613,6 +630,102 @@ UINT d912pxy_pso_cache::IsCompileQueueFree()
 void d912pxy_pso_cache::LockCompileQue(UINT lock)
 {
 	InterlockedExchange(&externalLock, lock);
+}
+
+void d912pxy_pso_cache::LoadCachedData()
+{
+	if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_READ)
+	{
+		UINT fsz = 0;
+		UINT32* max = (UINT32*)d912pxy_s(vfs)->LoadFileH(PXY_PSO_CACHE_KEYFILE_NAME, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS);
+
+		psoKeyCache = NULL;
+
+		if (max && *max)
+		{
+			cacheIncID = *max;
+			psoKeyCache = (d912pxy_serialized_pso_key**)malloc(sizeof(d912pxy_serialized_pso_key*) * (*max + 2));
+
+			for (int i = 1; i != (*max+1); ++i)
+			{
+				d912pxy_serialized_pso_key* psoTrimmedDsc = (d912pxy_serialized_pso_key*)d912pxy_s(vfs)->LoadFileH(i+1, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS);
+
+				if (fsz != sizeof(d912pxy_serialized_pso_key))
+				{
+					LOG_ERR_THROW2(-1, "pso key cache corrupted. size");
+				}
+
+				if (!psoTrimmedDsc)
+				{
+					LOG_ERR_THROW2(-1, "pso key cache corrupted. data");
+				}
+
+				cacheIndexes->PointAt32(&psoTrimmedDsc->staticPsoDesc[0]);
+				cacheIndexes->SetValue(i);
+
+				psoKeyCache[i] = psoTrimmedDsc;
+			}
+
+			if (d912pxy_s(sdb)->GetPrecompileFlag() & PXY_SDB_PSO_PRECOMPILE_LOAD)
+			{
+				d912pxy_memtree2* mt = d912pxy_s(vfs)->GetHeadTree(PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+
+				mt->Begin();
+
+				while (!mt->IterEnd())
+				{
+					UINT32 entryOffset = (UINT32)mt->CurrentCID();
+					if (entryOffset != 0)
+					{
+						d912pxy_shader_pair_cache_entry* entry = (d912pxy_shader_pair_cache_entry*)d912pxy_s(vfs)->GetCachePointer(entryOffset, PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+
+						d912pxy_vshader* vs = new d912pxy_vshader(m_dev, entry->vs);
+						d912pxy_pshader* ps = new d912pxy_pshader(m_dev, entry->ps);
+
+						for (int i = 1; i != (*max + 1); ++i)
+						{
+							if (entry->compiled[i >> 6] & (1ULL << (i & 0x3F)))
+							{
+								d912pxy_trimmed_dx12_pso dsc;
+
+								void* dscMem = (void*)((intptr_t)&dsc + d912pxy_trimmed_dx12_pso_hash_offset);
+
+								memcpy(dscMem, psoKeyCache[i]->staticPsoDesc, d912pxy_trimmed_pso_static_data_size);
+
+								d912pxy_vdecl* vdcl = new d912pxy_vdecl(m_dev, psoKeyCache[i]->declData);
+
+								dsc.PS = ps;
+								dsc.VS = vs;
+								dsc.InputLayout = vdcl;
+
+								d912pxy_shader_pair* pair = d912pxy_s(sdb)->GetPair(vs, ps);
+
+								pair->PrecompilePSO(i, &dsc);
+
+								//UseByDesc(&dsc, 0);
+
+								vdcl->Release();
+							}
+						}
+
+						vs->Release();
+						ps->Release();
+					}
+
+					mt->Next();
+				}
+			}
+
+			for (int i = 1; i != (*max+1); ++i)
+			{
+				free(psoKeyCache[i]);
+			}
+
+			free(psoKeyCache);
+
+			free(max);
+		}
+	}
 }
 
 d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_trimmed_dx12_pso* sDsc) : d912pxy_comhandler(dev, L"PSO item")

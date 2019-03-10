@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_device* dev) : d912pxy_noncom(dev, L"shader pair")
+d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_shader_uid* shd, d912pxy_device* dev) : d912pxy_noncom(dev, L"shader pair")
 {	
 	maxPsoId = 512;
 
@@ -32,10 +32,34 @@ d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d
 
 	psoItems = (d912pxy_pso_cache_item**)malloc(msz);
 	ZeroMemory(psoItems, msz);
+
+	node = nodeId;
+
+	memcpy(shdUID, shd, sizeof(d912pxy_shader_uid) * 2);
+
 }
 
 d912pxy_shader_pair::~d912pxy_shader_pair()
 {
+	if (d912pxy_s(sdb)->GetPrecompileFlag() & PXY_SDB_PSO_PRECOMPILE_SAVE)
+	{
+		d912pxy_shader_pair_cache_entry entryData;
+		ZeroMemory(&entryData, sizeof(d912pxy_shader_pair_cache_entry));
+
+		entryData.vs = shdUID[0];
+		entryData.ps = shdUID[1];
+
+		for (int i = 1; i != maxPsoId; ++i)
+		{
+			if (psoItems[i] != 0)
+			{
+				entryData.compiled[i >> 6] |= 1ULL << (i & 0x3F);
+			}
+		}
+
+		d912pxy_s(vfs)->ReWriteFileH(node, &entryData, sizeof(d912pxy_shader_pair_cache_entry), PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+	}
+
 	for (int i = 0; i != maxPsoId; ++i)
 	{
 		if (psoItems[i] != 0)
@@ -47,12 +71,23 @@ d912pxy_shader_pair::~d912pxy_shader_pair()
 	free(psoItems);
 }
 
-d912pxy_pso_cache_item* d912pxy_shader_pair::GetPSOCacheData(UINT32 idx, d912pxy_trimmed_dx12_pso* dsc)
+void d912pxy_shader_pair::PrecompilePSO(UINT32 idx, d912pxy_trimmed_dx12_pso * dsc)
+{
+	CheckArrayAllocation(idx);
+
+	d912pxy_pso_cache_item* ret = new d912pxy_pso_cache_item(m_dev, dsc);
+
+	ret->Compile();
+
+	psoItems[idx] = ret;
+}
+
+void d912pxy_shader_pair::CheckArrayAllocation(UINT32 idx)
 {
 	if (idx >= maxPsoId)
 	{
 		intptr_t oldEnd = maxPsoId * sizeof(d912pxy_pso_cache_item*);
-		
+
 		LOG_DBG_DTDM3("GetPSOCacheData realloc %u => %u", maxPsoId, idx + 100);
 
 		intptr_t extendSize = ((idx - maxPsoId) + 100) * sizeof(d912pxy_pso_cache_item*);
@@ -62,7 +97,12 @@ d912pxy_pso_cache_item* d912pxy_shader_pair::GetPSOCacheData(UINT32 idx, d912pxy
 
 		ZeroMemory((void*)((intptr_t)psoItems + oldEnd), extendSize);
 	}
+}
 
+d912pxy_pso_cache_item* d912pxy_shader_pair::GetPSOCacheData(UINT32 idx, d912pxy_trimmed_dx12_pso* dsc)
+{
+	CheckArrayAllocation(idx);
+	
 	d912pxy_pso_cache_item* ret = psoItems[idx];
 
 	if (!ret)

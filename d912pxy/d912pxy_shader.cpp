@@ -39,6 +39,22 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, co
 	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
 }
 
+d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d912pxy_shader_uid uid) : d912pxy_comhandler(shtName)
+{
+	m_dev = dev;
+	mUID = uid;
+
+	oCode = NULL;
+
+	d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID);
+
+	bytecode = replacer->GetCode();
+
+	delete replacer;
+
+	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
+}
+
 d912pxy_shader::~d912pxy_shader()
 {
 	delete pairs;

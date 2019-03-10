@@ -27,6 +27,8 @@ SOFTWARE.
 
 #define d912pxy_trimmed_dx12_pso_hash_offset (8*3)
 
+#define d912pxy_trimmed_pso_static_data_size (sizeof(d912pxy_trimmed_dx12_pso) - d912pxy_trimmed_dx12_pso_hash_offset)
+
 typedef struct d912pxy_trimmed_dx12_pso {
 	d912pxy_vshader* VS;
 	d912pxy_pshader* PS;
@@ -40,6 +42,13 @@ typedef struct d912pxy_trimmed_dx12_pso {
 	DXGI_FORMAT DSVFormat;
 	UINT NumRenderTargets;
 } d912pxy_trimmed_dx12_pso;
+
+typedef struct d912pxy_serialized_pso_key {
+	D3DVERTEXELEMENT9 declData[PXY_INNER_MAX_VDECL_LEN];
+
+	UINT8 staticPsoDesc[d912pxy_trimmed_pso_static_data_size];
+	
+} d912pxy_serialized_pso_key;
 
 class d912pxy_pso_cache_item : public d912pxy_comhandler {
 
@@ -65,6 +74,10 @@ private:
 	d912pxy_trimmed_dx12_pso* desc;
 	//UINT m_status;
 };
+
+#define PXY_PSO_CACHE_KEYFILE_NAME 1
+#define PXY_PSO_CACHE_KEYFILE_WRITE 2
+#define PXY_PSO_CACHE_KEYFILE_READ 1
 
 class d912pxy_pso_cache :
 	public d912pxy_noncom, public d912pxy_thread
@@ -119,6 +132,8 @@ public:
 
 	void LockCompileQue(UINT lock);
 
+	void LoadCachedData();
+
 private:
 	d912pxy_memtree2* cacheIndexes;
 	UINT32 cacheIncID;
@@ -130,6 +145,8 @@ private:
 	ID3D12PipelineState* psoPtr;
 
 	UINT8 dirty;
+	UINT8 fileCacheFlags;
+	d912pxy_serialized_pso_key** psoKeyCache;
 	d912pxy_trimmed_dx12_pso cDsc;	
 	DWORD DX9RSvalues[D3DRS_BLENDOPALPHA + 1];
 
