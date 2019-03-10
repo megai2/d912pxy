@@ -43,6 +43,9 @@ d912pxy_shader::~d912pxy_shader()
 {
 	delete pairs;
 
+	if (oCode)
+		free(oCode);
+
 	if ((!bytecode.blob) && (bytecode.code))
 		free(bytecode.code);
 }
@@ -58,6 +61,8 @@ D3D12_SHADER_BYTECODE * d912pxy_shader::GetCode()
 		delete replacer;
 
 		free(oCode);		
+
+		oCode = NULL;
 	}
 
 	return (D3D12_SHADER_BYTECODE*)&bytecode;
@@ -106,6 +111,18 @@ D912PXY_METHOD_IMPL(GetFunction)(THIS_ void* arg, UINT* pSizeOfData)
 	//LOG_ERR_THROW(-1, "Get shader function is not meant to work");
 
 	return D3D_OK;
+}
+
+D912PXY_METHOD_IMPL_(ULONG, ReleaseWithPairRemoval)(THIS)
+{
+	ULONG ret = ((d912pxy_comhandler*)this)->Release();
+
+	if (!ret)
+	{
+		RemovePairs();
+	}
+
+	return ret;
 }
 
 #undef D912PXY_METHOD_IMPL_CN

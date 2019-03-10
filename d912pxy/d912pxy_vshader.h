@@ -39,5 +39,7 @@ public:
 	/*** IDirect3DPixelShader9 methods ***/
 	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
 	D912PXY_METHOD(GetFunction)(THIS_ void*, UINT* pSizeOfData);
+
+	static D912PXY_METHOD_(ULONG, ReleaseWithPairRemoval)(IDirect3DVertexShader9* thisPtr);
 };
 

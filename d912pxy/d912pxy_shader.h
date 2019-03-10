@@ -37,6 +37,8 @@ public:
 	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
 	D912PXY_METHOD(GetFunction)(THIS_ void* arg, UINT* pSizeOfData);
 
+	D912PXY_METHOD_(ULONG, ReleaseWithPairRemoval)(THIS);	
+	
 	D3D12_SHADER_BYTECODE* GetCode();
 
 	d912pxy_shader_uid GetID();

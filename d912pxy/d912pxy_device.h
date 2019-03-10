@@ -180,6 +180,7 @@ public:
 	void InitClassFields();
 	void InitThreadSyncObjects();
 	void InitSingletons();
+	void InitComPatches();
 	void InitNullSRV();
 	void InitDrawUPBuffers();
 	void FreeAdditionalDX9Objects();

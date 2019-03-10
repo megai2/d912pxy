@@ -59,6 +59,7 @@ SOFTWARE.
 #include "IDirect3DDevice9Proxy.h"
 #include "d3d9_proxy_dll.h"
 #include "d912pxy_fwdecl.h"
+#include "d912pxy_com_tools.h"
 #include "d912pxy_thread_lock.h"
 #include "d912pxy_thread.h"
 #include "d912pxy_helper.h"

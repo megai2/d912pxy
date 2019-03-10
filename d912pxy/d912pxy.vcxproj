@@ -525,6 +525,7 @@
     <ClInclude Include="..\thirdparty\D3D9Proxy\defines.h" />
     <ClInclude Include="..\thirdparty\StackWalker\StackWalker.h" />
     <ClInclude Include="d3d9_proxy_dll.h" />
+    <ClInclude Include="d912pxy_com_tools.h" />
     <ClInclude Include="d912pxy_config.h" />
     <ClInclude Include="d912pxy_linked_list.h" />
     <ClInclude Include="d912pxy_basetexture.h" />
@@ -591,6 +592,7 @@
   <ItemGroup>
     <ClCompile Include="..\thirdparty\StackWalker\StackWalker.cpp" />
     <ClCompile Include="d3d9_proxy_dll.cpp" />
+    <ClCompile Include="d912pxy_com_tools.cpp" />
     <ClCompile Include="d912pxy_config.cpp" />
     <ClCompile Include="d912pxy_device_clipping.cpp" />
     <ClCompile Include="d912pxy_device_drawing.cpp" />

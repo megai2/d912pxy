@@ -45,15 +45,16 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comha
 	perfGraph = new d912pxy_performance_graph(0);
 #endif
 
-	LOG_INFO_DTDM2(InitClassFields(),									"Startup step 1/9");
-	LOG_INFO_DTDM2(InitVFS(),											"Startup step 2/9");
-	LOG_INFO_DTDM2(InitThreadSyncObjects(),								"Startup step 3/9");
-	LOG_INFO_DTDM2(SetupDevice(SelectSuitableGPU()),					"Startup step 4/9");
-	LOG_INFO_DTDM2(InitDescriptorHeaps(),								"Startup step 5/9");
-	LOG_INFO_DTDM2(InitSingletons(),									"Startup step 6/9");
-	LOG_INFO_DTDM2(InitNullSRV(),										"Startup step 7/9");
-	LOG_INFO_DTDM2(InitDrawUPBuffers(),									"Startup step 8/9");
-	LOG_INFO_DTDM2(InitDefaultSwapChain(&initialPresentParameters),		"Startup step 9/9");
+	LOG_INFO_DTDM2(InitClassFields(),									"Startup step  1/10");
+	LOG_INFO_DTDM2(InitVFS(),											"Startup step  2/10");
+	LOG_INFO_DTDM2(InitThreadSyncObjects(),								"Startup step  3/10");
+	LOG_INFO_DTDM2(SetupDevice(SelectSuitableGPU()),					"Startup step  4/10");
+	LOG_INFO_DTDM2(InitDescriptorHeaps(),								"Startup step  5/10");
+	LOG_INFO_DTDM2(InitSingletons(),									"Startup step  6/10");
+	LOG_INFO_DTDM2(InitComPatches(),									"Startup step  7/10");
+	LOG_INFO_DTDM2(InitNullSRV(),										"Startup step  8/10");
+	LOG_INFO_DTDM2(InitDrawUPBuffers(),									"Startup step  9/10");
+	LOG_INFO_DTDM2(InitDefaultSwapChain(&initialPresentParameters),		"Startup step 10/10");
 	LOG_INFO_DTDM2(d912pxy_s(iframe)->Start(),							"Started first IFrame");	
 }
 

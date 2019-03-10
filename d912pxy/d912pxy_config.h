@@ -34,6 +34,8 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SAMPLERS_MIN_LOD,	
 	PXY_CFG_CLEANUP_PERIOD,
 	PXY_CFG_CLEANUP_SUBSLEEP,	
+	PXY_CFG_SDB_KEEP_PAIRS,
+	PXY_CFG_SDB_USE_PSO_PRECOMPILE,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -65,7 +67,9 @@ private:
 		{L"pooling", L"lifetime",L"10000"},//PXY_CFG_POOLING_LIFETIME
 		{L"samplers", L"min_lod", L"0"},//PXY_CFG_SAMPLERS_MIN_LOD		
 		{L"cleanup", L"period",L"10000"},//PXY_CFG_CLEANUP_PERIOD
-		{L"cleanup", L"subsleep",L"250"}//PXY_CFG_CLEANUP_SUBSLEEP		
+		{L"cleanup", L"subsleep",L"250"},//PXY_CFG_CLEANUP_SUBSLEEP	
+		{L"sdb", L"keep_pairs", L"0"},//PXY_CFG_SDB_KEEP_PAIRS
+		{L"sdb", L"use_pso_precompile", L"0"}//PXY_CFG_SDB_USE_PSO_PRECOMPILE
 	};
 };
 

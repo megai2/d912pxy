@@ -122,6 +122,29 @@ void d912pxy_device::InitSingletons()
 	new d912pxy_cleanup_thread(this);
 }
 
+void d912pxy_device::InitComPatches()
+{
+	if (!d912pxy_s(config)->GetValueUI64(PXY_CFG_SDB_KEEP_PAIRS))
+	{
+		DWORD fakeShaderCode[] = {
+			0xFFFF0300, 0x001FFFFE, 0x42415443, 0x0000001C, 0x0000004F, 0xFFFF0300, 0x00000001, 0x0000001C, 0x00000100, 0x00000048,
+			0x00000030, 0x00000003, 0x00000001, 0x00000038, 0x00000000, 0x44325F73, 0xABABAB00, 0x000C0004, 0x00010001, 0x00000001,
+			0x00000000, 0x335F7370, 0x4D00305F, 0x6F726369, 0x74666F73, 0x29522820, 0x534C4820, 0x6853204C, 0x72656461, 0x6D6F4320,
+			0x656C6970, 0x30312072, 0xAB00312E, 0x0200001F, 0x8000000A, 0x900F0000, 0x0200001F, 0x80000005, 0x90030001, 0x0200001F,
+			0x90000000, 0xA00F0800, 0x03000042, 0x800F0000, 0x90E40001, 0xA0E40800, 0x03000005, 0x800F0800, 0x80E40000, 0x90E40000,
+			0x0000FFFF
+		};
+
+		d912pxy_vshader* vsPatch = new d912pxy_vshader(this, fakeShaderCode);
+		d912pxy_com_set_method((IDirect3DVertexShader9*)vsPatch, 2, &d912pxy_vshader::ReleaseWithPairRemoval);
+		vsPatch->Release();
+
+		d912pxy_pshader* psPatch = new d912pxy_pshader(this, fakeShaderCode);
+		d912pxy_com_set_method((IDirect3DPixelShader9*)psPatch, 2, &d912pxy_pshader::ReleaseWithPairRemoval);
+		psPatch->Release();
+	}
+}
+
 void d912pxy_device::InitNullSRV()
 {
 	UINT uuLc = 1;
