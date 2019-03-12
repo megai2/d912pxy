@@ -27,35 +27,34 @@ SOFTWARE.
 void d912pxy_device::LockThread(UINT thread)
 {
 	LOG_DBG_DTDM("thread %u locked", thread);
-	LeaveCriticalSection(&threadLockdEvents[thread]);
-
-	EnterCriticalSection(&threadLock);
-	LeaveCriticalSection(&threadLock);
-
-	EnterCriticalSection(&threadLockdEvents[thread]);
+	threadLockdEvents[thread].Release();
+	
+	threadLock.Hold();
+	threadLock.Release();	
+	
+	threadLockdEvents[thread].Hold();	
 }
 
 void d912pxy_device::InitLockThread(UINT thread)
 {
-	EnterCriticalSection(&threadLockdEvents[thread]);
+	threadLockdEvents[thread].Hold();	
 }
 
 void d912pxy_device::LockAsyncThreads()
 {
 	FRAME_METRIC_SYNC(1)
 
-	EnterCriticalSection(&threadLock);
+	threadLock.Hold();
 
 	InterlockedIncrement(&threadInterruptState);
 
 	d912pxy_s(texloadThread)->SignalWork();
 	d912pxy_s(bufloadThread)->SignalWork();
 	d912pxy_s(CMDReplay)->Finish();
-	//iframe->PSO()->SignalWork();
-
+	
 	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)
 	{
-		EnterCriticalSection(&threadLockdEvents[i]);			
+		threadLockdEvents[i].Hold();
 	}
 	
 	FRAME_METRIC_SYNC(0)
@@ -65,11 +64,11 @@ void d912pxy_device::UnLockAsyncThreads()
 {
 	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)
 	{
-		LeaveCriticalSection(&threadLockdEvents[i]);
+		threadLockdEvents[i].Release();
 	}
 
  	InterlockedDecrement(&threadInterruptState);
-	LeaveCriticalSection(&threadLock);
+	threadLock.Release();
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

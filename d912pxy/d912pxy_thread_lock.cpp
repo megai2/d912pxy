@@ -26,7 +26,7 @@ SOFTWARE.
 
 d912pxy_thread_lock::d912pxy_thread_lock()
 {
-	InitializeCriticalSection(&cs);
+	Init();
 }
 
 
@@ -43,4 +43,9 @@ void d912pxy_thread_lock::Hold()
 void d912pxy_thread_lock::Release()
 {
 	LeaveCriticalSection(&cs);
+}
+
+void d912pxy_thread_lock::Init()
+{
+	InitializeCriticalSection(&cs);
 }

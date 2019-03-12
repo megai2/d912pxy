@@ -29,8 +29,6 @@ d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iQueues, UINT iMaxCl
 	d912pxy_s(GPUque) = this;
 
 	mLists = new d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>(iQueues, 0);
-
-	InitializeCriticalSection(&execLock);
 		
 	D3D12_COMMAND_QUEUE_DESC desc = {};
 	desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;

@@ -106,6 +106,7 @@ SOFTWARE.
 #include "d912pxy_pso_cache.h"
 #include "d912pxy_batch.h"
 #include "d912pxy_iframe.h"
+#include "d912pxy_async_upload_thread.h"
 #include "d912pxy_texture_loader.h"
 #include "d912pxy_buffer_loader.h"
 #include "d912pxy_replay_thread.h"

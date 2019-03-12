@@ -224,9 +224,9 @@ d912pxy_dheap * d912pxy_device::GetDHeap(UINT slot)
 
 void d912pxy_device::IFrameCleanupEnqeue(d912pxy_comhandler * obj)
 {
-	EnterCriticalSection(&cleanupLock);
+	cleanupLock.Hold();
 	d912pxy_s(GPUque)->EnqueueCleanup(obj);
-	LeaveCriticalSection(&cleanupLock);
+	cleanupLock.Release();
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

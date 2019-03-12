@@ -33,6 +33,7 @@ public:
 
 	void Hold();
 	void Release();
+	void Init();
 
 private:
 	CRITICAL_SECTION cs;

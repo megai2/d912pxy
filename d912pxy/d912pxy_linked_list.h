@@ -50,7 +50,7 @@ public:
 	
 private:
 
-	CRITICAL_SECTION lock;
+	d912pxy_thread_lock lock;
 
 	d912pxy_linked_list_element * PooledNode();
 

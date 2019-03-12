@@ -29,12 +29,10 @@ d912pxy_surface_pool::d912pxy_surface_pool(d912pxy_device* dev) : d912pxy_pool<d
 {
 	config = d912pxy_s(config)->GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
 
-	InitializeCriticalSection(&mtMutex);
-
 	table = new d912pxy_memtree2(4, 4096, 2);
 
-	this->rwMutex = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION)*1);
-	InitializeCriticalSection(&this->rwMutex[0]);
+	this->rwMutex = (d912pxy_thread_lock*)malloc(sizeof(d912pxy_thread_lock)*1);
+	this->rwMutex[0].Init();
 }
 
 d912pxy_surface_pool::~d912pxy_surface_pool()
@@ -103,7 +101,7 @@ d912pxy_ringbuffer<d912pxy_surface*>* d912pxy_surface_pool::GetCatBuffer(UINT32 
 {
 	d912pxy_ringbuffer<d912pxy_surface*>* ret = NULL;
 
-	EnterCriticalSection(&mtMutex);
+	mtMutex.Hold();
 
 	table->PointAtMem(&cat, 4);
 	ret = (d912pxy_ringbuffer<d912pxy_surface*>*)table->CurrentCID();
@@ -114,7 +112,7 @@ d912pxy_ringbuffer<d912pxy_surface*>* d912pxy_surface_pool::GetCatBuffer(UINT32 
 		table->SetValue((UINT64)ret);
 	}
 
-	LeaveCriticalSection(&mtMutex);
+	mtMutex.Release();
 
 	return ret;
 }
@@ -127,11 +125,7 @@ void d912pxy_surface_pool::PoolRW(UINT32 cat, d912pxy_surface ** val, UINT8 rw)
 	{
 		if (!*val)
 		{
-			//			EnterCriticalSection(&allocMutex);
-
-			*val = AllocProc(cat);
-
-			//			LeaveCriticalSection(&allocMutex);
+			*val = AllocProc(cat);		
 		}
 		else {
 
@@ -139,15 +133,15 @@ void d912pxy_surface_pool::PoolRW(UINT32 cat, d912pxy_surface ** val, UINT8 rw)
 
 			PoolUnloadProc(*val, tbl);
 
-			EnterCriticalSection(&rwMutex[0]);
+			rwMutex[0].Hold();
 
 			tbl->WriteElement(*val);
 
-			LeaveCriticalSection(&rwMutex[0]);
+			rwMutex[0].Release();
 		}
 	}
 	else {
-		EnterCriticalSection(&rwMutex[0]);
+		rwMutex[0].Hold();
 
 		if (tbl->HaveElements())
 		{
@@ -157,7 +151,7 @@ void d912pxy_surface_pool::PoolRW(UINT32 cat, d912pxy_surface ** val, UINT8 rw)
 		else
 			*val = NULL;
 
-		LeaveCriticalSection(&rwMutex[0]);
+		rwMutex[0].Release();
 	}
 }
 

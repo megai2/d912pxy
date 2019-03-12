@@ -51,8 +51,7 @@ public:
 
 private:
 	UINT swapAsked;
-	CRITICAL_SECTION execLock;	
-
+	
 	d912pxy_swapchain* mSwp;
 	d912pxy_gpu_cmd_list* mCurrentGPUWork;
 	d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>* mLists;	

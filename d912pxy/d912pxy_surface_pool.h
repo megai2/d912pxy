@@ -45,7 +45,7 @@ public:
 private:
 	d912pxy_memtree2* table;
 
-	CRITICAL_SECTION mtMutex;
+	d912pxy_thread_lock mtMutex;
 
 	UINT64 config;
 };

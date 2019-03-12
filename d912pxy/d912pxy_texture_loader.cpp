@@ -24,22 +24,15 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_noncom(dev, L"texture loader"), d912pxy_thread("d912pxy texld")
+d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_async_upload_thread(dev, PXY_INNER_MAX_ASYNC_TEXLOADS, PXY_INNER_THREADID_TEX_LOADER, 3, L"texture upload thread", "d912pxy texld")
 {
 	poolPtr = 0;
-
-	buffer = new d912pxy_ringbuffer<d912pxy_texture_load_item*>(PXY_INNER_MAX_ASYNC_TEXLOADS, 0);
-
 	d912pxy_s(texloadThread) = this;
 
-	InitializeCriticalSection(&writeLock);
 }
 
 d912pxy_texture_loader::~d912pxy_texture_loader()
 {
-	Stop();
-	
-	delete buffer;
 }
 
 void d912pxy_texture_loader::IssueUpload(d912pxy_surface * surf, void* mem, UINT subRes)
@@ -54,41 +47,16 @@ void d912pxy_texture_loader::IssueUpload(d912pxy_surface * surf, void* mem, UINT
 	if (poolPtr >= PXY_INNER_MAX_ASYNC_TEXLOADS)
 		poolPtr = 0;
 	
-	//megai2: as ringbufer is not growing, we hit overrun and crash if we overwriting pool data
 	surf->ThreadRef(1);
-
-	EnterCriticalSection(&writeLock);
-	buffer->WriteElement(it);	
-	LeaveCriticalSection(&writeLock);
-//	it->surf->DelayedLoad(it->ul, it->subRes);
-
-
-	SignalWork();
+	
+	QueueItem(it);
 }
 
-void d912pxy_texture_loader::ThreadJob()
+void d912pxy_texture_loader::ThreadWake()
 {
-	while (buffer->HaveElements())
-	{
-		d912pxy_texture_load_item* it = buffer->GetElement();
-		
-		it->surf->DelayedLoad(it->ul, it->subRes);
-
-		buffer->Next();
-	}
-
-	CheckInterrupt();
 }
 
-void d912pxy_texture_loader::ThreadInitProc()
+void d912pxy_texture_loader::UploadItem(d912pxy_texture_load_item* it)
 {
-	d912pxy_s(dev)->InitLockThread(PXY_INNER_THREADID_TEX_LOADER);
-}
-
-void d912pxy_texture_loader::CheckInterrupt()
-{
-	if (m_dev->InterruptThreads())
-	{
-		m_dev->LockThread(PXY_INNER_THREADID_TEX_LOADER);
-	}
+	it->surf->DelayedLoad(it->ul, it->subRes);
 }

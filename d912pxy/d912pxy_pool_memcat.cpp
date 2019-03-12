@@ -62,12 +62,12 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 	}
 
 	memTable = (d912pxy_ringbuffer<ElementType>**)malloc(sizeof(void*)*bitCnt);
-	this->rwMutex = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION)*bitCnt);
+	this->rwMutex = (d912pxy_thread_lock*)malloc(sizeof(d912pxy_thread_lock)*bitCnt);
 
 	for (int i = 0; i != bitCnt; ++i)
 	{
 		memTable[i] = new d912pxy_ringbuffer<ElementType>(64, 2);
-		InitializeCriticalSection(&this->rwMutex[i]);
+		this->rwMutex[i].Init();
 	}
 
 	if (performaWarmUp)

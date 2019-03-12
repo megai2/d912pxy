@@ -110,12 +110,7 @@ void d912pxy_device::InitClassFields()
 
 void d912pxy_device::InitThreadSyncObjects()
 {
-	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)
-	{
-		InitializeCriticalSection(&threadLockdEvents[i]);
-	}
-	InitializeCriticalSection(&threadLock);
-	InitializeCriticalSection(&cleanupLock);
+
 }
 
 void d912pxy_device::InitSingletons()

@@ -195,9 +195,9 @@ public:
 
 private:
 	LONG threadInterruptState;	
-	CRITICAL_SECTION threadLockdEvents[PXY_INNER_THREADID_MAX];
-	CRITICAL_SECTION threadLock;	
-	CRITICAL_SECTION cleanupLock;
+	d912pxy_thread_lock threadLockdEvents[PXY_INNER_THREADID_MAX];
+	d912pxy_thread_lock threadLock;
+	d912pxy_thread_lock cleanupLock;
 
 	ComPtr<ID3D12Device> m_d12evice;
 	ID3D12Device* m_d12evice_ptr;

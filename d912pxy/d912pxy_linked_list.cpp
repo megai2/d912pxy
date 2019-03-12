@@ -26,8 +26,7 @@ SOFTWARE.
 
 template<class ElementType>
 d912pxy_linked_list<ElementType>::d912pxy_linked_list()
-{
-	InitializeCriticalSection(&lock);
+{	
 	nodePool = new d912pxy_ringbuffer<d912pxy_linked_list_element*>(0x40, 2);
 
 	base = 0;
@@ -60,14 +59,14 @@ void d912pxy_linked_list<ElementType>::Insert(ElementType v)
 	node->value = (void*)v;
 	node->next = 0;
 
-	EnterCriticalSection(&lock);
+	lock.Hold();
 	if (!base)
 		base = node;
 	else 		
 		end->next = node;
 
 	end = node;
-	LeaveCriticalSection(&lock);
+	lock.Release();
 }
 
 template<class ElementType>
@@ -90,7 +89,7 @@ void d912pxy_linked_list<ElementType>::IterRemove()
 {
 	iterPrev->next = iter->next;	
 
-	EnterCriticalSection(&lock);
+	lock.Hold();
 
 	if (iter == base)
 	{
@@ -106,7 +105,7 @@ void d912pxy_linked_list<ElementType>::IterRemove()
 	else
 		free(iter);
 
-	LeaveCriticalSection(&lock);
+	lock.Release();
 
 	if (iterPrev)
 		iter = iterPrev->next;

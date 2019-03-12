@@ -26,25 +26,17 @@ SOFTWARE.
 #include "stdafx.h"
 
 
-class d912pxy_buffer_loader : public d912pxy_noncom, public d912pxy_thread
+class d912pxy_buffer_loader : public d912pxy_async_upload_thread<d912pxy_vstream, d912pxy_buffer_loader*>
 {
 public:
 	d912pxy_buffer_loader(d912pxy_device* dev);
 	~d912pxy_buffer_loader();
 
-	void IssueUpload(d912pxy_vstream* dst);
-
-	void ThreadJob();
-	void ThreadInitProc();
+	void IssueUpload(d912pxy_vstream * dst);
+	void UploadItem(d912pxy_vstream* it);
+	void ThreadWake();
 
 private:
-	UINT isRunning;
-
-	UINT poolPtr;
-	UINT needSignal;
-
-	d912pxy_ringbuffer<d912pxy_vstream*>* buffer;
-	
-	d912pxy_thread_lock writeLock;
+	ID3D12GraphicsCommandList* cl;
 };
 

@@ -32,8 +32,6 @@ d912pxy_pool<ElementType, ProcImpl>::d912pxy_pool(d912pxy_device* dev, ProcImpl*
 		*singleton = static_cast<ProcImpl>(this);
 
 	static_cast<ProcImpl>(this)->EarlyInitProc();
-
-	InitializeCriticalSection(&pooledActionCS);	
 }
 
 template<class ElementType, class ProcImpl>
@@ -59,15 +57,15 @@ void d912pxy_pool<ElementType, ProcImpl>::PoolRW(UINT32 cat, ElementType * val, 
 
 			PoolUnloadProc(*val, cat);
 
-			EnterCriticalSection(&rwMutex[cat]);
+			rwMutex[cat].Hold();
 
 			tbl->WriteElement(*val);
 
-			LeaveCriticalSection(&rwMutex[cat]);
+			rwMutex[cat].Release();
 		}
 	}
 	else {
-		EnterCriticalSection(&rwMutex[cat]);
+		rwMutex[cat].Hold();
 
 		if (tbl->HaveElements())
 		{
@@ -77,20 +75,20 @@ void d912pxy_pool<ElementType, ProcImpl>::PoolRW(UINT32 cat, ElementType * val, 
 		else
 			*val = NULL;
 
-		LeaveCriticalSection(&rwMutex[cat]);
+		rwMutex[cat].Release();
 	}
 }
 
 template<class ElementType, class ProcImpl>
 void d912pxy_pool<ElementType, ProcImpl>::PooledActionLock()
 {
-	EnterCriticalSection(&pooledActionCS);
+	pooledActionCS.Hold();
 }
 
 template<class ElementType, class ProcImpl>
 void d912pxy_pool<ElementType, ProcImpl>::PooledActionUnLock()
 {
-	LeaveCriticalSection(&pooledActionCS);
+	pooledActionCS.Release();
 }
 
 template<class ElementType, class ProcImpl>

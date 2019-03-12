@@ -43,6 +43,6 @@ public:
 	virtual void WarmUp(UINT cat);
 	
 protected:
-	CRITICAL_SECTION pooledActionCS;	
-	CRITICAL_SECTION* rwMutex;
+	d912pxy_thread_lock pooledActionCS;	
+	d912pxy_thread_lock* rwMutex;
 };
