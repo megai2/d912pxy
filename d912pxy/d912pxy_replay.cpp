@@ -73,14 +73,16 @@ UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES 
 {
 	REPLAY_STACK_GET(DRPL_TRAN);
 
-	if (to == res->GetCurrentState())
+	D3D12_RESOURCE_STATES cstate = res->GetCurrentState();
+
+	if (to == cstate)
 		return 0;
 
 	it->transit.res = res;
 	it->transit.to = to;
-	it->transit.from = res->GetCurrentState();
+	it->transit.from = cstate;
 
-	res->IFrameTrans(to);
+	res->ATransit(to);
 
 	++stackTop;
 
@@ -365,7 +367,7 @@ d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type
 
 void d912pxy_replay::RHA_TRAN(d912pxy_replay_state_transit * it, ID3D12GraphicsCommandList * cl)
 {
-	it->res->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->to, it->from, cl);
+	it->res->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->to, it->from, cl);
 }
 
 void d912pxy_replay::RHA_OMSR(d912pxy_replay_om_sr* it, ID3D12GraphicsCommandList * cl)
@@ -442,12 +444,12 @@ void d912pxy_replay::RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsComman
 
 void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl)
 {
-	it->tgt->d912_rtv_clear2(it->clr, cl);
+	it->tgt->ClearAsRTV(it->clr, cl);
 }
 
 void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl)
 {
-	it->tgt->d912_dsv_clear2(it->depth, it->stencil, it->flag, cl);
+	it->tgt->ClearAsDSV(it->depth, it->stencil, it->flag, cl);
 }
 
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl)
@@ -476,5 +478,5 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 	d912pxy_surface* sSrc = it->src;
 	d912pxy_surface* sDst = it->dst;
 
-	sSrc->CopyTo2(sDst, cl);
+	sSrc->ACopyTo(sDst, cl);
 }

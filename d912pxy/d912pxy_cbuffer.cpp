@@ -135,14 +135,14 @@ void d912pxy_cbuffer::Upload()
 {
 	//pointers.host = NULL;
 	//uploadRes->GetD12Obj()->Unmap(0, 0);
-	uploadRes->CopyTo(this, 1, d912pxy_s(GPUcl)->GID(CLG_TOP));	
+	uploadRes->BCopyTo(this, 2, d912pxy_s(GPUcl)->GID(CLG_TOP));	
 }
 
 void d912pxy_cbuffer::UploadTarget(d912pxy_cbuffer * target, UINT offset, UINT size)
 {
 	ComPtr<ID3D12GraphicsCommandList> cq = d912pxy_s(GPUcl)->GID(CLG_SEQ);
 
-	target->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, CLG_SEQ);
+	target->BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, CLG_SEQ);
 
 	cq->CopyBufferRegion(target->GetD12Obj(), offset, uploadRes->GetD12Obj(), offset, size);
 }
@@ -151,16 +151,16 @@ void d912pxy_cbuffer::UploadOffset(UINT offset, UINT size)
 {
 	ComPtr<ID3D12GraphicsCommandList> cq = d912pxy_s(GPUcl)->GID(CLG_TOP);
 
-	IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, CLG_TOP);
+	BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, CLG_TOP);
 
-	cq->CopyBufferRegion(m_res.Get(), offset, uploadRes->GetD12Obj(), offset, size);
+	cq->CopyBufferRegion(m_res, offset, uploadRes->GetD12Obj(), offset, size);
 
-	IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_GENERIC_READ, CLG_TOP);
+	BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_GENERIC_READ, CLG_TOP);
 }
 
 void d912pxy_cbuffer::UploadOffsetNB(ID3D12GraphicsCommandList* cq, UINT offset, UINT size)
 {
-	cq->CopyBufferRegion(m_res.Get(), offset, uploadRes->GetD12Obj(), offset, size);
+	cq->CopyBufferRegion(m_res, offset, uploadRes->GetD12Obj(), offset, size);
 }
 
 void * d912pxy_cbuffer::OffsetWritePoint(UINT offset)

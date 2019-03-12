@@ -25,13 +25,6 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-typedef struct d912pxy_buffer_load_item {
-	d912pxy_vstream* dst;
-	d912pxy_upload_item* ul;
-	UINT offset;
-	UINT size;
-} d912pxy_buffer_load_item;
-
 
 class d912pxy_buffer_loader : public d912pxy_noncom, public d912pxy_thread
 {
@@ -39,7 +32,7 @@ public:
 	d912pxy_buffer_loader(d912pxy_device* dev);
 	~d912pxy_buffer_loader();
 
-	void IssueUpload(d912pxy_vstream* dst, d912pxy_upload_item* ul, UINT offset, UINT size);
+	void IssueUpload(d912pxy_vstream* dst);
 
 	void ThreadJob();
 	void ThreadInitProc();
@@ -47,13 +40,11 @@ public:
 private:
 	UINT isRunning;
 
-	d912pxy_buffer_load_item pool[PXY_INNER_MAX_ASYNC_BUFFERLOADS];
 	UINT poolPtr;
 	UINT needSignal;
 
-	d912pxy_ringbuffer<d912pxy_buffer_load_item*>* buffer;
-	d912pxy_ringbuffer<d912pxy_vstream*>* swapBuffer;
-
-	CRITICAL_SECTION writeLock;
+	d912pxy_ringbuffer<d912pxy_vstream*>* buffer;
+	
+	d912pxy_thread_lock writeLock;
 };
 

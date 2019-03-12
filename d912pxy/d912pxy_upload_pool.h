@@ -32,9 +32,12 @@ public:
 	d912pxy_upload_item(d912pxy_device * dev, UINT8 icat);
 	~d912pxy_upload_item();
 
+	void UploadTargetWithOffset(d912pxy_resource* res, UINT64 sofs, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList* cl);
 	void UploadTarget(ID3D12Resource* res, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList* cl);
 	
-	void* MapDPtr();
+	intptr_t DPtr();
+
+	intptr_t DPtrOffset(UINT64 offset);
 
 	void Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, const D3D12_RANGE* wofs);
 

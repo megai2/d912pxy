@@ -117,21 +117,21 @@ void d912pxy_batch::GPUCSCpy()
 		
 	UINT ofDlt = streamOfDlt[oddFrame];
 
-	stream->IFrameBarrierTrans4(0, D3D12_RESOURCE_STATE_COPY_DEST, topCl);
-	buffer->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_GENERIC_READ, topCl);
+	stream->BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, topCl);
+	buffer->BTransit(0, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_GENERIC_READ, topCl);
 	
 	stream->UploadOffsetNB(topCl, ofDlt, streamIdx * PXY_BATCH_STREAM_DATA_SIZE);
 	stream->UploadOffsetNB(topCl, ofDlt + PXY_BATCH_STREAM_CONTROL_OFFSET, streamIdx * PXY_BATCH_STREAM_CONTROL_SIZE);	
 	topCl->CopyBufferRegion(stream->GetD12Obj(), ofDlt, buffer->GetD12Obj(), PXY_BATCH_GPU_DRAW_BUFFER_SIZE * lastBatchCount, PXY_BATCH_GPU_DRAW_BUFFER_SIZE);
 
-	buffer->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE, topCl);
-	stream->IFrameBarrierTrans4(0, D3D12_RESOURCE_STATE_GENERIC_READ, topCl);
+	buffer->BTransit(0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE, topCl);
+	stream->BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, topCl);
 
 	topCl->SetPipelineState(copyPSO);
 	topCl->SetComputeRootUnorderedAccessView(1, stream->DevPtr() + ofDlt);
 	topCl->Dispatch(streamIdx >> PXY_BATCH_GPU_THREAD_BLOCK_SHIFT, 1, 1);
 
-	buffer->IFrameBarrierTrans2(0, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, topCl);
+	buffer->BTransit(0, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, topCl);
 
 	streamIdx = 0;
 }
@@ -149,6 +149,7 @@ void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 
 	memcpy(&streamData[streamIdx], src, size << 4);
 
+	/* hot 77% */
 	UINT32 i = offset;
 	while (i != (offset + size))
 	{
@@ -163,6 +164,7 @@ void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 		++streamIdx;
 		++i;
 	}
+	/* hot */
 	
 }
 

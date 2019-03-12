@@ -58,6 +58,7 @@ public:
 
 	UINT OccupySlot();
 	void FreeSlot(UINT slot);	
+	void FreeSlotByPtr(D3D12_CPU_DESCRIPTOR_HANDLE cptr);
 
 	void CleanupSlots(UINT maxCount);
 

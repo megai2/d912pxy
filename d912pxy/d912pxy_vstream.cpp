@@ -48,8 +48,10 @@ D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC *pDesc)
 d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(dev, isIB ? RTID_IBUF : RTID_VBUF, isIB ? L"vstream i" : L"vstream v")
 {
 	d12res_buffer(Length, D3D12_HEAP_TYPE_DEFAULT);
+	
+	lockInfo = new d912pxy_ringbuffer<d912pxy_vstream_lock_data>(16, 2);
 
-	lockDepth = 0;
+	ulObj = NULL;
 
 	data = malloc(Length);
 
@@ -64,37 +66,34 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 	dx9desc.Usage = Usage;
 
 	NoteFormatChange(fmt, isIB);
-
-	uploadResSel = 0;
-
-	opFlags = 0;
 }
 
 d912pxy_vstream::~d912pxy_vstream()
 {
 	if (data)
 		free(data);
+
+	if (lockInfo)
+		delete lockInfo;
 }
 
 D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 {
 	API_OVERHEAD_TRACK_START(2)
 
+	d912pxy_vstream_lock_data linfo;
+
 	if (!SizeToLock)
 	{
-		lockOffsets[lockDepth] = 0;
-		lockSizes[lockDepth] = dx9desc.Size - OffsetToLock;
+		linfo.offset = 0;
+		linfo.size = dx9desc.Size - OffsetToLock;
 	}
 	else {
-		lockOffsets[lockDepth] = OffsetToLock;
-		lockSizes[lockDepth] = SizeToLock;
+		linfo.offset = OffsetToLock;
+		linfo.size = SizeToLock;
 	}
-	++lockDepth;
 
-	if (lockDepth >= PXY_INNER_MAX_LOCK_DEPTH)
-	{
-		LOG_ERR_THROW2(-1, "lockDepth >= PXY_INNER_MAX_LOCK_DEPTH");
-	}
+	lockInfo->WriteElement(linfo);
 	
 	*ppbData = (void*)((intptr_t)(data) + OffsetToLock);
 
@@ -106,10 +105,8 @@ D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbDa
 D912PXY_METHOD_IMPL(Unlock)(THIS)
 {
 	API_OVERHEAD_TRACK_START(2)
-
-	opFlags |= PXY_INNER_BUFFER_FLAG_DIRTY;
-	--lockDepth;
-	d912pxy_s(bufloadThread)->IssueUpload(this, uploadRes[uploadResSel], lockOffsets[lockDepth], lockSizes[lockDepth]);
+		
+	d912pxy_s(bufloadThread)->IssueUpload(this);
 
 	API_OVERHEAD_TRACK_END(2)
 
@@ -188,6 +185,9 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 
 	if (!d912pxy_comhandler::PooledAction(use))
 	{		
+		if (use)
+			MakeGPUResident();
+
 		d912pxy_s(pool_vstream)->PooledActionUnLock();
 		return 0;
 	}
@@ -196,25 +196,18 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 	{		
 		d12res_buffer(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
 		data = malloc(dx9desc.Size);
+
+		lockInfo = new d912pxy_ringbuffer<d912pxy_vstream_lock_data>(16, 2);
 	}
 	else {
-		m_res = nullptr;
+		m_res->Release();
+		m_res = NULL;
+
+		delete lockInfo;
+		lockInfo = NULL;
 
 		free(data);
 		data = NULL;
-
-		if (uploadRes[0] != 0)
-		{
-			uploadRes[0]->Release();
-			uploadRes[0] = 0;
-		}
-
-		if (uploadRes[1] != 0)
-		{
-			uploadRes[1]->Release();
-			uploadRes[1] = 0;
-		}
-
 	}
 
 	d912pxy_s(pool_vstream)->PooledActionUnLock();
@@ -222,28 +215,30 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 	return 0;
 }
 
-void d912pxy_vstream::AsyncUploadDataCopy(UINT32 offset, UINT32 size, ID3D12GraphicsCommandList * cl)
-{
-	if (!uploadRes[uploadResSel])
-		CreateUploadBuffer(uploadResSel, dx9desc.Size);
+void d912pxy_vstream::ProcessUpload(ID3D12GraphicsCommandList * cl)
+{	
+	BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
 
-	memcpy((void*)((intptr_t)mappedMem[uploadResSel] + offset), (void*)((intptr_t)data + offset), size);
-
-	MakeGPUResident();
-
-	IFrameBarrierTrans(0, D3D12_RESOURCE_STATE_COPY_DEST, CLG_BUF);
-
-	AsyncBufferCopyPrepared(uploadRes[uploadResSel], offset, size, cl);
-
-	IFrameBarrierTrans(0, D3D12_RESOURCE_STATE_GENERIC_READ, CLG_BUF);
-
-	++swapRef;
-
-	if (swapRef == 255)
-		swapRef = 2;
-
-	ThreadRef(-1);
+	d912pxy_vstream_lock_data linfo = lockInfo->PopElementMTG();	
 	
+	if (!ulObj)
+		ulObj = d912pxy_s(pool_upload)->GetUploadObject(dx9desc.Size);
+	
+	UploadDataCopy(ulObj->DPtr() + linfo.offset, linfo.offset, linfo.size);
+
+	ulObj->UploadTargetWithOffset(this, linfo.offset, linfo.offset, linfo.size, cl);
+	
+	if (!lockInfo->HaveElements())
+	{
+		BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
+		ulObj->Release();
+		ulObj = NULL;
+	}
+}
+
+void d912pxy_vstream::UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size)
+{
+	memcpy((void*)ulMem, (void*)((intptr_t)data + offset), size);	
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE

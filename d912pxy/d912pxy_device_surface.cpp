@@ -93,7 +93,7 @@ HRESULT WINAPI d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTar
 
 	d912pxy_surface* src = (d912pxy_surface*)pRenderTarget;
 	d912pxy_surface* dst = (d912pxy_surface*)pDestSurface;
-	src->CopyTo(dst, 0, d912pxy_s(GPUcl)->GID(CLG_SEQ));
+	src->BCopyTo(dst, 3, d912pxy_s(GPUcl)->GID(CLG_SEQ));
 
 	dst->CopySurfaceDataToCPU();
 

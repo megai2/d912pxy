@@ -70,6 +70,11 @@ void d912pxy_dheap::FreeSlot(UINT slot)
 	stacks[PXY_DHEAP_STACK_CLEANUP]->Push(slot);
 }
 
+void d912pxy_dheap::FreeSlotByPtr(D3D12_CPU_DESCRIPTOR_HANDLE cptr)
+{
+	FreeSlot((UINT32)((cptr.ptr - cpuBase.ptr) / handleSz));
+}
+
 void d912pxy_dheap::CleanupSlots(UINT maxCount)
 {
 	UINT limit = 0;

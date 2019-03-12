@@ -29,8 +29,7 @@ class d912pxy_surface : public IDirect3DSurface9, public d912pxy_resource
 {
 public:
 	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, UINT* levels, UINT arrSz);
-	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, INT surfType);
-	d912pxy_surface(d912pxy_device* dev, ComPtr<ID3D12Resource> fromResource, D3D12_RESOURCE_STATES inState, d912pxy_swapchain* isBackBuffer);
+	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, INT surfType);	
 	~d912pxy_surface();
 
 	/*** IUnknown methods ***/
@@ -56,59 +55,51 @@ public:
 
 	//inner metods
 
-	void d912_rtv_clear(FLOAT* color4f, UINT NumRects, D3D12_RECT *pRects);
-	void d912_dsv_clear(FLOAT Depth, UINT8 Stencil, UINT NumRects, D3D12_RECT *pRects, D3D12_CLEAR_FLAGS flag);	
-
-	void d912_rtv_clear2(FLOAT* color4f, ID3D12GraphicsCommandList* cl);
-	void d912_dsv_clear2(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList* cl);
+	void ClearAsRTV(FLOAT* color4f, ID3D12GraphicsCommandList* cl);
+	void ClearAsDSV(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList* cl);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDHeapHandle();
-
-	void initInternalBuf();
-
 	UINT GetSRVHeapId();
-
-	UINT GetWPitchDX9(UINT lv);
-	UINT GetWPitchLV(UINT lv);
-
-	void PerformViewTypeTransit(D3D12_RESOURCE_STATES type);
-
-	void UploadSurfaceData(d912pxy_upload_item* ul, UINT lv);
-
+	d912pxy_surface_layer* GetLayer(UINT32 mip, UINT32 ar);
 	D3DSURFACE_DESC GetDX9DescAtLevel(UINT level);
-	size_t GetFootprintMemSz();
 
 	DXGI_FORMAT GetDSVFormat();
 	DXGI_FORMAT GetSRVFormat();
 	DXGI_FORMAT ConvertInnerDSVFormat();
 
-	void DelayedLoad(void* mem, UINT lv);
-
-	void CreateUploadBuffer(UINT id, UINT size);
-
-	UINT FinalReleaseCB();
-
-	UINT32 PooledAction(UINT32 use);
-
-	void MarkPooled(UINT uid) { isPooled = uid; };
-
-	d912pxy_surface_layer* GetLayer(UINT32 mip, UINT32 ar);
-
 	void CopySurfaceDataToCPU();
+	void UploadSurfaceData(d912pxy_upload_item* ul, UINT lv, ID3D12GraphicsCommandList* cl);
+	void DelayedLoad(void* mem, UINT lv);
+	
+	size_t GetFootprintMemSz();
+	UINT GetWPitchDX9(UINT lv);
+	UINT GetWPitchLV(UINT lv);
+	   	
+	UINT FinalReleaseCB();
+	UINT32 PooledAction(UINT32 use);
+	void MarkPooled(UINT uid) { isPooled = uid; };
+	
+	void initInternalBuf();
+	void UpdateDescCache();
+	UINT32 AllocateSRV();
+	void AllocateLayers();
+	void FreeLayers();
+	void FreeObjAndSlot();
 
 private:
-	BOOL lockDiscard;
+	D3D12_CPU_DESCRIPTOR_HANDLE rtdsHPtr;
+	UINT dheapId;
+
 	UINT isPooled;
-
-	UINT mem_perPixel;
-	UINT dheapId;	
-	UINT srvHeapIdx;
-
-	d912pxy_surface_layer* layers[64];
-		
-	d912pxy_swapchain* backBuffer;
-
 	DXGI_FORMAT m_fmt;
+	UINT mem_perPixel;
+
 	D3DSURFACE_DESC surf_dx9dsc;
+	D3D12_RESOURCE_DESC descCache;
+	
+	d912pxy_surface_layer** layers;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* subresFootprints;
+	size_t* subresSizes;
+	UINT subresCountCache;	
 };
 

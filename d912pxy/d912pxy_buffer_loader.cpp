@@ -29,10 +29,7 @@ d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_non
 	poolPtr = 0;
 	needSignal = 0;
 
-	buffer = new d912pxy_ringbuffer<d912pxy_buffer_load_item*>(PXY_INNER_MAX_ASYNC_BUFFERLOADS, 0);
-	swapBuffer = new d912pxy_ringbuffer<d912pxy_vstream*>(PXY_INNER_MAX_ASYNC_BUFFERLOADS, 0);
-
-	InitializeCriticalSection(&writeLock);
+	buffer = new d912pxy_ringbuffer<d912pxy_vstream*>(PXY_INNER_MAX_ASYNC_BUFFERLOADS, 0);	
 
 	d912pxy_s(bufloadThread) = this;
 }
@@ -41,28 +38,16 @@ d912pxy_buffer_loader::~d912pxy_buffer_loader()
 {
 	Stop();
 
-	delete swapBuffer;
 	delete buffer;
 }
 
-void d912pxy_buffer_loader::IssueUpload(d912pxy_vstream * dst, d912pxy_upload_item * ul, UINT offset, UINT size)
+void d912pxy_buffer_loader::IssueUpload(d912pxy_vstream * dst)
 {
-	d912pxy_buffer_load_item* it = &pool[poolPtr];
-
-	it->dst = dst;
-	it->ul = ul;
-	it->offset = offset;
-	it->size = size;
 	dst->ThreadRef(1);
-
-	++poolPtr;
-	if (poolPtr >= PXY_INNER_MAX_ASYNC_BUFFERLOADS)
-		poolPtr = 0;
-
-	//megai2: as ringbufer is not growing, we hit overrun and crash if we overwriting pool data
-	EnterCriticalSection(&writeLock);
-	buffer->WriteElement(it);
-	LeaveCriticalSection(&writeLock);
+	
+	writeLock.Hold();
+	buffer->WriteElement(dst);
+	writeLock.Release();
 	
 	++needSignal;
 
@@ -72,32 +57,20 @@ void d912pxy_buffer_loader::IssueUpload(d912pxy_vstream * dst, d912pxy_upload_it
 
 void d912pxy_buffer_loader::ThreadJob()
 {
-	ID3D12GraphicsCommandList* cq = d912pxy_s(GPUcl)->GID(CLG_BUF);	
+	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(CLG_BUF);	
 
 	while (buffer->HaveElements())
 	{
-		d912pxy_buffer_load_item* it = buffer->GetElement();
+		d912pxy_vstream* it = buffer->GetElement();
 
-		it->dst->AsyncUploadDataCopy(it->offset, it->size,cq);		
-		//it->dst->AsyncBufferCopy(it->ul, it->offset, it->size, cq);
-		
-		
-		if (it->dst->IsFirstFrameUploadRef() == 1)
-		{
-			swapBuffer->WriteElement(it->dst);			
-		}
+		it->ProcessUpload(cl);	
+		it->ThreadRef(-1);
 
 		buffer->Next();
 	}
 
 	if (m_dev->InterruptThreads())
 	{
-		while (swapBuffer->HaveElements())
-		{
-			swapBuffer->GetElement()->IFrameEndRefSwap();
-			swapBuffer->Next();
-		}
-
 		m_dev->LockThread(PXY_INNER_THREADID_BUF_LOADER);
 	}
 }

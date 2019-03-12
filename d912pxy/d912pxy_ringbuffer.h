@@ -41,6 +41,8 @@ public:
 	void Next();
 	
 	UINT TotalElements() { return writed; };
+
+	ElementType PopElementMTG();
 		
 private:
 	intptr_t bufferData;
@@ -51,5 +53,7 @@ private:
 	LONG maxElements;
 	UINT grow;
 	LONG writed;
+
+	d912pxy_thread_lock growthLock;
 };
 

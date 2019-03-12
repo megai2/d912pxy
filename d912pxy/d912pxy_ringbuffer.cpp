@@ -52,6 +52,8 @@ void d912pxy_ringbuffer<ElementType>::WriteElement(ElementType ele)
 	{
 		if (grow > 1)
 		{			
+			growthLock.Hold();
+
 			UINT expandElements = maxElements * (grow - 1);		
 			UINT oldMemSize = sizeof(ElementType)*maxElements; 
 			UINT addMemSize = sizeof(ElementType)*expandElements;			
@@ -71,6 +73,8 @@ void d912pxy_ringbuffer<ElementType>::WriteElement(ElementType ele)
 			memcpy((void*)(readPoint + addMemSize), (void*)(readPoint), oldMemSize - (readPoint - bufferData));
 			readPoint += addMemSize;
 			maxElements += expandElements;
+
+			growthLock.Release();
 		}
 		else {
 			LOG_ERR_THROW2(-1, "ring buffer overrun");
@@ -119,31 +123,24 @@ void d912pxy_ringbuffer<ElementType>::Next()
 		readPoint = bufferData;
 }
 
-/*
 template<class ElementType>
-UINT d912pxy_ringbuffer<ElementType>::ReadNext()
+ElementType d912pxy_ringbuffer<ElementType>::PopElementMTG()
 {
-	if (!writed)
-		return 0;
+	growthLock.Hold();
 
+	ElementType ret = GetElement();
+	Next();
 
-	--writed;
+	growthLock.Release();
 
-	if (writed)
-		readPoint += sizeof(ElementType);
-
-	if (readPoint >= bufferEnd)
-		readPoint = bufferData;
-	return 1;
+	return ret;	
 }
-*/
 
 template class d912pxy_ringbuffer<d912pxy_comhandler*>;
 template class d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>;
 template class d912pxy_ringbuffer<d912pxy_batch*>;
 template class d912pxy_ringbuffer<d912pxy_pso_cache_item*>;
 template class d912pxy_ringbuffer<d912pxy_texture_load_item*>;
-template class d912pxy_ringbuffer<d912pxy_buffer_load_item*>;
 template class d912pxy_ringbuffer<d912pxy_resource*>;
 template class d912pxy_ringbuffer<d912pxy_upload_item*>;
 template class d912pxy_ringbuffer<d912pxy_vstream*>;
@@ -152,3 +149,4 @@ template class d912pxy_ringbuffer<d912pxy_shader*>;
 template class d912pxy_ringbuffer<UINT32>;
 template class d912pxy_ringbuffer<UINT64>;
 template class d912pxy_ringbuffer<d912pxy_linked_list_element*>;
+template class d912pxy_ringbuffer<d912pxy_vstream_lock_data>;

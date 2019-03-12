@@ -207,21 +207,31 @@ d912pxy_upload_item::~d912pxy_upload_item()
 
 }
 
+void d912pxy_upload_item::UploadTargetWithOffset(d912pxy_resource * res, UINT64 sofs, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList * cl)
+{
+	cl->CopyBufferRegion(res->GetD12Obj(), dofs, mRes, sofs, sz);
+}
+
 void d912pxy_upload_item::UploadTarget(ID3D12Resource * res, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList * cl)
 {
 	cl->CopyBufferRegion(res, dofs, mRes, dofs, sz);
 }
 
-void * d912pxy_upload_item::MapDPtr()
+intptr_t d912pxy_upload_item::DPtr()
 {
 	//d912pxy_s(DXDev)->MakeResident(1, (ID3D12Pageable**)&mRes);
 
-	return (void*)(mappedMemWofs);
+	return (mappedMemWofs);
+}
+
+intptr_t d912pxy_upload_item::DPtrOffset(UINT64 offset)
+{
+	return mappedMemWofs + offset;
 }
 
 void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, const D3D12_RANGE * wofs)
 {
-	intptr_t bufferRef = (intptr_t)MapDPtr();
+	intptr_t bufferRef = (intptr_t)DPtr();
 	intptr_t srcm = (intptr_t)mem;
 		
 	//megai2: well..

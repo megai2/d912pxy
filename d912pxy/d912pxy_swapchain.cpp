@@ -98,7 +98,7 @@ HRESULT d912pxy_swapchain::GetFrontBufferData(IDirect3DSurface9 * pDestSurface)
 	//megai2: not actual front buffer data, but should work 
 
 	d912pxy_surface * dst = (d912pxy_surface*)pDestSurface;
-	backBufferSurface->CopyTo(dst, 0, d912pxy_s(GPUcl)->GID(CLG_SEQ));
+	backBufferSurface->BCopyTo(dst, 3, d912pxy_s(GPUcl)->GID(CLG_SEQ));
 
 	dst->CopySurfaceDataToCPU();
 
@@ -182,7 +182,7 @@ HRESULT d912pxy_swapchain::SetPresentParameters(D3DPRESENT_PARAMETERS * pp)
 
 void d912pxy_swapchain::StartFrame()
 {
-	backBufferSurface->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, CLG_TOP);
+	backBufferSurface->BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, CLG_TOP);
 
 	m_dev->SetRenderTarget(0, backBufferSurface);
 	m_dev->SetDepthStencilSurface(depthStencilSurface);	
@@ -190,7 +190,7 @@ void d912pxy_swapchain::StartFrame()
 
 void d912pxy_swapchain::EndFrame()
 {
-	backBufferSurface->IFrameBarrierTrans(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, CLG_SEQ);
+	backBufferSurface->BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, CLG_SEQ);
 }
 
 HRESULT d912pxy_swapchain::TestCoopLevel()
@@ -223,13 +223,13 @@ void d912pxy_swapchain::CopyFrameToDXGI(ID3D12GraphicsCommandList * cl)
 
 	ComPtr<ID3D12Resource> dxgiBuf = dxgiBackBuffer[dxgiIdx];
 
-	d912pxy_resource::IFrameBarrierTrans3(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT, cl, dxgiBuf);
-	backBufferSurface->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_PRESENT, cl);
+	d912pxy_resource::BTransitOOC(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT, cl, dxgiBuf.Get());
+	backBufferSurface->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_PRESENT, cl);
 
-	backBufferSurface->CopyTo3(dxgiBuf, cl);
+	cl->CopyResource(dxgiBuf.Get(), backBufferSurface->GetD12Obj());	
 
-	backBufferSurface->IFrameBarrierTrans2(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
-	d912pxy_resource::IFrameBarrierTrans3(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST, cl, dxgiBuf);
+	backBufferSurface->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
+	d912pxy_resource::BTransitOOC(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST, cl, dxgiBuf.Get());
 }
 
 void d912pxy_swapchain::SetGammaRamp(DWORD Flags, CONST D3DGAMMARAMP* pRamp)
