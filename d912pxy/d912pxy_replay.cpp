@@ -338,11 +338,8 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 {
 	switchRange = maxRange / PXY_INNER_REPLAY_THREADS;
 
-	//if (switchRange < 100)
+	if (switchRange < 100)
 		switchRange = 100;
-
-	switchPoint = switchRange;
-	cWorker = 0;
 
 	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
 	{		
@@ -353,6 +350,9 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 
 		threads[i]->ExecRange(switchRange * i, rangeEnds[i]);
 	}
+
+	switchPoint = rangeEnds[0];
+	cWorker = 0;
 }
 
 void d912pxy_replay::Start()
