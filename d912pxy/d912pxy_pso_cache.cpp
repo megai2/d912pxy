@@ -562,9 +562,60 @@ d912pxy_pso_cache_item* d912pxy_pso_cache::UseByDesc(d912pxy_trimmed_dx12_pso* d
 	}
 
 	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
-		return NULL;
+		return NULL;	
 			
 	d912pxy_pso_cache_item* item = d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheData((UINT32)id, dsc);
+
+	return item;
+}
+
+d912pxy_pso_cache_item * d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso * dsc, UINT32 frameStartTime)
+{
+	dsc->vdeclHash = dsc->InputLayout->GetHash();
+
+	void* dscMem = (void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset);
+
+	UINT32 dscHash = cacheIndexes->memHash32(dscMem);
+	UINT64 id = cacheIndexes->PointAtMemMT(&dscHash, 4);
+
+	if (id == 0)
+	{
+		psoLookupLock.Hold();
+
+		cacheIndexes->PointAtMem(&dscHash, 4);
+		cacheIndexes->SetValue(++cacheIncID);
+
+		psoLookupLock.Release();
+
+		id = cacheIncID;
+
+		if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_WRITE)
+		{
+			d912pxy_serialized_pso_key cacheEntry;
+
+			UINT unused;
+
+			memcpy(cacheEntry.declData, dsc->InputLayout->GetDeclarationPtr(&unused), sizeof(D3DVERTEXELEMENT9) * PXY_INNER_MAX_VDECL_LEN);
+			memcpy(cacheEntry.staticPsoDesc, dscMem, d912pxy_trimmed_pso_static_data_size);
+
+			d912pxy_s(vfs)->ReWriteFileH(id + 1, &cacheEntry, sizeof(d912pxy_serialized_pso_key), PXY_VFS_BID_PSO_CACHE_KEYS);
+			d912pxy_s(vfs)->ReWriteFileH(PXY_PSO_CACHE_KEYFILE_NAME, &cacheIncID, 4, PXY_VFS_BID_PSO_CACHE_KEYS);
+		}
+	}
+
+	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
+		return NULL;
+
+	d912pxy_pso_cache_item* item = d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc);
+
+	if (!item)
+	{
+		psoAllocLock.Hold();
+
+		item = d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheData((UINT32)id, dsc);
+
+		psoAllocLock.Release();
+	}
 
 	return item;
 }
@@ -726,6 +777,11 @@ void d912pxy_pso_cache::LoadCachedData()
 			free(max);
 		}
 	}
+}
+
+d912pxy_trimmed_dx12_pso * d912pxy_pso_cache::GetCurrentDsc()
+{
+	return &cDsc;
 }
 
 d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_trimmed_dx12_pso* sDsc) : d912pxy_comhandler(dev, L"PSO item")

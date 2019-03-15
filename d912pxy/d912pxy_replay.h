@@ -191,7 +191,7 @@ public:
 	//actual execute code and thread managment
 
 	void PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList* cl);
-	void Replay(UINT start, UINT end, d912pxy_gpu_cmd_list_group listGrp, d912pxy_replay_thread* thrd);
+	void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd);
 
 	void Finish();
 	void Start();

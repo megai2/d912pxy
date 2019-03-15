@@ -263,12 +263,12 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	++batchesIssued;
 
+	d912pxy_s(CMDReplay)->IssueWork(batchesIssued);
+
 	if (batchDF & 8)
 	{
 		d912pxy_s(psoCache)->IAFormat(d912pxy_s(psoCache)->GetIAFormat());
 	}
-
-	d912pxy_s(CMDReplay)->IssueWork(batchesIssued);
 }
 
 void d912pxy_iframe::TransitZBufferRW(int write)
@@ -550,11 +550,83 @@ void d912pxy_iframe::SetRSigOnList(d912pxy_gpu_cmd_list_group lstID)
 	cl->SetGraphicsRootDescriptorTable(1, mHeaps[PXY_INNER_HEAP_SRV]->GetGPUDHeapHandle(0));
 	cl->SetGraphicsRootDescriptorTable(2, mHeaps[PXY_INNER_HEAP_SPL]->GetGPUDHeapHandle(0));
 	cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 }
 
-void d912pxy_iframe::TransitStates(d912pxy_gpu_cmd_list_group tgtList)
+void d912pxy_iframe::GetCurrentDrawState(d912pxy_iframe_draw_state * ret)
 {
-	d912pxy_s(GPUcl)->GID(tgtList)->OMSetRenderTargets(bindedRTVcount, bindedRTV, 0, bindedDSV);
+	for (int i = 0; i != 2; ++i)
+	{
+		d912pxy_surface* bs = bindedSurfaces[i];
+
+		ret->bindedSurfaces[i] = bs;
+		if (bs)
+			bs->ThreadRef(1);
+	}
+	
+	for (int i = 0; i != streamsActive; ++i)
+	{
+		if (streamBinds[i].buffer)
+			streamBinds[i].buffer->ThreadRef(1);
+
+		ret->streamBinds[i] = streamBinds[i];
+	}
+
+	ret->indexBind = indexBind;
+
+	if (indexBind)
+		indexBind->ThreadRef(1);
+
+	ret->streamsActive = streamsActive;
+	ret->viewport = main_viewport;
+	ret->scissor = main_scissor;
+
+	ret->pso = *(d912pxy_s(psoCache)->GetCurrentDsc());
+	ret->pso.InputLayout->ThreadRef(1);
+}
+
+void d912pxy_iframe::SetDrawStateOnCL(ID3D12GraphicsCommandList * cl, d912pxy_iframe_draw_state * state)
+{
+	d912pxy_replay_item rItem;
+
+	rItem.type = DRPL_OMRT;
+	rItem.rt.dsv = state->bindedSurfaces[0];
+	rItem.rt.rtv = state->bindedSurfaces[1];
+
+	d912pxy_s(CMDReplay)->PlayId(&rItem, cl);
+
+	cl->RSSetViewports(1, &state->viewport);
+	cl->RSSetScissorRects(1, &state->scissor);
+
+	for (int i = 0; i != state->streamsActive; ++i)
+	{
+		d912pxy_vstream* buf = state->streamBinds[i].buffer;
+		if (buf)
+		{
+			buf->IFrameBindVB(state->streamBinds[i].stride, i, state->streamBinds[i].offset, cl);
+			buf->ThreadRef(-1);
+		}
+	}
+
+	if (state->indexBind)
+	{
+		state->indexBind->IFrameBindIB(cl);
+		state->indexBind->ThreadRef(-1);
+	}
+	
+	for (int i = 0; i != 2; ++i)
+	{
+		d912pxy_surface* bs = state->bindedSurfaces[i];
+
+		if (bs)		
+			bs->ThreadRef(-1);		
+	}
+
+	rItem.type = DRPL_CPSO;
+	rItem.compiledPso.psoItem = d912pxy_s(psoCache)->UseByDescMT(&state->pso, 0);
+	d912pxy_s(CMDReplay)->PlayId(&rItem, cl);
+
+	state->pso.InputLayout->ThreadRef(-1);
 }
 
 void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
@@ -585,6 +657,7 @@ void d912pxy_iframe::StateSafeFlush()
 	d912pxy_s(GPUque)->Flush(0);
 	Start();
 
+	//megai2: rebind surfaces as they are resetted to swapchain back buffers by Start()
 	for (int i = 0; i != 2; ++i)
 	{
 		BindSurface(i, refSurf[i]);
@@ -594,21 +667,12 @@ void d912pxy_iframe::StateSafeFlush()
 	}
 
 	if (indexBind)
-	{
 		indexBind->ThreadRef(-1);
-		SetIBuf(indexBind);
-	}
 
 	for (int i = 0; i != streamsActive; ++i)
 		if (streamBinds[i].buffer)
-		{
 			streamBinds[i].buffer->ThreadRef(-1);
-			SetVBuf(streamBinds[i].buffer, i, streamBinds[i].offset, streamBinds[i].stride);
-			SetStreamFreq(i, streamBinds[i].divider);
-		}
-
-	d912pxy_s(CMDReplay)->RSViewScissor(main_viewport, main_scissor);
-
+	
 	//megai2: force dirty to rebind all states
 	batchCommisionDF = 7;
 }

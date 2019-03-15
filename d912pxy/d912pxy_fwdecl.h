@@ -99,10 +99,12 @@ SOFTWARE.
 #define PXY_INNER_THREADID_TEX_LOADER 0
 #define PXY_INNER_THREADID_BUF_LOADER 1
 #define PXY_INNER_THREADID_RPL_THRD0 2
-//#define PXY_INNER_THREADID_PSO_COMPILER 2
-#define PXY_INNER_THREADID_MAX 3
+#define PXY_INNER_THREADID_RPL_THRD1 3
+#define PXY_INNER_THREADID_RPL_THRD2 4
+#define PXY_INNER_THREADID_RPL_THRD3 5
+#define PXY_INNER_THREADID_MAX 6
 
-#define PXY_INNER_REPLAY_THREADS 1
+#define PXY_INNER_REPLAY_THREADS 4
 
 //shader profile defs =======================
 
@@ -221,13 +223,13 @@ typedef enum d912pxy_gpu_cmd_list_group {
 	CLG_TEX = 1,
 	CLG_BUF = 2,
 	CLG_RP1 = 3,
-	/*CLG_RP2 = 4,
+	CLG_RP2 = 4,
 	CLG_RP3 = 5,
-	CLG_RP4 = 6,*/
-	CLG_SEQ = 4
+	CLG_RP4 = 6,
+	CLG_SEQ = 7
 } d912pxy_gpu_cmd_list_group;
 
-#define PXY_INNER_MAX_GPU_CMD_LIST_GROUPS 5
+#define PXY_INNER_MAX_GPU_CMD_LIST_GROUPS 8
 
 //global singletons =======================
 

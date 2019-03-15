@@ -82,10 +82,10 @@ void d912pxy_gpu_cmd_list::Execute()
 		mCL[1],
 		mCL[2],
 		mCL[3],
-		mCL[4]
-	/*	mCL[5].Get(),
-		mCL[6].Get(),
-		mCL[7].Get()*/
+		mCL[4],
+		mCL[5],
+		mCL[6],
+		mCL[7]
 	};
 
 	mDXQue->ExecuteCommandLists(PXY_INNER_MAX_GPU_CMD_LIST_GROUPS, commandLists);

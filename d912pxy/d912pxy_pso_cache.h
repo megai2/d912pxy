@@ -105,6 +105,7 @@ public:
 	UINT UseWithFeedbackPtr(void** feedback);
 
 	d912pxy_pso_cache_item* UseByDesc(d912pxy_trimmed_dx12_pso* dsc, UINT32 frameStartTime);
+	d912pxy_pso_cache_item* UseByDescMT(d912pxy_trimmed_dx12_pso* dsc, UINT32 frameStartTime);
 
 	void SetRootSignature(ComPtr<ID3D12RootSignature> sig);
 
@@ -134,6 +135,8 @@ public:
 
 	void LoadCachedData();
 
+	d912pxy_trimmed_dx12_pso* GetCurrentDsc();
+
 private:
 	d912pxy_memtree2* cacheIndexes;
 	UINT32 cacheIncID;
@@ -156,5 +159,8 @@ private:
 	ID3D12GraphicsCommandList* frameCl;
 
 	LONG externalLock;
+
+	d912pxy_thread_lock psoLookupLock;
+	d912pxy_thread_lock psoAllocLock;
 };
 

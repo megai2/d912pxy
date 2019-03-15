@@ -45,6 +45,7 @@ public:
 	void CheckArrayAllocation(UINT32 idx);
 
 	d912pxy_pso_cache_item* GetPSOCacheData(UINT32 idx, d912pxy_trimmed_dx12_pso* dsc);
+	d912pxy_pso_cache_item* GetPSOCacheDataMT(UINT32 idx, d912pxy_trimmed_dx12_pso* dsc);
 
 private:
 	

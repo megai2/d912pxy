@@ -38,7 +38,11 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"rep
 	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
 	{
 		d912pxy_gpu_cmd_list_group clg = (d912pxy_gpu_cmd_list_group)(CLG_RP1 + i);
-		threads[i] = new d912pxy_replay_thread(dev, clg);
+		
+		char thrdName[255];		
+		sprintf(thrdName, "d912pxy replay %u", i);
+
+		threads[i] = new d912pxy_replay_thread(dev, clg, thrdName);
 	}
 
 	ReRangeThreads(PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
@@ -251,18 +255,10 @@ void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList *
 	(this->*replay_handlers[it->type])(&it->ptr, cl);
 }
 
-void d912pxy_replay::Replay(UINT start, UINT end, d912pxy_gpu_cmd_list_group listGrp, d912pxy_replay_thread* thrd)
+void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd)
 {
-//	UINT32 startTime = GetTickCount();
-
-	ID3D12GraphicsCommandList * cl = d912pxy_s(GPUcl)->GID(listGrp);
-
-	ID3D12PipelineState* psoPtr = NULL;
-
 	LOG_DBG_DTDM("replay range [%u , %u, %u]", start, end, stackTop);
-
-	d912pxy_s(iframe)->SetRSigOnList(listGrp);	
-
+	
 	for (UINT i = start; i != end; ++i)
 	{
 		LOG_DBG_DTDM("RP TY %s", d912pxy_replay_item_type_dsc[stack[i].type]);
@@ -285,6 +281,23 @@ void d912pxy_replay::Replay(UINT start, UINT end, d912pxy_gpu_cmd_list_group lis
 
 		PlayId(&stack[i], cl);
 	}
+
+	//megai2: unlock thread only when stopMarker is set
+	while (!InterlockedAdd(&stopMarker, 0))
+	{
+		UINT32 addJob = thrd->GetAdditionalJob();
+		if (addJob != end)
+		{
+			for (UINT i = end; i != addJob; ++i)
+			{
+				LOG_DBG_DTDM("ADD RP TY %s", d912pxy_replay_item_type_dsc[stack[i].type]);
+
+				PlayId(&stack[i], cl);
+			}
+			thrd->DoAdditionalJob(end);
+		}
+		thrd->WaitForJob();
+	}
 }
 
 void d912pxy_replay::Finish()
@@ -305,18 +318,17 @@ void d912pxy_replay::Finish()
 void d912pxy_replay::IssueWork(UINT batch)
 {
 	if (stackTop > switchPoint)
-	{
-		if ((cWorker + 1) == PXY_INNER_REPLAY_THREADS)
-		{
-			threads[cWorker]->SignalWork();
-			switchPoint = PXY_INNER_MAX_IFRAME_BATCH_REPLAY;
-			return;
-		}
-		//this should be executed on replay thread, with somekind new DRPL_ item, but for now we use one thread and this is sufficient, so TODO
-		//d912pxy_s(iframe)->TransitStates((d912pxy_gpu_cmd_list_group)(CLG_RP1 + cWorker + 1));
+	{		
+		threads[cWorker]->DoAdditionalJob(stackTop);
 		threads[cWorker]->SignalWork();
-		threads[++cWorker]->SignalWork();
-		switchPoint += switchRange;
+		
+		++cWorker;
+		switchPoint = rangeEnds[cWorker];
+		
+		threads[cWorker]->ExecRange(stackTop, rangeEnds[cWorker]);
+		threads[cWorker]->RecordIFrameDrawState();
+		threads[cWorker]->SignalWork();
+		
 	}
 	else if ((batch % 100) == 0)
 		threads[cWorker]->SignalWork();
@@ -325,16 +337,21 @@ void d912pxy_replay::IssueWork(UINT batch)
 void d912pxy_replay::ReRangeThreads(UINT maxRange)
 {
 	switchRange = maxRange / PXY_INNER_REPLAY_THREADS;
+
+	//if (switchRange < 100)
+		switchRange = 100;
+
 	switchPoint = switchRange;
 	cWorker = 0;
 
 	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
 	{		
 		rangeEnds[i] = switchRange * (i + 1);
+
 		if (i == (PXY_INNER_REPLAY_THREADS - 1))
-			threads[i]->ExecRange(switchRange * i, PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
-		else
-			threads[i]->ExecRange(switchRange * i, rangeEnds[i]);
+			rangeEnds[i] = PXY_INNER_MAX_IFRAME_BATCH_REPLAY;		
+
+		threads[i]->ExecRange(switchRange * i, rangeEnds[i]);
 	}
 }
 
@@ -398,7 +415,7 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 
 	d912pxy_s(batch)->PreDIP(cl, it->StartInstanceLocation);
 
-	cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	cl->DrawIndexedInstanced(
 		it->IndexCountPerInstance,
 		it->InstanceCount,
@@ -454,8 +471,8 @@ void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommand
 
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl)
 {
-	replay_thread_pso = d912pxy_s(psoCache)->UseByDesc(&it->rawState, 0)->GetPtr();
-
+	replay_thread_pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0)->GetPtr();
+	
 	if (replay_thread_pso)
 		cl->SetPipelineState(replay_thread_pso);	
 }
@@ -469,8 +486,8 @@ void d912pxy_replay::RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCom
 }
 
 void d912pxy_replay::RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl)
-{
-	*it->feedbackPtr = d912pxy_s(psoCache)->UseByDesc(&it->rawState, 0);
+{	
+	*it->feedbackPtr = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0);	
 }
 
 void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl)

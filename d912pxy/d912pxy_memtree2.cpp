@@ -117,6 +117,30 @@ UINT64 d912pxy_memtree2::memHash64s(void * mem, UINT msz)
 	return hash;
 }
 
+UINT64 d912pxy_memtree2::PointAtMemMT(void * mem, UINT32 dataMemSz2)
+{
+	UINT32 depth = 0;
+	d912pxy_memtree2_node* root = &base;
+
+	UINT8* byteAc = (UINT8*)mem;
+
+	while (depth < dataMemSz2)
+	{
+		UINT8 ci = byteAc[depth];
+
+		UINT32 npi = root->childs[ci];
+		if (npi == 0)
+		{
+			return 0;
+		}
+		else {
+			root = &nodePool[npi];
+		}
+		++depth;
+	}	
+	return root->contentId;
+}
+
 UINT64 d912pxy_memtree2::PointAtMem(void * mem, UINT32 dataMemSz2)
 {
 	UINT32 depth = 0;
@@ -132,7 +156,7 @@ UINT64 d912pxy_memtree2::PointAtMem(void * mem, UINT32 dataMemSz2)
 		UINT32 npi = root->childs[ci];
 		if (npi == 0)
 		{
-			UINT32 newNode = InterlockedAdd((LONG*)&nodePoolIdx, 1)-1;
+			UINT32 newNode = nodePoolIdx++;
 			root->childs[ci] = newNode;
 			root = &nodePool[newNode];			
 			++newNode;

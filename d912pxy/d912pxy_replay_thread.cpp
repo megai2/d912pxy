@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread("d912pxy replay")
+d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread(threadName)
 {
 	listGrp = iListGrp;
 }
@@ -38,7 +38,17 @@ void d912pxy_replay_thread::ThreadJob()
 {
 	d912pxy_replay* rpl = d912pxy_s(CMDReplay);
 
-	rpl->Replay(startRI, endRI, listGrp, this);
+	d912pxy_s(iframe)->SetRSigOnList(listGrp);
+
+	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(listGrp);
+
+	if (drawStateSaved)
+	{
+		d912pxy_s(iframe)->SetDrawStateOnCL(cl, drawStateSaved);
+		drawStateSaved = NULL;
+	}
+
+	rpl->Replay(startRI, endRI, cl, this);
 
 	m_dev->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
 
@@ -59,4 +69,15 @@ void d912pxy_replay_thread::Finish()
 void d912pxy_replay_thread::ThreadInitProc()
 {
 	d912pxy_s(dev)->InitLockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
+}
+
+void d912pxy_replay_thread::RecordIFrameDrawState()
+{
+	drawStateSaved = &drawState;
+	d912pxy_s(iframe)->GetCurrentDrawState(&drawState);
+}
+
+void d912pxy_replay_thread::DoAdditionalJob(UINT end)
+{
+	endRI = end;
 }

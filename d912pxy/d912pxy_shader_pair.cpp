@@ -116,3 +116,15 @@ d912pxy_pso_cache_item* d912pxy_shader_pair::GetPSOCacheData(UINT32 idx, d912pxy
 
 	return ret;
 }
+
+d912pxy_pso_cache_item * d912pxy_shader_pair::GetPSOCacheDataMT(UINT32 idx, d912pxy_trimmed_dx12_pso * dsc)
+{
+	d912pxy_pso_cache_item* ret = NULL;
+
+	if (idx >= maxPsoId)
+		return ret;
+
+	ret = psoItems[idx];
+
+	return ret;
+}

@@ -29,7 +29,7 @@ class d912pxy_replay_thread :
 	public d912pxy_thread, public d912pxy_noncom
 {
 public:
-	d912pxy_replay_thread(d912pxy_device* dev, d912pxy_gpu_cmd_list_group iListGrp);
+	d912pxy_replay_thread(d912pxy_device* dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName);
 	~d912pxy_replay_thread();
 
 	void ThreadJob();
@@ -39,10 +39,18 @@ public:
 	void Finish();
 	void ThreadInitProc();
 
+	void RecordIFrameDrawState();
+
+	void DoAdditionalJob(UINT end);
+	UINT32 GetAdditionalJob() { return endRI; };
+
 private:
 
 	UINT startRI;
 	UINT endRI;
 	d912pxy_gpu_cmd_list_group listGrp;
+
+	d912pxy_iframe_draw_state drawState;
+	d912pxy_iframe_draw_state* drawStateSaved;
 };
 
