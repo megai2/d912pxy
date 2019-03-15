@@ -24,11 +24,11 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iQueues, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom(dev, L"GPU queue"), d912pxy_thread("d912pxy gpu exec")
+d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom(dev, L"GPU queue"), d912pxy_thread("d912pxy gpu exec")
 {
 	d912pxy_s(GPUque) = this;
 
-	mLists = new d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>(iQueues, 0);
+	mLists = new d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>(PXY_INNER_GPU_QUEUE_BUFFER_COUNT, 0);
 		
 	D3D12_COMMAND_QUEUE_DESC desc = {};
 	desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -40,9 +40,15 @@ d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iQueues, UINT iMaxCl
 
 	mGPUCleanupThread = new d912pxy_gpu_cleanup_thread();
 
-	for (int i = 0; i != iQueues; ++i)	
-		mLists->WriteElement(new d912pxy_gpu_cmd_list(dev, mDXQue.Get(), iMaxRefernecedObjs, iGrowReferences, iMaxCleanupPerSync, mGPUCleanupThread));	
+	for (int i = 0; i != PXY_INNER_GPU_QUEUE_BUFFER_COUNT; ++i)
+	{
+		mListsArr[i] = new d912pxy_gpu_cmd_list(dev, mDXQue.Get(), iMaxRefernecedObjs, iGrowReferences, iMaxCleanupPerSync, mGPUCleanupThread);
+		mLists->WriteElement(mListsArr[i]);
+	}
 	mCurrentGPUWork = NULL;
+
+	EnableGID(CLG_TOP, PXY_INNER_CLG_PRIO_FIRST);
+	EnableGID(CLG_SEQ, PXY_INNER_CLG_PRIO_LAST);
 
 	d912pxy_s(GPUcl) = mLists->GetElement();
 }
@@ -221,4 +227,12 @@ void d912pxy_gpu_que::ThreadJob()
 	WaitForGPU();
 
 	SignalWorkCompleted();
+}
+
+void d912pxy_gpu_que::EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio)
+{
+	for (int i = 0; i != PXY_INNER_GPU_QUEUE_BUFFER_COUNT; ++i)
+	{
+		mListsArr[i]->EnableGID(id, prio);
+	}
 }

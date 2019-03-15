@@ -47,6 +47,8 @@ d912pxy_config::d912pxy_config()
 			fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].value);		
 		}
 
+		fwprintf(f, L"\r\n[end] \r\n");
+
 		fflush(f);
 		fclose(f);
 		

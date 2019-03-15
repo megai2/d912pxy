@@ -28,7 +28,7 @@ d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_as
 {
 	poolPtr = 0;
 	d912pxy_s(texloadThread) = this;
-
+	d912pxy_s(GPUque)->EnableGID(CLG_TEX, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
 }
 
 d912pxy_texture_loader::~d912pxy_texture_loader()

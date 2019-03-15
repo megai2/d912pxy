@@ -29,7 +29,7 @@ class d912pxy_gpu_que :
 	public d912pxy_noncom, public d912pxy_thread
 {
 public:
-	d912pxy_gpu_que(d912pxy_device* dev, UINT iQueues, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences);
+	d912pxy_gpu_que(d912pxy_device* dev, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences);
 	~d912pxy_gpu_que();
 
 	HRESULT ExecuteCurrentGPUWork(UINT doSwap);
@@ -49,12 +49,15 @@ public:
 
 	void ThreadJob();
 
+	void EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio);
+
 private:
 	UINT swapAsked;
 	
 	d912pxy_swapchain* mSwp;
 	d912pxy_gpu_cmd_list* mCurrentGPUWork;
 	d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>* mLists;	
+	d912pxy_gpu_cmd_list* mListsArr[PXY_INNER_GPU_QUEUE_BUFFER_COUNT];
 	
 	ComPtr<ID3D12CommandQueue> mDXQue;
 

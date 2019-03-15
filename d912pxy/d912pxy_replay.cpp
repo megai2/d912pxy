@@ -35,14 +35,18 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"rep
 	stackTop = 0;
 	stopMarker = 1;
 
-	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
-	{
+	numThreads = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_REPLAY_THREADS);
+
+	for (int i = 0; i != numThreads; ++i)
+	{		
 		d912pxy_gpu_cmd_list_group clg = (d912pxy_gpu_cmd_list_group)(CLG_RP1 + i);
 		
 		char thrdName[255];		
 		sprintf(thrdName, "d912pxy replay %u", i);
-
+		
 		threads[i] = new d912pxy_replay_thread(dev, clg, thrdName);
+
+		d912pxy_s(GPUque)->EnableGID(clg, PXY_INNER_CLG_PRIO_REPLAY + i);
 	}
 
 	ReRangeThreads(PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
@@ -66,9 +70,10 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"rep
 
 d912pxy_replay::~d912pxy_replay()
 {	
-	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
+	for (int i = 0; i != numThreads; ++i)
 	{
-		threads[i]->Stop();
+		if (threads[i])
+			threads[i]->Stop();
 		delete threads[i];
 	}		
 }
@@ -309,7 +314,7 @@ void d912pxy_replay::Finish()
 
 	InterlockedIncrement(&stopMarker);	
 
-	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
+	for (int i = 0; i != numThreads; ++i)
 		threads[i]->Finish();	
 
 	ReRangeThreads(stackTop);
@@ -336,16 +341,16 @@ void d912pxy_replay::IssueWork(UINT batch)
 
 void d912pxy_replay::ReRangeThreads(UINT maxRange)
 {
-	switchRange = maxRange / PXY_INNER_REPLAY_THREADS;
+	switchRange = maxRange / numThreads;
 
 	if (switchRange < 100)
 		switchRange = 100;
 
-	for (int i = 0; i != PXY_INNER_REPLAY_THREADS; ++i)
+	for (int i = 0; i != numThreads; ++i)
 	{		
 		rangeEnds[i] = switchRange * (i + 1);
 
-		if (i == (PXY_INNER_REPLAY_THREADS - 1))
+		if (i == (numThreads - 1))
 			rangeEnds[i] = PXY_INNER_MAX_IFRAME_BATCH_REPLAY;		
 
 		threads[i]->ExecRange(switchRange * i, rangeEnds[i]);

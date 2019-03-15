@@ -32,14 +32,17 @@ d912pxy_gpu_cmd_list::d912pxy_gpu_cmd_list(d912pxy_device * dev, ID3D12CommandQu
 	
 	for (int i = 0; i != PXY_INNER_MAX_GPU_CMD_LIST_GROUPS; ++i)
 	{
-		LOG_ERR_THROW2(dx12dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mALC[i])), "gpu cmd list allocator error");
-		LOG_ERR_THROW2(dx12dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mALC[i], NULL, IID_PPV_ARGS(&mCL[i])), "gpu cmd list allocator error");
+		LOG_ERR_THROW2(dx12dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCL[i].alc)), "gpu cmd list allocator error");
+		LOG_ERR_THROW2(dx12dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCL[i].alc, NULL, IID_PPV_ARGS(&mCL[i].cl)), "gpu cmd list allocator error");
 
 		wchar_t buf[256];
-		wsprintf(buf, L"gpu cmd list %u", i);
+		wsprintf(buf, L"disabled gpu cmd list %u", i);
+		mCL[i].cl->SetName(buf);
 
-		mCL[i]->SetName(buf);
+		mCLPrio[i] = 99999;
 	}
+
+	totalActCLs = 0;
 	
 	LOG_ERR_THROW2(dx12dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)), "can't create fence");
 	fenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -64,8 +67,8 @@ d912pxy_gpu_cmd_list::~d912pxy_gpu_cmd_list()
 
 	for (int i = 0; i != PXY_INNER_MAX_GPU_CMD_LIST_GROUPS; ++i)
 	{
-		mCL[i]->Release();
-		mALC[i]->Release();
+		mCL[i].cl->Release();
+		mCL[i].alc->Release();
 	}
 	fence->Release();
 }
@@ -74,21 +77,16 @@ void d912pxy_gpu_cmd_list::Execute()
 {	
 	LOG_DBG_DTDM("exec %016llX", this);
 
-	for (int i = 0; i != PXY_INNER_MAX_GPU_CMD_LIST_GROUPS; ++i)
-		LOG_ERR_THROW2(mCL[i]->Close(), "can't close command list");
+	ID3D12CommandList* execArr[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
 
-	ID3D12CommandList* const commandLists[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS] = {
-		mCL[0],
-		mCL[1],
-		mCL[2],
-		mCL[3],
-		mCL[4],
-		mCL[5],
-		mCL[6],
-		mCL[7]
-	};
+	for (int i = 0; i != totalActCLs; ++i)
+	{
+		ID3D12GraphicsCommandList* ccl = mActCL[i].cl;
+		LOG_ERR_THROW2(ccl->Close(), "can't close command list");
+		execArr[i] = ccl;
+	}
 
-	mDXQue->ExecuteCommandLists(PXY_INNER_MAX_GPU_CMD_LIST_GROUPS, commandLists);
+	mDXQue->ExecuteCommandLists(totalActCLs, (ID3D12CommandList* const*)execArr);
 }
 
 void d912pxy_gpu_cmd_list::Wait()
@@ -111,10 +109,10 @@ void d912pxy_gpu_cmd_list::WaitNoCleanup()
 	++fenceId;
 
 	//all data is processed, reset lists and allocator
-	for (int i = 0; i != PXY_INNER_MAX_GPU_CMD_LIST_GROUPS; ++i)
+	for (int i = 0; i != totalActCLs; ++i)
 	{
-		mALC[i]->Reset();
-		mCL[i]->Reset(mALC[i], 0);
+		mActCL[i].alc->Reset();
+		mActCL[i].cl->Reset(mActCL[i].alc, 0);
 	}
 }
 
@@ -162,5 +160,35 @@ void d912pxy_gpu_cmd_list::CleanupReferenced(UINT items)
 		
 		if (cleaned >= items)
 			return;
+	}
+}
+
+void d912pxy_gpu_cmd_list::EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio)
+{
+	mActCL[totalActCLs] = mCL[id];
+
+	wchar_t buf[256];
+	wsprintf(buf, L"gpu cmd list %u", id);
+	mCL[totalActCLs].cl->SetName(buf);
+	mCLPrio[totalActCLs] = prio;
+
+	++totalActCLs;
+	
+
+	for (int i = 0; i != totalActCLs; ++i)
+	{
+		for (int j = i; j != totalActCLs; ++j)
+		{
+			if (mCLPrio[i] > mCLPrio[j])
+			{
+				d912pxy_gpu_cmd_list_entry swp = mActCL[i];
+				mActCL[i] = mActCL[j];
+				mActCL[j] = swp;
+
+				UINT32 swpPr = mCLPrio[i];
+				mCLPrio[i] = mCLPrio[j];
+				mCLPrio[j] = swpPr;
+			}
+		}
 	}
 }

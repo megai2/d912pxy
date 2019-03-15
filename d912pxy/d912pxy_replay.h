@@ -226,10 +226,11 @@ private:
 		
 	UINT switchRange;	
 	UINT switchPoint;
-	UINT rangeEnds[PXY_INNER_REPLAY_THREADS];
+	UINT rangeEnds[PXY_INNER_REPLAY_THREADS_MAX];
 	UINT cWorker;
+	UINT numThreads;
 
-	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS];
+	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS_MAX];
 	LONG stopMarker;
 };
 

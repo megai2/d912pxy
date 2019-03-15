@@ -25,6 +25,11 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
+typedef struct d912pxy_gpu_cmd_list_entry {
+	ID3D12GraphicsCommandList* cl;
+	ID3D12CommandAllocator* alc;
+} d912pxy_gpu_cmd_list_entry;
+
 class d912pxy_gpu_cmd_list :
 	public d912pxy_noncom
 {
@@ -42,11 +47,16 @@ public:
 	void CleanupAllReferenced();
 	void CleanupReferenced(UINT items);
 
-	ID3D12GraphicsCommandList* GID(d912pxy_gpu_cmd_list_group id) { return mCL[id]; }
+	void EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio);
+
+	ID3D12GraphicsCommandList* GID(d912pxy_gpu_cmd_list_group id) { return mCL[id].cl; }
 
 private:	
-	ID3D12GraphicsCommandList* mCL[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
-	ID3D12CommandAllocator* mALC[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
+	d912pxy_gpu_cmd_list_entry mActCL[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
+	d912pxy_gpu_cmd_list_entry mCL[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
+	UINT32 mCLPrio[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
+	UINT32 totalActCLs;
+			
 	ID3D12CommandQueue* mDXQue;
 
 	d912pxy_ringbuffer<d912pxy_comhandler*>* mGpuRefs;

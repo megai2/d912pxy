@@ -115,7 +115,7 @@ void d912pxy_device::InitThreadSyncObjects()
 
 void d912pxy_device::InitSingletons()
 {
-	new d912pxy_gpu_que(this, 2, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
+	new d912pxy_gpu_que(this, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
 	new d912pxy_replay(this);
 	new d912pxy_shader_db(this);
 
