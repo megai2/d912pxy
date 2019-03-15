@@ -240,6 +240,8 @@ DXGI_FORMAT d912pxy_surface::GetDSVFormat()
 	switch (surf_dx9dsc.Format)
 	{
 		//case D3DFMT_INTZ:
+		case D3DFMT_D16:
+			return DXGI_FORMAT_D16_UNORM;
 		case D3DFMT_D32:			
 			return DXGI_FORMAT_D32_FLOAT;
 		case D3DFMT_INTZ:
@@ -256,6 +258,8 @@ DXGI_FORMAT d912pxy_surface::GetSRVFormat()
 	switch (surf_dx9dsc.Format)
 	{
 		//case D3DFMT_INTZ:
+		case D3DFMT_D16:
+			return DXGI_FORMAT_R16_UNORM;
 		case D3DFMT_D32:
 			return DXGI_FORMAT_R32_UINT;
 		case D3DFMT_INTZ:
@@ -273,6 +277,8 @@ DXGI_FORMAT d912pxy_surface::ConvertInnerDSVFormat()
 	switch (surf_dx9dsc.Format)
 	{
 		//case D3DFMT_INTZ:
+		case D3DFMT_D16:
+			return DXGI_FORMAT_R16_TYPELESS;
 		case D3DFMT_D32:
 			return DXGI_FORMAT_R32_TYPELESS;
 		case D3DFMT_INTZ:
