@@ -30,7 +30,7 @@ class d912pxy_gpu_cmd_list :
 {
 
 public:
-	d912pxy_gpu_cmd_list(d912pxy_device* dev, ComPtr<ID3D12CommandQueue> que, UINT iMaxRefernecedObjs, UINT iGrowReferences, UINT iMaxCleanupPerSync, d912pxy_gpu_cleanup_thread* cleanupThread);
+	d912pxy_gpu_cmd_list(d912pxy_device* dev, ID3D12CommandQueue* que, UINT iMaxRefernecedObjs, UINT iGrowReferences, UINT iMaxCleanupPerSync, d912pxy_gpu_cleanup_thread* cleanupThread);
 	~d912pxy_gpu_cmd_list();
 
 	void Execute();
@@ -42,17 +42,17 @@ public:
 	void CleanupAllReferenced();
 	void CleanupReferenced(UINT items);
 
-	ID3D12GraphicsCommandList* GID(d912pxy_gpu_cmd_list_group id) { return mCL[id].Get(); }
+	ID3D12GraphicsCommandList* GID(d912pxy_gpu_cmd_list_group id) { return mCL[id]; }
 
 private:	
-	ComPtr<ID3D12GraphicsCommandList> mCL[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
-	ComPtr<ID3D12CommandAllocator> mALC[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
-	ComPtr<ID3D12CommandQueue> mDXQue;
+	ID3D12GraphicsCommandList* mCL[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
+	ID3D12CommandAllocator* mALC[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS];
+	ID3D12CommandQueue* mDXQue;
 
 	d912pxy_ringbuffer<d912pxy_comhandler*>* mGpuRefs;
 	UINT mGpuRefsCleanupDepth;
 
-	ComPtr<ID3D12Fence> fence;
+	ID3D12Fence* fence;
 	HANDLE fenceEvent;
 	UINT64 fenceId;
 

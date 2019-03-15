@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_gpu_cmd_list::d912pxy_gpu_cmd_list(d912pxy_device * dev, ComPtr<ID3D12CommandQueue> que, UINT iMaxRefernecedObjs, UINT iGrowReferences, UINT iMaxCleanupPerSync, d912pxy_gpu_cleanup_thread* cleanupThread) : d912pxy_noncom(dev, L"GPU command list")
+d912pxy_gpu_cmd_list::d912pxy_gpu_cmd_list(d912pxy_device * dev, ID3D12CommandQueue* que, UINT iMaxRefernecedObjs, UINT iGrowReferences, UINT iMaxCleanupPerSync, d912pxy_gpu_cleanup_thread* cleanupThread) : d912pxy_noncom(dev, L"GPU command list")
 {
 	ID3D12Device* dx12dev = d912pxy_s(DXDev);
 
@@ -33,7 +33,7 @@ d912pxy_gpu_cmd_list::d912pxy_gpu_cmd_list(d912pxy_device * dev, ComPtr<ID3D12Co
 	for (int i = 0; i != PXY_INNER_MAX_GPU_CMD_LIST_GROUPS; ++i)
 	{
 		LOG_ERR_THROW2(dx12dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mALC[i])), "gpu cmd list allocator error");
-		LOG_ERR_THROW2(dx12dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mALC[i].Get(), NULL, IID_PPV_ARGS(&mCL[i])), "gpu cmd list allocator error");
+		LOG_ERR_THROW2(dx12dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mALC[i], NULL, IID_PPV_ARGS(&mCL[i])), "gpu cmd list allocator error");
 
 		wchar_t buf[256];
 		wsprintf(buf, L"gpu cmd list %u", i);
@@ -61,6 +61,13 @@ d912pxy_gpu_cmd_list::~d912pxy_gpu_cmd_list()
 	CleanupAllReferenced();
 
 	delete mGpuRefs;
+
+	for (int i = 0; i != PXY_INNER_MAX_GPU_CMD_LIST_GROUPS; ++i)
+	{
+		mCL[i]->Release();
+		mALC[i]->Release();
+	}
+	fence->Release();
 }
 
 void d912pxy_gpu_cmd_list::Execute()
@@ -71,11 +78,11 @@ void d912pxy_gpu_cmd_list::Execute()
 		LOG_ERR_THROW2(mCL[i]->Close(), "can't close command list");
 
 	ID3D12CommandList* const commandLists[PXY_INNER_MAX_GPU_CMD_LIST_GROUPS] = {
-		mCL[0].Get(),
-		mCL[1].Get(),
-		mCL[2].Get(),
-		mCL[3].Get(),
-		mCL[4].Get()
+		mCL[0],
+		mCL[1],
+		mCL[2],
+		mCL[3],
+		mCL[4]
 	/*	mCL[5].Get(),
 		mCL[6].Get(),
 		mCL[7].Get()*/
@@ -107,14 +114,14 @@ void d912pxy_gpu_cmd_list::WaitNoCleanup()
 	for (int i = 0; i != PXY_INNER_MAX_GPU_CMD_LIST_GROUPS; ++i)
 	{
 		mALC[i]->Reset();
-		mCL[i]->Reset(mALC[i].Get(), 0);
+		mCL[i]->Reset(mALC[i], 0);
 	}
 }
 
 void d912pxy_gpu_cmd_list::Signal()
 {
 	const UINT64 fenceVal = fenceId;
-	LOG_ERR_THROW2(mDXQue->Signal(fence.Get(), fenceVal), "can't set signal on fence");
+	LOG_ERR_THROW2(mDXQue->Signal(fence, fenceVal), "can't set signal on fence");
 	
 }
 

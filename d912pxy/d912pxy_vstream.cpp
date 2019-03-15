@@ -93,6 +93,7 @@ D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbDa
 		linfo.size = SizeToLock;
 	}
 
+	//megai2: FIXME not thread safe for multiple thread callers
 	lockInfo->WriteElement(linfo);
 	
 	*ppbData = (void*)((intptr_t)(data) + OffsetToLock);
@@ -105,7 +106,7 @@ D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbDa
 D912PXY_METHOD_IMPL(Unlock)(THIS)
 {
 	API_OVERHEAD_TRACK_START(2)
-		
+			
 	d912pxy_s(bufloadThread)->IssueUpload(this);
 
 	API_OVERHEAD_TRACK_END(2)
@@ -219,6 +220,7 @@ void d912pxy_vstream::ProcessUpload(ID3D12GraphicsCommandList * cl)
 {	
 	BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
 
+	//megai2: FIXME this must be done in reverse order
 	d912pxy_vstream_lock_data linfo = lockInfo->PopElementMTG();	
 	
 	if (!ulObj)

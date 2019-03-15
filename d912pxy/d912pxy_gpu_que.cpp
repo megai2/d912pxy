@@ -41,7 +41,7 @@ d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iQueues, UINT iMaxCl
 	mGPUCleanupThread = new d912pxy_gpu_cleanup_thread();
 
 	for (int i = 0; i != iQueues; ++i)	
-		mLists->WriteElement(new d912pxy_gpu_cmd_list(dev, mDXQue, iMaxRefernecedObjs, iGrowReferences, iMaxCleanupPerSync, mGPUCleanupThread));	
+		mLists->WriteElement(new d912pxy_gpu_cmd_list(dev, mDXQue.Get(), iMaxRefernecedObjs, iGrowReferences, iMaxCleanupPerSync, mGPUCleanupThread));	
 	mCurrentGPUWork = NULL;
 
 	d912pxy_s(GPUcl) = mLists->GetElement();
