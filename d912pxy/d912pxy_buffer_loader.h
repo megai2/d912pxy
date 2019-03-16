@@ -26,14 +26,14 @@ SOFTWARE.
 #include "stdafx.h"
 
 
-class d912pxy_buffer_loader : public d912pxy_async_upload_thread<d912pxy_vstream, d912pxy_buffer_loader*>
+class d912pxy_buffer_loader : public d912pxy_async_upload_thread<d912pxy_vstream_lock_data, d912pxy_buffer_loader*>
 {
 public:
 	d912pxy_buffer_loader(d912pxy_device* dev);
 	~d912pxy_buffer_loader();
 
-	void IssueUpload(d912pxy_vstream * dst);
-	void UploadItem(d912pxy_vstream* it);
+	void IssueUpload(d912pxy_vstream_lock_data dst);
+	void UploadItem(d912pxy_vstream_lock_data* it);
 	void ThreadWake();
 
 private:

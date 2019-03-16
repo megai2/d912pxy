@@ -140,7 +140,7 @@ template class d912pxy_ringbuffer<d912pxy_comhandler*>;
 template class d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>;
 template class d912pxy_ringbuffer<d912pxy_batch*>;
 template class d912pxy_ringbuffer<d912pxy_pso_cache_item*>;
-template class d912pxy_ringbuffer<d912pxy_texture_load_item*>;
+template class d912pxy_ringbuffer<d912pxy_texture_load_item>;
 template class d912pxy_ringbuffer<d912pxy_resource*>;
 template class d912pxy_ringbuffer<d912pxy_upload_item*>;
 template class d912pxy_ringbuffer<d912pxy_vstream*>;

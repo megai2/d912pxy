@@ -49,7 +49,7 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 {
 	d12res_buffer(Length, D3D12_HEAP_TYPE_DEFAULT);
 	
-	lockInfo = new d912pxy_ringbuffer<d912pxy_vstream_lock_data>(16, 2);
+	lockDepth = 0;
 
 	ulObj = NULL;
 
@@ -72,9 +72,6 @@ d912pxy_vstream::~d912pxy_vstream()
 {
 	if (data)
 		free(data);
-
-	if (lockInfo)
-		delete lockInfo;
 }
 
 D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
@@ -82,6 +79,7 @@ D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbDa
 	API_OVERHEAD_TRACK_START(2)
 
 	d912pxy_vstream_lock_data linfo;
+	linfo.dst = this;
 
 	if (!SizeToLock)
 	{
@@ -93,8 +91,9 @@ D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbDa
 		linfo.size = SizeToLock;
 	}
 
-	//megai2: FIXME not thread safe for multiple thread callers
-	lockInfo->WriteElement(linfo);
+	//megai2: TODO probably thread safety guard
+	lockInfo[lockDepth] = linfo;
+	++lockDepth;
 	
 	*ppbData = (void*)((intptr_t)(data) + OffsetToLock);
 
@@ -107,7 +106,8 @@ D912PXY_METHOD_IMPL(Unlock)(THIS)
 {
 	API_OVERHEAD_TRACK_START(2)
 			
-	d912pxy_s(bufloadThread)->IssueUpload(this);
+	--lockDepth;
+	d912pxy_s(bufloadThread)->IssueUpload(lockInfo[lockDepth]);	
 
 	API_OVERHEAD_TRACK_END(2)
 
@@ -196,16 +196,11 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 	if (use)
 	{		
 		d12res_buffer(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
-		data = malloc(dx9desc.Size);
-
-		lockInfo = new d912pxy_ringbuffer<d912pxy_vstream_lock_data>(16, 2);
+		data = malloc(dx9desc.Size);		
 	}
 	else {
 		m_res->Release();
 		m_res = NULL;
-
-		delete lockInfo;
-		lockInfo = NULL;
 
 		free(data);
 		data = NULL;
@@ -216,21 +211,18 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 	return 0;
 }
 
-void d912pxy_vstream::ProcessUpload(ID3D12GraphicsCommandList * cl)
+void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl)
 {	
 	BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
-
-	//megai2: FIXME this must be done in reverse order
-	d912pxy_vstream_lock_data linfo = lockInfo->PopElementMTG();	
-	
+		
 	if (!ulObj)
 		ulObj = d912pxy_s(pool_upload)->GetUploadObject(dx9desc.Size);
 	
-	UploadDataCopy(ulObj->DPtr() + linfo.offset, linfo.offset, linfo.size);
+	UploadDataCopy(ulObj->DPtr() + linfo->offset, linfo->offset, linfo->size);
 
-	ulObj->UploadTargetWithOffset(this, linfo.offset, linfo.offset, linfo.size, cl);
+	ulObj->UploadTargetWithOffset(this, linfo->offset, linfo->offset, linfo->size, cl);
 	
-	if (!lockInfo->HaveElements())
+	if (!InterlockedAdd(&lockDepth,0))
 	{
 		BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
 		ulObj->Release();

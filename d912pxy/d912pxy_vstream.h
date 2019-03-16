@@ -32,6 +32,7 @@ SOFTWARE.
 #define d912pxy_vstream_to_index(val) ((IDirect3DIndexBuffer9*)((IDirect3DVertexBuffer9*)val))
 
 typedef struct d912pxy_vstream_lock_data {
+	d912pxy_vstream* dst;
 	UINT32 size;
 	UINT32 offset;
 } d912pxy_vstream_lock_data;
@@ -78,7 +79,7 @@ public:
 	UINT32 PooledAction(UINT32 use);
 	void UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size);
 
-	void ProcessUpload(ID3D12GraphicsCommandList * cl);
+	void ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl);
 
 private:	
 	union bindData {
@@ -92,6 +93,7 @@ private:
 
 	d912pxy_upload_item* ulObj;
 
-	d912pxy_ringbuffer<d912pxy_vstream_lock_data>* lockInfo;
+	d912pxy_vstream_lock_data lockInfo[PXY_INNER_MAX_LOCK_DEPTH];
+	LONG lockDepth;
 };
 

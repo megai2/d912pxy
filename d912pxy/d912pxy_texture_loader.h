@@ -40,9 +40,5 @@ public:
 	void UploadItem(d912pxy_texture_load_item* it);
 	void IssueUpload(d912pxy_surface * surf, void* mem, UINT subRes);
 	void ThreadWake();
-
-private:	
-	d912pxy_texture_load_item pool[PXY_INNER_MAX_ASYNC_TEXLOADS];
-	UINT poolPtr;
 };
 

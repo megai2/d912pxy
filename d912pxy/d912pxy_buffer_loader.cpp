@@ -34,10 +34,10 @@ d912pxy_buffer_loader::~d912pxy_buffer_loader()
 {
 }
 
-void d912pxy_buffer_loader::UploadItem(d912pxy_vstream * it)
+void d912pxy_buffer_loader::UploadItem(d912pxy_vstream_lock_data* it)
 {
-	it->ProcessUpload(cl);
-	it->ThreadRef(-1);
+	it->dst->ProcessUpload(it, cl);
+	it->dst->ThreadRef(-1);
 }
 
 void d912pxy_buffer_loader::ThreadWake()
@@ -45,8 +45,8 @@ void d912pxy_buffer_loader::ThreadWake()
 	cl = d912pxy_s(GPUcl)->GID(CLG_BUF);
 }
 
-void d912pxy_buffer_loader::IssueUpload(d912pxy_vstream * dst)
+void d912pxy_buffer_loader::IssueUpload(d912pxy_vstream_lock_data lck)
 {
-	dst->ThreadRef(1);	
-	QueueItem(dst);
+	lck.dst->ThreadRef(1);	
+	QueueItem(lck);
 }
