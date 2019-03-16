@@ -96,29 +96,6 @@ void d912pxy_iframe::RBarrierStk(UINT cnt, D3D12_RESOURCE_BARRIER * bar)
 void d912pxy_iframe::SetStreamFreq(UINT StreamNumber, UINT Divider)
 {
 	streamBinds[StreamNumber].divider = Divider;
-	
-	/*if (Divider == 1)
-	{
-		instanceCount = 0;
-	}
-
-	if (Divider & D3DSTREAMSOURCE_INDEXEDDATA)
-	{
-		instanceCount = (0x3FFFFFFF & Divider);
-		//streamBinds[StreamNumber].divider = 1;
-	}
-	else if (Divider & D3DSTREAMSOURCE_INSTANCEDATA)
-	{
-		instanceDataStream = StreamNumber;
-
-		//streamBinds[StreamNumber].divider = 2;
-		
-		useInstanced = d912pxy_s(psoCache)->GetIAFormat()->GetInstancedModification();
-		//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
-		useInstanced->ModifyStreamElementType(StreamNumber, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-
-		d912pxy_s(psoCache)->IAFormat(useInstanced);
-	}*/
 }
 
 void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride)
@@ -126,8 +103,7 @@ void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT Offse
 	if (vb && !streamBinds[StreamNumber].buffer)
 		++streamsActive;
 	else if (!vb && streamsActive)
-	{
-		//d912pxy_s(GPUcl)->GID(CLG_SEQ)->IASetVertexBuffers(StreamNumber, 0, 0);
+	{		
 		--streamsActive;
 	}
 
@@ -139,15 +115,11 @@ void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT Offse
 
 	if (vb)
 		d912pxy_s(CMDReplay)->VBbind(vb, Stride, StreamNumber, OffsetInBytes);
-
-	//do this later and handle resource change midframe 
-	//streamBinds[StreamNumber].buffer->IFrameBind(Stride, StreamNumber);
 }
 
 void d912pxy_iframe::SetIBuf(d912pxy_vstream* ib)
 {
-	indexBind = ib;
-	//batchCommisionDF |= 2;
+	indexBind = ib;	
 	if (ib)
 		d912pxy_s(CMDReplay)->IBbind(ib);
 }
@@ -595,9 +567,9 @@ void d912pxy_iframe::SetDrawStateOnCL(ID3D12GraphicsCommandList * cl, d912pxy_if
 
 	d912pxy_s(CMDReplay)->PlayId(&rItem, cl);
 
-	cl->RSSetViewports(1, &state->viewport);
 	cl->RSSetScissorRects(1, &state->scissor);
-
+	cl->RSSetViewports(1, &state->viewport);
+	
 	for (int i = 0; i != state->streamsActive; ++i)
 	{
 		d912pxy_vstream* buf = state->streamBinds[i].buffer;
@@ -622,7 +594,7 @@ void d912pxy_iframe::SetDrawStateOnCL(ID3D12GraphicsCommandList * cl, d912pxy_if
 			bs->ThreadRef(-1);		
 	}
 
-	rItem.type = DRPL_CPSO;
+	rItem.type = DRPL_CPSO; 
 	rItem.compiledPso.psoItem = d912pxy_s(psoCache)->UseByDescMT(&state->pso, 0);
 	d912pxy_s(CMDReplay)->PlayId(&rItem, cl);
 

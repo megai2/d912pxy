@@ -264,7 +264,9 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 {
 	LOG_DBG_DTDM("replay range [%u , %u, %u]", start, end, stackTop);
 	
-	for (UINT i = start; i != end; ++i)
+	UINT i = start;
+
+	while (i != end)
 	{
 		LOG_DBG_DTDM("RP TY %s", d912pxy_replay_item_type_dsc[stack[i].type]);
 
@@ -285,23 +287,31 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 		}
 
 		PlayId(&stack[i], cl);
+		++i;
 	}
 
-	//megai2: unlock thread only when stopMarker is set
-	while (!InterlockedAdd(&stopMarker, 0))
-	{
-		UINT32 addJob = thrd->GetAdditionalJob();
-		if (addJob != end)
-		{
-			for (UINT i = end; i != addJob; ++i)
-			{
-				LOG_DBG_DTDM("ADD RP TY %s", d912pxy_replay_item_type_dsc[stack[i].type]);
+	LOG_DBG_DTDM("RP TY EAD %s", d912pxy_replay_item_type_dsc[stack[end - 1].type]);
 
-				PlayId(&stack[i], cl);
-			}
-			thrd->DoAdditionalJob(end);
+	//megai2: unlock thread only when stopMarker is set
+	while (!InterlockedAdd(&stopMarker, 0))	
+		thrd->WaitForJob();		
+		
+	UINT32 addJob = thrd->GetAdditionalJob();
+
+	LOG_DBG_DTDM("replay range [%u , %u, %u]", start, addJob, stackTop);
+
+	if (addJob > end)
+	{		
+		for (UINT i = end; i != addJob; ++i)
+		{
+			LOG_DBG_DTDM("ADD RP TY %s", d912pxy_replay_item_type_dsc[stack[i].type]);
+
+			PlayId(&stack[i], cl);
 		}
-		thrd->WaitForJob();
+
+		LOG_DBG_DTDM("RP TY AD %s", d912pxy_replay_item_type_dsc[stack[addJob - 1].type]);
+
+		thrd->DoAdditionalJob(end);
 	}
 }
 
@@ -312,25 +322,32 @@ void d912pxy_replay::Finish()
 		LOG_ERR_THROW2(-1, "too many replay items");
 	}
 
+	if (((cWorker + 1) != numThreads) && (stackTop > switchPoint))
+	{
+		threads[cWorker]->DoAdditionalJob(stackTop);
+	}
+
 	InterlockedIncrement(&stopMarker);	
 
 	for (int i = 0; i != numThreads; ++i)
 		threads[i]->Finish();	
+
+	LOG_DBG_DTDM("FSTK %u", stackTop);
 
 	ReRangeThreads(stackTop);
 }
 
 void d912pxy_replay::IssueWork(UINT batch)
 {
-	if (stackTop > switchPoint)
+	if (stackTop >= switchPoint)
 	{		
-		threads[cWorker]->DoAdditionalJob(stackTop);
+		//threads[cWorker]->DoAdditionalJob(stackTop);
 		threads[cWorker]->SignalWork();
 		
 		++cWorker;
 		switchPoint = rangeEnds[cWorker];
 		
-		threads[cWorker]->ExecRange(stackTop, rangeEnds[cWorker]);
+		//threads[cWorker]->ExecRange(stackTop, rangeEnds[cWorker]);
 		threads[cWorker]->RecordIFrameDrawState();
 		threads[cWorker]->SignalWork();
 		
@@ -343,9 +360,10 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 {
 	switchRange = maxRange / numThreads;
 
-	if (switchRange < 100)
-		switchRange = 100;
-
+	//megai2: TODO fix flicker on cl switch due to GPU executing them in parallel
+	if (switchRange < 500)
+		switchRange = 500;
+	 
 	for (int i = 0; i != numThreads; ++i)
 	{		
 		rangeEnds[i] = switchRange * (i + 1);
@@ -356,12 +374,16 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 		threads[i]->ExecRange(switchRange * i, rangeEnds[i]);
 	}
 
+//	threads[0]->ExecRange(0, rangeEnds[0]);
+
 	switchPoint = rangeEnds[0];
 	cWorker = 0;
 }
 
 void d912pxy_replay::Start()
 {
+	LOG_DBG_DTDM("RP START");
+
 	stackTop = 0;
 	InterlockedDecrement(&stopMarker);
 }

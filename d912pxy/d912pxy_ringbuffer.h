@@ -35,6 +35,7 @@ public:
 
 	void WriteElement(ElementType ele);
 	ElementType GetElement();
+	ElementType PopElement();
 	
 	UINT HaveElements();
 	UINT HaveFreeSpace();

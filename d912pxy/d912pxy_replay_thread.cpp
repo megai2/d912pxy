@@ -26,12 +26,13 @@ SOFTWARE.
 
 d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread(threadName)
 {
+	exchRI = new d912pxy_ringbuffer<UINT32>(4, 0);
 	listGrp = iListGrp;
 }
 
 d912pxy_replay_thread::~d912pxy_replay_thread()
 {
-	
+	delete exchRI;
 }
 
 void d912pxy_replay_thread::ThreadJob()
@@ -44,11 +45,22 @@ void d912pxy_replay_thread::ThreadJob()
 
 	if (drawStateSaved)
 	{
+		d912pxy_replay_item* rit = rpl->BacktraceItemType(DRPL_OMSR, 0);
+
+		if (rit)
+			rpl->PlayId(rit, cl);
+
+		rit = rpl->BacktraceItemType(DRPL_OMBF, 0);
+
+		if (rit)
+			rpl->PlayId(rit, cl);
+
 		d912pxy_s(iframe)->SetDrawStateOnCL(cl, drawStateSaved);
 		drawStateSaved = NULL;
 	}
 
-	rpl->Replay(startRI, endRI, cl, this);
+	if (exchRI->HaveElements())
+		rpl->Replay(exchRI->PopElement(), exchRI->PopElement(), cl, this);
 
 	m_dev->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
 
@@ -57,8 +69,8 @@ void d912pxy_replay_thread::ThreadJob()
 
 void d912pxy_replay_thread::ExecRange(UINT start, UINT end)
 {
-	startRI = start;	
-	endRI = end;
+	exchRI->WriteElement(end);
+	exchRI->WriteElement(start);	
 }
 
 void d912pxy_replay_thread::Finish()
@@ -73,11 +85,11 @@ void d912pxy_replay_thread::ThreadInitProc()
 
 void d912pxy_replay_thread::RecordIFrameDrawState()
 {
-	drawStateSaved = &drawState;
 	d912pxy_s(iframe)->GetCurrentDrawState(&drawState);
+	drawStateSaved = &drawState;	
 }
 
 void d912pxy_replay_thread::DoAdditionalJob(UINT end)
 {
-	endRI = end;
+	addRI = end;
 }

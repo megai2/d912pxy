@@ -98,6 +98,15 @@ ElementType d912pxy_ringbuffer<ElementType>::GetElement()
 }
 
 template<class ElementType>
+ElementType d912pxy_ringbuffer<ElementType>::PopElement()
+{
+	ElementType ret = GetElement();
+	Next();
+
+	return ret;
+}
+
+template<class ElementType>
 UINT d912pxy_ringbuffer<ElementType>::HaveElements()
 {
 	return (writed != 0);

@@ -42,12 +42,13 @@ public:
 	void RecordIFrameDrawState();
 
 	void DoAdditionalJob(UINT end);
-	UINT32 GetAdditionalJob() { return endRI; };
+	UINT32 GetAdditionalJob() { return addRI; };
 
 private:
 
-	UINT startRI;
-	UINT endRI;
+	d912pxy_ringbuffer<UINT32>* exchRI;
+
+	UINT addRI;
 	d912pxy_gpu_cmd_list_group listGrp;
 
 	d912pxy_iframe_draw_state drawState;
