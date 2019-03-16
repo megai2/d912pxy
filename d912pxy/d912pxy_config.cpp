@@ -140,3 +140,8 @@ wchar_t * d912pxy_config::GetValueRaw(d912pxy_config_value val)
 {
 	return &data[val].value[0];
 }
+
+d912pxy_config_value_dsc * d912pxy_config::GetEntryRaw(d912pxy_config_value val)
+{
+	return &data[val];
+}

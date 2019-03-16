@@ -60,6 +60,8 @@ public:
 	UINT64 GetValueUI64(d912pxy_config_value val);
 	wchar_t* GetValueRaw(d912pxy_config_value val);
 
+	d912pxy_config_value_dsc* GetEntryRaw(d912pxy_config_value val);
+
 private:
 
 	d912pxy_config_value_dsc data[PXY_CFG_CNT] = {

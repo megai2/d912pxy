@@ -250,6 +250,17 @@ void d912pxy_device::PrintInfoBanner()
 	SYSTEM_INFO sysInf = { 0 };
 	GetSystemInfo(&sysInf);
 	LOG_INFO_DTDM("CPU cores: %u", sysInf.dwNumberOfProcessors);
+
+	LOG_INFO_DTDM("=========================================== Config data");
+
+	for (int i = 0; i != PXY_CFG_CNT; ++i)
+	{
+		d912pxy_config_value_dsc* entry = d912pxy_s(config)->GetEntryRaw((d912pxy_config_value)i);
+
+		LOG_INFO_DTDM("%s.%s = %s", entry->section, entry->name, entry->value);
+	}
+
+	LOG_INFO_DTDM("======================================================");
 }
 
 void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters)
