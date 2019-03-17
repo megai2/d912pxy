@@ -55,6 +55,7 @@ void d912pxy_async_upload_thread<QueItemType, ProcImpl>::CheckInterrupt()
 {
 	if (m_dev->InterruptThreads())
 	{
+		static_cast<ProcImpl>(this)->OnThreadInterrupt();
 		m_dev->LockThread(threadSyncId);
 	}
 }

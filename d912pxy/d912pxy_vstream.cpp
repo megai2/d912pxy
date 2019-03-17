@@ -212,22 +212,24 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 }
 
 void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl)
-{	
-	BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
-		
+{			
 	if (!ulObj)
+	{
+		BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
 		ulObj = d912pxy_s(pool_upload)->GetUploadObject(dx9desc.Size);
+		d912pxy_s(bufloadThread)->AddToFinishList(this);
+	}
 	
 	UploadDataCopy(ulObj->DPtr() + linfo->offset, linfo->offset, linfo->size);
 
 	ulObj->UploadTargetWithOffset(this, linfo->offset, linfo->offset, linfo->size, cl);
-	
-	if (!InterlockedAdd(&lockDepth,0))
-	{
-		BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
-		ulObj->Release();
-		ulObj = NULL;
-	}
+}
+
+void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
+{
+	BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
+	ulObj->Release();
+	ulObj = NULL;
 }
 
 void d912pxy_vstream::UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size)

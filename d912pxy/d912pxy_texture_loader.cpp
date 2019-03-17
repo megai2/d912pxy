@@ -46,6 +46,10 @@ void d912pxy_texture_loader::ThreadWake()
 {
 }
 
+void d912pxy_texture_loader::OnThreadInterrupt()
+{
+}
+
 void d912pxy_texture_loader::UploadItem(d912pxy_texture_load_item* it)
 {
 	it->surf->DelayedLoad(it->ul, it->subRes);

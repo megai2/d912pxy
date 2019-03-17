@@ -81,6 +81,8 @@ public:
 
 	void ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl);
 
+	void FinishUpload(ID3D12GraphicsCommandList * cl);
+
 private:	
 	union bindData {
 		D3D12_VERTEX_BUFFER_VIEW v;
