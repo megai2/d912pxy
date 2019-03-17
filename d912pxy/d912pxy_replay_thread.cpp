@@ -43,24 +43,16 @@ void d912pxy_replay_thread::ThreadJob()
 
 	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(listGrp);
 
-	if (drawStateSaved)
-	{
-		d912pxy_replay_item* rit = rpl->BacktraceItemType(DRPL_OMSR, 0);
-
-		if (rit)
-			rpl->PlayId(rit, cl);
-
-		rit = rpl->BacktraceItemType(DRPL_OMBF, 0);
-
-		if (rit)
-			rpl->PlayId(rit, cl);
-
-		d912pxy_s(iframe)->SetDrawStateOnCL(cl, drawStateSaved);
-		drawStateSaved = NULL;
-	}
+	UINT32 startRI = 0;
+	UINT32 endRI = 0;
 
 	if (exchRI->HaveElements())
-		rpl->Replay(exchRI->PopElement(), exchRI->PopElement(), cl, this);
+	{	
+		endRI = exchRI->PopElement();
+		startRI = exchRI->PopElement();		
+	}
+
+	rpl->Replay(startRI, endRI, cl, this);
 
 	m_dev->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
 
@@ -81,15 +73,4 @@ void d912pxy_replay_thread::Finish()
 void d912pxy_replay_thread::ThreadInitProc()
 {
 	d912pxy_s(dev)->InitLockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
-}
-
-void d912pxy_replay_thread::RecordIFrameDrawState()
-{
-	d912pxy_s(iframe)->GetCurrentDrawState(&drawState);
-	drawStateSaved = &drawState;	
-}
-
-void d912pxy_replay_thread::DoAdditionalJob(UINT end)
-{
-	addRI = end;
 }

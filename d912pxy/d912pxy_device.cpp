@@ -62,15 +62,10 @@ d912pxy_device::~d912pxy_device(void)
 {	
 	LOG_INFO_DTDM("d912pxy exiting");
 
-	LOG_INFO_DTDM2(d912pxy_s(CMDReplay)->Finish(),   "Replayer finished");
 	LOG_INFO_DTDM2(d912pxy_s(iframe)->End(),		 "Last iframe ended");
 	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(),		 "Additional DX9 objects freed");
 	LOG_INFO_DTDM2(d912pxy_s(GPUque)->Flush(0),      "Last gpu cmd lists flushed");
 	LOG_INFO_DTDM2(swapchains[0]->Release(),		 "Swapchain stopped");
-
-	//megai2: we have some tree like deletions of objects, so we must call this multiple times
-	for (int i = 0; i != 100; ++i)
-		d912pxy_s(GPUque)->Flush(0);
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
 		

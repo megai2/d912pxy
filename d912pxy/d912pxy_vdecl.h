@@ -55,6 +55,8 @@ public:
 
 	UINT32 GetHash();
 
+	UINT GetUsedStreams();
+
 private:
 	
 	D3DVERTEXELEMENT9 declData[PXY_INNER_MAX_VDECL_LEN];

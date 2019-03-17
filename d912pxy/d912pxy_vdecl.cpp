@@ -222,6 +222,19 @@ UINT32 d912pxy_vdecl::GetHash()
 	return mHash;
 }
 
+UINT d912pxy_vdecl::GetUsedStreams()
+{
+	UINT ret = 0;
+
+	for (int i = 0; i != declLen; ++i)
+	{
+		if (declData12[i].InputSlot > ret)
+			ret = declData12[i].InputSlot;
+	}
+
+	return ret;
+}
+
 #define D912PXY_METHOD_IMPL_CN d912pxy_vdecl
 
 D912PXY_IUNK_IMPL

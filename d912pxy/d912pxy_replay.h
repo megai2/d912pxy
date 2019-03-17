@@ -198,8 +198,14 @@ public:
 	void IssueWork(UINT batch);
 	void ReRangeThreads(UINT batches);
 
+	UINT GetStackTop();
+	void SyncStackTop();
+
 	d912pxy_replay_item* GetItem(UINT id) { return &stack[id]; };
-	d912pxy_replay_item* BacktraceItemType(d912pxy_replay_item_type type, UINT depth);
+	d912pxy_replay_item* BacktraceItemType(d912pxy_replay_item_type type, UINT depth, UINT base);
+
+	void TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base);
+	void TransitCLState(ID3D12GraphicsCommandList* cl, UINT base);
 
 private:
 
@@ -222,7 +228,10 @@ private:
 	void RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl);
 	
 	d912pxy_replay_item stack[PXY_INNER_MAX_IFRAME_BATCH_REPLAY];
+
 	UINT stackTop;
+	LONG stackTopMT;
+	
 		
 	UINT switchRange;	
 	UINT switchPoint;

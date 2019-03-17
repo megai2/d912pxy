@@ -256,7 +256,7 @@ void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, 
 }
 
 void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList * cl)
-{
+{	
 	(this->*replay_handlers[it->type])(&it->ptr, cl);
 }
 
@@ -264,55 +264,54 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 {
 	LOG_DBG_DTDM("replay range [%u , %u, %u]", start, end, stackTop);
 	
+	replay_thread_pso = NULL;
+
 	UINT i = start;
 
+	//megai2: wait for actual stack to be filled	
+	while (i >= GetStackTop())
+	{
+		if (InterlockedAdd(&stopMarker, 0))
+		{
+			if (i >= GetStackTop())
+				return;
+			else
+				break;
+		}
+		thrd->WaitForJob();		
+	}
+	
+	if (start > 0)
+		TransitCLState(cl, start);
+
+	UINT32 maxRI = GetStackTop();
+
+	//execute operations
 	while (i != end)
 	{
-		LOG_DBG_DTDM("RP TY %s", d912pxy_replay_item_type_dsc[stack[i].type]);
+		LOG_DBG_DTDM("RP TY %u %s",i, d912pxy_replay_item_type_dsc[stack[i].type]);
 
-		if (i >= stackTop)
+		while (i >= maxRI)
 		{
 			if (InterlockedAdd(&stopMarker, 0))
-				return;
-		sleepAgain:
-			thrd->WaitForJob();
-			//if we waked this thread just to mark it finished
-			if (i >= stackTop)
 			{
-				if (InterlockedAdd(&stopMarker, 0))
+				maxRI = GetStackTop();
+				if (i >= maxRI)
 					return;
 				else
-					goto sleepAgain;
-			}			
+					break;
+			}
+			thrd->WaitForJob();		
+			maxRI = GetStackTop();
 		}
 
 		PlayId(&stack[i], cl);
 		++i;
 	}
 
-	LOG_DBG_DTDM("RP TY EAD %s", d912pxy_replay_item_type_dsc[stack[end - 1].type]);
-
 	//megai2: unlock thread only when stopMarker is set
 	while (!InterlockedAdd(&stopMarker, 0))	
 		thrd->WaitForJob();		
-		
-	UINT32 addJob = thrd->GetAdditionalJob();
-
-	LOG_DBG_DTDM("replay range [%u , %u, %u]", start, addJob, stackTop);
-
-	if (addJob > end)
-	{		
-		for (UINT i = end; i != addJob; ++i)
-		{
-			LOG_DBG_DTDM("ADD RP TY %s", d912pxy_replay_item_type_dsc[stack[i].type]);
-
-			PlayId(&stack[i], cl);
-		}
-
-		LOG_DBG_DTDM("RP TY AD %s", d912pxy_replay_item_type_dsc[stack[addJob - 1].type]);
-
-		thrd->DoAdditionalJob(end);
-	}
 }
 
 void d912pxy_replay::Finish()
@@ -321,48 +320,44 @@ void d912pxy_replay::Finish()
 	{
 		LOG_ERR_THROW2(-1, "too many replay items");
 	}
-
-	if (((cWorker + 1) != numThreads) && (stackTop > switchPoint))
-	{
-		threads[cWorker]->DoAdditionalJob(stackTop);
-	}
-
+	
+	SyncStackTop();
 	InterlockedIncrement(&stopMarker);	
-
+	
 	for (int i = 0; i != numThreads; ++i)
 		threads[i]->Finish();	
 
 	LOG_DBG_DTDM("FSTK %u", stackTop);
 
-	ReRangeThreads(stackTop);
+	ReRangeThreads((UINT32)stackTop);
 }
 
 void d912pxy_replay::IssueWork(UINT batch)
 {
 	if (stackTop >= switchPoint)
-	{		
-		//threads[cWorker]->DoAdditionalJob(stackTop);
+	{	
+		SyncStackTop();
+
 		threads[cWorker]->SignalWork();
 		
 		++cWorker;
 		switchPoint = rangeEnds[cWorker];
-		
-		//threads[cWorker]->ExecRange(stackTop, rangeEnds[cWorker]);
-		threads[cWorker]->RecordIFrameDrawState();
+				
 		threads[cWorker]->SignalWork();
 		
 	}
-	else if ((batch % 100) == 0)
+	else if ((batch % 100) == 0) {
+		SyncStackTop();
 		threads[cWorker]->SignalWork();
+	}
 }
 
 void d912pxy_replay::ReRangeThreads(UINT maxRange)
 {
 	switchRange = maxRange / numThreads;
 
-	//megai2: TODO fix flicker on cl switch due to GPU executing them in parallel
-	if (switchRange < 500)
-		switchRange = 500;
+	if (switchRange < 30)
+		switchRange = 30;
 	 
 	for (int i = 0; i != numThreads; ++i)
 	{		
@@ -374,10 +369,20 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 		threads[i]->ExecRange(switchRange * i, rangeEnds[i]);
 	}
 
-//	threads[0]->ExecRange(0, rangeEnds[0]);
+	//threads[0]->ExecRange(0, rangeEnds[0]);
 
 	switchPoint = rangeEnds[0];
 	cWorker = 0;
+}
+
+UINT d912pxy_replay::GetStackTop()
+{
+	return InterlockedAdd(&stackTopMT, 0);
+}
+
+void d912pxy_replay::SyncStackTop()
+{
+	InterlockedExchange(&stackTopMT, stackTop);
 }
 
 void d912pxy_replay::Start()
@@ -385,15 +390,17 @@ void d912pxy_replay::Start()
 	LOG_DBG_DTDM("RP START");
 
 	stackTop = 0;
+	SyncStackTop();
+
 	InterlockedDecrement(&stopMarker);
 }
 
-d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type type, UINT depth)
+d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type type, UINT depth, UINT base)
 {
 	if (stackTop == 0)
 		return nullptr;
 
-	for (int i = stackTop - 1; i > 0; --i)
+	for (int i = base - 1; i >= 0; --i)
 	{
 		if (stack[i].type == type)
 		{
@@ -408,6 +415,62 @@ d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type
 
 	return nullptr;
 }
+
+void d912pxy_replay::TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base)
+{
+	d912pxy_replay_item * it = BacktraceItemType(type, depth, base);
+
+	if (it)
+		PlayId(it, cl);
+}
+
+void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base)
+{
+	//megai2: FIXME add inter-cl barrier to force serial GPU execution of command lists
+
+	//megai2: transit states by backtrace in stack
+	TransitBacktrace(DRPL_OMSR, 0, cl, base);
+	TransitBacktrace(DRPL_OMBF, 0, cl, base);
+	TransitBacktrace(DRPL_OMRT, 0, cl, base);
+
+	//megai2: FIXME use correct VP & SR based on cmd order
+	TransitBacktrace(DRPL_RSVP, 0, cl, base);
+	//TransitBacktrace(DRPL_RSSR, 0, cl, base);
+
+	TransitBacktrace(DRPL_IFIB, 0, cl, base);
+
+	d912pxy_replay_item* it = BacktraceItemType(DRPL_RPSO, 0, base);
+
+	if (it)
+	{
+		UINT32 usedStreams = it->rawPso.rawState.InputLayout->GetUsedStreams() + 1;
+
+		for (int i = 0; i != usedStreams; ++i)
+		{
+			UINT32 depth = 0;
+
+			while (depth < 10)
+			{
+				d912pxy_replay_item* vbb = BacktraceItemType(DRPL_IFVB, depth, base);
+
+				if (!vbb)
+					break;
+
+				if (vbb->vb.slot == i)
+				{
+					PlayId(vbb, cl);
+					break;
+				}
+				else
+					++depth;
+			}
+		}
+
+		PlayId(it, cl);
+	}
+
+}
+
 
 void d912pxy_replay::RHA_TRAN(d912pxy_replay_state_transit * it, ID3D12GraphicsCommandList * cl)
 {

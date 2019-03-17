@@ -39,19 +39,11 @@ public:
 	void Finish();
 	void ThreadInitProc();
 
-	void RecordIFrameDrawState();
-
-	void DoAdditionalJob(UINT end);
-	UINT32 GetAdditionalJob() { return addRI; };
-
 private:
-
 	d912pxy_ringbuffer<UINT32>* exchRI;
 
-	UINT addRI;
 	d912pxy_gpu_cmd_list_group listGrp;
 
-	d912pxy_iframe_draw_state drawState;
-	d912pxy_iframe_draw_state* drawStateSaved;
+	d912pxy_thread_lock transitLock;
 };
 

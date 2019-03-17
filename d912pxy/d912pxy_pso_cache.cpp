@@ -582,13 +582,16 @@ d912pxy_pso_cache_item * d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso
 	{
 		psoLookupLock.Hold();
 
-		cacheIndexes->PointAtMem(&dscHash, 4);
-		cacheIndexes->SetValue(++cacheIncID);
+		id = cacheIndexes->PointAtMem(&dscHash, 4);
+
+		if (id == 0)
+		{
+			cacheIndexes->SetValue(++cacheIncID);
+			id = cacheIncID;
+		}
 
 		psoLookupLock.Release();
-
-		id = cacheIncID;
-
+		
 		if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_WRITE)
 		{
 			d912pxy_serialized_pso_key cacheEntry;

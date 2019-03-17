@@ -27,16 +27,6 @@ SOFTWARE.
 
 #define PXY_INNER_RBSTACK_SIZE 65535
 
-typedef struct d912pxy_iframe_draw_state {
-	UINT streamsActive;	
-	d912pxy_device_streamsrc streamBinds[PXY_INNER_MAX_VBUF_STREAMS];
-	d912pxy_vstream* indexBind;
-	d912pxy_surface* bindedSurfaces[2];
-	D3D12_VIEWPORT viewport;
-	D3D12_RECT scissor;
-	d912pxy_trimmed_dx12_pso pso;
-} d912pxy_iframe_draw_state;
-
 class d912pxy_iframe : public d912pxy_noncom
 {
 public:
@@ -84,13 +74,11 @@ public:
 
 	void SetRSigOnList(d912pxy_gpu_cmd_list_group lstID);
 
-	void GetCurrentDrawState(d912pxy_iframe_draw_state* ret);
-
-	void SetDrawStateOnCL(ID3D12GraphicsCommandList* cl, d912pxy_iframe_draw_state* state);
-
 	void NoteBindedSurfaceTransit(d912pxy_surface* surf, UINT slot);
 
 	void StateSafeFlush();
+
+	void ForceStateRebind();
 
 private:	
 
