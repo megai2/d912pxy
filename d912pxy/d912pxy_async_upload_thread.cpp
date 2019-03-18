@@ -8,6 +8,8 @@ d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread(
 
 	uploadCount = 0;
 	uploadTrigger = throttleFactor;
+
+	dev->AddActiveThreads(1);
 }
 
 template<class QueItemType, class ProcImpl>

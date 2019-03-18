@@ -105,6 +105,8 @@ void d912pxy_device::InitVFS()
 
 void d912pxy_device::InitClassFields()
 {
+	activeThreadCount = 0;
+	threadLockCounter = 0;
 	ZeroMemory(swapchains, sizeof(intptr_t)*PXY_INNER_MAX_SWAP_CHAINS);
 }
 

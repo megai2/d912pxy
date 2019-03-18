@@ -37,24 +37,22 @@ d912pxy_replay_thread::~d912pxy_replay_thread()
 
 void d912pxy_replay_thread::ThreadJob()
 {
-	d912pxy_replay* rpl = d912pxy_s(CMDReplay);
-
-	d912pxy_s(iframe)->SetRSigOnList(listGrp);
-
-	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(listGrp);
-
-	UINT32 startRI = 0;
-	UINT32 endRI = 0;
-
 	if (exchRI->HaveElements())
-	{	
-		endRI = exchRI->PopElement();
-		startRI = exchRI->PopElement();		
+	{
+		d912pxy_s(iframe)->SetRSigOnList(listGrp);
+
+		ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(listGrp);
+
+		d912pxy_s(CMDReplay)->Replay(exchRI->PopElement(), exchRI->PopElement(), cl, this);
 	}
-
-	rpl->Replay(startRI, endRI, cl, this);
-
-	m_dev->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
+	else {
+		LOG_ERR_THROW2(-1, "RI exchange buffer is empty on replay thread wake");
+	}
+	
+	if (m_dev->InterruptThreads())
+		m_dev->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
+	else 
+		LOG_ERR_THROW2(-1, "Device is not interrupting threads while replaying thread exits from proc");
 
 	IgnoreJob();
 }

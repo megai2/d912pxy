@@ -192,6 +192,7 @@ public:
 
 	void PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList* cl);
 	void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd);
+	UINT WaitForData(UINT idx, UINT maxRI, d912pxy_replay_thread* thrd);
 
 	void Finish();
 	void Start();

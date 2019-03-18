@@ -193,11 +193,15 @@ public:
 
 	ID3D12RootSignature* ConstructRootSignature(D3D12_ROOT_SIGNATURE_DESC* rootSignatureDesc);
 
+	void AddActiveThreads(UINT cnt) { activeThreadCount += cnt; };
+
 private:
 	LONG threadInterruptState;	
 	d912pxy_thread_lock threadLockdEvents[PXY_INNER_THREADID_MAX];
 	d912pxy_thread_lock threadLock;
 	d912pxy_thread_lock cleanupLock;
+	LONG threadLockCounter;
+	UINT activeThreadCount;
 
 	ComPtr<ID3D12Device> m_d12evice;
 	ID3D12Device* m_d12evice_ptr;

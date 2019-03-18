@@ -37,6 +37,8 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"rep
 
 	numThreads = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_REPLAY_THREADS);
 
+	dev->AddActiveThreads(numThreads);
+
 	for (int i = 0; i != numThreads; ++i)
 	{		
 		d912pxy_gpu_cmd_list_group clg = (d912pxy_gpu_cmd_list_group)(CLG_RP1 + i);
@@ -266,44 +268,27 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	
 	replay_thread_pso = NULL;
 
-	UINT i = start;
+	UINT i = start;		
+	UINT maxRI = 0;
 
 	//megai2: wait for actual stack to be filled	
-	while (i >= GetStackTop())
-	{
-		if (InterlockedAdd(&stopMarker, 0))
-		{
-			if (i >= GetStackTop())
-				return;
-			else
-				break;
-		}
-		thrd->WaitForJob();		
-	}
+	maxRI = WaitForData(i, maxRI, thrd);
+
+	if (!maxRI)
+		return;
 	
 	if (start > 0)
 		TransitCLState(cl, start);
-
-	UINT32 maxRI = GetStackTop();
-
+	
 	//execute operations
 	while (i != end)
 	{
 		LOG_DBG_DTDM("RP TY %u %s",i, d912pxy_replay_item_type_dsc[stack[i].type]);
 
-		while (i >= maxRI)
-		{
-			if (InterlockedAdd(&stopMarker, 0))
-			{
-				maxRI = GetStackTop();
-				if (i >= maxRI)
-					return;
-				else
-					break;
-			}
-			thrd->WaitForJob();		
-			maxRI = GetStackTop();
-		}
+		maxRI = WaitForData(i, maxRI, thrd);			
+
+		if (!maxRI)
+			return;		
 
 		PlayId(&stack[i], cl);
 		++i;
@@ -312,6 +297,24 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	//megai2: unlock thread only when stopMarker is set
 	while (!InterlockedAdd(&stopMarker, 0))	
 		thrd->WaitForJob();		
+}
+
+UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, d912pxy_replay_thread * thrd)
+{	
+	while (idx >= maxRI)
+	{
+		maxRI = GetStackTop();
+		if (InterlockedAdd(&stopMarker, 0))
+		{			
+			if (idx >= maxRI)
+				return 0;
+			else
+				break;
+		}		
+		thrd->WaitForJob();
+	}
+
+	return maxRI;
 }
 
 void d912pxy_replay::Finish()

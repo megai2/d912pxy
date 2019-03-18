@@ -158,7 +158,7 @@ fallback:
 
 		if (FAILED(cprHR))
 		{
-			LOG_ERR_DTDM("CreatePlacedResource failed with po %llX ps %llX", memPoolOffset, memPoolSize);
+			LOG_ERR_DTDM("CreatePlacedResource failed with hr = %lX po %llX ps %llX", cprHR, memPoolOffset, memPoolSize);
 			ctorLock->Release();
 			goto fallback;
 		}
