@@ -472,15 +472,20 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base)
 
 	if (it)
 	{
-		UINT32 usedStreams = it->rawPso.rawState.InputLayout->GetUsedStreams() + 1;
+		//megai2: FIXME
+		//PSO1 VB VB *transit* IB PSO2 <= this sequence will break things if usedStreams1 < usedStreams2
+		//hardcore to 2 for now
+		UINT32 usedStreams = 2;//it->rawPso.rawState.InputLayout->GetUsedStreams() + 1;
 
 		for (int i = 0; i != usedStreams; ++i)
 		{
 			UINT32 depth = 0;
 
+			d912pxy_replay_item* vbb;
+
 			while (depth < 10)
 			{
-				d912pxy_replay_item* vbb = BacktraceItemType(DRPL_IFVB, depth, base);
+				vbb = BacktraceItemType(DRPL_IFVB, depth, base);
 
 				if (!vbb)
 					break;
@@ -493,6 +498,9 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base)
 				else
 					++depth;
 			}
+
+			if (!vbb)
+				break;
 		}
 
 		PlayId(it, cl);
