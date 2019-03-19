@@ -391,3 +391,4 @@ bin/d912pxy_crash.txt
 
 bin/d912pxy/config.ini
 bin/d912pxy/log.txt
+bin/d912pxy/crash.txt
