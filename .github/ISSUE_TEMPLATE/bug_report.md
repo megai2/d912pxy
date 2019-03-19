@@ -37,7 +37,7 @@ If applicable, add screenshots to help explain your problem.
 2. Hardware info: CPU, RAM, GPU
 3. GPU Driver version
 4. Version of d912pxy used
-5. Log file from <game root>/P7logs folder and/or d912pxy_crash.txt
+5. Log file from <game root>/P7logs folder or d912pxy/log.txt and d912pxy/crash.txt if exist
 
 **Additional context**
 Add any other context about the problem here.
