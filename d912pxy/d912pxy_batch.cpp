@@ -201,8 +201,6 @@ void d912pxy_batch::InitCopyCS()
 	LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateComputePipelineState(&dsc, IID_PPV_ARGS(&copyPSO)), "CS pso creation err");
 
 	//cleanup
-	if (CScode.blob)
-		CScode.blob->Release();
-	else
+	if (!CScode.blob)
 		free(CScode.code);
 }
