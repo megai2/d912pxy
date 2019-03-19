@@ -656,7 +656,9 @@ void d912pxy_pso_cache::QueueShaderCleanup(d912pxy_shader * v)
 void d912pxy_pso_cache::CompileItem(d912pxy_pso_cache_item * item)
 {
 	item->AddRef();
+	compileQueLock.Hold();
 	psoCompileBuffer->WriteElement(item);
+	compileQueLock.Release();
 	SignalWork();
 }
 
