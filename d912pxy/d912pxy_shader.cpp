@@ -62,6 +62,9 @@ d912pxy_shader::~d912pxy_shader()
 	if (oCode)
 		free(oCode);
 
+	if (bytecode.blob)
+		bytecode.blob->Release();
+
 	if ((!bytecode.blob) && (bytecode.code))
 		free(bytecode.code);
 }
