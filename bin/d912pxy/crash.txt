@@ -1,0 +1,1 @@
+0 | d912pxy_global_objects::DXDev->CreateCommittedResource( &rhCfg, D3D12_HEAP_FLAG_NONE, &rsDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &optimizedClearValue, __uuidof(**(&m_res)), IID_PPV_ARGS_Helper(&m_res) ) | hr = 80070057 
