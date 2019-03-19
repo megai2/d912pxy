@@ -795,7 +795,7 @@ void d912pxy_pso_cache_item::Compile()
 		d912pxy_pso_cache::cDscBase.PS = *psObj->GetCode();
 	}
 	catch (...) {
-		m_log->P7_ERROR(LGC_DEFAULT, TM("final error compiling shader pair VS %016llX PS %016llX"), vsObj->GetID(), psObj->GetID());
+		LOG_ERR_DTDM("final error compiling shader pair VS %016llX PS %016llX", vsObj->GetID(), psObj->GetID());
 
 		vsObj->ThreadRef(-1);
 		psObj->ThreadRef(-1);
@@ -847,7 +847,7 @@ void d912pxy_pso_cache_item::Compile()
 		}
 		catch (...)
 		{
-			m_log->P7_ERROR(LGC_DEFAULT, TM("CreateGraphicsPipelineState error for VS %016llX PS %016llX"), vsObj->GetID(), psObj->GetID());
+			LOG_ERR_DTDM("CreateGraphicsPipelineState error for VS %016llX PS %016llX", vsObj->GetID(), psObj->GetID());
 
 			char dumpString[sizeof(d912pxy_trimmed_dx12_pso)*2 + 1];
 			dumpString[0] = 0;
@@ -862,7 +862,7 @@ void d912pxy_pso_cache_item::Compile()
 
 			dumpString[sizeof(d912pxy_trimmed_dx12_pso) * 2] = 0;
 
-			m_log->P7_ERROR(LGC_DEFAULT, TM("trimmed pso dump %S"), dumpString);
+			LOG_ERR_DTDM("trimmed pso dump %S", dumpString);
 
 			vsObj->ThreadRef(-1);
 			psObj->ThreadRef(-1);

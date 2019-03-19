@@ -32,6 +32,7 @@ SOFTWARE.
 
 IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevice9Proxy_create_params cp)
 {
+#ifndef DISABLE_P7LIB
 	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
 
 	wchar_t buf[1024];
@@ -45,7 +46,7 @@ IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevi
 
 	log_trace->P7_DEBUG(log_module, TM("ocp a %u bf %u dt %u hfw %u"), cp.Adapter, cp.BehaviorFlags, cp.DeviceType, cp.hFocusWindow);
 	//log_trace->P7_DEBUG(log_module, TM("ocp pp a %u bf %u dt %u hfw %u"), cp.pPresentationParameters->);
-
+#endif
 
 	origIDirect3DDevice9 = 0;
 	origID3D9 = pOriginal;
@@ -59,7 +60,9 @@ IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevi
 }
 
 IDirect3DDevice9Proxy::~IDirect3DDevice9Proxy(void){
+#ifndef DISABLE_P7LIB
 	log_trace->P7_DEBUG(log_module, TM("freed"));
+#endif
 
 #ifdef PERFORMANCE_GRAPH_WRITE
 	if (perfGraph)
@@ -650,7 +653,9 @@ HRESULT IDirect3DDevice9Proxy::PostInit(IDirect3DDevice9** realDev)
 
 	*realDev = origIDirect3DDevice9;
 
+#ifndef DISABLE_P7LIB
 	log_trace->P7_DEBUG(log_module, TM("odev %016llX"), origIDirect3DDevice9);
+#endif
 
 	return ret;
 }

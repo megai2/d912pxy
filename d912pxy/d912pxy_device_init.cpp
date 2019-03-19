@@ -80,25 +80,25 @@ void d912pxy_device::InitVFS()
 	d912pxy_s(vfs)->SetRoot("./d912pxy/pck");
 	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_CSO, "shader_cso"))
 	{
-		m_log->P7_ERROR(LGC_DEFAULT, TM("shader_cso VFS not loaded"));
+		LOG_ERR_DTDM("shader_cso VFS not loaded");
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
 
 	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_SHADER_PROFILE, "shader_profiles"))
 	{
-		m_log->P7_ERROR(LGC_DEFAULT, TM("shader_profiles VFS not loaded"));
+		LOG_ERR_DTDM("shader_profiles VFS not loaded");		
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
 
 	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_CACHE_KEYS, "pso_cache"))
 	{
-		m_log->P7_ERROR(LGC_DEFAULT, TM("pso_cache VFS not loaded"));
+		LOG_ERR_DTDM("pso_cache VFS not loaded");		
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
 
 	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_PRECOMPILE_LIST, "pso_precompile"))
 	{
-		m_log->P7_ERROR(LGC_DEFAULT, TM("pso_precompile VFS not loaded"));
+		LOG_ERR_DTDM("pso_precompile VFS not loaded");		
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
 }
@@ -378,7 +378,7 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 
 	gpu_totalVidmemMB = (DWORD)(pDesc.DedicatedVideoMemory >> 20llu);
 
-	m_log->P7_INFO(LGC_DEFAULT, TM("GPU name: %s vidmem: %u Mb"), pDesc.Description, gpu_totalVidmemMB);
+	LOG_INFO_DTDM("GPU name: %s vidmem: %u Mb", pDesc.Description, gpu_totalVidmemMB);
 
 	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
 	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
@@ -444,7 +444,7 @@ void d912pxy_device::SetupDevice(ComPtr<ID3D12Device> device)
 		1 << (vaSizes.MaxGPUVirtualAddressBitsPerResource - 20), 1 << (vaSizes.MaxGPUVirtualAddressBitsPerProcess - 20)
 	);
 
-	m_log->P7_INFO(LGC_DEFAULT, TM("Adapter Nodes: %u"), m_d12evice->GetNodeCount());
+	LOG_INFO_DTDM("Adapter Nodes: %u", m_d12evice->GetNodeCount());
 
 	LOG_DBG_DTDM("dev %016llX", m_d12evice.Get());
 }

@@ -27,10 +27,12 @@ SOFTWARE.
 
 d912pxy_StackWalker::d912pxy_StackWalker() : StackWalker(), d912pxy_noncom(NULL, L"StkWalk")
 {
+	d912pxy_s(log)->SyncCrashWrite(1);
 }
 
 d912pxy_StackWalker::~d912pxy_StackWalker()
 {
+	d912pxy_s(log)->SyncCrashWrite(0);
 }
 
 void d912pxy_StackWalker::OnOutput(LPCSTR szText)
@@ -38,14 +40,7 @@ void d912pxy_StackWalker::OnOutput(LPCSTR szText)
 	wchar_t buf[4096];
 	wsprintf(buf, L"%S", szText);
 
-	m_log->P7_ERROR(LGC_DEFAULT, L"%s", buf);
+	LOG_ERR_DTDM("%s", buf);
 
-	FILE* f = fopen("d912pxy_crash.txt", "ab");
-	
-	fwrite(buf, 2, lstrlenW(buf)-1, f);
-
-	const wchar_t* nlv = L"\r\n";
-	fwrite(nlv, 2, 2, f);
-
-	fclose(f);
+	d912pxy_s(log)->WriteCrashLogLine(buf);
 }

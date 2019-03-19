@@ -73,12 +73,15 @@ static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {
 	L"slots / spl"
 };
 
+
+
 class d912pxy_metrics : public d912pxy_noncom
 {
 public:
 	d912pxy_metrics(d912pxy_device* dev);
 	~d912pxy_metrics();
 	   
+#ifndef DISABLE_P7LIB
 	void TrackAPIOverheadStart(UINT group);
 	void TrackAPIOverheadEnd(UINT group);
 
@@ -110,5 +113,6 @@ private:
 	UINT64 apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT+1];	
 
 	UINT lastDraws;
+#endif
 };
 

@@ -157,7 +157,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	//bind vb/ib
 	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 1))
 	{
-		m_log->P7_ERROR(LGC_DEFAULT, L"batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
+		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
 		StateSafeFlush();
 	}

@@ -40,9 +40,7 @@ HANDLE gLeakMapLock;
 
 d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
 {
-	m_log = d912pxy_helper::GetLogger();
-
-	m_log->Register_Module(logModule, &LGC_DEFAULT);
+	d912pxy_s(log)->RegisterModule(logModule, &LGC_DEFAULT);
 
 	LOG_DBG_DTDM("new %s", logModule);
 
@@ -101,9 +99,7 @@ void d912pxy_noncom::ThrowErrorDbg(HRESULT hr, const char * msg)
 	if (!FAILED(hr))
 		return;
 
-	m_log->P7_ERROR(LGC_DEFAULT, TM("throw on %S with HR = 0x%lX"), msg, hr);
-
-	//P7_Exceptional_Flush();
+	LOG_ERR_DTDM("throw on %S with HR = 0x%lX", msg, hr);
 			
 	d912pxy_helper::ThrowIfFailed(hr, msg);
 }

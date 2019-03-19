@@ -41,9 +41,9 @@ public:
 
 protected:
 
-	d912pxy_device* m_dev;
-	IP7_Trace * m_log;
-	IP7_Trace::hModule LGC_DEFAULT;
+	d912pxy_log_module LGC_DEFAULT;
+
+	d912pxy_device* m_dev;	
 
 #ifdef DEBUG_LEAKOBJ
 	UINT lkObjTrace;

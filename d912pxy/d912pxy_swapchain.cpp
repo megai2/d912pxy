@@ -56,7 +56,7 @@ d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT
 
 d912pxy_swapchain::~d912pxy_swapchain()
 {
-	m_log->P7_INFO(LGC_DEFAULT, TM("Stopping swapchain"));
+	LOG_INFO_DTDM("Stopping swapchain");
 }
 
 HRESULT d912pxy_swapchain::QueryInterface(REFIID riid, void ** ppvObj)

@@ -52,7 +52,6 @@ SOFTWARE.
 //#define PERFORMANCE_GRAPH_WRITE
 //#define PER_BATCH_FLUSH_DEBUG 1
 //#define TRACK_SHADER_BUGS_PROFILE
-//#define LOCAL_NETWORK_LOGGING
 
 #ifdef PERFORMANCE_GRAPH_WRITE_DX9
 	#define PERFORMANCE_GRAPH_WRITE
@@ -148,19 +147,24 @@ SOFTWARE.
 
 //logging macro =======================
 
-#define LOG_INFO_DTDM(fmt, ...) (m_log->P7_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#define LOG_ERR_DTDM(fmt, ...) (m_log->P7_ERROR(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+#ifdef DISABLE_P7LIB
+	#define TM(i_pStr)         L##i_pStr
+#endif
+
+#define LOG_INFO_DTDM(fmt, ...) (d912pxy_s(log)->_PXY_LOG_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+#define LOG_WARN_DTDM(fmt, ...) (d912pxy_s(log)->_PXY_LOG_WARNING(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+#define LOG_ERR_DTDM(fmt, ...) (d912pxy_s(log)->_PXY_LOG_ERROR(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 #define LOG_INFO_DTDM2(code, fmt, ...) code; LOG_INFO_DTDM(fmt, __VA_ARGS__)
 
 #ifdef ENABLE_DEBUG_LOGGING
 	#ifdef _DEBUG
-		#define LOG_DBG_DTDM(fmt, ...) ;//(m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM2(fmt, ...) ;//(m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM3(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM(fmt, ...) ;//(d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM2(fmt, ...) ;//(d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM3(fmt, ...) (d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 	#else 
-		#define LOG_DBG_DTDM(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM2(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM3(fmt, ...) (m_log->P7_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM(fmt, ...) (d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM2(fmt, ...) (d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM3(fmt, ...) (d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 	#endif
 #else
 	#define LOG_DBG_DTDM(fmt, ...) ;
@@ -179,6 +183,8 @@ SOFTWARE.
 #define d912pxy_shader_db_hlsl_custom_dir L"./d912pxy/shaders/hlsl/custom"
 #define d912pxy_shader_db_cso_dir "shaders/cso"
 #define d912pxy_shader_db_bugs_dir "shaders/bugs"
+#define PXY_CRASH_LOG_FILE_PATH "d912pxy/crash"
+#define PXY_LOG_FILE_NAME "d912pxy/log.txt"
 
 //forward class defenitions =======================
 
@@ -214,6 +220,7 @@ class d912pxy_pso_cache_item;
 class d912pxy_vfs;
 class d912pxy_metrics;
 class d912pxy_config;
+class d912pxy_log;
 struct d912pxy_trimmed_dx12_pso;
 
 
@@ -263,6 +270,7 @@ public:
 	static d912pxy_device* dev;
 	static d912pxy_metrics* metrics;
 	static d912pxy_config* config;
+	static d912pxy_log* log;
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a

@@ -28,7 +28,9 @@ SOFTWARE.
 d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom(dev, L"metrics")
 {
 	d912pxy_s(metrics) = this;
-	m_log->P7_INFO(LGC_DEFAULT, L"collecting frame and descriptor heap statistics, expect some performance drop");
+
+#ifndef DISABLE_P7LIB
+	LOG_INFO_DTDM("collecting frame and descriptor heap statistics, expect some performance drop");
 
 	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
 
@@ -62,11 +64,12 @@ d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom(dev, L"m
 	iframeMetrics->Create(TM("derived / app prep"), 0, 10000, 10000, 1, &metricIFrameAppPrep);
 
 	l_pClient->Release();
-
+#endif
 }
 
 d912pxy_metrics::~d912pxy_metrics()
 {
+#ifndef DISABLE_P7LIB
 	for (int i = 0; i != PXY_METRICS_API_OVERHEAD_COUNT + 1; ++i)
 		delete apiOverheadTime[i];
 
@@ -75,7 +78,10 @@ d912pxy_metrics::~d912pxy_metrics()
 
 	dheapMetrics->Release();
 	iframeMetrics->Release();
+#endif
 }
+
+#ifndef DISABLE_P7LIB
 
 void d912pxy_metrics::TrackAPIOverheadStart(UINT group)
 {
@@ -142,3 +148,5 @@ void d912pxy_metrics::FlushIFrameValues()
 	iframeMetrics->Add(metricIFramePerBatchPrep, iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() / (lastDraws + 1));
 	iframeMetrics->Add(metricIFramePerBatchOverhead, apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT] / (lastDraws + 1));
 }
+
+#endif

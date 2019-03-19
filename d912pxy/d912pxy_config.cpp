@@ -80,7 +80,7 @@ d912pxy_config::d912pxy_config()
 				section[i - dlmt] = 0;
 			}
 
-			if (buf[i] == L'=')
+			if ((buf[i] == L'=') && (valf == 0))
 			{
 				memcpy(param, buf, sizeof(wchar_t)*i);
 				param[i] = 0;

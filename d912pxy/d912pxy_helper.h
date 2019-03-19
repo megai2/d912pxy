@@ -49,8 +49,6 @@ namespace d912pxy_helper {
 
 	ComPtr<ID3D12CommandQueue> CreateCommandQueue(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type);
 	
-	IP7_Trace* GetLogger();
-
 	DXGI_FORMAT DXGIFormatFromDX9FMT(D3DFORMAT fmt);
 	UINT8 BitsPerPixel(DXGI_FORMAT fmt);
 

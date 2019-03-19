@@ -24,8 +24,6 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-IP7_Client        *logger = NULL;
-
 extern "C" HRESULT WINAPI CreateD912PXY(D3DPRESENT_PARAMETERS* presPars, IDirect3DDevice9** dev)
 {
 	d912pxy_device* proxy = new d912pxy_device(NULL, presPars);
@@ -50,22 +48,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_PROCESS_ATTACH:
 	{
 		//megai2: load config at dll load
-		new d912pxy_config();
-
-		//create P7 client object
-#ifdef LOCAL_NETWORK_LOGGING
-		logger = P7_Create_Client(TM("/P7.Pool=32768"));
-#else
-		logger = P7_Create_Client(TM("/P7.Pool=32768 /P7.Sink=FileBin"));
-#endif
-
-		if (logger == NULL)
-		{
-			MessageBox(0, L"P7 init error", L"frame_analyzer", MB_ICONERROR);
-			return 0;
-		}
-		
-		logger->Share(TM("logger"));
+		new d912pxy_config();		
+		new d912pxy_log();
 
 		D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
 		D3D9ProxyCb_set_OnDevDestroy(&app_cb_D3D9Dev_destroy);
@@ -77,11 +61,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_THREAD_DETACH:
 		break;
     case DLL_PROCESS_DETACH:
-		if (logger)
-		{
-			//P7_Exceptional_Flush();
-			logger->Release();
-		}
         break;
     }
     return TRUE;

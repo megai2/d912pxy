@@ -35,7 +35,7 @@ d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, UINT idx) : d912pxy_noncom(de
 	cpuBase = heap->GetCPUDescriptorHandleForHeapStart();
 	gpuBase = heap->GetGPUDescriptorHandleForHeapStart();
 
-	m_log->P7_INFO(LGC_DEFAULT, TM("DHeap %u limit: %u"), idx, desc->NumDescriptors);
+	LOG_INFO_DTDM("DHeap %u limit: %u", idx, desc->NumDescriptors);
 
 	for (int i = 0; PXY_DHEAP_STACK_COUNT != i; ++i)	
 		stacks[i] = new d912pxy_dheap_slot_stack(desc->NumDescriptors);	

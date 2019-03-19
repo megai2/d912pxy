@@ -33,18 +33,13 @@ SOFTWARE.
 using namespace Microsoft::WRL;
 using namespace d912pxy_helper;
 
-IP7_Trace* m_log = NULL;
-IP7_Trace::hModule m_helperLGM;
-
-UINT s_crashLine = 0;
-
-D3D_FEATURE_LEVEL usingFeatures = D3D_FEATURE_LEVEL_11_0;
+static d912pxy_log_module LGC_DEFAULT;
 
 LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
 {
 	PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
 
-	GetLogger()->P7_ERROR(m_helperLGM, L"Exception: %u", ExceptionRecord->ExceptionCode);
+	LOG_ERR_DTDM("Exception: %u", ExceptionRecord->ExceptionCode);
 
 	switch (ExceptionRecord->ExceptionCode)
 	{
@@ -105,9 +100,7 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 
 			if (len)
 			{
-				GetLogger()->P7_ERROR(m_helperLGM, L"%s", pwz);
-
-//				WriteConsoleW(hOut, pwz, len - 1, &len, 0);
+				LOG_ERR_DTDM("%s", pwz);
 			}
 
 		}
@@ -120,6 +113,7 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 void d912pxy_helper::InstallVehHandler()
 {
 	AddVectoredExceptionHandler(TRUE, VexDbgHandler);
+	d912pxy_s(log)->RegisterModule(L"helper", &LGC_DEFAULT);
 }
 
 int d912pxy_helper::IsFileExist(const char *name)
@@ -134,14 +128,12 @@ void d912pxy_helper::ThrowIfFailed(HRESULT hr, const char* reason)
 	if (FAILED(hr))
 	{
 		wchar_t buf[1024];
-		wsprintf(buf, L"%u | %S | hr = %08lX \r\n", s_crashLine, reason, hr);
-		++s_crashLine;
+		wsprintf(buf, L"%S | hr = %08lX", reason, hr);
 
-		FILE* f = fopen("d912pxy_crash.txt", "ab");
-		fwrite(buf, 2, lstrlenW(buf), f);
-		fclose(f);
-
-		//	MessageBox(0, buf, L"d912pxy", MB_ICONERROR);
+		d912pxy_s(log)->SyncCrashWrite(1);
+		d912pxy_s(log)->WriteCrashLogLine(buf);
+		d912pxy_s(log)->SyncCrashWrite(0);
+			
 		throw std::exception();
 	}
 }
@@ -200,24 +192,6 @@ ComPtr<ID3D12CommandQueue> d912pxy_helper::CreateCommandQueue(ComPtr<ID3D12Devic
 	return d3d12CommandQueue;
 }
 
-IP7_Trace* d912pxy_helper::GetLogger()
-{
-	//create P7 trace object 1
-
-	if (m_log == NULL)
-	{
-		IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
-		m_log = P7_Create_Trace(l_pClient, TM("d912pxy"));
-		m_log->Register_Thread(TM("main thread"), 0);
-
-		m_log->Register_Module(L"helper", &m_helperLGM);
-
-		l_pClient->Release();		
-	}
-
-	return m_log;
-}
-
 DXGI_FORMAT d912pxy_helper::DXGIFormatFromDX9FMT(D3DFORMAT fmt)
 {
 	switch (fmt)
@@ -263,7 +237,7 @@ DXGI_FORMAT d912pxy_helper::DXGIFormatFromDX9FMT(D3DFORMAT fmt)
 		case D3DFMT_NULL: return DXGI_FORMAT_UNKNOWN; break;//megai2: ignore it
 		default: 
 		{
-			GetLogger()->P7_ERROR(m_helperLGM, L"D3D9 fmt to DXGI fmt not matched for %u", fmt);
+			LOG_ERR_DTDM("D3D9 fmt to DXGI fmt not matched for %u", fmt);
 			return DXGI_FORMAT_UNKNOWN;
 		}
 	}

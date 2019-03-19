@@ -181,8 +181,10 @@ private:
 
 	D3DPRESENT_PARAMETERS origPP;
 
+#ifndef DISABLE_P7LIB
 	IP7_Trace* log_trace;
 	IP7_Trace::hModule log_module;
+#endif
 
 	UINT batchCnt;
 

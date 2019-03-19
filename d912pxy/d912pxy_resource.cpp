@@ -147,7 +147,7 @@ HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt,
 
 	if (hr != S_OK)
 	{
-		m_log->P7_ERROR(LGC_DEFAULT, TM("d12res_tex2d w %u h %u arsz %u lvls %u fmt %u"), width, height, arrSz, *levels, fmt);
+		LOG_ERR_DTDM("d12res_tex2d w %u h %u arsz %u lvls %u fmt %u", width, height, arrSz, *levels, fmt);
 		LOG_ERR_THROW2(hr, "texture object create failed");
 	}
 

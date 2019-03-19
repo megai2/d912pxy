@@ -391,7 +391,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;FRAMEANALYZER_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;FRAMEANALYZER_EXPORTS;_WINDOWS;_USRDLL;DISABLE_P7LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -403,7 +403,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>deffile</ModuleDefinitionFile>
-      <AdditionalDependencies>P7x64.lib;Ws2_32.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\thirdparty\p7logger\Binaries\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
@@ -545,6 +545,7 @@
     <ClInclude Include="d912pxy_helper.h" />
     <ClInclude Include="d912pxy_hlsl_generator.h" />
     <ClInclude Include="d912pxy_iframe.h" />
+    <ClInclude Include="d912pxy_log.h" />
     <ClInclude Include="d912pxy_memtree.h" />
     <ClInclude Include="d912pxy_memtree2.h" />
     <ClInclude Include="d912pxy_metrics.h" />
@@ -625,6 +626,7 @@
     <ClCompile Include="d912pxy_helper.cpp" />
     <ClCompile Include="d912pxy_hlsl_generator.cpp" />
     <ClCompile Include="d912pxy_iframe.cpp" />
+    <ClCompile Include="d912pxy_log.cpp" />
     <ClCompile Include="d912pxy_memtree.cpp" />
     <ClCompile Include="d912pxy_memtree2.cpp" />
     <ClCompile Include="d912pxy_metrics.cpp" />
