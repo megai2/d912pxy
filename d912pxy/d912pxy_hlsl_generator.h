@@ -71,6 +71,18 @@ typedef struct d912pxy_hlsl_generator_regtext {
 	char t[512];
 } d912pxy_hlsl_generator_regtext;
 
+static const UINT SM_1_X_SIO_SIZE[] = {
+	0, 	2,	3,	0,	4,	3,	2,	2,	3,	3,	3,	3,	3,	3,	2,	2,	0,	0,	4,	2,	0,	0,
+	0,	0,	0,	0,	0,	0,	0,	0,	0,	2,	3,	0,	0,	2,	2,	2,	1,	0,	0,	2,	0,	0,
+	0,	2,	2,	0,	5,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,
+	3,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	2,	0,	0,	5,	0,	0,	0,	0,	0,	0,
+	4,	0,	4,	0,	0,	0,	0,	3,	0
+};
+
+class d912pxy_hlsl_generator;
+
+typedef void (d912pxy_hlsl_generator::*d912pxy_hlsl_generator_sio_handler)(DWORD* op);
+
 class d912pxy_hlsl_generator : public d912pxy_noncom
 {
 public:
@@ -114,6 +126,8 @@ public:
 	void LoadBugDefs();
 
 	UINT GetMaxShaderPassedVars();
+
+	static void FillHandlers();
 
 private:
 	void ProcSIO_DEF(DWORD* op);
@@ -186,9 +200,7 @@ private:
 	UINT maxShaderPassedVars;
 
 	UINT64 regDefined[(D3DSPR_PREDICATE + 1) * 32];
-
-	void (d912pxy_hlsl_generator::*SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt])(DWORD* op);
 	
-
+	static d912pxy_hlsl_generator_sio_handler SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt];	
 };
 

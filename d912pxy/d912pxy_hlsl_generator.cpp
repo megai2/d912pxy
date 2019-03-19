@@ -228,6 +228,8 @@ const char* d912pxy_hlsl_generator_reg_names_proc_vs[20] = {
 	"reg_pred"
 };
 
+d912pxy_hlsl_generator_sio_handler d912pxy_hlsl_generator::SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt] = { 0 };
+
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : d912pxy_noncom(0, L"hlsl generator")
 {
 
@@ -251,139 +253,12 @@ d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * 
 
 	of = _wfopen(ofn, L"wb");
 
-	for (int i = 0; i!= d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_cnt;++i)
-		SIOhandlers[i] = &d912pxy_hlsl_generator::ProcSIO_UNK;
-
 	procOffsetPredef = d912pxy_hlsl_generator_proc_predef_offset;
 	headerOffsetI = 0;
 	headerOffsetO = d912pxy_hlsl_generator_heado_offset;
 	procOffset = d912pxy_hlsl_generator_proc_offset;
 	ZeroMemory(lines, sizeof(char*) * d912pxy_hlsl_generator_max_code_lines);
-	ZeroMemory(regDefined, 8 * ((D3DSPR_PREDICATE + 1) * 32));
-
-	//megai2: sm 1_0, uses same handles as sm 2 and 3 , cuz i'm lazy and hope it will work
-#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x
-	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
-	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
-	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;
-	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
-	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
-	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;
-	SIOhandlers[__SIOtOF + D3DSIO_MUL] = &d912pxy_hlsl_generator::ProcSIO_MUL;
-	SIOhandlers[__SIOtOF + D3DSIO_MAD] = &d912pxy_hlsl_generator::ProcSIO_MAD;
-	SIOhandlers[__SIOtOF + D3DSIO_ADD] = &d912pxy_hlsl_generator::ProcSIO_ADD;
-	SIOhandlers[__SIOtOF + D3DSIO_MOV] = &d912pxy_hlsl_generator::ProcSIO_MOV;
-	SIOhandlers[__SIOtOF + D3DSIO_MOVA] = &d912pxy_hlsl_generator::ProcSIO_MOV;
-	SIOhandlers[__SIOtOF + D3DSIO_REP] = &d912pxy_hlsl_generator::ProcSIO_REP;
-	SIOhandlers[__SIOtOF + D3DSIO_ENDREP] = &d912pxy_hlsl_generator::ProcSIO_ENDREP;
-	SIOhandlers[__SIOtOF + D3DSIO_MIN] = &d912pxy_hlsl_generator::ProcSIO_MIN;
-	SIOhandlers[__SIOtOF + D3DSIO_MAX] = &d912pxy_hlsl_generator::ProcSIO_MAX;
-	SIOhandlers[__SIOtOF + D3DSIO_RCP] = &d912pxy_hlsl_generator::ProcSIO_RCP;
-	SIOhandlers[__SIOtOF + D3DSIO_CMP] = &d912pxy_hlsl_generator::ProcSIO_CMP;
-	SIOhandlers[__SIOtOF + D3DSIO_DP2ADD] = &d912pxy_hlsl_generator::ProcSIO_DP2ADD;
-	SIOhandlers[__SIOtOF + D3DSIO_FRC] = &d912pxy_hlsl_generator::ProcSIO_FRC;
-	SIOhandlers[__SIOtOF + D3DSIO_POW] = &d912pxy_hlsl_generator::ProcSIO_POW;
-	SIOhandlers[__SIOtOF + D3DSIO_RSQ] = &d912pxy_hlsl_generator::ProcSIO_RSQ;
-	SIOhandlers[__SIOtOF + D3DSIO_NRM] = &d912pxy_hlsl_generator::ProcSIO_NRM;
-	SIOhandlers[__SIOtOF + D3DSIO_LOG] = &d912pxy_hlsl_generator::ProcSIO_LOG;
-	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
-	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
-	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
-	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
-	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
-	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
-	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
-	SIOhandlers[__SIOtOF + D3DSIO_TEXLDL] = &d912pxy_hlsl_generator::ProcSIO_TEXLDL;
-	SIOhandlers[__SIOtOF + D3DSIO_LRP] = &d912pxy_hlsl_generator::ProcSIO_LRP;
-	SIOhandlers[__SIOtOF + D3DSIO_SLT] = &d912pxy_hlsl_generator::ProcSIO_SLT;
-	SIOhandlers[__SIOtOF + D3DSIO_ABS] = &d912pxy_hlsl_generator::ProcSIO_ABS;
-	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
-	SIOhandlers[__SIOtOF + D3DSIO_SGN] = &d912pxy_hlsl_generator::ProcSIO_SGN;
-	SIOhandlers[__SIOtOF + D3DSIO_SINCOS] = &d912pxy_hlsl_generator::ProcSIO_SINCOS;
-#undef __SIOtOF
-
-	//sm 2_0
-#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x
-	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
-	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;	
-	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;		
-	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
-	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
-	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;
-	SIOhandlers[__SIOtOF + D3DSIO_MUL] = &d912pxy_hlsl_generator::ProcSIO_MUL;
-	SIOhandlers[__SIOtOF + D3DSIO_MAD] = &d912pxy_hlsl_generator::ProcSIO_MAD;
-	SIOhandlers[__SIOtOF + D3DSIO_ADD] = &d912pxy_hlsl_generator::ProcSIO_ADD;
-	SIOhandlers[__SIOtOF + D3DSIO_MOV] = &d912pxy_hlsl_generator::ProcSIO_MOV;
-	SIOhandlers[__SIOtOF + D3DSIO_MOVA] = &d912pxy_hlsl_generator::ProcSIO_MOV;
-	SIOhandlers[__SIOtOF + D3DSIO_REP] = &d912pxy_hlsl_generator::ProcSIO_REP;
-	SIOhandlers[__SIOtOF + D3DSIO_ENDREP] = &d912pxy_hlsl_generator::ProcSIO_ENDREP;
-	SIOhandlers[__SIOtOF + D3DSIO_MIN] = &d912pxy_hlsl_generator::ProcSIO_MIN;
-	SIOhandlers[__SIOtOF + D3DSIO_MAX] = &d912pxy_hlsl_generator::ProcSIO_MAX;
-	SIOhandlers[__SIOtOF + D3DSIO_RCP] = &d912pxy_hlsl_generator::ProcSIO_RCP;
-	SIOhandlers[__SIOtOF + D3DSIO_CMP] = &d912pxy_hlsl_generator::ProcSIO_CMP;
-	SIOhandlers[__SIOtOF + D3DSIO_DP2ADD] = &d912pxy_hlsl_generator::ProcSIO_DP2ADD;
-	SIOhandlers[__SIOtOF + D3DSIO_FRC] = &d912pxy_hlsl_generator::ProcSIO_FRC;
-	SIOhandlers[__SIOtOF + D3DSIO_POW] = &d912pxy_hlsl_generator::ProcSIO_POW;
-	SIOhandlers[__SIOtOF + D3DSIO_RSQ] = &d912pxy_hlsl_generator::ProcSIO_RSQ;
-	SIOhandlers[__SIOtOF + D3DSIO_NRM] = &d912pxy_hlsl_generator::ProcSIO_NRM;
-	SIOhandlers[__SIOtOF + D3DSIO_LOG] = &d912pxy_hlsl_generator::ProcSIO_LOG;
-	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
-	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
-	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
-	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
-	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
-	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
-	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
-	SIOhandlers[__SIOtOF + D3DSIO_TEXLDL] = &d912pxy_hlsl_generator::ProcSIO_TEXLDL;
-	SIOhandlers[__SIOtOF + D3DSIO_SLT] = &d912pxy_hlsl_generator::ProcSIO_SLT;
-	SIOhandlers[__SIOtOF + D3DSIO_ABS] = &d912pxy_hlsl_generator::ProcSIO_ABS;
-	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
-	SIOhandlers[__SIOtOF + D3DSIO_SGN] = &d912pxy_hlsl_generator::ProcSIO_SGN;
-	SIOhandlers[__SIOtOF + D3DSIO_SINCOS] = &d912pxy_hlsl_generator::ProcSIO_SINCOS;
-
-#undef __SIOtOF
-
-	//sm 3_0
-#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x
-	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
-	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
-	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;
-	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
-	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
-	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;
-	SIOhandlers[__SIOtOF + D3DSIO_MUL] = &d912pxy_hlsl_generator::ProcSIO_MUL;
-	SIOhandlers[__SIOtOF + D3DSIO_MAD] = &d912pxy_hlsl_generator::ProcSIO_MAD;
-	SIOhandlers[__SIOtOF + D3DSIO_ADD] = &d912pxy_hlsl_generator::ProcSIO_ADD;
-	SIOhandlers[__SIOtOF + D3DSIO_MOV] = &d912pxy_hlsl_generator::ProcSIO_MOV;
-	SIOhandlers[__SIOtOF + D3DSIO_MOVA] = &d912pxy_hlsl_generator::ProcSIO_MOV;
-	SIOhandlers[__SIOtOF + D3DSIO_REP] = &d912pxy_hlsl_generator::ProcSIO_REP;
-	SIOhandlers[__SIOtOF + D3DSIO_ENDREP] = &d912pxy_hlsl_generator::ProcSIO_ENDREP;
-	SIOhandlers[__SIOtOF + D3DSIO_MIN] = &d912pxy_hlsl_generator::ProcSIO_MIN;
-	SIOhandlers[__SIOtOF + D3DSIO_MAX] = &d912pxy_hlsl_generator::ProcSIO_MAX;
-	SIOhandlers[__SIOtOF + D3DSIO_RCP] = &d912pxy_hlsl_generator::ProcSIO_RCP;
-	SIOhandlers[__SIOtOF + D3DSIO_CMP] = &d912pxy_hlsl_generator::ProcSIO_CMP;	
-	SIOhandlers[__SIOtOF + D3DSIO_DP2ADD] = &d912pxy_hlsl_generator::ProcSIO_DP2ADD;
-	SIOhandlers[__SIOtOF + D3DSIO_FRC] = &d912pxy_hlsl_generator::ProcSIO_FRC;
-	SIOhandlers[__SIOtOF + D3DSIO_POW] = &d912pxy_hlsl_generator::ProcSIO_POW;
-	SIOhandlers[__SIOtOF + D3DSIO_RSQ] = &d912pxy_hlsl_generator::ProcSIO_RSQ;
-	SIOhandlers[__SIOtOF + D3DSIO_NRM] = &d912pxy_hlsl_generator::ProcSIO_NRM;
-	SIOhandlers[__SIOtOF + D3DSIO_LOG] = &d912pxy_hlsl_generator::ProcSIO_LOG;
-	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
-	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
-	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
-	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
-	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
-	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
-	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
-	SIOhandlers[__SIOtOF + D3DSIO_TEXLDL] = &d912pxy_hlsl_generator::ProcSIO_TEXLDL;
-	SIOhandlers[__SIOtOF + D3DSIO_LRP] = &d912pxy_hlsl_generator::ProcSIO_LRP;
-	SIOhandlers[__SIOtOF + D3DSIO_SLT] = &d912pxy_hlsl_generator::ProcSIO_SLT;
-	SIOhandlers[__SIOtOF + D3DSIO_ABS] = &d912pxy_hlsl_generator::ProcSIO_ABS;
-	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
-	SIOhandlers[__SIOtOF + D3DSIO_SGN] = &d912pxy_hlsl_generator::ProcSIO_SGN;
-	SIOhandlers[__SIOtOF + D3DSIO_SINCOS] = &d912pxy_hlsl_generator::ProcSIO_SINCOS;
-#undef __SIOtOF
-
+	ZeroMemory(regDefined, 8 * ((D3DSPR_PREDICATE + 1) * 32));	
 }
 
 d912pxy_hlsl_generator::~d912pxy_hlsl_generator()
@@ -470,11 +345,9 @@ void d912pxy_hlsl_generator::Process()
 		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x;
 	else if (majVer == 2)
 		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x;
-	else 
-		//FIXME sm 1_x support
-		/*if (majVer == 1) 
+	else if (majVer == 1) 
 		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x;
-	else*/ {
+	else {
 		m_log->P7_ERROR(LGC_DEFAULT, TM("hlsl generator not support %u_%u shader model"), majVer, minVer);
 		LOG_ERR_THROW2(-1, "hlsl generator not support shader model specified");
 	}
@@ -499,9 +372,10 @@ void d912pxy_hlsl_generator::Process()
 		//For pixel and vertex shader versions 2_0 and later, bits 24 through 27 specify the size in DWORDs of the instruction 
 		//excluding the instruction token itself(that is, the number of tokens that comprise the instruction excluding the instruction token).
 
-		//FIXME sm 1_x support
-		
-		ocIdx += 1 + (oCode[ocIdx] >> 24) & 0xF;
+		if (majVer < 2)
+			ocIdx += 1 + SM_1_X_SIO_SIZE[sioID];
+		else
+			ocIdx += 1 + (oCode[ocIdx] >> 24) & 0xF;
 	}
 
 
@@ -2203,4 +2077,134 @@ void d912pxy_hlsl_generator::ProcSIO_UNK(DWORD * op)
 		HLSL_GEN_WRITE_PROC("error //op par %u = %08lX", i - 1, op[i]);
 	}
 	
+}
+
+void d912pxy_hlsl_generator::FillHandlers()
+{
+
+	for (int i = 0; i != d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_cnt; ++i)
+		SIOhandlers[i] = &d912pxy_hlsl_generator::ProcSIO_UNK;
+
+	//megai2: sm 1_0, uses same handles as sm 2 and 3 , cuz i'm lazy and hope it will work
+#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x
+	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
+	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
+	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;
+	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
+	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
+	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;
+	SIOhandlers[__SIOtOF + D3DSIO_MUL] = &d912pxy_hlsl_generator::ProcSIO_MUL;
+	SIOhandlers[__SIOtOF + D3DSIO_MAD] = &d912pxy_hlsl_generator::ProcSIO_MAD;
+	SIOhandlers[__SIOtOF + D3DSIO_ADD] = &d912pxy_hlsl_generator::ProcSIO_ADD;
+	SIOhandlers[__SIOtOF + D3DSIO_MOV] = &d912pxy_hlsl_generator::ProcSIO_MOV;
+	SIOhandlers[__SIOtOF + D3DSIO_MOVA] = &d912pxy_hlsl_generator::ProcSIO_MOV;
+	SIOhandlers[__SIOtOF + D3DSIO_REP] = &d912pxy_hlsl_generator::ProcSIO_REP;
+	SIOhandlers[__SIOtOF + D3DSIO_ENDREP] = &d912pxy_hlsl_generator::ProcSIO_ENDREP;
+	SIOhandlers[__SIOtOF + D3DSIO_MIN] = &d912pxy_hlsl_generator::ProcSIO_MIN;
+	SIOhandlers[__SIOtOF + D3DSIO_MAX] = &d912pxy_hlsl_generator::ProcSIO_MAX;
+	SIOhandlers[__SIOtOF + D3DSIO_RCP] = &d912pxy_hlsl_generator::ProcSIO_RCP;
+	SIOhandlers[__SIOtOF + D3DSIO_CMP] = &d912pxy_hlsl_generator::ProcSIO_CMP;
+	SIOhandlers[__SIOtOF + D3DSIO_DP2ADD] = &d912pxy_hlsl_generator::ProcSIO_DP2ADD;
+	SIOhandlers[__SIOtOF + D3DSIO_FRC] = &d912pxy_hlsl_generator::ProcSIO_FRC;
+	SIOhandlers[__SIOtOF + D3DSIO_POW] = &d912pxy_hlsl_generator::ProcSIO_POW;
+	SIOhandlers[__SIOtOF + D3DSIO_RSQ] = &d912pxy_hlsl_generator::ProcSIO_RSQ;
+	SIOhandlers[__SIOtOF + D3DSIO_NRM] = &d912pxy_hlsl_generator::ProcSIO_NRM;
+	SIOhandlers[__SIOtOF + D3DSIO_LOG] = &d912pxy_hlsl_generator::ProcSIO_LOG;
+	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
+	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
+	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
+	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
+	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
+	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
+	SIOhandlers[__SIOtOF + D3DSIO_TEXLDL] = &d912pxy_hlsl_generator::ProcSIO_TEXLDL;
+	SIOhandlers[__SIOtOF + D3DSIO_LRP] = &d912pxy_hlsl_generator::ProcSIO_LRP;
+	SIOhandlers[__SIOtOF + D3DSIO_SLT] = &d912pxy_hlsl_generator::ProcSIO_SLT;
+	SIOhandlers[__SIOtOF + D3DSIO_ABS] = &d912pxy_hlsl_generator::ProcSIO_ABS;
+	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
+	SIOhandlers[__SIOtOF + D3DSIO_SGN] = &d912pxy_hlsl_generator::ProcSIO_SGN;
+	SIOhandlers[__SIOtOF + D3DSIO_SINCOS] = &d912pxy_hlsl_generator::ProcSIO_SINCOS;
+#undef __SIOtOF
+
+	//sm 2_0
+#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x
+	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
+	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
+	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;
+	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
+	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
+	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;
+	SIOhandlers[__SIOtOF + D3DSIO_MUL] = &d912pxy_hlsl_generator::ProcSIO_MUL;
+	SIOhandlers[__SIOtOF + D3DSIO_MAD] = &d912pxy_hlsl_generator::ProcSIO_MAD;
+	SIOhandlers[__SIOtOF + D3DSIO_ADD] = &d912pxy_hlsl_generator::ProcSIO_ADD;
+	SIOhandlers[__SIOtOF + D3DSIO_MOV] = &d912pxy_hlsl_generator::ProcSIO_MOV;
+	SIOhandlers[__SIOtOF + D3DSIO_MOVA] = &d912pxy_hlsl_generator::ProcSIO_MOV;
+	SIOhandlers[__SIOtOF + D3DSIO_REP] = &d912pxy_hlsl_generator::ProcSIO_REP;
+	SIOhandlers[__SIOtOF + D3DSIO_ENDREP] = &d912pxy_hlsl_generator::ProcSIO_ENDREP;
+	SIOhandlers[__SIOtOF + D3DSIO_MIN] = &d912pxy_hlsl_generator::ProcSIO_MIN;
+	SIOhandlers[__SIOtOF + D3DSIO_MAX] = &d912pxy_hlsl_generator::ProcSIO_MAX;
+	SIOhandlers[__SIOtOF + D3DSIO_RCP] = &d912pxy_hlsl_generator::ProcSIO_RCP;
+	SIOhandlers[__SIOtOF + D3DSIO_CMP] = &d912pxy_hlsl_generator::ProcSIO_CMP;
+	SIOhandlers[__SIOtOF + D3DSIO_DP2ADD] = &d912pxy_hlsl_generator::ProcSIO_DP2ADD;
+	SIOhandlers[__SIOtOF + D3DSIO_FRC] = &d912pxy_hlsl_generator::ProcSIO_FRC;
+	SIOhandlers[__SIOtOF + D3DSIO_POW] = &d912pxy_hlsl_generator::ProcSIO_POW;
+	SIOhandlers[__SIOtOF + D3DSIO_RSQ] = &d912pxy_hlsl_generator::ProcSIO_RSQ;
+	SIOhandlers[__SIOtOF + D3DSIO_NRM] = &d912pxy_hlsl_generator::ProcSIO_NRM;
+	SIOhandlers[__SIOtOF + D3DSIO_LOG] = &d912pxy_hlsl_generator::ProcSIO_LOG;
+	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
+	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
+	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
+	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
+	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
+	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
+	SIOhandlers[__SIOtOF + D3DSIO_TEXLDL] = &d912pxy_hlsl_generator::ProcSIO_TEXLDL;
+	SIOhandlers[__SIOtOF + D3DSIO_SLT] = &d912pxy_hlsl_generator::ProcSIO_SLT;
+	SIOhandlers[__SIOtOF + D3DSIO_ABS] = &d912pxy_hlsl_generator::ProcSIO_ABS;
+	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
+	SIOhandlers[__SIOtOF + D3DSIO_SGN] = &d912pxy_hlsl_generator::ProcSIO_SGN;
+	SIOhandlers[__SIOtOF + D3DSIO_SINCOS] = &d912pxy_hlsl_generator::ProcSIO_SINCOS;
+
+#undef __SIOtOF
+
+	//sm 3_0
+#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x
+	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
+	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
+	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;
+	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
+	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
+	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;
+	SIOhandlers[__SIOtOF + D3DSIO_MUL] = &d912pxy_hlsl_generator::ProcSIO_MUL;
+	SIOhandlers[__SIOtOF + D3DSIO_MAD] = &d912pxy_hlsl_generator::ProcSIO_MAD;
+	SIOhandlers[__SIOtOF + D3DSIO_ADD] = &d912pxy_hlsl_generator::ProcSIO_ADD;
+	SIOhandlers[__SIOtOF + D3DSIO_MOV] = &d912pxy_hlsl_generator::ProcSIO_MOV;
+	SIOhandlers[__SIOtOF + D3DSIO_MOVA] = &d912pxy_hlsl_generator::ProcSIO_MOV;
+	SIOhandlers[__SIOtOF + D3DSIO_REP] = &d912pxy_hlsl_generator::ProcSIO_REP;
+	SIOhandlers[__SIOtOF + D3DSIO_ENDREP] = &d912pxy_hlsl_generator::ProcSIO_ENDREP;
+	SIOhandlers[__SIOtOF + D3DSIO_MIN] = &d912pxy_hlsl_generator::ProcSIO_MIN;
+	SIOhandlers[__SIOtOF + D3DSIO_MAX] = &d912pxy_hlsl_generator::ProcSIO_MAX;
+	SIOhandlers[__SIOtOF + D3DSIO_RCP] = &d912pxy_hlsl_generator::ProcSIO_RCP;
+	SIOhandlers[__SIOtOF + D3DSIO_CMP] = &d912pxy_hlsl_generator::ProcSIO_CMP;
+	SIOhandlers[__SIOtOF + D3DSIO_DP2ADD] = &d912pxy_hlsl_generator::ProcSIO_DP2ADD;
+	SIOhandlers[__SIOtOF + D3DSIO_FRC] = &d912pxy_hlsl_generator::ProcSIO_FRC;
+	SIOhandlers[__SIOtOF + D3DSIO_POW] = &d912pxy_hlsl_generator::ProcSIO_POW;
+	SIOhandlers[__SIOtOF + D3DSIO_RSQ] = &d912pxy_hlsl_generator::ProcSIO_RSQ;
+	SIOhandlers[__SIOtOF + D3DSIO_NRM] = &d912pxy_hlsl_generator::ProcSIO_NRM;
+	SIOhandlers[__SIOtOF + D3DSIO_LOG] = &d912pxy_hlsl_generator::ProcSIO_LOG;
+	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
+	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
+	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
+	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
+	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
+	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
+	SIOhandlers[__SIOtOF + D3DSIO_TEXLDL] = &d912pxy_hlsl_generator::ProcSIO_TEXLDL;
+	SIOhandlers[__SIOtOF + D3DSIO_LRP] = &d912pxy_hlsl_generator::ProcSIO_LRP;
+	SIOhandlers[__SIOtOF + D3DSIO_SLT] = &d912pxy_hlsl_generator::ProcSIO_SLT;
+	SIOhandlers[__SIOtOF + D3DSIO_ABS] = &d912pxy_hlsl_generator::ProcSIO_ABS;
+	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
+	SIOhandlers[__SIOtOF + D3DSIO_SGN] = &d912pxy_hlsl_generator::ProcSIO_SGN;
+	SIOhandlers[__SIOtOF + D3DSIO_SINCOS] = &d912pxy_hlsl_generator::ProcSIO_SINCOS;
+#undef __SIOtOF
 }
