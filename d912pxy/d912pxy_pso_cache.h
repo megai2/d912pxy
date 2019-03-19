@@ -159,8 +159,5 @@ private:
 	ID3D12GraphicsCommandList* frameCl;
 
 	LONG externalLock;
-
-	d912pxy_thread_lock psoLookupLock;
-	d912pxy_thread_lock psoAllocLock;
 };
 

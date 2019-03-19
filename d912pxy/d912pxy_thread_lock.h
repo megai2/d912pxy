@@ -28,14 +28,24 @@ SOFTWARE.
 class d912pxy_thread_lock
 {
 public:
-	d912pxy_thread_lock();
+	d912pxy_thread_lock();	
 	~d912pxy_thread_lock();
-
+	
 	void Hold();
 	void Release();
 	void Init();
 
-private:
+	void LockedAdd(LONG val);
+
+	void WaitHold(LONG cond);
+	void HoldWait(LONG cond);
+
+	void Add(LONG val);
+	void Wait(LONG cond);
+
+private:	
 	CRITICAL_SECTION cs;
+	LONG spinLock;
+
 };
 

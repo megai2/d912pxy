@@ -27,8 +27,8 @@ SOFTWARE.
 d912pxy_thread_lock::d912pxy_thread_lock()
 {
 	Init();
+	InterlockedExchange(&spinLock, 0);
 }
-
 
 d912pxy_thread_lock::~d912pxy_thread_lock()
 {
@@ -48,4 +48,50 @@ void d912pxy_thread_lock::Release()
 void d912pxy_thread_lock::Init()
 {
 	InitializeCriticalSection(&cs);
+}
+
+void d912pxy_thread_lock::LockedAdd(LONG val)
+{
+	Hold();
+	Add(val);
+	Release();
+}
+
+void d912pxy_thread_lock::WaitHold(LONG cond)
+{
+	Wait(cond);
+	Hold();
+}
+
+void d912pxy_thread_lock::HoldWait(LONG cond)
+{
+	Hold();
+	Wait(cond);
+}
+
+void d912pxy_thread_lock::Add(LONG val)
+{
+	InterlockedAdd(&spinLock, val);
+}
+
+void d912pxy_thread_lock::Wait(LONG cond)
+{
+	//megai2: simple spin wait
+	UINT spin = 0;
+
+	while (InterlockedAdd(&spinLock, 0) != cond)
+	{
+		if (spin > 32)
+			Sleep(0);
+		else if (spin > 12)
+			SwitchToThread();
+		else
+		{
+			int loops = (1 << spin); //1..12 ==> 2..4096
+			while (loops > 0)
+				loops -= 1;
+		}
+
+		++spin;
+	}
 }

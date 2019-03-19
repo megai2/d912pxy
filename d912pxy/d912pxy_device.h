@@ -199,8 +199,7 @@ private:
 	LONG threadInterruptState;	
 	d912pxy_thread_lock threadLockdEvents[PXY_INNER_THREADID_MAX];
 	d912pxy_thread_lock threadLock;
-	d912pxy_thread_lock cleanupLock;
-	LONG threadLockCounter;
+	d912pxy_thread_lock cleanupLock;	
 	UINT activeThreadCount;
 
 	ComPtr<ID3D12Device> m_d12evice;

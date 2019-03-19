@@ -576,21 +576,16 @@ d912pxy_pso_cache_item * d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso
 	void* dscMem = (void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset);
 
 	UINT32 dscHash = cacheIndexes->memHash32(dscMem);
-	UINT64 id = cacheIndexes->PointAtMemMT(&dscHash, 4);
-
+	UINT64 id = cacheIndexes->PointAtMemMTR(&dscHash, 4);
+	
 	if (id == 0)
-	{
-		psoLookupLock.Hold();
+	{	
+		id = cacheIndexes->PointAtMemMTRW(&dscHash, 4);
 
-		id = cacheIndexes->PointAtMem(&dscHash, 4);
+		if (!id)		
+			id = ++cacheIncID;		
 
-		if (id == 0)
-		{
-			cacheIndexes->SetValue(++cacheIncID);
-			id = cacheIncID;
-		}
-
-		psoLookupLock.Release();
+		cacheIndexes->PointAtMemMTW(id);
 		
 		if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_WRITE)
 		{
@@ -608,19 +603,8 @@ d912pxy_pso_cache_item * d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso
 
 	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
 		return NULL;
-
-	d912pxy_pso_cache_item* item = d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc);
-
-	if (!item)
-	{
-		psoAllocLock.Hold();
-
-		item = d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheData((UINT32)id, dsc);
-
-		psoAllocLock.Release();
-	}
-
-	return item;
+	
+	return d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc);
 }
 
 void d912pxy_pso_cache::SetRootSignature(ComPtr<ID3D12RootSignature> sig)

@@ -79,27 +79,25 @@ d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_ps
 	LOG_DBG_DTDM2("ShaderPair %016llX %016llX", pdc[0], pdc[1]);
 	
 	d912pxy_shader_pair_hash_type ha = (d912pxy_shader_pair_hash_type)(pdc[0] ^ pdc[1]);
+		
+	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->PointAtMemMTR(&ha, sizeof(d912pxy_shader_pair_hash_type));
 	
-	treeLock.Hold();
-
-	shaderPairs->PointAtMem(&ha, sizeof(d912pxy_shader_pair_hash_type));
-
-	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->CurrentCID();
-
 	if (it)
-	{
-		treeLock.Release();
+	{		
 		return it;
 	}
 	else {
-		it = new d912pxy_shader_pair(ha, pdc, m_dev);
+		it = (d912pxy_shader_pair*)shaderPairs->PointAtMemMTRW(&ha, sizeof(d912pxy_shader_pair_hash_type));
 
-		vs->NotePairUsage(ha);
-		ps->NotePairUsage(ha);
+		if (!it)
+		{
+			it = new d912pxy_shader_pair(ha, pdc, m_dev);
 
-		shaderPairs->SetValue((intptr_t)it);
-
-		treeLock.Release();
+			vs->NotePairUsage(ha);
+			ps->NotePairUsage(ha);
+		}
+	
+		shaderPairs->PointAtMemMTW((intptr_t)it);
 
 		return it;
 	}
@@ -107,16 +105,10 @@ d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_ps
 
 void d912pxy_shader_db::DeletePair(d912pxy_shader_pair_hash_type ha)
 {
-	treeLock.Hold();
+	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->PointAtMemMTRW(&ha, sizeof(d912pxy_shader_pair_hash_type));
 
-	shaderPairs->PointAtMem(&ha, sizeof(d912pxy_shader_pair_hash_type));
-
-	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->CurrentCID();
-
-	shaderPairs->SetValue(0);
+	shaderPairs->PointAtMemMTW(0);
 	
-	treeLock.Release();
-
 	if (it)
 		delete it;		
 }

@@ -34,7 +34,7 @@ void d912pxy_device::LockThread(UINT thread)
 		
 	threadLockdEvents[thread].Hold();	
 
-	InterlockedDecrement(&threadLockCounter);
+	threadLock.Add(-1);	
 }
 
 void d912pxy_device::InitLockThread(UINT thread)
@@ -45,27 +45,8 @@ void d912pxy_device::InitLockThread(UINT thread)
 void d912pxy_device::LockAsyncThreads()
 {
 	FRAME_METRIC_SYNC(1)
-	
-	//megai2: simple spin wait
-	UINT spin = 0;
 
-	while (InterlockedAdd(&threadLockCounter, 0) != 0)
-	{		
-		if (spin > 32)
-			Sleep(0);
-		else if (spin > 12)
-			SwitchToThread();
-		else
-		{
-			int loops = (1 << spin); //1..12 ==> 2..4096
-			while (loops > 0)
-				loops -= 1;
-		}
-
-		++spin;
-	}
-
-	threadLock.Hold();
+	threadLock.WaitHold(0);
 
 	InterlockedIncrement(&threadInterruptState);
 
@@ -73,7 +54,7 @@ void d912pxy_device::LockAsyncThreads()
 	d912pxy_s(bufloadThread)->SignalWork();
 	d912pxy_s(CMDReplay)->Finish();
 
-	InterlockedAdd(&threadLockCounter, activeThreadCount);
+	threadLock.Add(activeThreadCount);	
 	
 	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)
 	{

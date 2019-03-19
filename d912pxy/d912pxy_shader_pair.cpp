@@ -121,10 +121,19 @@ d912pxy_pso_cache_item * d912pxy_shader_pair::GetPSOCacheDataMT(UINT32 idx, d912
 {
 	d912pxy_pso_cache_item* ret = NULL;
 
-	if (idx >= maxPsoId)
-		return ret;
+	lock.LockedAdd(1);
+	
+	if (idx < maxPsoId)
+		ret = psoItems[idx];
 
-	ret = psoItems[idx];
+	lock.LockedAdd(-1);
+
+	if (!ret)
+	{
+		lock.HoldWait(0);
+		ret = GetPSOCacheData(idx, dsc);
+		lock.Release();
+	}
 
 	return ret;
 }

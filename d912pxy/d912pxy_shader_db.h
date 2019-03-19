@@ -42,8 +42,6 @@ public:
 	UINT GetPrecompileFlag() { return precompileFlag; };
 
 private:
-	d912pxy_thread_lock treeLock;
-
 	d912pxy_memtree2* shaderPairs;
 
 	UINT precompileFlag;

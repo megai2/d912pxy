@@ -117,9 +117,26 @@ UINT64 d912pxy_memtree2::memHash64s(void * mem, UINT msz)
 	return hash;
 }
 
-UINT64 d912pxy_memtree2::PointAtMemMT(void * mem, UINT32 dataMemSz2)
+void d912pxy_memtree2::PointAtMemMTW(UINT64 val)
+{
+	SetValue(val);
+
+	lock.Release();
+}
+
+UINT64 d912pxy_memtree2::PointAtMemMTRW(void * mem, UINT32 dataMemSz2)
+{
+	lock.HoldWait(0);
+
+	return PointAtMem(mem, dataMemSz2);
+}
+
+UINT64 d912pxy_memtree2::PointAtMemMTR(void * mem, UINT32 dataMemSz2)
 {
 	UINT32 depth = 0;
+
+	lock.LockedAdd(1);
+
 	d912pxy_memtree2_node* root = &base;
 
 	UINT8* byteAc = (UINT8*)mem;
@@ -131,6 +148,7 @@ UINT64 d912pxy_memtree2::PointAtMemMT(void * mem, UINT32 dataMemSz2)
 		UINT32 npi = root->childs[ci];
 		if (npi == 0)
 		{
+			lock.Add(-1);
 			return 0;
 		}
 		else {
@@ -138,7 +156,12 @@ UINT64 d912pxy_memtree2::PointAtMemMT(void * mem, UINT32 dataMemSz2)
 		}
 		++depth;
 	}	
-	return root->contentId;
+
+	UINT64 ret = root->contentId;
+
+	lock.Add(-1);
+
+	return ret;
 }
 
 UINT64 d912pxy_memtree2::PointAtMem(void * mem, UINT32 dataMemSz2)

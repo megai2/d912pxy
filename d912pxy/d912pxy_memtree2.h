@@ -38,7 +38,9 @@ public:
 	d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow);
 	~d912pxy_memtree2();
 
-	UINT64 PointAtMemMT(void* mem, UINT32 dataMemSz2);
+	void PointAtMemMTW(UINT64 val);
+	UINT64 PointAtMemMTRW(void* mem, UINT32 dataMemSz2);
+	UINT64 PointAtMemMTR(void* mem, UINT32 dataMemSz2);
 	UINT64 PointAtMem(void* mem, UINT32 dataMemSz2);
 
 	UINT64 PointAt32(void* mem);
@@ -76,7 +78,7 @@ private:
 
 	UINT32 grow;
 
-	d912pxy_thread_lock* lock;
+	d912pxy_thread_lock lock;
 
 #ifdef CAPTURE_JMP_MAP
 	UINT8* memDiffData;
