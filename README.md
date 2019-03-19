@@ -63,20 +63,18 @@ Video by reddit u/moriz0, running WvW in 4k: https://www.youtube.com/watch?v=RQA
 # Installing
 
 [**Install instructions** (English)](https://github.com/megai2/d912pxy/wiki/Installing)
+[**Руководство по установке** (Russian)](https://github.com/megai2/d912pxy/wiki/InstallingRU)
 
 # Known bugs
 
-**Bug**: Losing focus in fullscreen can hang the system videofeed
+**Bug**: Fullscreen crash can hang system videofeed.
 
-*Troubleshooting*: If you encounter this, use Ctrl+Alt+Delete -> Logout for a soft reboot. Use windowed fullscreen as workaround.
+*Troubleshooting*: If you encounter this, use Ctrl+Alt+Delete -> Logout for a soft reboot. Use windowed fullscreen as workaround and report this as crash.
 
-**Bug**: ArcDPS doesn't work using chainloading
+**Bug**: Crashes with 3-rd party tool/overlay/addon 
 
-*Workaround*: Read [this](https://github.com/megai2/d912pxy/issues/38#issuecomment-459956222).
-
-**Bug**: Long load times
-
-*Note*: Long load times on install/uninstall are expected as shader cache is not included in release package.
+*Troubleshooting*: Check is your tool/overlay/addon compatible with d912pxy [here](https://github.com/megai2/d912pxy/issues/38). 
+If you see no comments for your case, [report crash](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)
 
 
 # Troubleshooting
