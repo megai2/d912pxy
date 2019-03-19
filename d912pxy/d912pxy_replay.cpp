@@ -276,9 +276,11 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 
 	if (!maxRI)
 		return;
-	
+
 	if (start > 0)
+	{		
 		TransitCLState(cl, start);
+	}
 	
 	//execute operations
 	while (i != end)
@@ -431,14 +433,38 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base)
 {
 	//megai2: FIXME add inter-cl barrier to force serial GPU execution of command lists
 
+
 	//megai2: transit states by backtrace in stack
 	TransitBacktrace(DRPL_OMSR, 0, cl, base);
 	TransitBacktrace(DRPL_OMBF, 0, cl, base);
 	TransitBacktrace(DRPL_OMRT, 0, cl, base);
 
-	//megai2: FIXME use correct VP & SR based on cmd order
-	TransitBacktrace(DRPL_RSVP, 0, cl, base);
-	//TransitBacktrace(DRPL_RSSR, 0, cl, base);
+	int viewportSetOrder = 0;
+
+	for (int i = base - 1; i >= 0; --i)
+	{
+		if (stack[i].type == DRPL_RSSR)
+		{
+			if (viewportSetOrder == 0)
+			{
+				viewportSetOrder = 1;
+				PlayId(&stack[i], cl);
+			}
+		}
+		else if (stack[i].type == DRPL_RSVP)
+		{
+			if (viewportSetOrder == 0)
+			{
+				PlayId(&stack[i], cl);
+				break;
+			}
+			else {
+				cl->RSSetViewports(1, &stack[i].rs.viewport);
+				break;
+			}
+		}
+
+	}
 
 	TransitBacktrace(DRPL_IFIB, 0, cl, base);
 

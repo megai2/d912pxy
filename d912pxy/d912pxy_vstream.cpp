@@ -115,20 +115,19 @@ D912PXY_METHOD_IMPL(Unlock)(THIS)
 }
 
 void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12GraphicsCommandList * cl)
-{
-	bindData.v.StrideInBytes = stride;
+{	
+	D3D12_VERTEX_BUFFER_VIEW bindDataLocal;
+
+	bindDataLocal = bindData.v;
+	bindDataLocal.StrideInBytes = stride;
 
 	if (offset != 0)
-	{
-		D3D12_VERTEX_BUFFER_VIEW bindDataOffst;
+	{						
+		bindDataLocal.SizeInBytes -= offset;
+		bindDataLocal.BufferLocation += offset;		
+	}	
 
-		bindDataOffst = bindData.v;
-		bindDataOffst.SizeInBytes -= offset;
-		bindDataOffst.BufferLocation += offset;
-		cl->IASetVertexBuffers(slot, 1, &bindDataOffst);
-	}
-	else
-		cl->IASetVertexBuffers(slot, 1, &bindData.v);
+	cl->IASetVertexBuffers(slot, 1, &bindDataLocal);
 }
 
 void d912pxy_vstream::IFrameBindIB(ID3D12GraphicsCommandList * cl)

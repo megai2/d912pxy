@@ -209,7 +209,6 @@ public:
 	void TransitCLState(ID3D12GraphicsCommandList* cl, UINT base);
 
 private:
-
 	d912pxy_replay_handler_func replay_handlers[DRPL_COUNT];
 
 	void RHA_TRAN(d912pxy_replay_state_transit* it, ID3D12GraphicsCommandList * cl);	
