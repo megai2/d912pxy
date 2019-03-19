@@ -32,7 +32,7 @@ d912pxy_thread_lock::d912pxy_thread_lock()
 
 d912pxy_thread_lock::~d912pxy_thread_lock()
 {
-
+	DeleteCriticalSection(&cs);
 }
 
 void d912pxy_thread_lock::Hold()
