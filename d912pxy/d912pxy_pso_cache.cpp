@@ -722,6 +722,19 @@ void d912pxy_pso_cache::LoadCachedData()
 						d912pxy_vshader* vs = new d912pxy_vshader(m_dev, entry->vs);
 						d912pxy_pshader* ps = new d912pxy_pshader(m_dev, entry->ps);
 
+						try {
+							vs->GetCode();
+							ps->GetCode();
+						}
+						catch (...) {
+							LOG_ERR_DTDM("Shader pair VS: %llX PS: %llX load fail", entry->vs, entry->ps);
+
+							vs->Release();
+							ps->Release();
+							mt->Next();
+							continue;
+						}
+
 						for (int i = 1; i != (*max + 1); ++i)
 						{
 							if (entry->compiled[i >> 6] & (1ULL << (i & 0x3F)))
