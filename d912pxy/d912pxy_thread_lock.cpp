@@ -95,3 +95,8 @@ void d912pxy_thread_lock::Wait(LONG cond)
 		++spin;
 	}
 }
+
+LONG d912pxy_thread_lock::GetValue()
+{
+	return InterlockedAdd(&spinLock, 0);
+}

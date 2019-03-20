@@ -43,6 +43,8 @@ public:
 	void Add(LONG val);
 	void Wait(LONG cond);
 
+	LONG GetValue();
+
 private:	
 	CRITICAL_SECTION cs;
 	LONG spinLock;

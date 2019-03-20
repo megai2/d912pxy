@@ -68,12 +68,16 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 
 	API_OVERHEAD_TRACK_START(0)
 
+	swapOpLock.Hold();
+
 	d912pxy_s(iframe)->End();
 	d912pxy_s(GPUque)->Flush(0);
 
 	HRESULT ret = swapchains[0]->SetPresentParameters(pPresentationParameters);
 	
 	d912pxy_s(iframe)->Start();
+
+	swapOpLock.Release();
 
 	API_OVERHEAD_TRACK_END(0)
 		
@@ -85,6 +89,9 @@ HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 	LOG_DBG_DTDM(__FUNCTION__);
 
 	API_OVERHEAD_TRACK_START(0)
+
+	swapOpLock.Hold();
+	
 	d912pxy_s(iframe)->End();
 	API_OVERHEAD_TRACK_END(0)	
 	FRAME_METRIC_PRESENT(0)
@@ -105,6 +112,9 @@ HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 	API_OVERHEAD_TRACK_START(0)
 	mDrawUPStreamPtr = 0;
 	d912pxy_s(iframe)->Start();
+
+	swapOpLock.Release();
+
 	API_OVERHEAD_TRACK_END(0)	
 
 	return ret;
