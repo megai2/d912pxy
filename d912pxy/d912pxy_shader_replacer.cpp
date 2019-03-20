@@ -233,7 +233,8 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 	{
 		if (oCode == NULL)
 		{
-			LOG_ERR_THROW2(-1, "shader cso load error");
+			ret.code = NULL;
+			return ret;
 		}
 
 		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_custom_dir, 1);

@@ -46,13 +46,16 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d9
 
 	oCode = NULL;
 
+	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
+
 	d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID);
 
 	bytecode = replacer->GetCode();
 
-	delete replacer;
+	delete replacer;	
 
-	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
+	if (!bytecode.code)
+		LOG_ERR_THROW2(-1, "shader cso load error");
 }
 
 d912pxy_shader::~d912pxy_shader()

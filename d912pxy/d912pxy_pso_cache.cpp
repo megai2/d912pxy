@@ -719,18 +719,21 @@ void d912pxy_pso_cache::LoadCachedData()
 					{
 						d912pxy_shader_pair_cache_entry* entry = (d912pxy_shader_pair_cache_entry*)d912pxy_s(vfs)->GetCachePointer(entryOffset, PXY_VFS_BID_PSO_PRECOMPILE_LIST);
 
-						d912pxy_vshader* vs = new d912pxy_vshader(m_dev, entry->vs);
-						d912pxy_pshader* ps = new d912pxy_pshader(m_dev, entry->ps);
+						d912pxy_vshader* vs = NULL;
+						d912pxy_pshader* ps = NULL;
 
 						try {
-							vs->GetCode();
-							ps->GetCode();
+							vs = new d912pxy_vshader(m_dev, entry->vs);
+							ps = new d912pxy_pshader(m_dev, entry->ps);
 						}
 						catch (...) {
 							LOG_ERR_DTDM("Shader pair VS: %llX PS: %llX load fail", entry->vs, entry->ps);
 
-							vs->Release();
-							ps->Release();
+							if (vs)
+								vs->Release();
+							if (ps)
+								ps->Release();
+
 							mt->Next();
 							continue;
 						}
