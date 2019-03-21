@@ -765,7 +765,7 @@ d912pxy_trimmed_dx12_pso * d912pxy_pso_cache::GetCurrentDsc()
 	return &cDsc;
 }
 
-void d912pxy_pso_cache::SaveKeyToCache(UINT id, d912pxy_trimmed_dx12_pso * dsc)
+void d912pxy_pso_cache::SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc)
 {
 	if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_WRITE)
 	{

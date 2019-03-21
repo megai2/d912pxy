@@ -137,7 +137,7 @@ public:
 
 	d912pxy_trimmed_dx12_pso* GetCurrentDsc();
 
-	void SaveKeyToCache(UINT id, d912pxy_trimmed_dx12_pso * dsc);
+	void SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc);
 
 private:
 	d912pxy_memtree2* cacheIndexes;
