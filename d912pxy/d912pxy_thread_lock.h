@@ -42,6 +42,7 @@ public:
 
 	void Add(LONG val);
 	void Wait(LONG cond);
+	UINT WaitTimeout(LONG cond, DWORD ms);
 
 	LONG GetValue();
 

@@ -57,11 +57,10 @@ public:
 
 private:
 	HANDLE workEvent;
-	HANDLE completionEvent;
-
+	
 	HANDLE thrdHandle;
 
-	LONG workIssued;
+	d912pxy_thread_lock workIssued;
 
 	UINT isRunning;
 };

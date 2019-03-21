@@ -96,6 +96,36 @@ void d912pxy_thread_lock::Wait(LONG cond)
 	}
 }
 
+UINT d912pxy_thread_lock::WaitTimeout(LONG cond, DWORD ms)
+{
+	DWORD stime = GetTickCount();
+
+	//megai2: simple spin wait
+	UINT spin = 0;
+
+	while (InterlockedAdd(&spinLock, 0) != cond)
+	{
+		if (spin > 32)
+		{
+			if ((GetTickCount() - stime) > ms)
+				return 0;
+			Sleep(0);
+		}
+		else if (spin > 12)
+			SwitchToThread();
+		else
+		{
+			int loops = (1 << spin); //1..12 ==> 2..4096
+			while (loops > 0)
+				loops -= 1;
+		}
+
+		++spin;
+	}
+
+	return 1;
+}
+
 LONG d912pxy_thread_lock::GetValue()
 {
 	return InterlockedAdd(&spinLock, 0);

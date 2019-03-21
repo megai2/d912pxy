@@ -56,9 +56,7 @@ void SetThreadName(DWORD dwThreadID, char* threadName)
 d912pxy_thread::d912pxy_thread(const char* threadName)
 {
 	isRunning = 1;
-	workEvent = CreateEvent(NULL, 0, 0, NULL);
-	completionEvent = CreateEvent(NULL, 1, 0, NULL);
-	workIssued = 0;
+	workEvent = CreateEvent(NULL, 0, 0, NULL);	
 
 	thrdHandle = CreateThread(
 		NULL,
@@ -83,8 +81,7 @@ void d912pxy_thread::Stop()
 	SignalWork();
 	WaitForSingleObject(thrdHandle, INFINITE);
 	CloseHandle(thrdHandle);
-	CloseHandle(workEvent);
-	CloseHandle(completionEvent);
+	CloseHandle(workEvent);	
 }
 
 void d912pxy_thread::ThreadProc()
@@ -120,50 +117,28 @@ void d912pxy_thread::IgnoreJob()
 
 void d912pxy_thread::SignalWorkCompleted()
 {
-	if (!InterlockedDecrement(&workIssued))
-	{
-		SetEvent(completionEvent);
-	}
+	workIssued.Add(-1);
 }
 
 void d912pxy_thread::IssueWork()
 {
-	InterlockedIncrement(&workIssued);
+	workIssued.Add(1);
 	SignalWork();
 }
 
 UINT d912pxy_thread::IsWorkCompleted()
 {
-	return InterlockedAdd(&workIssued, 0) == 0;
+	return workIssued.GetValue();
 }
 
 void d912pxy_thread::WaitForIssuedWorkCompletion()
 {
-	if (IsWorkCompleted())
-	{
-		ResetEvent(completionEvent);
-		return;
-	}
-
-	WaitForSingleObject(completionEvent, INFINITE);
-	ResetEvent(completionEvent);
+	workIssued.Wait(0);	
 }
 
 UINT d912pxy_thread::WaitForIssuedWorkCompletionTimeout(DWORD timeout)
 {
-	if (IsWorkCompleted())
-	{
-		ResetEvent(completionEvent);
-		return 1;
-	}
-
-	if (WaitForSingleObject(completionEvent, timeout) != WAIT_TIMEOUT)
-	{
-		ResetEvent(completionEvent);
-		return 1;
-	}
-	else
-		return 0;
+	return workIssued.WaitTimeout(0, timeout);
 }
 
 void d912pxy_thread::ThreadInitProc()
