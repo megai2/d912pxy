@@ -42,7 +42,14 @@ SOFTWARE.
 #define PXY_METRICS_IFRAME_PREP 0
 #define PXY_METRICS_IFRAME_EXEC 1
 #define PXY_METRICS_IFRAME_SYNC 2
-#define PXY_METRICS_IFRAME_COUNT 3
+#define PXY_METRICS_IFRAME_THREAD_TEX 3
+#define PXY_METRICS_IFRAME_THREAD_BUF 4
+#define PXY_METRICS_IFRAME_THREAD_RP0 5
+#define PXY_METRICS_IFRAME_THREAD_RP1 6
+#define PXY_METRICS_IFRAME_THREAD_RP2 7
+#define PXY_METRICS_IFRAME_THREAD_RP3 8
+#define PXY_METRICS_IFRAME_SYNC_WAKE 9
+#define PXY_METRICS_IFRAME_COUNT 10
 
 static const wchar_t* PXY_METRICS_API_OVERHEAD_NAMES[] = {
 	L"overhead / dev",
@@ -63,7 +70,14 @@ static const wchar_t* PXY_METRICS_API_OVERHEAD_NAMES[] = {
 static const wchar_t* PXY_METRICS_IFRAME_TIME_NAMES [] = {
 	L"time / prep",
 	L"time / exec",
-	L"time / sync"
+	L"time / sync",
+	L"time / thread / tex",
+	L"time / thread / buf",
+	L"time / thread / rp0",
+	L"time / thread / rp1",
+	L"time / thread / rp2",
+	L"time / thread / rp3",
+	L"time / sync wake"
 };
 
 static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {

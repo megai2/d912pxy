@@ -25,28 +25,39 @@ SOFTWARE.
 #include "stdafx.h"
 
 void d912pxy_device::LockThread(UINT thread)
-{
+{	
 	LOG_DBG_DTDM("thread %u locked", thread);
 	threadLockdEvents[thread].Release();
+
+	FRAME_METRIC_THREAD(0, thread);
 	
 	threadLock.Hold();	
 	threadLock.Release();	
-		
+	
 	threadLockdEvents[thread].Hold();	
-
+	
 	threadLock.Add(-1);	
 }
 
 void d912pxy_device::InitLockThread(UINT thread)
 {
-	threadLockdEvents[thread].Hold();	
+	threadLockdEvents[thread].Hold();		
 }
 
 void d912pxy_device::LockAsyncThreads()
-{
-	FRAME_METRIC_SYNC(1)
+{	
+	FRAME_METRIC_SYNC_WAKE(1)
 
 	threadLock.WaitHold(0);
+
+	FRAME_METRIC_SYNC_WAKE(0);
+
+#ifdef ENABLE_METRICS
+	for (int i = 0; i != activeThreadCount; ++i)
+		FRAME_METRIC_THREAD(1, i);
+#endif
+
+	FRAME_METRIC_SYNC(1)
 
 	InterlockedIncrement(&threadInterruptState);
 
@@ -56,8 +67,8 @@ void d912pxy_device::LockAsyncThreads()
 
 	threadLock.Add(activeThreadCount);	
 	
-	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)
-	{
+	for (int i = 0; i != activeThreadCount; ++i)
+	{		
 		threadLockdEvents[i].Hold();
 	}
 
@@ -69,7 +80,7 @@ void d912pxy_device::LockAsyncThreads()
 void d912pxy_device::UnLockAsyncThreads()
 {
 	InterlockedDecrement(&threadInterruptState);
-	for (int i = 0; i != PXY_INNER_THREADID_MAX; ++i)
+	for (int i = 0; i != activeThreadCount; ++i)
 	{
 		threadLockdEvents[i].Release();
 	}	

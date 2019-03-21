@@ -132,6 +132,8 @@ SOFTWARE.
 	#define FRAME_METRIC_DHEAP(a,b) d912pxy_s(metrics)->TrackDHeapSlots(a,b);
 	#define FRAME_METRIC_EXEC(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_EXEC);
 	#define FRAME_METRIC_SYNC(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC);
+	#define FRAME_METRIC_SYNC_WAKE(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC_WAKE);
+	#define FRAME_METRIC_THREAD(a,b) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_THREAD_TEX+b);
 	#define FRAME_METRIC_PRESENT(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_PREP);
 	#define API_OVERHEAD_TRACK_START(a) d912pxy_s(metrics)->TrackAPIOverheadStart(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);
 	#define API_OVERHEAD_TRACK_END(a) d912pxy_s(metrics)->TrackAPIOverheadEnd(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);	
@@ -140,6 +142,8 @@ SOFTWARE.
 	#define FRAME_METRIC_DHEAP(a,b)
 	#define FRAME_METRIC_EXEC(a) 
 	#define FRAME_METRIC_SYNC(a)
+	#define FRAME_METRIC_SYNC_WAKE(a)
+	#define FRAME_METRIC_THREAD(a,b)
 	#define FRAME_METRIC_PRESENT(a) 
 	#define API_OVERHEAD_TRACK_START(a)
 	#define API_OVERHEAD_TRACK_END(a)
