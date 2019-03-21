@@ -72,7 +72,7 @@ public:
 	void* GetCachePointer(UINT32 offset, UINT id);
 		
 private:
-	d912pxy_thread_lock lock;
+	d912pxy_thread_lock lock[PXY_VFS_MAX_BID];
 
 	char m_rootPath[2048];
 	FILE* m_vfsBlocks[PXY_VFS_MAX_BID];

@@ -201,13 +201,13 @@ void d912pxy_vfs::ReWriteFileN(const char * fnpath, void * data, UINT sz, UINT i
 
 void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 {
-	lock.Hold();
+	lock[id].Hold();
 	
 	UINT64 offset = IsPresentH(namehash, id);
 
 	if (!offset)
 	{
-		lock.Release();
+		lock[id].Release();
 		return nullptr;
 	}
 
@@ -215,7 +215,7 @@ void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 	{
 		offset -= PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
 
-		lock.Release();
+		lock[id].Release();
 
 		*sz = *((UINT32*)((intptr_t)m_vfsCache[id] + offset));
 
@@ -234,14 +234,14 @@ void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 
 	fread(ret, 1, *sz, m_vfsBlocks[id]);
 
-	lock.Release();
+	lock[id].Release();
 
 	return ret;
 }
 
 void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 {
-	lock.Hold();
+	lock[id].Hold();
 
 	fseek(m_vfsBlocks[id], PXY_VFS_FILE_HEADER_SIZE*m_vfsFileCount[id] + PXY_VFS_BID_TABLE_START, SEEK_SET);
 
@@ -261,12 +261,12 @@ void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 
 	m_vfsLastFileOffset[id] += sz + 4;
 
-	lock.Release();
+	lock[id].Release();
 }
 
 void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 {
-	lock.Hold();
+	lock[id].Hold();
 
 	UINT64 offset = IsPresentH(namehash, id);
 
@@ -282,7 +282,7 @@ void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 	else
 		WriteFileH(namehash, data, sz, id);
 
-	lock.Release();
+	lock[id].Release();
 }
 
 UINT64 d912pxy_vfs::HashFromName(const char * fnpath)
