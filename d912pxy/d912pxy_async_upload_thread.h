@@ -13,8 +13,10 @@ public:
 	void ThreadJob();
 	void ThreadInitProc();
 
-private:
+protected:
 	void CheckInterrupt();
+
+private:	
 	
 	d912pxy_ringbuffer<QueItemType>* buffer;
 

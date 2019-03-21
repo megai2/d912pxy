@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_async_upload_thread(dev, PXY_INNER_MAX_ASYNC_TEXLOADS, PXY_INNER_THREADID_TEX_LOADER, 3, L"texture upload thread", "d912pxy texld")
+d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_async_upload_thread(dev, PXY_INNER_MAX_ASYNC_TEXLOADS, PXY_INNER_THREADID_TEX_LOADER, 1, L"texture upload thread", "d912pxy texld")
 {
 	d912pxy_s(texloadThread) = this;
 	d912pxy_s(GPUque)->EnableGID(CLG_TEX, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
@@ -53,4 +53,5 @@ void d912pxy_texture_loader::OnThreadInterrupt()
 void d912pxy_texture_loader::UploadItem(d912pxy_texture_load_item* it)
 {
 	it->surf->DelayedLoad(it->ul, it->subRes);
+	CheckInterrupt();
 }
