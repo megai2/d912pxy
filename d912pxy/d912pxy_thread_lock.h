@@ -45,7 +45,8 @@ public:
 	UINT WaitTimeout(LONG cond, DWORD ms);
 
 	LONG GetValue();
-
+	void SetValue(LONG val);
+	
 private:	
 	CRITICAL_SECTION cs;
 	LONG spinLock;

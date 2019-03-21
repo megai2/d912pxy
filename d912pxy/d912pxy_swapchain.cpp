@@ -27,6 +27,17 @@ SOFTWARE.
 
 #define DXGI_SOFT_THROW(a, msg, ...) { HRESULT eret = a; if (FAILED(eret)) { LOG_ERR_DTDM(msg, __VA_ARGS__); LOG_ERR_DTDM("HR: %08lX", eret); state = SWCS_INIT_ERROR; return D3D_OK; } }
 
+static d912pxy_swapchain* baseSwapChain;
+
+LRESULT APIENTRY d912pxy_dxgi_wndproc_patch(
+	HWND hwnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam)
+{
+	return baseSwapChain->DXGIWndProc(hwnd, uMsg, wParam, lParam);
+}
+
 d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT_PARAMETERS * in_pp) : d912pxy_comhandler(dev, L"swap chain")
 {
 	state = SWCS_SETUP;
@@ -34,7 +45,13 @@ d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT
 	backBufferSurface = NULL;
 	swapCheckValue = D3D_OK;
 	dxgiNoWaitFlag = DXGI_PRESENT_DO_NOT_WAIT;
+	dxgiOWndProc = NULL;
 	errorCount = 0;
+
+	if (index == 0)
+	{
+		baseSwapChain = this;
+	}
 
 	currentPP = *in_pp;
 
@@ -56,6 +73,9 @@ d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT
 
 d912pxy_swapchain::~d912pxy_swapchain()
 {
+	//megai2: restore ogirinal wnd proc
+	SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)dxgiOWndProc);
+
 	LOG_INFO_DTDM("Stopping swapchain");
 }
 
@@ -335,6 +355,24 @@ void d912pxy_swapchain::GetGammaRamp(D3DGAMMARAMP* pRamp)
 	}
 }
 
+LRESULT d912pxy_swapchain::DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	LOG_DBG_DTDM2("DXGI_WP MSG = %u", uMsg);
+
+	switch (uMsg)
+	{
+		//megai2: forward a fullscreen swap interruption to stop present calls before msg pump is locked up
+		case WM_ACTIVATE:
+		{			
+			if (LOWORD(wParam) == WA_INACTIVE)
+				fullscreenIterrupt.LockedAdd(1);
+		}
+		break;
+	}
+
+	return CallWindowProc(dxgiOWndProc, hwnd, uMsg,	wParam, lParam);
+}
+
 void d912pxy_swapchain::ChangeState(d912pxy_swapchain_state newState)
 {
 	LOG_DBG_DTDM3("swapchain state %S=>%S", d912pxy_swapchain_state_names[state], d912pxy_swapchain_state_names[newState]);
@@ -467,10 +505,23 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable()
 
 HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
 {
-	HRESULT ret = dxgiSwapchain->Present(0, DXGI_PRESENT_TEST);
+	//HRESULT ret = dxgiSwapchain->Present(0, DXGI_PRESENT_TEST);
 
-	if (ret == S_OK)
+	//if (ret == S_OK)
+
+	HRESULT ret;
+
+	fullscreenIterrupt.Hold();
+
+	if (fullscreenIterrupt.GetValue())
+	{
+		ret = DXGI_STATUS_OCCLUDED;
+		fullscreenIterrupt.SetValue(0);
+	}
+	else 
 		ret = dxgiSwapchain->Present(currentPP.PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, dxgiPresentFlags);
+
+	fullscreenIterrupt.Release();
 
 	if (ret == DXGI_STATUS_OCCLUDED)
 	{
@@ -579,6 +630,8 @@ HRESULT d912pxy_swapchain::SwapHandle_Focus_Lost_Switch()
 	return D3D_OK;
 }
 
+
+
 HRESULT d912pxy_swapchain::InitDXGISwapChain()
 {
 	ComPtr<IDXGIFactory4> dxgiFactory4;
@@ -603,14 +656,13 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 
-	dxgiResizeFlags = 0;
-	dxgiPresentFlags = 0;
+	dxgiResizeFlags = 0;	
+	dxgiPresentFlags = dxgiNoWaitFlag;
 	
 	if (currentPP.Windowed)
 	{
 		dxgiResizeFlags |= dxgiTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
-		dxgiPresentFlags |= dxgiTearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;
-		dxgiPresentFlags |= dxgiNoWaitFlag;
+		dxgiPresentFlags |= dxgiTearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;		
 	}
 	else {
 		dxgiResizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
@@ -624,6 +676,8 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 	swapChainFullscreenDsc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	swapChainFullscreenDsc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swapChainFullscreenDsc.Windowed = currentPP.Windowed;
+
+
 	
 	ComPtr<IDXGISwapChain1> swapChain1;
 
@@ -636,6 +690,11 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 		currentPP.BackBufferFormat
 	);
 
+	if (!dxgiOWndProc)
+	{
+		dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch);
+	}
+	
 	HRESULT swapRet = dxgiFactory4->CreateSwapChainForHwnd(
 		d912pxy_s(GPUque)->GetDXQue().Get(),
 		currentPP.hDeviceWindow,

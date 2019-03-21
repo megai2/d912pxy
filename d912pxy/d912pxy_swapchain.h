@@ -91,6 +91,8 @@ public:
 	void SetGammaRamp(DWORD Flags, CONST D3DGAMMARAMP* pRamp);
 	void GetGammaRamp(D3DGAMMARAMP* pRamp);
 
+	LRESULT DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 private:	
 	void ChangeState(d912pxy_swapchain_state newState);
 
@@ -141,5 +143,8 @@ private:
 	UINT dxgiPresentFlags;
 	UINT dxgiTearingSupported;
 	UINT dxgiBuffersCount;
+
+	d912pxy_thread_lock fullscreenIterrupt;
+	WNDPROC dxgiOWndProc;
 };
 

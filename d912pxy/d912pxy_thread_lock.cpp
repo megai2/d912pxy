@@ -130,3 +130,8 @@ LONG d912pxy_thread_lock::GetValue()
 {
 	return InterlockedAdd(&spinLock, 0);
 }
+
+void d912pxy_thread_lock::SetValue(LONG val)
+{
+	InterlockedExchange(&spinLock, val);
+}
