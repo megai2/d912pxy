@@ -777,6 +777,8 @@ HRESULT d912pxy_swapchain::SetDXGIFullscreen()
 
 		if (FAILED(cr))
 			return cr;
+
+		fullscreenIterrupt.SetValue(0);
 	}
 
 	return dxgiSwapchain->SetFullscreenState(!currentPP.Windowed, NULL);
