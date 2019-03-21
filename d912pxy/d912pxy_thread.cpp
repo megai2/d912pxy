@@ -149,8 +149,26 @@ void d912pxy_thread::WaitForIssuedWorkCompletion()
 	ResetEvent(completionEvent);
 }
 
+UINT d912pxy_thread::WaitForIssuedWorkCompletionTimeout(DWORD timeout)
+{
+	if (IsWorkCompleted())
+	{
+		ResetEvent(completionEvent);
+		return 1;
+	}
+
+	if (WaitForSingleObject(completionEvent, timeout) != WAIT_TIMEOUT)
+	{
+		ResetEvent(completionEvent);
+		return 1;
+	}
+	else
+		return 0;
+}
+
 void d912pxy_thread::ThreadInitProc()
 {
+
 }
 
 

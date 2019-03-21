@@ -51,6 +51,7 @@ public:
 	UINT IsWorkCompleted();
 
 	void WaitForIssuedWorkCompletion();	
+	UINT WaitForIssuedWorkCompletionTimeout(DWORD timeout);
 
 	virtual void ThreadInitProc();
 

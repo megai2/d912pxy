@@ -51,6 +51,10 @@ public:
 
 	void EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio);
 
+	void SwitchCurrentCL();
+
+	UINT WaitForExecuteCompletion();
+
 private:
 	UINT swapAsked;
 	
@@ -63,5 +67,6 @@ private:
 
 	d912pxy_gpu_cleanup_thread* mGPUCleanupThread;
 
+	d912pxy_thread_lock gpuSignalSync;
 };
 

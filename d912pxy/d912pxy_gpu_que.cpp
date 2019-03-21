@@ -88,7 +88,8 @@ HRESULT d912pxy_gpu_que::ExecuteCurrentGPUWork(UINT doSwap)
 		ret = D3D_OK;
 
 	mCurrentGPUWork->Signal();
-
+	
+		
 	return ret;
 }
 
@@ -96,30 +97,14 @@ HRESULT d912pxy_gpu_que::ExecuteCommandsImm(UINT doSwap)
 {
 	HRESULT ret = 0;
 
-	WaitForIssuedWorkCompletion();
+	if (!WaitForExecuteCompletion())
+		return S_OK;
 
 	WaitForGPU();
-	
-	//we are commiting our commands list, so we must wait while new one is setup
-	m_dev->LockAsyncThreads();
 
-	//execute current command List
-	//iterate to next
-	//and write back this one to que
-	//also make a mark that we executing something on gpu
-	mCurrentGPUWork = mLists->GetElement();
-
-	mLists->Next();
-	mLists->WriteElement(mCurrentGPUWork);
-
-	d912pxy_s(GPUcl) = mLists->GetElement();
-
-	mGPUCleanupThread->SignalWork();
+	SwitchCurrentCL();
 
 	ret = ExecuteCurrentGPUWork(doSwap);
-
-	//we have a new list setted up, so we can continue to commit data
-	m_dev->UnLockAsyncThreads();
 
 	return ret;
 }
@@ -129,29 +114,14 @@ HRESULT d912pxy_gpu_que::ExecuteCommands(UINT doSwap)
 	HRESULT ret = 0;
 	FRAME_METRIC_EXEC(1)
 
-	WaitForIssuedWorkCompletion();
+	if (!WaitForExecuteCompletion())
+		return S_OK;
 	
-	if (swapAsked != S_OK)
-	{
-		doSwap = 0;
-	}
+	if (swapAsked != S_OK)	
+		doSwap = 0;	
 
-	//we are commiting our commands list, so we must wait while new one is setup
-	m_dev->LockAsyncThreads();
+	SwitchCurrentCL();
 
-	//execute current command List
-	//iterate to next
-	//and write back this one to que
-	//also make a mark that we executing something on gpu
-	mCurrentGPUWork = mLists->GetElement();
-	
-	mLists->Next();
-	mLists->WriteElement(mCurrentGPUWork);
-
-	d912pxy_s(GPUcl) = mLists->GetElement();
-		
-	mGPUCleanupThread->SignalWork();
-		
 	if (doSwap)
 	{
 		swapAsked = doSwap;
@@ -162,13 +132,8 @@ HRESULT d912pxy_gpu_que::ExecuteCommands(UINT doSwap)
 				swapAsked = 0;
 		}
 	}
-
-	IssueWork();
-	
-	//ret = ExecuteCurrentGPUWork(doSwap);
 		
-	//we have a new list setted up, so we can continue to commit data
-	m_dev->UnLockAsyncThreads();
+	IssueWork();
 
 	FRAME_METRIC_EXEC(0)
 
@@ -235,4 +200,39 @@ void d912pxy_gpu_que::EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio)
 	{
 		mListsArr[i]->EnableGID(id, prio);
 	}
+}
+
+void d912pxy_gpu_que::SwitchCurrentCL()
+{
+	//we are commiting our commands list, so we must wait while new one is setup
+	m_dev->LockAsyncThreads();
+
+	//execute current command List
+	//iterate to next
+	//and write back this one to que
+	//also make a mark that we executing something on gpu
+	mCurrentGPUWork = mLists->GetElement();
+
+	mLists->Next();
+	mLists->WriteElement(mCurrentGPUWork);
+
+	d912pxy_s(GPUcl) = mLists->GetElement();
+
+	mGPUCleanupThread->SignalWork();
+
+	//we have a new list setted up, so we can continue to commit data
+	m_dev->UnLockAsyncThreads();
+}
+
+UINT d912pxy_gpu_que::WaitForExecuteCompletion()
+{
+	//megai2: this happens if we hit DXGI deadlock or merely draw something more then 3 seconds
+	if (!WaitForIssuedWorkCompletionTimeout(3000))
+	{	
+		LOG_ERR_DTDM("WaitForExecuteCompletion timeout");		
+		//megai2: just keep building lists up for now
+		return 0;
+	}
+
+	return 1;
 }
