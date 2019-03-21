@@ -66,7 +66,5 @@ private:
 	ComPtr<ID3D12CommandQueue> mDXQue;
 
 	d912pxy_gpu_cleanup_thread* mGPUCleanupThread;
-
-	d912pxy_thread_lock gpuSignalSync;
 };
 

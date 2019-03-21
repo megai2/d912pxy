@@ -226,12 +226,12 @@ void d912pxy_gpu_que::SwitchCurrentCL()
 
 UINT d912pxy_gpu_que::WaitForExecuteCompletion()
 {
-	//megai2: this happens if we hit DXGI deadlock or merely draw something more then 3 seconds
-	if (!WaitForIssuedWorkCompletionTimeout(3000))
+	//megai2: this happens if we hit DXGI deadlock or merely draw something more then 5 seconds
+	if (!WaitForIssuedWorkCompletionTimeout(5000))
 	{	
-		LOG_ERR_DTDM("WaitForExecuteCompletion timeout");		
-		//megai2: just keep building lists up for now
-		return 0;
+		//megai2: shutdown if we hit this
+		LOG_ERR_DTDM("WaitForExecuteCompletion timeout/deadlock");				
+		TerminateProcess(GetCurrentProcess(), -1);
 	}
 
 	return 1;
