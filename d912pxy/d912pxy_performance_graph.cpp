@@ -172,7 +172,11 @@ void d912pxy_performance_graph::DrawOverlay()
 	}	
 
 	DrawText(900, 10, 1, d912pxy_helper::GetCPUBrandString());
-	DrawText(900, 20, 1, d912pxy_s(dev)->GetCurrentGPUName());
+
+	if (!dx9)
+		DrawText(900, 20, 1, d912pxy_s(dev)->GetCurrentGPUName());
+	else 
+		DrawText(900, 20, 1, (char*)"DX9");
 }
 
 void d912pxy_performance_graph::DrawLineH(UINT y)
