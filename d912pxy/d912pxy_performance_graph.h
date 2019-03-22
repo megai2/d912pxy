@@ -37,11 +37,20 @@ public:
 	d912pxy_performance_graph(UINT isDX9);
 	~d912pxy_performance_graph();
 	void RecordPresent(int batchCount);
+
+	void DrawOverlay();
 private:
+	void DrawLineH(UINT y);
+	void DrawLineV(UINT x);
+	void DrawCharacter(UINT lx, UINT ty, UINT scale, CHAR v);
+	void DrawText(UINT rx, UINT ty, UINT scale, char* txt);
+
 	Stopwatch frameTime;
 
 	UINT dx9;
 
 	UINT32 dataAcm[PXY_PERFGRPH_BATCH_PTS* PXY_PERFGRPH_FRAMETIME_PTS];
+
+	UINT8* imgData;
 };
 
