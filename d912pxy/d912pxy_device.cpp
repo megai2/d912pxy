@@ -224,4 +224,10 @@ void d912pxy_device::IFrameCleanupEnqeue(d912pxy_comhandler * obj)
 	cleanupLock.Release();
 }
 
+char * d912pxy_device::GetCurrentGPUName()
+{
+	return GPUNameA;
+}
+
+
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

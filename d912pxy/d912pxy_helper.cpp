@@ -399,3 +399,29 @@ UINT8 d912pxy_helper::BitsPerPixel(DXGI_FORMAT fmt)
 		return 0;
 	}
 }
+
+static char CPUBrandString[0x40] = { 0 };
+
+char * d912pxy_helper::GetCPUBrandString()
+{
+	if (CPUBrandString[0] != 0)
+		return &CPUBrandString[0];
+
+	int CPUInfo[4] = { -1 };
+	unsigned   nExIds, i = 0;	
+	// Get the information associated with each extended ID.
+	__cpuid(CPUInfo, 0x80000000);
+	nExIds = CPUInfo[0];
+	for (i = 0x80000000; i <= nExIds; ++i)
+	{
+		__cpuid(CPUInfo, i);
+		// Interpret CPU brand string
+		if (i == 0x80000002)
+			memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+		else if (i == 0x80000003)
+			memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+		else if (i == 0x80000004)
+			memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+	}
+	return nullptr;
+}

@@ -195,6 +195,8 @@ public:
 
 	void AddActiveThreads(UINT cnt) { activeThreadCount += cnt; };
 
+	char* GetCurrentGPUName();
+
 private:
 	LONG threadInterruptState;	
 	d912pxy_thread_lock threadLockdEvents[PXY_INNER_THREADID_MAX];
@@ -225,6 +227,8 @@ private:
 	D3DPRESENT_PARAMETERS initialPresentParameters;
 
 	void* initPtr;
+
+	char GPUNameA[128];
 
 	//dx9 api hacks
 	UINT32 gpuWriteDsc;

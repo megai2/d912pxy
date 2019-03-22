@@ -52,4 +52,6 @@ namespace d912pxy_helper {
 	DXGI_FORMAT DXGIFormatFromDX9FMT(D3DFORMAT fmt);
 	UINT8 BitsPerPixel(DXGI_FORMAT fmt);
 
+	char* GetCPUBrandString();
+
 }

@@ -229,25 +229,8 @@ void d912pxy_device::PrintInfoBanner()
 		LOG_INFO_DTDM("System physical RAM size: %llu Gb", memKb >> 20llu);
 	}
 
-	int CPUInfo[4] = { -1 };
-	unsigned   nExIds, i = 0;
-	char CPUBrandString[0x40];
-	// Get the information associated with each extended ID.
-	__cpuid(CPUInfo, 0x80000000);
-	nExIds = CPUInfo[0];
-	for (i = 0x80000000; i <= nExIds; ++i)
-	{
-		__cpuid(CPUInfo, i);
-		// Interpret CPU brand string
-		if (i == 0x80000002)
-			memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
-		else if (i == 0x80000003)
-			memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
-		else if (i == 0x80000004)
-			memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
-	}
 	//string includes manufacturer, model and clockspeed
-	LOG_INFO_DTDM("CPU: %S", CPUBrandString);
+	LOG_INFO_DTDM("CPU: %S", d912pxy_helper::GetCPUBrandString());
 
 	SYSTEM_INFO sysInf = { 0 };
 	GetSystemInfo(&sysInf);
@@ -379,7 +362,12 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	gpu_totalVidmemMB = (DWORD)(pDesc.DedicatedVideoMemory >> 20llu);
 
 	LOG_INFO_DTDM("GPU name: %s vidmem: %u Mb", pDesc.Description, gpu_totalVidmemMB);
-
+	
+	for (int i = 0; i != 128; ++i)
+	{		
+		GPUNameA[i] = (char)pDesc.Description[i];
+	}
+	
 	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
 	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
 

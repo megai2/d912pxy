@@ -170,6 +170,9 @@ void d912pxy_performance_graph::DrawOverlay()
 	{
 		DrawText(texPosX[i], texPosY[i], 1, (char*)Hleg[i]);
 	}	
+
+	DrawText(900, 10, 1, d912pxy_helper::GetCPUBrandString());
+	DrawText(900, 20, 1, d912pxy_s(dev)->GetCurrentGPUName());
 }
 
 void d912pxy_performance_graph::DrawLineH(UINT y)
