@@ -41,6 +41,7 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 			return 343434;
 		break;
 		case D3DRS_D912PXY_SETUP_PSO:
+			d912pxy_s(psoCache)->UseCompiled(0);
 			d912pxy_s(psoCache)->MarkDirty(0);
 		break;
 		case D3DRS_D912PXY_GPU_WRITE:

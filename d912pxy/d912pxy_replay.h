@@ -169,11 +169,13 @@ typedef struct d912pxy_replay_thread_transit_data {
 	d912pxy_vstream* indexBuf;
 
 	d912pxy_trimmed_dx12_pso pso;
+	d912pxy_pso_cache_item* cpso;
 
 	UINT saved;
 
 	D3D12_VIEWPORT main_viewport;
 	D3D12_RECT main_scissor;
+	
 } d912pxy_replay_thread_transit_data;
 
 class d912pxy_replay;

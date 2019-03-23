@@ -137,11 +137,15 @@ public:
 
 	d912pxy_trimmed_dx12_pso* GetCurrentDsc();
 
+	d912pxy_pso_cache_item* GetCurrentCPSO() { return cCPSO; };
+
 	void SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc);
 
 private:
 	d912pxy_memtree2* cacheIndexes;
 	UINT32 cacheIncID;
+
+	d912pxy_pso_cache_item* cCPSO;
 		
 	d912pxy_ringbuffer<d912pxy_shader*>* shaderCleanupBuffer;
 

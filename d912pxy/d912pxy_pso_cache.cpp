@@ -37,6 +37,8 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 
 	fileCacheFlags = (UINT8)d912pxy_s(config)->GetValueUI64(PXY_CFG_SDB_USE_PSO_KEY_CACHE);
 
+	cCPSO = NULL;
+
 	d912pxy_pso_cache::vsMaxVars = 0;
 	d912pxy_pso_cache::psMaxVars = 0;
 	
@@ -507,6 +509,9 @@ UINT d912pxy_pso_cache::Use()
 		d912pxy_s(CMDReplay)->PSORaw(&cDsc);
 
 		dirty = 0;
+
+		//megai2: FIXME remove as CPSO dx9 hack is updated
+		cCPSO = NULL;
 	} 
 
 
@@ -515,9 +520,15 @@ UINT d912pxy_pso_cache::Use()
 
 UINT d912pxy_pso_cache::UseCompiled(d912pxy_pso_cache_item * it)
 {	
-	d912pxy_s(CMDReplay)->PSOCompiled(it);
+	if (it)
+	{
+		d912pxy_s(CMDReplay)->PSOCompiled(it);
+		cCPSO = it;
 
-	dirty = 0;
+		dirty = 0;
+	}
+	else
+		cCPSO = NULL;
 
 	return 1;
 }

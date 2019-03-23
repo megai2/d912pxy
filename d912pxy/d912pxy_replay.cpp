@@ -456,6 +456,8 @@ void d912pxy_replay::SaveCLState(UINT thread)
 	trd->main_scissor = *d912pxy_s(iframe)->GetScissorRect();
 
 	trd->saved = 1;
+
+	trd->cpso = d912pxy_s(psoCache)->GetCurrentCPSO();
 }
 
 void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, UINT thread)
@@ -499,14 +501,22 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 		PlayId(&stack[trd->bfacStk], cl);
 
 	d912pxy_replay_item psoSet;
-	psoSet.type = DRPL_RPSO;
 
-	psoSet.rawPso.rawState = trd->pso;
-
+	if (trd->cpso)
+	{
+		psoSet.type = DRPL_CPSO;
+		psoSet.compiledPso.psoItem = trd->cpso;
+	}
+	else {
+		psoSet.type = DRPL_RPSO;
+		psoSet.rawPso.rawState = trd->pso;
+	}
 	PlayId(&psoSet, cl);
 
 	cl->RSSetViewports(1, &trd->main_viewport);
 	cl->RSSetScissorRects(1, &trd->main_scissor);
+
+
 
 	trd->saved = 0;	
 }
