@@ -48,6 +48,8 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"rep
 		
 		threads[i] = new d912pxy_replay_thread(dev, clg, thrdName);
 
+		transitData[i].saved = 0;
+
 		d912pxy_s(GPUque)->EnableGID(clg, PXY_INNER_CLG_PRIO_REPLAY + i);
 	}
 
@@ -279,7 +281,7 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 
 	if (start > 0)
 	{		
-		TransitCLState(cl, start);
+		TransitCLState(cl, start, thrd->GetId());
 	}
 	
 	//execute operations
@@ -347,6 +349,7 @@ void d912pxy_replay::IssueWork(UINT batch)
 		
 		++cWorker;
 		switchPoint = rangeEnds[cWorker];
+		SaveCLState(cWorker);
 				
 		threads[cWorker]->SignalWork();
 		
@@ -395,6 +398,9 @@ void d912pxy_replay::Start()
 	LOG_DBG_DTDM("RP START");
 
 	stackTop = 0;
+	lastBFactorStk = -1;
+	lastSRefStk = -1;
+
 	SyncStackTop();
 
 	InterlockedDecrement(&stopMarker);
@@ -429,83 +435,80 @@ void d912pxy_replay::TransitBacktrace(d912pxy_replay_item_type type, UINT depth,
 		PlayId(it, cl);
 }
 
-void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base)
+void d912pxy_replay::SaveCLState(UINT thread)
 {
-	//megai2: FIXME add inter-cl barrier to force serial GPU execution of command lists
+	d912pxy_replay_thread_transit_data* trd = &transitData[thread];
 
+	trd->bfacStk = lastBFactorStk;
+	trd->srefStk = lastSRefStk;
 
-	//megai2: transit states by backtrace in stack
-	TransitBacktrace(DRPL_OMSR, 0, cl, base);
-	TransitBacktrace(DRPL_OMBF, 0, cl, base);
-	TransitBacktrace(DRPL_OMRT, 0, cl, base);
+	trd->surfBind[0] = d912pxy_s(iframe)->GetBindedSurface(0);
+	trd->surfBind[1] = d912pxy_s(iframe)->GetBindedSurface(1);
 
-	int viewportSetOrder = 0;
+	trd->indexBuf = d912pxy_s(iframe)->GetIBuf();
 
-	for (int i = base - 1; i >= 0; --i)
-	{
-		if (stack[i].type == DRPL_RSSR)
-		{
-			if (viewportSetOrder == 0)
-			{
-				viewportSetOrder = 1;
-				PlayId(&stack[i], cl);
-			}
-		}
-		else if (stack[i].type == DRPL_RSVP)
-		{
-			if (viewportSetOrder == 0)
-			{
-				PlayId(&stack[i], cl);
-				break;
-			}
-			else {
-				cl->RSSetViewports(1, &stack[i].rs.viewport);
-				break;
-			}
-		}
+	for (int i = 0; i!= PXY_INNER_REPLAY_THREADS_MAX;++i)
+		trd->streams[i] = d912pxy_s(iframe)->GetStreamSource(i);
 
+	trd->pso = *d912pxy_s(psoCache)->GetCurrentDsc();
+
+	trd->main_viewport = *d912pxy_s(iframe)->GetViewport();
+	trd->main_scissor = *d912pxy_s(iframe)->GetScissorRect();
+
+	trd->saved = 1;
+}
+
+void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, UINT thread)
+{
+	d912pxy_replay_thread_transit_data* trd = &transitData[thread];
+
+	if (!trd->saved)
+		return;
+
+	d912pxy_replay_item surfBind;
+	surfBind.type = DRPL_OMRT;
+	surfBind.rt.dsv = trd->surfBind[0];
+	surfBind.rt.rtv = trd->surfBind[1];
+
+	PlayId(&surfBind, cl);
+
+	d912pxy_replay_item streamBind;
+	streamBind.type = DRPL_IFVB;
+
+	for (int i = 0; i != PXY_INNER_REPLAY_THREADS_MAX; ++i)
+	{		
+		if (!trd->streams[i].buffer)
+			continue;
+
+		streamBind.vb.buf = trd->streams[i].buffer;
+		streamBind.vb.offset = trd->streams[i].offset;
+		streamBind.vb.slot = i;
+		streamBind.vb.stride = trd->streams[i].stride;
+
+		PlayId(&streamBind, cl);
 	}
 
-	TransitBacktrace(DRPL_IFIB, 0, cl, base);
+	streamBind.type = DRPL_IFIB;
+	streamBind.ib.buf = trd->indexBuf;
+	PlayId(&streamBind, cl);
 
-	d912pxy_replay_item* it = BacktraceItemType(DRPL_RPSO, 0, base);
+	if (trd->srefStk != -1)	
+		PlayId(&stack[trd->srefStk], cl);
 
-	if (it)
-	{
-		//megai2: FIXME
-		//PSO1 VB VB *transit* IB PSO2 <= this sequence will break things if usedStreams1 < usedStreams2
-		//hardcore to 2 for now
-		UINT32 usedStreams = 2;//it->rawPso.rawState.InputLayout->GetUsedStreams() + 1;
+	if (trd->bfacStk != -1)
+		PlayId(&stack[trd->bfacStk], cl);
 
-		for (int i = 0; i != usedStreams; ++i)
-		{
-			UINT32 depth = 0;
+	d912pxy_replay_item psoSet;
+	psoSet.type = DRPL_RPSO;
 
-			d912pxy_replay_item* vbb;
+	psoSet.rawPso.rawState = trd->pso;
 
-			while (depth < 10)
-			{
-				vbb = BacktraceItemType(DRPL_IFVB, depth, base);
+	PlayId(&psoSet, cl);
 
-				if (!vbb)
-					break;
+	cl->RSSetViewports(1, &trd->main_viewport);
+	cl->RSSetScissorRects(1, &trd->main_scissor);
 
-				if (vbb->vb.slot == i)
-				{
-					PlayId(vbb, cl);
-					break;
-				}
-				else
-					++depth;
-			}
-
-			if (!vbb)
-				break;
-		}
-
-		PlayId(it, cl);
-	}
-
+	trd->saved = 0;	
 }
 
 

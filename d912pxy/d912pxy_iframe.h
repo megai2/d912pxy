@@ -62,6 +62,9 @@ public:
 	void SetViewport(D3D12_VIEWPORT* pViewport);
 	void SetScissors(D3D12_RECT* pRect);
 
+	D3D12_VIEWPORT* GetViewport() { return &main_viewport; };
+	D3D12_RECT* GetScissorRect() { return &main_scissor; };
+
 	void RestoreScissor();
 	void IgnoreScissor();
 

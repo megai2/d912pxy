@@ -39,6 +39,8 @@ public:
 	void Finish();
 	void ThreadInitProc();
 
+	UINT GetId() { return listGrp - CLG_RP1; };
+
 private:
 	d912pxy_ringbuffer<UINT32>* exchRI;
 

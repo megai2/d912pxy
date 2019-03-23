@@ -160,6 +160,22 @@ typedef struct d912pxy_replay_item {
 	};
 } d912pxy_replay_item;
 
+typedef struct d912pxy_replay_thread_transit_data {
+	d912pxy_surface* surfBind[2];
+	UINT32 srefStk;
+	UINT32 bfacStk;
+	
+	d912pxy_device_streamsrc streams[PXY_INNER_MAX_VBUF_STREAMS];
+	d912pxy_vstream* indexBuf;
+
+	d912pxy_trimmed_dx12_pso pso;
+
+	UINT saved;
+
+	D3D12_VIEWPORT main_viewport;
+	D3D12_RECT main_scissor;
+} d912pxy_replay_thread_transit_data;
+
 typedef void (d912pxy_replay::*d912pxy_replay_handler_func)(void*, ID3D12GraphicsCommandList* cl);
 
 class d912pxy_replay :
@@ -206,7 +222,9 @@ public:
 	d912pxy_replay_item* BacktraceItemType(d912pxy_replay_item_type type, UINT depth, UINT base);
 
 	void TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base);
-	void TransitCLState(ID3D12GraphicsCommandList* cl, UINT base);
+
+	void TransitCLState(ID3D12GraphicsCommandList* cl, UINT base, UINT thread);
+	void SaveCLState(UINT thread);
 
 private:
 	d912pxy_replay_handler_func replay_handlers[DRPL_COUNT];
@@ -232,12 +250,16 @@ private:
 	UINT stackTop;
 	LONG stackTopMT;
 	
+	UINT lastSRefStk;
+	UINT lastBFactorStk;
 		
 	UINT switchRange;	
 	UINT switchPoint;
 	UINT rangeEnds[PXY_INNER_REPLAY_THREADS_MAX];
 	UINT cWorker;
 	UINT numThreads;
+
+	d912pxy_replay_thread_transit_data transitData[PXY_INNER_REPLAY_THREADS_MAX];
 
 	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS_MAX];
 	LONG stopMarker;
