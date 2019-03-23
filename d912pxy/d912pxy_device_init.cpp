@@ -118,7 +118,12 @@ void d912pxy_device::InitThreadSyncObjects()
 void d912pxy_device::InitSingletons()
 {
 	new d912pxy_gpu_que(this, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
-	new d912pxy_replay(this);
+
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_REPLAY_MT_BEHAIVOUR))
+		new d912pxy_replay(this);
+	else
+		new d912pxy_replay_passthru(this);
+
 	new d912pxy_shader_db(this);
 
 	new d912pxy_iframe(this, m_dheaps);

@@ -28,7 +28,7 @@ SOFTWARE.
 
 __declspec(thread) static ID3D12PipelineState* replay_thread_pso;
 
-d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")
+d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 {
 	d912pxy_s(CMDReplay) = this;
 
@@ -626,4 +626,13 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 	d912pxy_surface* sDst = it->dst;
 
 	sSrc->ACopyTo(sDst, cl);
+}
+
+d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")
+{
+
+}
+
+d912pxy_replay_base::~d912pxy_replay_base()
+{
 }

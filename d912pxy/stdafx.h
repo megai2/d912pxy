@@ -114,6 +114,7 @@ SOFTWARE.
 #include "d912pxy_buffer_loader.h"
 #include "d912pxy_replay_thread.h"
 #include "d912pxy_replay.h"
+#include "d912pxy_replay_passthru.h"
 #include "d912pxy_device.h"
 
 #include "frame_analyzer.h"

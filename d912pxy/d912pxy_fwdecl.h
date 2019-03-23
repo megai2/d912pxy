@@ -201,7 +201,7 @@ class d912pxy_device;
 class d912pxy_dheap;
 class d912pxy_vdecl;
 class d912pxy_gpu_cmd_list;
-class d912pxy_replay;
+class d912pxy_replay_base;
 class d912pxy_batch;
 class d912pxy_shader_db;
 class d912pxy_shader_pair;
@@ -264,7 +264,7 @@ public:
 	static d912pxy_gpu_que* GPUque;
 	static d912pxy_gpu_cmd_list* GPUcl;
 	static ID3D12Device* DXDev;
-	static d912pxy_replay* CMDReplay;
+	static d912pxy_replay_base* CMDReplay;
 	static d912pxy_texture_state* textureState;
 	static d912pxy_pso_cache* psoCache;
 	static d912pxy_texture_loader* texloadThread;

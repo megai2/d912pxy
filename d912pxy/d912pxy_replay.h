@@ -176,10 +176,47 @@ typedef struct d912pxy_replay_thread_transit_data {
 	D3D12_RECT main_scissor;
 } d912pxy_replay_thread_transit_data;
 
+class d912pxy_replay;
+
 typedef void (d912pxy_replay::*d912pxy_replay_handler_func)(void*, ID3D12GraphicsCommandList* cl);
 
-class d912pxy_replay :
+class d912pxy_replay_base :
 	public d912pxy_noncom
+{
+public:
+	d912pxy_replay_base(d912pxy_device* dev);
+	~d912pxy_replay_base();
+
+	//actions
+
+	virtual UINT StateTransit(d912pxy_resource* res, D3D12_RESOURCE_STATES to) = 0;
+	virtual void OMStencilRef(DWORD ref) = 0;
+	virtual void OMBlendFac(float* color) = 0;
+	virtual void RSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor) = 0;
+
+	virtual void PSOCompiled(d912pxy_pso_cache_item* dsc) = 0;
+	virtual void PSORaw(d912pxy_trimmed_dx12_pso* dsc) = 0;
+	virtual void PSORawFeedback(d912pxy_trimmed_dx12_pso* dsc, void** ptr) = 0;
+	virtual void VBbind(d912pxy_vstream* buf, UINT stride, UINT slot, UINT offset) = 0;
+	virtual void IBbind(d912pxy_vstream* buf) = 0;
+	virtual void DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation) = 0;
+
+	virtual void RT(d912pxy_surface* rtv, d912pxy_surface* dsv) = 0;
+	virtual void RTClear(d912pxy_surface* tgt, float* clr) = 0;
+	virtual void DSClear(d912pxy_surface* tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag) = 0;
+	virtual void StretchRect(d912pxy_surface* src, d912pxy_surface* dst) = 0;
+
+	//actual execute code and thread managment
+
+	virtual void Finish() = 0;
+	virtual void Start() = 0;
+	virtual void IssueWork(UINT batch) = 0;
+
+	virtual void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd) = 0;
+
+};
+
+class d912pxy_replay : public d912pxy_replay_base	
 {
 public:
 	d912pxy_replay(d912pxy_device* dev);
