@@ -159,3 +159,4 @@ template class d912pxy_ringbuffer<UINT32>;
 template class d912pxy_ringbuffer<UINT64>;
 template class d912pxy_ringbuffer<d912pxy_linked_list_element*>;
 template class d912pxy_ringbuffer<d912pxy_vstream_lock_data>;
+template class d912pxy_ringbuffer<void*>;

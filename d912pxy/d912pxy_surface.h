@@ -86,6 +86,8 @@ public:
 	void FreeLayers();
 	void FreeObjAndSlot();
 
+	void FinishUpload();
+
 private:
 	D3D12_CPU_DESCRIPTOR_HANDLE rtdsHPtr;
 	UINT dheapId;
@@ -101,5 +103,8 @@ private:
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* subresFootprints;
 	size_t* subresSizes;
 	UINT subresCountCache;	
+
+	UINT ulMarked;
+	d912pxy_upload_item** ul;
 };
 

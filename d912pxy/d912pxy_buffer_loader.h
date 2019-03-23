@@ -36,13 +36,9 @@ public:
 	void UploadItem(d912pxy_vstream_lock_data* it);
 	void ThreadWake();
 
-	void AddToFinishList(d912pxy_vstream* it);
-
 	void OnThreadInterrupt();
 
 private:
 	ID3D12GraphicsCommandList* cl;
-
-	d912pxy_ringbuffer<d912pxy_vstream*>* finishList;
 };
 

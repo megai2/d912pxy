@@ -42,5 +42,9 @@ public:
 
 	void ThreadWake();
 	void OnThreadInterrupt();
+
+private:
+
+	UINT allowAsnycLoad;
 };
 

@@ -27,9 +27,7 @@ SOFTWARE.
 d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_async_upload_thread(dev, PXY_INNER_MAX_ASYNC_BUFFERLOADS, PXY_INNER_THREADID_BUF_LOADER, 10, L"buffer upload thread", "d912pxy bufld")
 {
 	d912pxy_s(bufloadThread) = this;
-	d912pxy_s(GPUque)->EnableGID(CLG_BUF, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
-
-	finishList = new d912pxy_ringbuffer<d912pxy_vstream*>(64, 2);
+	d912pxy_s(GPUque)->EnableGID(CLG_BUF, PXY_INNER_CLG_PRIO_ASYNC_LOAD);	
 }
 
 d912pxy_buffer_loader::~d912pxy_buffer_loader()
@@ -48,16 +46,11 @@ void d912pxy_buffer_loader::ThreadWake()
 	cl = d912pxy_s(GPUcl)->GID(CLG_BUF);
 }
 
-void d912pxy_buffer_loader::AddToFinishList(d912pxy_vstream * it)
-{
-	finishList->WriteElement(it);
-}
-
 void d912pxy_buffer_loader::OnThreadInterrupt()
 {
 	while (finishList->HaveElements())
 	{
-		finishList->PopElement()->FinishUpload(cl);
+		((d912pxy_vstream*)finishList->PopElement())->FinishUpload(cl);
 	}
 }
 

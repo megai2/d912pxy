@@ -28,6 +28,8 @@ d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_as
 {
 	d912pxy_s(texloadThread) = this;
 	d912pxy_s(GPUque)->EnableGID(CLG_TEX, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
+
+	allowAsnycLoad = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_UPLOAD_TEX_ASYNC);
 }
 
 d912pxy_texture_loader::~d912pxy_texture_loader()
@@ -48,10 +50,16 @@ void d912pxy_texture_loader::ThreadWake()
 
 void d912pxy_texture_loader::OnThreadInterrupt()
 {
+	while (finishList->HaveElements())
+	{
+		((d912pxy_surface*)finishList->PopElement())->FinishUpload();
+	}
 }
 
 void d912pxy_texture_loader::UploadItem(d912pxy_texture_load_item* it)
 {
 	it->surf->DelayedLoad(it->ul, it->subRes);
-	CheckInterrupt();
+
+	if (allowAsnycLoad)
+		CheckInterrupt();
 }

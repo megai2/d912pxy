@@ -13,13 +13,16 @@ public:
 	void ThreadJob();
 	void ThreadInitProc();
 
+	void AddToFinishList(void* ptr);
+
 protected:
 	void CheckInterrupt();
+	d912pxy_ringbuffer<void*>* finishList;
 
 private:	
 	
 	d912pxy_ringbuffer<QueItemType>* buffer;
-
+	
 	d912pxy_thread_lock writeLock;
 	UINT threadSyncId;
 

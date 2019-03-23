@@ -9,6 +9,8 @@ d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread(
 	uploadCount = 0;
 	uploadTrigger = throttleFactor;
 
+	finishList = new d912pxy_ringbuffer<void*>(64, 2);
+
 	dev->AddActiveThreads(1);
 }
 
@@ -16,6 +18,7 @@ template<class QueItemType, class ProcImpl>
 d912pxy_async_upload_thread<QueItemType, ProcImpl>::~d912pxy_async_upload_thread()
 {
 	delete buffer;
+	delete finishList;
 }
 
 template<class QueItemType, class ProcImpl>
@@ -50,6 +53,12 @@ template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::ThreadInitProc()
 {
 	d912pxy_s(dev)->InitLockThread(threadSyncId);
+}
+
+template<class QueItemType, class ProcImpl>
+void d912pxy_async_upload_thread<QueItemType, ProcImpl>::AddToFinishList(void * ptr)
+{
+	finishList->WriteElement(ptr);
 }
 
 template<class QueItemType, class ProcImpl>
