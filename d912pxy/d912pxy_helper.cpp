@@ -423,5 +423,6 @@ char * d912pxy_helper::GetCPUBrandString()
 		else if (i == 0x80000004)
 			memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
 	}
-	return nullptr;
+
+	return &CPUBrandString[0];
 }
