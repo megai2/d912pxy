@@ -91,6 +91,7 @@ void d912pxy_log::WriteCrashLogLine(wchar_t * buf)
 
 	fwprintf(crashLog, L"%u | %s \r\n", crashLogLine, buf);	
 	fflush(crashLog);
+	++crashLogLine;
 }
 
 void d912pxy_log::WriteLogLine(d912pxy_log_module module, const wchar_t * fmt, const wchar_t * cat, ...)

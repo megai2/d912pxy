@@ -101,6 +101,21 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 			if (len)
 			{
 				LOG_ERR_DTDM("%s", pwz);
+
+				//megai2: check for D3D12 device removal message
+				if (!lstrcmpW(pwz, L"D3D12: Removing Device."))
+				{
+					if (d912pxy_s(DXDev))
+						LOG_ERR_DTDM("Recived D3D12 device removal message due to %lX", d912pxy_s(DXDev)->GetDeviceRemovedReason());
+					else
+						LOG_ERR_DTDM("Recived D3D12 device removal message due to unknown error");
+
+					d912pxy_StackWalker sw;
+					sw.ShowCallstack();
+
+
+					ExceptionInfo->ExceptionRecord->ExceptionCode = EXCEPTION_NONCONTINUABLE_EXCEPTION;
+				}
 			}
 
 		}
@@ -131,7 +146,19 @@ void d912pxy_helper::ThrowIfFailed(HRESULT hr, const char* reason)
 		wsprintf(buf, L"%S | hr = %08lX", reason, hr);
 
 		d912pxy_s(log)->SyncCrashWrite(1);
+
 		d912pxy_s(log)->WriteCrashLogLine(buf);
+
+		if (hr == DXGI_ERROR_DEVICE_REMOVED)
+		{
+			if (d912pxy_s(DXDev))
+				wsprintf(buf, L"D3D12 device removal due to %lX", d912pxy_s(DXDev)->GetDeviceRemovedReason());
+			else
+				wsprintf(buf, L"D3D12 device removal due to unknown error");
+
+			d912pxy_s(log)->WriteCrashLogLine(buf);
+		}
+		
 		d912pxy_s(log)->SyncCrashWrite(0);
 			
 		throw std::exception();
