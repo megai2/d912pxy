@@ -28,6 +28,7 @@ d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iMaxCleanupPerSync, 
 {
 	d912pxy_s(GPUque) = this;
 
+	gpuExecuteTimeout = d912pxy_s(config)->GetValueUI32(PXY_CFG_MISC_GPU_TIMEOUT);
 	mLists = new d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>(PXY_INNER_GPU_QUEUE_BUFFER_COUNT, 0);
 		
 	D3D12_COMMAND_QUEUE_DESC desc = {};
@@ -226,8 +227,9 @@ void d912pxy_gpu_que::SwitchCurrentCL()
 
 UINT d912pxy_gpu_que::WaitForExecuteCompletion()
 {
-	//megai2: this happens if we hit DXGI deadlock or merely draw something more then 5 seconds
-	if (!WaitForIssuedWorkCompletionTimeout(5000))
+	//megai2: this happens if we hit DXGI deadlock or merely draw something more then 5 seconds by default
+	//or if we use RenderDoc to capture something
+	if (!WaitForIssuedWorkCompletionTimeout(gpuExecuteTimeout))
 	{	
 		//megai2: shutdown if we hit this
 		LOG_ERR_DTDM("WaitForExecuteCompletion timeout/deadlock");				

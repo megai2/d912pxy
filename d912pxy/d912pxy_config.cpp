@@ -136,6 +136,11 @@ UINT64 d912pxy_config::GetValueUI64(d912pxy_config_value val)
 	return _wtoi64(&data[val].value[0]);
 }
 
+UINT64 d912pxy_config::GetValueUI32(d912pxy_config_value val)
+{
+	return (UINT32)GetValueUI64(val);
+}
+
 wchar_t * d912pxy_config::GetValueRaw(d912pxy_config_value val)
 {
 	return &data[val].value[0];

@@ -41,6 +41,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_REPLAY_THREADS,	
 	PXY_CFG_LOG_P7CONFIG,
 	PXY_CFG_UPLOAD_TEX_ASYNC,
+	PXY_CFG_MISC_GPU_TIMEOUT,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -60,6 +61,7 @@ public:
 
 	UINT64 GetValueXI64(d912pxy_config_value val);
 	UINT64 GetValueUI64(d912pxy_config_value val);
+	UINT64 GetValueUI32(d912pxy_config_value val);
 	wchar_t* GetValueRaw(d912pxy_config_value val);
 
 	d912pxy_config_value_dsc* GetEntryRaw(d912pxy_config_value val);
@@ -81,7 +83,8 @@ private:
 		{L"replay", L"mt", L"1"},//PXY_CFG_REPLAY_MT_BEHAIVOUR
 		{L"replay", L"threads", L"1"},//PXY_CFG_REPLAY_THREADS
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG
-		{L"upload",L"tex_async",L"0"}//PXY_CFG_UPLOAD_TEX_ASYNC
+		{L"upload",L"tex_async",L"0"},//PXY_CFG_UPLOAD_TEX_ASYNC
+		{L"misc",L"gpu_timeout",L"5000"}//PXY_CFG_MISC_GPU_TIMEOUT
 	};
 };
 
