@@ -78,7 +78,7 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 		rtdsHPtr = dsvHeap->GetDHeapHandle(dsvHeap->CreateDSV(m_res, &dsc2));
 	}
 
-	dheapId = AllocateSRV();
+	dheapId = -1;
 
 	LOG_DBG_DTDM("w %u h %u u %u", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
 }
@@ -246,7 +246,7 @@ DXGI_FORMAT d912pxy_surface::GetDSVFormat()
 			return DXGI_FORMAT_D16_UNORM;
 		case D3DFMT_D32:			
 			return DXGI_FORMAT_D32_FLOAT;
-		case D3DFMT_INTZ:
+		case D3DFMT_INTZ:		
 		case D3DFMT_D24X8:
 			return DXGI_FORMAT_D24_UNORM_S8_UINT;
 		default:
@@ -560,7 +560,8 @@ void d912pxy_surface::FreeObjAndSlot()
 	m_res->Release();
 	m_res = NULL;
 
-	dHeap->FreeSlot(dheapId);
+	if (dheapId != -1)
+		dHeap->FreeSlot(dheapId);
 }
 
 void d912pxy_surface::FinishUpload()
@@ -588,6 +589,9 @@ UINT d912pxy_surface::GetSRVHeapId()
 		if (surf_dx9dsc.Format == D3DFMT_NULL)
 			return 0;
 
+		if (dheapId == -1)
+			dheapId = AllocateSRV();
+			   
 		if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 		{
 			if (d912pxy_s(CMDReplay)->StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
