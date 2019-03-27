@@ -31,8 +31,7 @@ d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_asy
 }
 
 d912pxy_buffer_loader::~d912pxy_buffer_loader()
-{
-	delete finishList;
+{	
 }
 
 void d912pxy_buffer_loader::UploadItem(d912pxy_vstream_lock_data* it)

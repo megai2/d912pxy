@@ -108,7 +108,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE d912pxy_dheap::GetGPUDHeapHandle(UINT slot)
 	return ret;
 }
 
-UINT d912pxy_dheap::CreateSRV(ComPtr<ID3D12Resource> resource, D3D12_SHADER_RESOURCE_VIEW_DESC* dsc)
+UINT d912pxy_dheap::CreateSRV(ID3D12Resource* resource, D3D12_SHADER_RESOURCE_VIEW_DESC* dsc)
 {
 	UINT ret = OccupySlot();
 
@@ -116,10 +116,10 @@ UINT d912pxy_dheap::CreateSRV(ComPtr<ID3D12Resource> resource, D3D12_SHADER_RESO
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC constDsc;
 		constDsc = *dsc;
-		d912pxy_s(DXDev)->CreateShaderResourceView(resource.Get(), &constDsc, GetDHeapHandle(ret));
+		d912pxy_s(DXDev)->CreateShaderResourceView(resource, &constDsc, GetDHeapHandle(ret));
 	}
 	else {
-		d912pxy_s(DXDev)->CreateShaderResourceView(resource.Get(), NULL, GetDHeapHandle(ret));
+		d912pxy_s(DXDev)->CreateShaderResourceView(resource, NULL, GetDHeapHandle(ret));
 	}
 
 	LOG_DBG_DTDM("new SRV @%u = %u", selfIID, ret);
@@ -173,7 +173,7 @@ UINT d912pxy_dheap::CreateSampler(D3D12_SAMPLER_DESC * dsc)
 	return ret;
 }
 
-UINT d912pxy_dheap::CreateRTV(ComPtr<ID3D12Resource> resource, D3D12_RENDER_TARGET_VIEW_DESC* dsc)
+UINT d912pxy_dheap::CreateRTV(ID3D12Resource* resource, D3D12_RENDER_TARGET_VIEW_DESC* dsc)
 {
 	UINT ret = OccupySlot();
 
@@ -181,10 +181,10 @@ UINT d912pxy_dheap::CreateRTV(ComPtr<ID3D12Resource> resource, D3D12_RENDER_TARG
 	{
 		D3D12_RENDER_TARGET_VIEW_DESC constDsc;
 		constDsc = *dsc;
-		d912pxy_s(DXDev)->CreateRenderTargetView(resource.Get(), &constDsc, GetDHeapHandle(ret));
+		d912pxy_s(DXDev)->CreateRenderTargetView(resource, &constDsc, GetDHeapHandle(ret));
 	}
 	else {
-		d912pxy_s(DXDev)->CreateRenderTargetView(resource.Get(), NULL, GetDHeapHandle(ret));
+		d912pxy_s(DXDev)->CreateRenderTargetView(resource, NULL, GetDHeapHandle(ret));
 	}
 
 	LOG_DBG_DTDM("new RTV @%u = %u", selfIID, ret);
@@ -192,7 +192,7 @@ UINT d912pxy_dheap::CreateRTV(ComPtr<ID3D12Resource> resource, D3D12_RENDER_TARG
 	return ret;
 }
 
-UINT d912pxy_dheap::CreateDSV(ComPtr<ID3D12Resource> resource, D3D12_DEPTH_STENCIL_VIEW_DESC * dsc)
+UINT d912pxy_dheap::CreateDSV(ID3D12Resource* resource, D3D12_DEPTH_STENCIL_VIEW_DESC * dsc)
 {
 	UINT ret = OccupySlot();
 	
@@ -201,10 +201,10 @@ UINT d912pxy_dheap::CreateDSV(ComPtr<ID3D12Resource> resource, D3D12_DEPTH_STENC
 	{
 		D3D12_DEPTH_STENCIL_VIEW_DESC constDsc;
 		constDsc = *dsc;
-		d912pxy_s(DXDev)->CreateDepthStencilView(resource.Get(), &constDsc, GetDHeapHandle(ret));
+		d912pxy_s(DXDev)->CreateDepthStencilView(resource, &constDsc, GetDHeapHandle(ret));
 	}
 	else {
-		d912pxy_s(DXDev)->CreateDepthStencilView(resource.Get(), NULL, GetDHeapHandle(ret));
+		d912pxy_s(DXDev)->CreateDepthStencilView(resource, NULL, GetDHeapHandle(ret));
 	}
 
 	LOG_DBG_DTDM("new DSV @%u = %u", selfIID, ret);
@@ -212,7 +212,7 @@ UINT d912pxy_dheap::CreateDSV(ComPtr<ID3D12Resource> resource, D3D12_DEPTH_STENC
 	return ret;
 }
 
-UINT d912pxy_dheap::CreateSRV_at(ComPtr<ID3D12Resource> resource, D3D12_SHADER_RESOURCE_VIEW_DESC * dsc, UINT32 slot)
+UINT d912pxy_dheap::CreateSRV_at(ID3D12Resource* resource, D3D12_SHADER_RESOURCE_VIEW_DESC * dsc, UINT32 slot)
 {
 	UINT ret = slot;
 
@@ -220,10 +220,10 @@ UINT d912pxy_dheap::CreateSRV_at(ComPtr<ID3D12Resource> resource, D3D12_SHADER_R
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC constDsc;
 		constDsc = *dsc;
-		d912pxy_s(DXDev)->CreateShaderResourceView(resource.Get(), &constDsc, GetDHeapHandle(ret));
+		d912pxy_s(DXDev)->CreateShaderResourceView(resource, &constDsc, GetDHeapHandle(ret));
 	}
 	else {
-		d912pxy_s(DXDev)->CreateShaderResourceView(resource.Get(), NULL, GetDHeapHandle(ret));
+		d912pxy_s(DXDev)->CreateShaderResourceView(resource, NULL, GetDHeapHandle(ret));
 	}
 
 	LOG_DBG_DTDM("reusing SRV @%u = %u", selfIID, ret);
