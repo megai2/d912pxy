@@ -549,6 +549,7 @@ void d912pxy_surface::FreeLayers()
 		{
 			UINT subresId = i * descCache.MipLevels + j;
 			delete layers[subresId];
+			layers[subresId] = NULL;//megai2: set this NULL to crash out if we hit something bad, like -1 dereferencing
 		}
 	}
 
