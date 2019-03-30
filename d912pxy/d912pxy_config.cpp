@@ -100,22 +100,30 @@ d912pxy_config::d912pxy_config()
 			if (((buf[i] == L'\r') || (buf[i] == L'\n')))
 			{
 				if (!valf)
+				{
+					++fptr;
 					break;
+				}
 
 				memcpy(val, &buf[dlmt], sizeof(wchar_t)*(i - dlmt));
 				val[i - dlmt] = 0;
+
+				++fptr;
 				break;
 			}
-
-
-
+					   
 			if (buf[i] == 0)
+			{
+				++fptr;
 				break;
-
+			}
+			
 			++fptr;
-		}
 
-		++fptr;
+			if (fptr == fsz)
+				break;
+			
+		}	
 
 		if (valf)
 		{
