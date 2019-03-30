@@ -39,7 +39,7 @@ LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
 {
 	PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
 
-	LOG_ERR_DTDM("Exception: %u", ExceptionRecord->ExceptionCode);
+	LOG_ERR_DTDM("Exception: %lX", ExceptionRecord->ExceptionCode);	
 
 	switch (ExceptionRecord->ExceptionCode)
 	{
@@ -101,6 +101,9 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 			if (len)
 			{
 				LOG_ERR_DTDM("%s", pwz);
+
+				//megai2: relay dbg print messages to crashlog too
+				d912pxy_s(log)->WriteCrashLogLine((wchar_t*)pwz);
 
 				//megai2: check for D3D12 device removal message
 				if (!lstrcmpW(pwz, L"D3D12: Removing Device."))
