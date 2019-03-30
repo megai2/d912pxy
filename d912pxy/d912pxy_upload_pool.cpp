@@ -108,7 +108,7 @@ ID3D12Resource * d912pxy_upload_pool::MakeUploadBuffer(UINT maxSize)
 
 	ID3D12Resource* ret = NULL;
 
-	if (!memPool)
+	if (!memPool || (maxSize >= memPoolSize))
 	{
 fallback:
 		d912pxy_resource* dxBuffer = new d912pxy_resource(m_dev, RTID_UL_BUF, L"upload pool data");
