@@ -33,7 +33,9 @@ public:
 	void Start();
 	void IssueWork(UINT batch);
 
-	void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd) ;
+	void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd);
+
+	void Free();
 
 private:
 	ID3D12GraphicsCommandList* cl;

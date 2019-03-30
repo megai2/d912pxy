@@ -159,3 +159,8 @@ void d912pxy_replay_passthru::IssueWork(UINT batch)
 void d912pxy_replay_passthru::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread * thrd)
 {
 }
+
+void d912pxy_replay_passthru::Free()
+{
+	delete this;
+}
