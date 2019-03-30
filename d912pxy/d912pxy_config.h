@@ -61,7 +61,7 @@ public:
 
 	UINT64 GetValueXI64(d912pxy_config_value val);
 	UINT64 GetValueUI64(d912pxy_config_value val);
-	UINT64 GetValueUI32(d912pxy_config_value val);
+	UINT32 GetValueUI32(d912pxy_config_value val);
 	wchar_t* GetValueRaw(d912pxy_config_value val);
 
 	d912pxy_config_value_dsc* GetEntryRaw(d912pxy_config_value val);
