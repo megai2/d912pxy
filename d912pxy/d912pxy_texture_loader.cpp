@@ -39,6 +39,15 @@ d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_as
 
 d912pxy_texture_loader::~d912pxy_texture_loader()
 {
+	if (asyncLoadPendingItems)
+	{
+		if (asyncLoadPendingItems->HaveElements())
+		{
+			LOG_ERR_DTDM("FIXME asyncLoadPendingItems->HaveElements() on removal");
+		}
+
+		delete asyncLoadPendingItems;
+	}
 }
 
 void d912pxy_texture_loader::IssueUpload(d912pxy_surface * surf, void* mem, UINT subRes)
