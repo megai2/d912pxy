@@ -77,7 +77,7 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_upload),		"Final cleanups  6/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_surface),		"Final cleanups  7/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(GPUque),			"Final cleanups  8/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(CMDReplay),			"Final cleanups  9/12");
+	LOG_INFO_DTDM2(d912pxy_s(CMDReplay)->Free(),		"Final cleanups  9/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups 10/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(vfs),				"Final cleanups 11/12");
 		

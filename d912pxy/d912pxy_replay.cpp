@@ -46,11 +46,11 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 		char thrdName[255];		
 		sprintf(thrdName, "d912pxy replay %u", i);
 		
+		d912pxy_s(GPUque)->EnableGID(clg, PXY_INNER_CLG_PRIO_REPLAY + i);
+
 		threads[i] = new d912pxy_replay_thread(dev, clg, thrdName);
 
-		transitData[i].saved = 0;
-
-		d912pxy_s(GPUque)->EnableGID(clg, PXY_INNER_CLG_PRIO_REPLAY + i);
+		transitData[i].saved = 0;		
 	}
 
 	ReRangeThreads(PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
@@ -74,12 +74,7 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 
 d912pxy_replay::~d912pxy_replay()
 {	
-	for (int i = 0; i != numThreads; ++i)
-	{
-		if (threads[i])
-			threads[i]->Stop();
-		delete threads[i];
-	}		
+		
 }
 
 UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
@@ -289,13 +284,16 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	{
 		LOG_DBG_DTDM("RP TY %u %s",i, d912pxy_replay_item_type_dsc[stack[i].type]);
 
+		while (i < maxRI)
+		{
+			PlayId(&stack[i], cl);
+			++i;
+		}
+		
 		maxRI = WaitForData(i, maxRI, thrd);			
 
 		if (!maxRI)
 			return;		
-
-		PlayId(&stack[i], cl);
-		++i;
 	}
 
 	//megai2: unlock thread only when stopMarker is set
@@ -381,6 +379,17 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 
 	switchPoint = rangeEnds[0];
 	cWorker = 0;
+}
+
+void d912pxy_replay::Free()
+{
+	for (int i = 0; i != numThreads; ++i)
+	{
+		if (threads[i])
+			threads[i]->Stop();
+		delete threads[i];
+	}
+	delete this;
 }
 
 UINT d912pxy_replay::GetStackTop()
@@ -515,9 +524,7 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 
 	cl->RSSetViewports(1, &trd->main_viewport);
 	cl->RSSetScissorRects(1, &trd->main_scissor);
-
-
-
+	   
 	trd->saved = 0;	
 }
 

@@ -216,6 +216,7 @@ public:
 
 	virtual void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd) = 0;
 
+	virtual void Free() = 0;
 };
 
 class d912pxy_replay : public d912pxy_replay_base	
@@ -253,6 +254,8 @@ public:
 	void Start();
 	void IssueWork(UINT batch);
 	void ReRangeThreads(UINT batches);
+
+	void Free();
 
 	UINT GetStackTop();
 	void SyncStackTop();
