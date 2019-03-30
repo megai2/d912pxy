@@ -46,5 +46,6 @@ public:
 private:
 
 	UINT allowAsnycLoad;
+	d912pxy_ringbuffer<d912pxy_surface*>* asyncLoadPendingItems;
 };
 

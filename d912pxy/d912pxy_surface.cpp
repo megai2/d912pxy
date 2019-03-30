@@ -566,9 +566,7 @@ void d912pxy_surface::FreeObjAndSlot()
 }
 
 void d912pxy_surface::FinishUpload()
-{
-	ThreadRef(-1);
-
+{	
 	UINT subCnt = descCache.DepthOrArraySize*descCache.MipLevels;
 
 	for (int i = 0; i != subCnt; ++i)
@@ -581,6 +579,8 @@ void d912pxy_surface::FinishUpload()
 	}
 
 	ulMarked = 0;
+
+	ThreadRef(-1);
 }
 
 UINT d912pxy_surface::GetSRVHeapId()
