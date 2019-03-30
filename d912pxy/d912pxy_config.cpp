@@ -28,10 +28,10 @@ d912pxy_config::d912pxy_config()
 {
 	d912pxy_s(config) = this;
 
-	FILE* f = fopen(PXY_CFG_FILE_NAME, "r");
+	FILE* f = fopen(PXY_CFG_FILE_NAME, "rb");
 
 	if (!f) {
-		f = fopen(PXY_CFG_FILE_NAME, "w");
+		f = fopen(PXY_CFG_FILE_NAME, "wb");
 
 		wchar_t csection[256] = L"0";
 
@@ -59,15 +59,24 @@ d912pxy_config::d912pxy_config()
 	wchar_t param[256];
 	wchar_t val[256];
 
-	while (!feof(f))
-	{
-		wchar_t buf[256];
-		fgetws(buf, 256, f);
-		
+	fseek(f, 0, SEEK_END);
+	UINT fsz = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	int fptr = 0;
+
+	wchar_t* fileContent = (wchar_t*)malloc(fsz);
+
+	fread(fileContent, 1, fsz, f);
+
+	while (fptr != fsz)
+	{			
 		UINT dlmt = 0;
 		UINT valf = 0;
 
-		for (int i = 0; i != 256; ++i)
+		wchar_t* buf = &fileContent[fptr];
+
+		for (int i = 0; i!=256;++i)
 		{
 			if (buf[i] == L'[')
 			{
@@ -88,16 +97,25 @@ d912pxy_config::d912pxy_config()
 				dlmt = i + 1;
 			}
 
-			if (((buf[i] == L'\r') || (buf[i] == L'\n')) && valf)
+			if (((buf[i] == L'\r') || (buf[i] == L'\n')))
 			{
+				if (!valf)
+					break;
+
 				memcpy(val, &buf[dlmt], sizeof(wchar_t)*(i - dlmt));
 				val[i - dlmt] = 0;
 				break;
 			}
 
+
+
 			if (buf[i] == 0)
 				break;
+
+			++fptr;
 		}
+
+		++fptr;
 
 		if (valf)
 		{
@@ -116,6 +134,8 @@ d912pxy_config::d912pxy_config()
 		}
 	}
 
+
+	free(fileContent);
 	fclose(f);
 }
 
