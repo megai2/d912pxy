@@ -43,7 +43,11 @@ d912pxy_texture_loader::~d912pxy_texture_loader()
 	{
 		if (asyncLoadPendingItems->HaveElements())
 		{
-			LOG_ERR_DTDM("FIXME asyncLoadPendingItems->HaveElements() on removal");
+			while (asyncLoadPendingItems->HaveElements())
+			{
+				asyncLoadPendingItems->PopElement()->ThreadRef(-1);
+			}
+			LOG_INFO_DTDM("pending items dereferenced");
 		}
 
 		delete asyncLoadPendingItems;
@@ -93,7 +97,7 @@ void d912pxy_texture_loader::OnThreadInterrupt()
 }
 
 void d912pxy_texture_loader::UploadItem(d912pxy_texture_load_item* it)
-{
+{	
 	it->surf->DelayedLoad(it->ul, it->subRes);
 
 	if (allowAsnycLoad)
