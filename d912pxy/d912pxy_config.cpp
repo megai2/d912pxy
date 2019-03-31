@@ -60,8 +60,11 @@ d912pxy_config::d912pxy_config()
 	wchar_t val[256];
 
 	fseek(f, 0, SEEK_END);
-	UINT fsz = ftell(f);
+	int fsz = ftell(f);
 	fseek(f, 0, SEEK_SET);
+
+	if (fsz <= 0)
+		return;
 
 	int fptr = 0;
 
@@ -100,15 +103,20 @@ d912pxy_config::d912pxy_config()
 			if (((buf[i] == L'\r') || (buf[i] == L'\n')))
 			{
 				if (!valf)
-				{
+				{					
 					++fptr;
+					if ((fptr < fsz) && (buf[i + 1] == L'\n'))
+						++fptr;
 					break;
 				}
 
 				memcpy(val, &buf[dlmt], sizeof(wchar_t)*(i - dlmt));
 				val[i - dlmt] = 0;
-
+				
 				++fptr;
+				if ((fptr < fsz) && (buf[i + 1] == L'\n'))
+					++fptr;
+
 				break;
 			}
 					   
