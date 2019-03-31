@@ -78,6 +78,7 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 		rtdsHPtr = dsvHeap->GetDHeapHandle(dsvHeap->CreateDSV(m_res, &dsc2));
 	}
 
+	layers = NULL;
 	dheapId = -1;
 
 	LOG_DBG_DTDM("w %u h %u u %u", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
@@ -293,6 +294,13 @@ DXGI_FORMAT d912pxy_surface::ConvertInnerDSVFormat()
 
 void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 {
+	//megai2: skip render target fake upload
+	if (surf_dx9dsc.Usage == D3DUSAGE_D912PXY_FORCE_RT)
+	{
+		ThreadRef(-1);
+		return;
+	}
+
 	if (!ul[lv])
 	{
 		ul[lv] = d912pxy_s(pool_upload)->GetUploadObject(subresFootprints[lv].Footprint.RowPitch*subresFootprints[lv].Footprint.Height);		
