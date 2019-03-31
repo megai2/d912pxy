@@ -269,7 +269,7 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	UINT maxRI = 0;
 
 	//megai2: wait for actual stack to be filled	
-	maxRI = WaitForData(i, maxRI, thrd);
+	maxRI = WaitForData(i, maxRI, end, thrd);
 
 	if (!maxRI)
 		return;
@@ -290,7 +290,7 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 			++i;
 		}
 		
-		maxRI = WaitForData(i, maxRI, thrd);			
+		maxRI = WaitForData(i, maxRI, end, thrd);			
 
 		if (!maxRI)
 			return;		
@@ -301,13 +301,15 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 		thrd->WaitForJob();		
 }
 
-UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, d912pxy_replay_thread * thrd)
+UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_thread * thrd)
 {	
 	while (idx >= maxRI)
 	{
 		maxRI = GetStackTop();
 		if (InterlockedAdd(&stopMarker, 0))
 		{			
+			//megai2: be sure to have the last one value
+			maxRI = GetStackTop();
 			if (idx >= maxRI)
 				return 0;
 			else
@@ -315,6 +317,9 @@ UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, d912pxy_replay_thread * t
 		}		
 		thrd->WaitForJob();
 	}
+
+	if (maxRI > end)
+		maxRI = end;
 
 	return maxRI;
 }
