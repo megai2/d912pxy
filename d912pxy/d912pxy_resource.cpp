@@ -120,6 +120,8 @@ HRESULT d912pxy_resource::d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width,
 		IID_PPV_ARGS(&m_res)
 	));
 
+	LOG_DX_SET_NAME(m_res, L"z buffer");
+
 	stateCache = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 
 	return D3D_OK;
@@ -151,7 +153,7 @@ HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt,
 		LOG_ERR_THROW2(hr, "texture object create failed");
 	}
 
-	m_res->SetName(L"texture obj");
+	LOG_DX_SET_NAME(m_res, L"texture obj");
 
 	stateCache = D3D12_RESOURCE_STATE_COMMON;
 
@@ -252,6 +254,8 @@ HRESULT d912pxy_resource::d12res_rtgt(DXGI_FORMAT fmt, float * clearV, UINT widt
 		IID_PPV_ARGS(&m_res)
 	));
 
+	LOG_DX_SET_NAME(m_res, L"render target");
+
 	stateCache = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
 	return D3D_OK;
@@ -278,9 +282,9 @@ HRESULT d912pxy_resource::d12res_buffer(size_t size, D3D12_HEAP_TYPE heap)
 	));
 
 	if (heap == D3D12_HEAP_TYPE_UPLOAD)	
-		m_res->SetName(L"upload buffer");
+		LOG_DX_SET_NAME(m_res, L"upload buffer");
 	else 
-		m_res->SetName(L"vmem buffer");
+		LOG_DX_SET_NAME(m_res, L"vmem buffer");
 
 	stateCache = D3D12_RESOURCE_STATE_GENERIC_READ;
 
@@ -307,6 +311,8 @@ HRESULT d912pxy_resource::d12res_readback_buffer(size_t size)
 		IID_PPV_ARGS(&m_res)
 	));
 
+	LOG_DX_SET_NAME(m_res, L"readback buffer");
+
 	stateCache = D3D12_RESOURCE_STATE_COPY_DEST;
 
 	return D3D_OK;
@@ -331,6 +337,8 @@ HRESULT d912pxy_resource::d12res_uav_buffer(size_t size, D3D12_HEAP_TYPE heap)
 		0,
 		IID_PPV_ARGS(&m_res)
 	));
+
+	LOG_DX_SET_NAME(m_res, L"uav buffer");
 
 	stateCache = D3D12_RESOURCE_STATE_GENERIC_READ;
 

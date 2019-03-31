@@ -37,7 +37,7 @@ d912pxy_gpu_cmd_list::d912pxy_gpu_cmd_list(d912pxy_device * dev, ID3D12CommandQu
 
 		wchar_t buf[256];
 		wsprintf(buf, L"disabled gpu cmd list %u", i);
-		mCL[i].cl->SetName(buf);
+		LOG_DX_SET_NAME(mCL[i].cl, buf);
 
 		mCLPrio[i] = 99999;
 	}
@@ -169,7 +169,7 @@ void d912pxy_gpu_cmd_list::EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio)
 
 	wchar_t buf[256];
 	wsprintf(buf, L"gpu cmd list %u", id);
-	mCL[totalActCLs].cl->SetName(buf);
+	LOG_DX_SET_NAME(mCL[totalActCLs].cl, buf);
 	mCLPrio[totalActCLs] = prio;
 
 	++totalActCLs;
