@@ -118,7 +118,9 @@ void d912pxy_replay_passthru::RTClear(d912pxy_surface * tgt, float * clr)
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
 	StateTransit(tgt, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-	tgt->ClearAsRTV(clr, cl);
+	float clrRemap[4] = { clr[3], clr[2], clr[1], clr[0] };
+
+	tgt->ClearAsRTV(clrRemap, cl);
 
 	StateTransit(tgt, prevState);
 }
