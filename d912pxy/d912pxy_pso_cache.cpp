@@ -508,10 +508,7 @@ UINT d912pxy_pso_cache::Use()
 	{
 		d912pxy_s(CMDReplay)->PSORaw(&cDsc);
 
-		dirty = 0;
-
-		//megai2: FIXME remove as CPSO dx9 hack is updated
-		cCPSO = NULL;
+		dirty = 0;		
 	} 
 
 
