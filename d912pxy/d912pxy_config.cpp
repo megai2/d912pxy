@@ -72,6 +72,8 @@ d912pxy_config::d912pxy_config()
 
 	fread(fileContent, 1, fsz, f);
 
+	fsz = fsz / sizeof(wchar_t);
+
 	while (fptr != fsz)
 	{			
 		UINT dlmt = 0;
