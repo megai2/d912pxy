@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom(dev, L"GPU queue"), d912pxy_thread("d912pxy gpu exec")
+d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom(dev, L"GPU queue"), d912pxy_thread("d912pxy gpu exec", 0)
 {
 	d912pxy_s(GPUque) = this;
 

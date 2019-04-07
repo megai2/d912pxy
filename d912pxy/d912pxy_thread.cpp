@@ -53,7 +53,7 @@ void SetThreadName(DWORD dwThreadID, char* threadName)
 	}
 }
 
-d912pxy_thread::d912pxy_thread(const char* threadName)
+d912pxy_thread::d912pxy_thread(const char* threadName, UINT suspend)
 {
 	isRunning = 1;
 	workEvent = CreateEvent(NULL, 0, 0, NULL);	
@@ -63,7 +63,7 @@ d912pxy_thread::d912pxy_thread(const char* threadName)
 		0,
 		d912pxy_thread_main,
 		this,
-		0,
+		CREATE_SUSPENDED * suspend,
 		0
 	);	
 
@@ -144,6 +144,11 @@ UINT d912pxy_thread::WaitForIssuedWorkCompletionTimeout(DWORD timeout)
 void d912pxy_thread::ThreadInitProc()
 {
 
+}
+
+void d912pxy_thread::Resume()
+{
+	ResumeThread(thrdHandle);
 }
 
 

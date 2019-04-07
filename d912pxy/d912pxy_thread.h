@@ -31,7 +31,7 @@ DWORD WINAPI d912pxy_thread_main(void* arg);
 class d912pxy_thread
 {
 public:
-	d912pxy_thread(const char* threadName);
+	d912pxy_thread(const char* threadName, UINT suspend);
 	~d912pxy_thread();
 
 	void Stop();
@@ -54,6 +54,8 @@ public:
 	UINT WaitForIssuedWorkCompletionTimeout(DWORD timeout);
 
 	virtual void ThreadInitProc();
+
+	void Resume();
 
 private:
 	HANDLE workEvent;

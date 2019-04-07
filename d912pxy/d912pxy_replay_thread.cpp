@@ -24,10 +24,12 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread(threadName)
+d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread(threadName, 1)
 {
 	exchRI = new d912pxy_ringbuffer<UINT32>(5, 0);
 	listGrp = iListGrp;
+
+	Resume();
 }
 
 d912pxy_replay_thread::~d912pxy_replay_thread()

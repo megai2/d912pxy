@@ -25,7 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_gpu_cleanup_thread.h"
 
-d912pxy_gpu_cleanup_thread::d912pxy_gpu_cleanup_thread() : d912pxy_thread("d912pxy gpu cleanup")
+d912pxy_gpu_cleanup_thread::d912pxy_gpu_cleanup_thread() : d912pxy_thread("d912pxy gpu cleanup", 0)
 {
 	finishedEvent = CreateEvent(0, 0, 1, 0);
 }
