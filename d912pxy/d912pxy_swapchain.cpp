@@ -73,8 +73,11 @@ d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT
 
 d912pxy_swapchain::~d912pxy_swapchain()
 {
-	//megai2: restore ogirinal wnd proc
-	SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)dxgiOWndProc);
+	if (dxgiOWndProc)
+	{
+		//megai2: restore ogirinal wnd proc
+		SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)dxgiOWndProc);
+	}
 
 	LOG_INFO_DTDM("Stopping swapchain");
 }
@@ -491,12 +494,12 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable()
 {
 	HRESULT ret = dxgiSwapchain->Present(0, dxgiPresentFlags);
 
-	if (!((ret == DXGI_ERROR_WAS_STILL_DRAWING) || (ret == S_OK)))
+	if (!((ret == DXGI_ERROR_WAS_STILL_DRAWING) || (ret == S_OK) || (ret == DXGI_STATUS_OCCLUDED)))
 	{
 		//megai2: disable no wait flag and drop back to blocking call if we catch an error, 
 		//should fix vrr monitors behaivour on FPS > maxRefreshRate
 		dxgiNoWaitFlag = 0;
-		LOG_ERR_DTDM("error: %llX", ret);
+		LOG_ERR_DTDM("error: %lX", ret);
 		ChangeState(SWCS_SWAP_ERROR);
 	}
 		
@@ -539,7 +542,8 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
 HRESULT d912pxy_swapchain::SwapHandle_Reconfigure()
 {
 	//megai2: if we change fullscreen state: need to recreate whole swapchain
-	if (oldPP.Windowed != currentPP.Windowed)
+	//also if we change vsync state, do the recreation
+	if ((oldPP.Windowed != currentPP.Windowed) || (oldPP.PresentationInterval != currentPP.PresentationInterval))
 	{
 		ChangeState(SWCS_RESETUP);
 	}
@@ -662,11 +666,18 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 	if (currentPP.Windowed)
 	{
 		dxgiResizeFlags |= dxgiTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
-		dxgiPresentFlags |= dxgiTearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;		
+		dxgiPresentFlags |= dxgiTearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;				
+
+		//megai2: app asks for vsync, do a waitable swap
+		if (currentPP.PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE)
+		{
+			dxgiPresentFlags = 0;
+		}
 	}
 	else {
 		dxgiResizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	}
+
 
 	swapChainDesc.Flags = dxgiResizeFlags;	
 
@@ -723,6 +734,14 @@ void d912pxy_swapchain::FreeDXGISwapChain()
 	if (!currentPP.Windowed && dxgiSwapchain)
 	{
 		dxgiSwapchain->SetFullscreenState(0, NULL);
+	}
+
+	if (dxgiOWndProc)
+	{
+		//megai2: restore ogirinal wnd proc
+		SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)dxgiOWndProc);
+		fullscreenIterrupt.SetValue(0);
+		dxgiOWndProc = NULL;
 	}
 
 	dxgiSwapchain = nullptr;
