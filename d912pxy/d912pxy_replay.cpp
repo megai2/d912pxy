@@ -647,7 +647,22 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 	d912pxy_surface* sSrc = it->src;
 	d912pxy_surface* sDst = it->dst;
 
-	sSrc->ACopyTo(sDst, cl);
+	D3DSURFACE_DESC dSrc, dDst;
+
+	dSrc = sSrc->GetDX9DescAtLevel(0);
+	dDst = sDst->GetDX9DescAtLevel(0);
+
+	if (
+		(dSrc.Height == dDst.Height) &&
+		(dSrc.Width == dDst.Width) &&
+		(dSrc.Format == dDst.Format)
+		)
+	{
+		sSrc->ACopyTo(sDst, cl);
+	} else {
+		//megai2: TODO allow non similar texture copy via custom pass
+		;
+	}
 }
 
 d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")
