@@ -154,6 +154,8 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
+
+	API_OVERHEAD_TRACK_START(0)
 	
 	switch (State)
 	{
@@ -171,9 +173,10 @@ HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* p
 		*pValue = d912pxy_s(textureState)->GetCurrent()->splHeapID[*pValue];
 		break;
 	default:
-		*pValue = d912pxy_s(psoCache)->GetDX9RsValue(State);
-		return D3D_OK;
+		*pValue = d912pxy_s(psoCache)->GetDX9RsValue(State);		
 	}
+
+	API_OVERHEAD_TRACK_END(0)
 
 	return D3D_OK;
 }

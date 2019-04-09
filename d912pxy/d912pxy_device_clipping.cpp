@@ -47,7 +47,7 @@ HRESULT WINAPI d912pxy_device::SetScissorRect(CONST RECT* pRect)
 
 	API_OVERHEAD_TRACK_END(0)
 
-		return D3D_OK;
+	return D3D_OK;
 }
 
 HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
@@ -68,7 +68,7 @@ HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
 
 	API_OVERHEAD_TRACK_END(0)
 
-		return D3D_OK;
+	return D3D_OK;
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

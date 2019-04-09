@@ -65,7 +65,7 @@ d912pxy_texture::d912pxy_texture(d912pxy_device* dev, UINT Width, UINT Height, U
 
 
 d912pxy_texture::~d912pxy_texture()
-{
+{	
 	baseSurface->Release();
 }
 
@@ -126,11 +126,7 @@ D912PXY_METHOD_IMPL(LockRect)(THIS_ UINT Level, D3DLOCKED_RECT* pLockedRect, CON
 { 
 	LOG_DBG_DTDM("LockRect lv %u", Level);
 
-	API_OVERHEAD_TRACK_START(1)
-
 	HRESULT ret = baseSurface->GetLayer(Level, 0)->LockRect(pLockedRect, pRect, Flags);
-
-	API_OVERHEAD_TRACK_END(1)
 
 	return ret;
 }
@@ -139,11 +135,7 @@ D912PXY_METHOD_IMPL(UnlockRect)(THIS_ UINT Level)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(1)
-
 	HRESULT ret = baseSurface->GetLayer(Level, 0)->UnlockRect();
-
-	API_OVERHEAD_TRACK_END(1)
 
 	return ret;
 }

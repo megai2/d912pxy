@@ -141,7 +141,7 @@ HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, U
 {
 	API_OVERHEAD_TRACK_START(0)
 
-		LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
 	void* dstPtr;
 	mDrawUPVbuf->Lock(mDrawUPStreamPtr, 0, &dstPtr, 0);
@@ -168,7 +168,7 @@ HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, U
 
 	API_OVERHEAD_TRACK_END(0)
 
-		return D3D_OK;
+	return D3D_OK;
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

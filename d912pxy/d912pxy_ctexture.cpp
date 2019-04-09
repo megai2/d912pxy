@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_TEXTURE
+
 d912pxy_ctexture::d912pxy_ctexture(d912pxy_device* dev, UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format) : d912pxy_basetexture(dev)
 {
 	srvIDc = (UINT32*)((intptr_t)this - 8);
@@ -83,7 +85,12 @@ D912PXY_METHOD_IMPL(GetLevelDesc)(THIS_ UINT Level, D3DSURFACE_DESC *pDesc)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
+	API_OVERHEAD_TRACK_START(1)
+
 	*pDesc = baseSurface->GetDX9DescAtLevel(Level);
+
+	API_OVERHEAD_TRACK_END(1)
+
 	return D3D_OK;
 }
 
@@ -91,8 +98,14 @@ D912PXY_METHOD_IMPL(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Lev
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
+	API_OVERHEAD_TRACK_START(1)
+
 	*ppCubeMapSurface = (IDirect3DSurface9*)baseSurface->GetLayer(Level, FaceType);
 	(*ppCubeMapSurface)->AddRef();
+
+
+	API_OVERHEAD_TRACK_END(1)
+
 	return D3D_OK; 
 }
 
@@ -100,8 +113,8 @@ D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLO
 { 
 	LOG_DBG_DTDM("LockRect lv %u fc %u", Level, FaceType);
 
-
 	baseSurface->GetLayer(Level, FaceType)->LockRect(pLockedRect, pRect, Flags);
+
 	return D3D_OK; 
 }
 
@@ -110,6 +123,7 @@ D912PXY_METHOD_IMPL(UnlockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level)
 	LOG_DBG_DTDM(__FUNCTION__);
 
 	baseSurface->GetLayer(Level, FaceType)->UnlockRect();
+
 	return D3D_OK; 
 }
 
@@ -125,3 +139,5 @@ UINT d912pxy_ctexture::GetSRVHeapId()
 {
 	return faceSurfaces[0]->GetSRVHeapId();
 }
+
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

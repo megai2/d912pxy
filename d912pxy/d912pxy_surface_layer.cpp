@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_SURFACE
+
 d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_surface * iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix)
 {
 	base = iBase;
@@ -80,11 +82,17 @@ D912PXY_METHOD_IMPL(GetContainer)(THIS_ REFIID riid, void** ppContainer)
 
 D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
 {
-	return base->GetDesc(pDesc);	
+	API_OVERHEAD_TRACK_START(1)
+	HRESULT ret = base->GetDesc(pDesc);	
+	API_OVERHEAD_TRACK_END(1)
+
+	return ret;
 }
 
 D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
 {
+	API_OVERHEAD_TRACK_START(1)
+
 	void* surfMemRef = surfMem;
 
 	if (pRect)
@@ -97,21 +105,25 @@ D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRe
 
 	pLockedRect->Pitch = wPitch;
 
-	if ((Flags & D3DLOCK_READONLY) == 0)
-		++lockDepth;
+	++lockDepth;
+
+	API_OVERHEAD_TRACK_END(1)
 
 	return D3D_OK;
 }
 
 D912PXY_METHOD_IMPL(UnlockRect)(THIS)
 {
-	if (lockDepth)
-		--lockDepth;
+	API_OVERHEAD_TRACK_START(1)
+
+	--lockDepth;
 
 	if (!lockDepth)
 	{
 		d912pxy_s(texloadThread)->IssueUpload(base, surfMem, subres);
 	}
+
+	API_OVERHEAD_TRACK_END(1)
 
 	return D3D_OK;
 }
@@ -127,6 +139,7 @@ D912PXY_METHOD_IMPL(ReleaseDC)(THIS_ HDC hdc)
 }
 
 #undef D912PXY_METHOD_IMPL_CN
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 
 
 void d912pxy_surface_layer::SetDirtyRect(UINT32 left, UINT32 right, UINT32 top, UINT32 bottom)
 {

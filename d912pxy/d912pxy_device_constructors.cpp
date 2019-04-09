@@ -136,7 +136,7 @@ HRESULT WINAPI d912pxy_device::CreateStateBlock(D3DSTATEBLOCKTYPE Type, IDirect3
 
 	API_OVERHEAD_TRACK_END(0)
 
-		return D3D_OK;
+	return D3D_OK;
 }
 
 HRESULT WINAPI d912pxy_device::CreateVertexDeclaration(CONST D3DVERTEXELEMENT9* pVertexElements, IDirect3DVertexDeclaration9** ppDecl)

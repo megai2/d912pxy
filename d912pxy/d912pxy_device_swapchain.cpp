@@ -124,7 +124,13 @@ HRESULT WINAPI d912pxy_device::GetBackBuffer(UINT iSwapChain, UINT iBackBuffer, 
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	return swapchains[iSwapChain]->GetBackBuffer(iBackBuffer, Type, ppBackBuffer);
+	API_OVERHEAD_TRACK_START(0)
+
+	HRESULT ret = swapchains[iSwapChain]->GetBackBuffer(iBackBuffer, Type, ppBackBuffer);
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return ret;
 }
 
 HRESULT WINAPI d912pxy_device::GetRasterStatus(UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
@@ -173,7 +179,13 @@ HRESULT WINAPI d912pxy_device::TestCooperativeLevel(void)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	return swapchains[0]->TestCoopLevel();
+	API_OVERHEAD_TRACK_START(0)
+
+	HRESULT ret = swapchains[0]->TestCoopLevel();
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return ret;
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 
