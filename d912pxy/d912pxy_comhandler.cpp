@@ -57,8 +57,12 @@ ULONG d912pxy_comhandler::AddRef()
 	return InterlockedAdd(&refc, 1);
 }
 
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_COM
+
 ULONG d912pxy_comhandler::Release()
 {
+	API_OVERHEAD_TRACK_START(1)
+
 	LONG decR = InterlockedAdd(&refc, -1);
 
 	if (decR == 0)
@@ -67,13 +71,21 @@ ULONG d912pxy_comhandler::Release()
 
 		if (m_dev)
 			m_dev->IFrameCleanupEnqeue(this);
-		else
+		else {
+
+			API_OVERHEAD_TRACK_END(1)
+
 			delete this;
-		return 0;
+			return 0;
+		}
 	}
+
+	API_OVERHEAD_TRACK_END(1)
 
 	return decR;
 }
+
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE
 
 UINT d912pxy_comhandler::FinalReleaseTest()
 {

@@ -38,7 +38,8 @@ SOFTWARE.
 #define PXY_METRICS_API_OVERHEAD_VSTREAM 10
 #define PXY_METRICS_API_OVERHEAD_TEXTURE 11
 #define PXY_METRICS_API_OVERHEAD_SURFACE 12
-#define PXY_METRICS_API_OVERHEAD_COUNT 13
+#define PXY_METRICS_API_OVERHEAD_COM 13
+#define PXY_METRICS_API_OVERHEAD_COUNT 14
 
 #define PXY_METRICS_IFRAME_PREP 0
 #define PXY_METRICS_IFRAME_EXEC 1
@@ -66,6 +67,7 @@ static const wchar_t* PXY_METRICS_API_OVERHEAD_NAMES[] = {
 	L"overhead / vstream",
 	L"overhead / texture",
 	L"overhead / surface",
+	L"overhead / com",
 	L"overhead / total"
 };
 
