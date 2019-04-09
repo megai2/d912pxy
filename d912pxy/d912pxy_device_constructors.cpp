@@ -197,6 +197,8 @@ HRESULT WINAPI d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Heig
 {
 	LOG_DBG_DTDM3(__FUNCTION__);
 
+	API_OVERHEAD_TRACK_START(0)
+
 	//megai2: hacky way to fix dxgi backbuffer format change
 	switch (Format)
 	{
@@ -210,6 +212,8 @@ HRESULT WINAPI d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Heig
 	d912pxy_surface* ret = new d912pxy_surface(this, Width, Height, Format, D3DUSAGE_D912PXY_FORCE_RT, &levels, 1);
 
 	*ppSurface = (IDirect3DSurface9*)ret;
+
+	API_OVERHEAD_TRACK_END(0)
 
 	return D3D_OK;
 }
