@@ -29,9 +29,9 @@ d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_as
 	d912pxy_s(texloadThread) = this;
 	d912pxy_s(GPUque)->EnableGID(CLG_TEX, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
 
-	allowAsnycLoad = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_UPLOAD_TEX_ASYNC);
+	allowAsyncLoad = d912pxy_s(config)->GetValueUI32(PXY_CFG_UPLOAD_TEX_ASYNC);
 
-	if (allowAsnycLoad)
+	if (allowAsyncLoad)
 		asyncLoadPendingItems = new d912pxy_ringbuffer<d912pxy_surface*>(64, 2);
 	else
 		asyncLoadPendingItems = NULL;
@@ -68,11 +68,10 @@ void d912pxy_texture_loader::ThreadWake()
 
 void d912pxy_texture_loader::OnThreadInterrupt()
 {
-	if (allowAsnycLoad)
+	if (allowAsyncLoad)
 	{
 		//megai2: delay finish pass 1 frame due to possible dereferencing while in GPU queue
 		//then safely remove reference
-
 		while (asyncLoadPendingItems->HaveElements())
 		{
 			asyncLoadPendingItems->PopElement()->ThreadRef(-1);
@@ -100,6 +99,11 @@ void d912pxy_texture_loader::UploadItem(d912pxy_texture_load_item* it)
 {	
 	it->surf->DelayedLoad(it->ul, it->subRes);
 
-	if (allowAsnycLoad)
-		CheckInterrupt();
+	if (allowAsyncLoad)
+	{
+		//megai2: allow only N items to be left on queue when we encounter thread interrupt
+		//otherwise if machine can't handle per frame upload requests in reasonable time it will thrash memory
+		if (ItemsOnQueue() < allowAsyncLoad)
+			CheckInterrupt();
+	}
 }

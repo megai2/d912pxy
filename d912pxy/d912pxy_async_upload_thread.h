@@ -39,6 +39,8 @@ public:
 
 	void AddToFinishList(void* ptr);
 
+	UINT32 ItemsOnQueue();
+
 protected:
 	void CheckInterrupt();
 	d912pxy_ringbuffer<void*>* finishList;

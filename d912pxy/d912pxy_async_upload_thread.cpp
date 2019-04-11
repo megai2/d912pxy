@@ -88,6 +88,12 @@ void d912pxy_async_upload_thread<QueItemType, ProcImpl>::AddToFinishList(void * 
 }
 
 template<class QueItemType, class ProcImpl>
+UINT32 d912pxy_async_upload_thread<QueItemType, ProcImpl>::ItemsOnQueue()
+{
+	return buffer->TotalElements();
+}
+
+template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::CheckInterrupt()
 {
 	if (m_dev->InterruptThreads())
