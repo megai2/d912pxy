@@ -80,18 +80,6 @@ void d912pxy_pool<ElementType, ProcImpl>::PoolRW(UINT32 cat, ElementType * val, 
 }
 
 template<class ElementType, class ProcImpl>
-void d912pxy_pool<ElementType, ProcImpl>::PooledActionLock()
-{
-	pooledActionCS.Hold();
-}
-
-template<class ElementType, class ProcImpl>
-void d912pxy_pool<ElementType, ProcImpl>::PooledActionUnLock()
-{
-	pooledActionCS.Release();
-}
-
-template<class ElementType, class ProcImpl>
 d912pxy_ringbuffer<ElementType>* d912pxy_pool<ElementType, ProcImpl>::GetCatBuffer(UINT32 cat)
 {
 	return NULL;

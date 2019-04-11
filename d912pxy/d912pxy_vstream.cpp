@@ -181,14 +181,11 @@ IDirect3DIndexBuffer9 * d912pxy_vstream::AsDX9IB()
 
 UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 {
-	d912pxy_s(pool_vstream)->PooledActionLock();
-
 	if (!d912pxy_comhandler::PooledAction(use))
 	{		
 		if (use)
 			MakeGPUResident();
 
-		d912pxy_s(pool_vstream)->PooledActionUnLock();
 		return 0;
 	}
 
@@ -204,8 +201,6 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 		free(data);
 		data = NULL;
 	}
-
-	d912pxy_s(pool_vstream)->PooledActionUnLock();
 
 	return 0;
 }

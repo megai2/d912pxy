@@ -82,5 +82,7 @@ private:
 	UINT32 timestamp;
 
 	LONG beingWatched;
+
+	d912pxy_thread_lock poolSync;
 };
 

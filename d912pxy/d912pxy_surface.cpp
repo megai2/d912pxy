@@ -363,14 +363,11 @@ UINT d912pxy_surface::FinalReleaseCB()
 
 UINT32 d912pxy_surface::PooledAction(UINT32 use)
 {
-	d912pxy_s(pool_surface)->PooledActionLock();
-
 	if (!d912pxy_comhandler::PooledAction(use))
 	{
 		if (use)
 			MakeGPUResident();
 
-		d912pxy_s(pool_surface)->PooledActionUnLock();
 		return 0;
 	}
 
@@ -386,8 +383,6 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 		FreeObjAndSlot();
 		FreeLayers();		
 	}
-
-	d912pxy_s(pool_surface)->PooledActionUnLock();
 
 	return 0;
 }

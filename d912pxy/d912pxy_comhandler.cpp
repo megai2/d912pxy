@@ -140,27 +140,32 @@ UINT d912pxy_comhandler::CheckExpired(UINT32 nt, UINT32 lifetime)
 
 UINT32 d912pxy_comhandler::PooledAction(UINT32 use)
 {
+	UINT32 ret = 0;
+
+	poolSync.Hold();
+
 	if (use)
 	{
 		if (timestamp == 1)
 		{
 			timestamp = 0;
-			return 1;
+			ret = 1;
 		}
 		else {
-			timestamp = 0;
-			return 0;
+			timestamp = 0;			
 		}
 	}
 	else {
 		if (timestamp > 1)
 		{
 			timestamp = 1;
-			return 1;
-		}
-		else
-			return 0;
+			ret = 1;
+		}		
 	}
+
+	poolSync.Release();
+
+	return ret;
 }
 
 int d912pxy_comhandler::Watching(LONG v)

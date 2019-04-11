@@ -264,14 +264,8 @@ UINT d912pxy_upload_item::FinalReleaseCB()
 
 UINT32 d912pxy_upload_item::PooledAction(UINT32 use)
 {
-	d912pxy_s(pool_upload)->PooledActionLock();
-
 	if (!d912pxy_comhandler::PooledAction(use))
-	{
-		d912pxy_s(pool_upload)->PooledActionUnLock();
-
 		return 0;
-	}
 
 	if (use)
 	{
@@ -285,8 +279,6 @@ UINT32 d912pxy_upload_item::PooledAction(UINT32 use)
 
 		mappedMemWofs = NULL;
 	}
-
-	d912pxy_s(pool_upload)->PooledActionUnLock();
 
 	return 0;
 }

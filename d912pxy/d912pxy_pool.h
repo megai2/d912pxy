@@ -35,14 +35,10 @@ public:
 
 	virtual void PoolRW(UINT32 cat, ElementType* val, UINT8 rw);
 
-	void PooledActionLock();
-	void PooledActionUnLock();
-
 	virtual d912pxy_ringbuffer<ElementType>* GetCatBuffer(UINT32 cat);	
 	virtual void PoolUnloadProc(ElementType val, UINT32 cat);
 	virtual void WarmUp(UINT cat);
 	
 protected:
-	d912pxy_thread_lock pooledActionCS;	
 	d912pxy_thread_lock* rwMutex;
 };
