@@ -59,10 +59,11 @@ public:
 
 private:
 	HANDLE workEvent;
+	d912pxy_thread_lock workEventSync;
 	
 	HANDLE thrdHandle;
 
-	d912pxy_thread_lock workIssued;
+	d912pxy_thread_lock workIssued;	
 
 	UINT isRunning;
 };

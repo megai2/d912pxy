@@ -87,11 +87,12 @@ void d912pxy_thread::Stop()
 void d912pxy_thread::ThreadProc()
 {
 	ThreadInitProc();
-	WaitForSingleObject(workEvent, INFINITE);
+
+	WaitForJob();
 	while (isRunning)
 	{		
-		ThreadJob();		
-		WaitForSingleObject(workEvent, INFINITE);
+		ThreadJob();				
+		WaitForJob();
 	}
 }
 
@@ -101,18 +102,28 @@ void d912pxy_thread::ThreadJob()
 }
 
 void d912pxy_thread::SignalWork()
-{
-	SetEvent(workEvent);
+{	
+	workEventSync.Hold();
+
+	if (!workEventSync.GetValue())
+	{
+		SetEvent(workEvent);		
+		workEventSync.SetValue(1);
+	} 		
+
+	workEventSync.Release();
 }
 
 void d912pxy_thread::WaitForJob()
 {
 	WaitForSingleObject(workEvent, INFINITE);
+	workEventSync.LockedSet(0);	
 }
 
 void d912pxy_thread::IgnoreJob()
 {
 	ResetEvent(workEvent);
+	workEventSync.SetValue(0);
 }
 
 void d912pxy_thread::SignalWorkCompleted()

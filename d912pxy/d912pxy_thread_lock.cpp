@@ -57,6 +57,13 @@ void d912pxy_thread_lock::LockedAdd(LONG val)
 	Release();
 }
 
+void d912pxy_thread_lock::LockedSet(LONG val)
+{
+	Hold();
+	SetValue(val);
+	Release();
+}
+
 void d912pxy_thread_lock::WaitHold(LONG cond)
 {
 	Wait(cond);
@@ -69,9 +76,9 @@ void d912pxy_thread_lock::HoldWait(LONG cond)
 	Wait(cond);
 }
 
-void d912pxy_thread_lock::Add(LONG val)
+LONG d912pxy_thread_lock::Add(LONG val)
 {
-	InterlockedAdd(&spinLock, val);
+	return InterlockedAdd(&spinLock, val);
 }
 
 void d912pxy_thread_lock::Wait(LONG cond)

@@ -36,11 +36,12 @@ public:
 	void Init();
 
 	void LockedAdd(LONG val);
+	void LockedSet(LONG val);
 
 	void WaitHold(LONG cond);
 	void HoldWait(LONG cond);
 
-	void Add(LONG val);
+	LONG Add(LONG val);
 	void Wait(LONG cond);
 	UINT WaitTimeout(LONG cond, DWORD ms);
 
