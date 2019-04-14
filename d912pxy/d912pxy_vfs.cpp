@@ -77,7 +77,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 
 	fseek(m_vfsBlocks[id], 0, SEEK_SET);
 
-	m_vfsFileOffsets[id] = new d912pxy_memtree2(8, PXY_VFS_MAX_FILES_PER_BID, 2);
+	m_vfsFileOffsets[id] = new d912pxy_memtree2(8, 256, 2);
 
 	m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
 	m_vfsFileCount[id] = 0;
