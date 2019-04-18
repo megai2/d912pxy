@@ -26,9 +26,21 @@ SOFTWARE.
 
 d912pxy_vfs_file_header s_headerTable[PXY_VFS_MAX_FILES_PER_BID];
 
-d912pxy_vfs::d912pxy_vfs()
+d912pxy_vfs::d912pxy_vfs(const char* lockPath)
 {
 	d912pxy_s(vfs) = this;
+
+	lockFile = CreateFileA(lockPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+	if (lockFile == INVALID_HANDLE_VALUE)
+	{		
+		writeAllowed = 0;
+	}
+	else {
+		DWORD pid = GetProcessId(GetCurrentProcess());
+		DWORD ret = 0;
+		WriteFile(lockFile, &pid, 4, &ret, NULL);
+		writeAllowed = 1;
+	}
 
 	ZeroMemory(m_vfsBlocks, sizeof(FILE*)*PXY_VFS_MAX_BID);
 	ZeroMemory(m_vfsFileOffsets, sizeof(d912pxy_memtree*)*PXY_VFS_MAX_BID);
@@ -37,7 +49,7 @@ d912pxy_vfs::d912pxy_vfs()
 
 
 d912pxy_vfs::~d912pxy_vfs()
-{
+{	
 	for (int i = 0; i != PXY_VFS_MAX_BID; ++i)
 	{
 		if (m_vfsBlocks[i] != NULL)
@@ -47,6 +59,11 @@ d912pxy_vfs::~d912pxy_vfs()
 
 			delete m_vfsFileOffsets[i];
 		}
+	}
+
+	if (writeAllowed)
+	{		
+		CloseHandle(lockFile);
 	}
 }
 
@@ -241,6 +258,9 @@ void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 
 void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 {
+	if (!writeAllowed)
+		return;
+
 	lock[id].Hold();
 
 	fseek(m_vfsBlocks[id], PXY_VFS_FILE_HEADER_SIZE*m_vfsFileCount[id] + PXY_VFS_BID_TABLE_START, SEEK_SET);
@@ -266,6 +286,9 @@ void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 
 void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 {
+	if (!writeAllowed)
+		return;
+
 	lock[id].Hold();
 
 	UINT64 offset = IsPresentH(namehash, id);

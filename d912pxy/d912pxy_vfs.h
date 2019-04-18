@@ -49,7 +49,7 @@ typedef struct d912pxy_vfs_file_header {
 class d912pxy_vfs
 {
 public:
-	d912pxy_vfs();
+	d912pxy_vfs(const char* lockPath);
 	~d912pxy_vfs();
 
 	void SetRoot(const char* rootPath);
@@ -71,7 +71,12 @@ public:
 	d912pxy_memtree2* GetHeadTree(UINT id);
 	void* GetCachePointer(UINT32 offset, UINT id);
 		
+	UINT32 IsWriteAllowed() { return writeAllowed; };
+
 private:
+	HANDLE lockFile;
+	UINT32 writeAllowed;
+
 	d912pxy_thread_lock lock[PXY_VFS_MAX_BID];
 
 	char m_rootPath[2048];

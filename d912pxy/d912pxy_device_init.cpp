@@ -75,7 +75,12 @@ void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATI
 
 void d912pxy_device::InitVFS()
 {
-	new d912pxy_vfs();
+	new d912pxy_vfs(d912pxy_vfs_lock_file);
+
+	if (!d912pxy_s(vfs)->IsWriteAllowed())
+	{
+		LOG_INFO_DTDM("VFS is locked by another process, no data will be saved on disk");
+	}
 
 	d912pxy_s(vfs)->SetRoot("./d912pxy/pck");
 	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_CSO, "shader_cso"))
