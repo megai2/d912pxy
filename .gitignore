@@ -383,7 +383,7 @@ healthchecksdb
 # debug runs output / debug related
 bin/performance_graph.png
 bin/d912pxy_crash.txt
-*.hlsl
+bin/d912pxy/shaders/hlsl/*.hlsl
 *.cap
 
 
