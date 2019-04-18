@@ -483,7 +483,7 @@ UINT32 d912pxy_surface::AllocateSRV()
 		switch (m_fmt)
 		{
 		case DXGI_FORMAT_BC5_UNORM:
-			srvDsc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(1, 0, 2, 3);
+			srvDsc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(1, 0, 1, 3);//megai2: need to find proof document on that mapping orders in dx9 hlsl
 			break;
 		case DXGI_FORMAT_R8G8_UNORM:
 			srvDsc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(0, 0, 0, 1);
