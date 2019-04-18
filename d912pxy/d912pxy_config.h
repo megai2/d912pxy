@@ -37,6 +37,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_KEEP_PAIRS,
 	PXY_CFG_SDB_USE_PSO_PRECOMPILE,
 	PXY_CFG_SDB_USE_PSO_KEY_CACHE,
+	PXY_CFG_SDB_ALLOW_PP_SUFFIX,
 	PXY_CFG_REPLAY_MT_BEHAIVOUR,
 	PXY_CFG_REPLAY_THREADS,	
 	PXY_CFG_LOG_P7CONFIG,
@@ -80,6 +81,7 @@ private:
 		{L"sdb", L"keep_pairs", L"0"},//PXY_CFG_SDB_KEEP_PAIRS
 		{L"sdb", L"use_pso_precompile", L"0"},//PXY_CFG_SDB_USE_PSO_PRECOMPILE
 		{L"sdb", L"use_pso_key_cache", L"0"},//PXY_CFG_SDB_USE_PSO_KEY_CACHE
+		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX
 		{L"replay", L"mt", L"1"},//PXY_CFG_REPLAY_MT_BEHAIVOUR
 		{L"replay", L"threads", L"1"},//PXY_CFG_REPLAY_THREADS
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG

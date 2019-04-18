@@ -128,6 +128,7 @@ public:
 	UINT GetMaxShaderPassedVars();
 
 	static void FillHandlers();
+	static UINT allowPP_suffix;
 
 private:
 	void ProcSIO_DEF(DWORD* op);

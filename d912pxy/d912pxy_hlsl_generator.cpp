@@ -230,6 +230,8 @@ const char* d912pxy_hlsl_generator_reg_names_proc_vs[20] = {
 
 d912pxy_hlsl_generator_sio_handler d912pxy_hlsl_generator::SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt] = { 0 };
 
+UINT d912pxy_hlsl_generator::allowPP_suffix = 0;
+
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : d912pxy_noncom(0, L"hlsl generator")
 {
 
@@ -748,7 +750,12 @@ UINT64 d912pxy_hlsl_generator::FormatCmpString(DWORD op)
 
 UINT d912pxy_hlsl_generator::GetDstModifier(DWORD op)
 {
-	return (op >> 20) & 0xF;
+	UINT ret = (op >> 20) & 0xF;
+
+	if (!allowPP_suffix)	
+		ret &= 1;	
+
+	return ret;
 }
 
 void d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)

@@ -113,6 +113,7 @@ void d912pxy_device::InitClassFields()
 	ZeroMemory(swapchains, sizeof(intptr_t)*PXY_INNER_MAX_SWAP_CHAINS);
 
 	d912pxy_hlsl_generator::FillHandlers();
+	d912pxy_hlsl_generator::allowPP_suffix = d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ALLOW_PP_SUFFIX);
 }
 
 void d912pxy_device::InitThreadSyncObjects()
