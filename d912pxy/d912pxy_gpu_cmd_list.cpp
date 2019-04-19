@@ -150,11 +150,7 @@ void d912pxy_gpu_cmd_list::CleanupReferenced(UINT items)
 	while (mGpuRefs->HaveElements())
 	{
 		d912pxy_comhandler* obj = mGpuRefs->GetElement();
-		if (!obj->FinalRelease())
-		{
-			//for multithread holded objects			
-			mGpuRefs->WriteElement(obj);
-		}
+		LOG_ASSERT(obj->FinalRelease(), "obj->FinalRelease() wrong cleanup");		
 		mGpuRefs->Next();
 		++cleaned;
 		
