@@ -89,7 +89,7 @@ ULONG d912pxy_comhandler::Release()
 
 UINT d912pxy_comhandler::FinalReleaseTest()
 {
-	if (thrdRefc)
+	if (InterlockedAdd(&thrdRefc, 0))
 	{
 		m_dev->IFrameCleanupEnqeue(this);
 		return 2;
@@ -103,7 +103,7 @@ UINT d912pxy_comhandler::FinalReleaseTest()
 
 UINT d912pxy_comhandler::FinalRelease()
 {
-	if (thrdRefc)
+	if (InterlockedAdd(&thrdRefc, 0))
 	{
 		m_dev->IFrameCleanupEnqeue(this);
 		return 2;
