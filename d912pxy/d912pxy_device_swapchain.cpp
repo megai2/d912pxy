@@ -181,7 +181,11 @@ HRESULT WINAPI d912pxy_device::TestCooperativeLevel(void)
 
 	API_OVERHEAD_TRACK_START(0)
 
+	swapOpLock.Hold();
+
 	HRESULT ret = swapchains[0]->TestCoopLevel();
+
+	swapOpLock.Release();
 
 	API_OVERHEAD_TRACK_END(0)
 

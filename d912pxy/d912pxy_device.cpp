@@ -56,11 +56,16 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comha
 	LOG_INFO_DTDM2(InitDrawUPBuffers(),									"Startup step  9/10");
 	LOG_INFO_DTDM2(InitDefaultSwapChain(&initialPresentParameters),		"Startup step 10/10");
 	LOG_INFO_DTDM2(d912pxy_s(iframe)->Start(),							"Started first IFrame");	
+
+	isRunning.SetValue(1);
 }
 
 d912pxy_device::~d912pxy_device(void)
 {	
 	LOG_INFO_DTDM("d912pxy exiting");
+	isRunning.SetValue(0);
+
+	swapOpLock.Hold();
 
 	LOG_INFO_DTDM2(d912pxy_s(iframe)->End(),		 "Last iframe ended");
 	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(),		 "Additional DX9 objects freed");
@@ -73,7 +78,10 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups  2/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(iframe),			"Final cleanups  3/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(sdb),				"Final cleanups  4/12");
+
 	LOG_INFO_DTDM2(delete d912pxy_s(thread_cleanup),	"Final cleanups  5/12");
+	swapOpLock.Release();
+
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_vstream),		"Final cleanups  6/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_upload),		"Final cleanups  7/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_surface),		"Final cleanups  8/12");
@@ -101,7 +109,7 @@ d912pxy_device::~d912pxy_device(void)
 
 #ifdef _DEBUG
 	d912pxy_helper::d3d12_ReportLeaks();
-#endif
+#endif	
 }
 
 void d912pxy_device::FreeAdditionalDX9Objects()
@@ -227,6 +235,20 @@ void d912pxy_device::IFrameCleanupEnqeue(d912pxy_comhandler * obj)
 char * d912pxy_device::GetCurrentGPUName()
 {
 	return GPUNameA;
+}
+
+void d912pxy_device::ExternalFlush()
+{
+	if ((!isRunning.GetValue()) || (swapchains[0]->SwapCheck() != D3DERR_DEVICELOST))
+		return;
+
+	swapOpLock.Hold();
+
+	d912pxy_s(iframe)->End();
+	d912pxy_s(GPUque)->Flush(0);
+	d912pxy_s(iframe)->Start();
+
+	swapOpLock.Release();
 }
 
 

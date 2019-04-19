@@ -197,6 +197,8 @@ public:
 
 	char* GetCurrentGPUName();
 
+	void ExternalFlush();
+
 private:
 	LONG threadInterruptState;	
 	d912pxy_thread_lock threadLockdEvents[PXY_INNER_THREADID_MAX];
@@ -204,6 +206,7 @@ private:
 	d912pxy_thread_lock cleanupLock;	
 	d912pxy_thread_lock swapOpLock;
 	UINT activeThreadCount;
+	d912pxy_thread_lock isRunning;
 
 	ComPtr<ID3D12Device> m_d12evice;
 	ID3D12Device* m_d12evice_ptr;

@@ -72,7 +72,8 @@ void d912pxy_cleanup_thread::ThreadJob()
 			return;
 	}
 
-//	m_dev->GetShaderDB()->CleanUnusedPairs();
+	//megai2: do external flush on device every wake cycle
+	m_dev->ExternalFlush();
 
 	UINT32 etime = GetTickCount();
 
