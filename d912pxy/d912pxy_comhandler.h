@@ -76,6 +76,8 @@ public:
 
 	int Watching(LONG v);
 
+	LONG GetCOMRefCount() { return refc; };
+
 private:
 	LONG thrdRefc;
 	LONG refc;

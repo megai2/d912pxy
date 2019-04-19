@@ -124,14 +124,31 @@ HRESULT WINAPI d912pxy_device::QueryInterface(REFIID riid, void** ppvObj)
 	return d912pxy_comhandler::QueryInterface(riid, ppvObj);
 }
 
+static d912pxy_device* lastDev = NULL;
+
 ULONG WINAPI d912pxy_device::AddRef(void)
 { 
+	if (lastDev)
+	{
+		if (lastDev != this)
+		{
+			LOG_ERR_DTDM("Last device exited without cleanup");
+		}		
+	}
+	else
+		lastDev = this;
+
 	return d912pxy_comhandler::AddRef();
 }
 
 ULONG WINAPI d912pxy_device::Release(void)
 { 	
-	return d912pxy_comhandler::Release();
+	if (GetCOMRefCount() == 1)
+	{
+		LOG_INFO_DTDM("Device last reference removal");
+		lastDev = NULL;
+	}
+	return d912pxy_comhandler::Release();	
 }
 
 UINT WINAPI d912pxy_device::GetAvailableTextureMem(void)
