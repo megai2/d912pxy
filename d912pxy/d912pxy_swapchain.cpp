@@ -373,17 +373,6 @@ LRESULT d912pxy_swapchain::DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 				DXGIFullscreenInterrupt(1);
 		}
 		break;
-		case WM_NCACTIVATE:
-		{			
-			if (!wParam)
-				DXGIFullscreenInterrupt(1);					
-		}
-		break;
-		case WM_STYLECHANGING:
-		{
-			DXGIFullscreenInterrupt(1);
-		}
-		break;
 	}
 
 	LRESULT ret = CallWindowProc(dxgiOWndProc, hwnd, uMsg,	wParam, lParam);
