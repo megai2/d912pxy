@@ -59,12 +59,16 @@ public:
 
 	void WriteLogLine(d912pxy_log_module module, const wchar_t* fmt, const wchar_t* cat, ...);
 
+	void RegisterThread(const char* name);
+
 private:
 #ifndef DISABLE_P7LIB
 	IP7_Trace* m_log;
 	IP7_Client* p7cli;
-#else
 
+	wchar_t threadNames[255][10];
+	UINT32 threadNameId;
+#else
 	FILE* logfile;
 	d912pxy_thread_lock logLock;
 #endif

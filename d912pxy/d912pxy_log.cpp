@@ -45,6 +45,8 @@ d912pxy_log::d912pxy_log()
 
 	m_log = P7_Create_Trace(p7cli, TM("d912pxy"));
 	m_log->Register_Thread(TM("main thread"), 0);	
+
+	threadNameId = 0;
 #else
 	logfile = fopen(PXY_LOG_FILE_NAME, "w");
 #endif
@@ -135,5 +137,14 @@ void d912pxy_log::WriteLogLine(d912pxy_log_module module, const wchar_t * fmt, c
 	fflush(logfile);
 
 	logLock.Release();
+#endif
+}
+
+void d912pxy_log::RegisterThread(const char * name)
+{	
+#ifndef DISABLE_P7LIB
+	wsprintf(threadNames[threadNameId], L"%S", name);
+	m_log->Register_Thread(threadNames[threadNameId], GetCurrentThreadId());
+	++threadNameId;
 #endif
 }
