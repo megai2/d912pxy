@@ -230,10 +230,16 @@ UINT d912pxy_gpu_que::WaitForExecuteCompletion()
 	//megai2: this happens if we hit DXGI deadlock or merely draw something more then 5 seconds by default
 	//or if we use RenderDoc to capture something
 	if (!WaitForIssuedWorkCompletionTimeout(gpuExecuteTimeout))
-	{	
-		//megai2: shutdown if we hit this
-		LOG_ERR_DTDM("WaitForExecuteCompletion timeout/deadlock");				
-		TerminateProcess(GetCurrentProcess(), -1);
+	{			
+		LOG_ERR_DTDM("WaitForExecuteCompletion timeout/deadlock");
+
+		RestartThread();
+
+		SignalWorkCompleted();
+		mCurrentGPUWork->Signal();
+		WaitForGPU();
+
+		mSwp->ReanimateDXGI();		
 	}
 
 	return 1;
