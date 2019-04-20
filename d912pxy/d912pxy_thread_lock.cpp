@@ -35,6 +35,11 @@ d912pxy_thread_lock::~d912pxy_thread_lock()
 	DeleteCriticalSection(&cs);
 }
 
+UINT32 d912pxy_thread_lock::TryHold()
+{
+	return TryEnterCriticalSection(&cs);
+}
+
 void d912pxy_thread_lock::Hold()
 {
 	EnterCriticalSection(&cs);
@@ -50,11 +55,13 @@ void d912pxy_thread_lock::Init()
 	InitializeCriticalSection(&cs);
 }
 
-void d912pxy_thread_lock::LockedAdd(LONG val)
+LONG d912pxy_thread_lock::LockedAdd(LONG val)
 {
 	Hold();
-	Add(val);
+	LONG ret = Add(val);
 	Release();
+
+	return ret;
 }
 
 void d912pxy_thread_lock::LockedSet(LONG val)
@@ -141,4 +148,10 @@ LONG d912pxy_thread_lock::GetValue()
 void d912pxy_thread_lock::SetValue(LONG val)
 {
 	InterlockedExchange(&spinLock, val);
+}
+
+void d912pxy_thread_lock::ResetLock()
+{
+	DeleteCriticalSection(&cs);
+	InitializeCriticalSection(&cs);
 }

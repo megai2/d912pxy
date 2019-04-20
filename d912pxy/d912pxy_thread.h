@@ -57,6 +57,8 @@ public:
 
 	void Resume();
 
+	void RestartThread();
+
 private:
 	HANDLE workEvent;
 	d912pxy_thread_lock workEventSync;
@@ -66,5 +68,7 @@ private:
 	d912pxy_thread_lock workIssued;	
 
 	UINT isRunning;
+
+	char* name;
 };
 

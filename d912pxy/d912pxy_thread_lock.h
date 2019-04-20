@@ -31,11 +31,12 @@ public:
 	d912pxy_thread_lock();	
 	~d912pxy_thread_lock();
 	
+	UINT32 TryHold();
 	void Hold();
 	void Release();
 	void Init();
 
-	void LockedAdd(LONG val);
+	LONG LockedAdd(LONG val);
 	void LockedSet(LONG val);
 
 	void WaitHold(LONG cond);
@@ -47,6 +48,8 @@ public:
 
 	LONG GetValue();
 	void SetValue(LONG val);
+
+	void ResetLock();
 	
 private:	
 	CRITICAL_SECTION cs;

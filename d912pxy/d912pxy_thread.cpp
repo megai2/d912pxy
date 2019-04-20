@@ -68,11 +68,14 @@ d912pxy_thread::d912pxy_thread(const char* threadName, UINT suspend)
 	);	
 
 	SetThreadName(GetThreadId(thrdHandle), (char*)threadName);
+
+	name = _strdup(threadName);
 }
 
 
 d912pxy_thread::~d912pxy_thread()
 {
+	free(name);
 }
 
 void d912pxy_thread::Stop()
@@ -86,6 +89,7 @@ void d912pxy_thread::Stop()
 
 void d912pxy_thread::ThreadProc()
 {
+	d912pxy_s(log)->RegisterThread(name);
 	ThreadInitProc();
 
 	WaitForJob();
@@ -123,7 +127,7 @@ void d912pxy_thread::WaitForJob()
 void d912pxy_thread::IgnoreJob()
 {
 	ResetEvent(workEvent);
-	workEventSync.SetValue(0);
+	workEventSync.LockedSet(0);
 }
 
 void d912pxy_thread::SignalWorkCompleted()
@@ -160,6 +164,20 @@ void d912pxy_thread::ThreadInitProc()
 void d912pxy_thread::Resume()
 {
 	ResumeThread(thrdHandle);
+}
+
+void d912pxy_thread::RestartThread()
+{
+	TerminateThread(thrdHandle, 0);
+
+	thrdHandle = CreateThread(
+		NULL,
+		0,
+		d912pxy_thread_main,
+		this,
+		0,
+		0
+	);	
 }
 
 
