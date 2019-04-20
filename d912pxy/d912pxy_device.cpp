@@ -256,7 +256,7 @@ char * d912pxy_device::GetCurrentGPUName()
 
 void d912pxy_device::ExternalFlush()
 {
-	if ((!isRunning.GetValue()) || (swapchains[0]->SwapCheck() != D3DERR_DEVICELOST))
+	if ((!isRunning.GetValue()) || (swapchains[0]->GetCurrentState() != SWCS_FOCUS_PENDING))
 		return;
 
 	swapOpLock.Hold();
