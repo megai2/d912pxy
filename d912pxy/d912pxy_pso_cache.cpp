@@ -41,8 +41,6 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 
 	d912pxy_pso_cache::vsMaxVars = 0;
 	d912pxy_pso_cache::psMaxVars = 0;
-	
-	shaderCleanupBuffer = new d912pxy_ringbuffer<d912pxy_shader*>(0xFFFF, 0);
 
 	ZeroMemory(&d912pxy_pso_cache::cDscBase, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
@@ -169,7 +167,6 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 	State(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
 
 	dirty = 1;
-	externalLock = 0;
 
 	psoCompileBuffer = new d912pxy_ringbuffer<d912pxy_pso_cache_item*>(0xFFFF, 0);	
 }
@@ -178,7 +175,6 @@ d912pxy_pso_cache::~d912pxy_pso_cache()
 {
 	Stop();
 	delete psoCompileBuffer;
-	delete shaderCleanupBuffer;
 
 	delete cacheIndexes;
 
@@ -616,10 +612,7 @@ d912pxy_vshader * d912pxy_pso_cache::GetVShader()
 
 void d912pxy_pso_cache::ThreadJob()
 {
-	while (InterlockedAdd(&externalLock, 0))
-	{
-		Sleep(1000);
-	}
+	CheckExternalLock();
 
 	while (psoCompileBuffer->HaveElements())
 	{
@@ -627,14 +620,11 @@ void d912pxy_pso_cache::ThreadJob()
 
  		it->Compile();
 		it->Release();
-		
+			
 		psoCompileBuffer->Next();
-	}
-}
 
-void d912pxy_pso_cache::QueueShaderCleanup(d912pxy_shader * v)
-{
-	shaderCleanupBuffer->WriteElement(v);
+		CheckExternalLock();
+	}
 }
 
 void d912pxy_pso_cache::CompileItem(d912pxy_pso_cache_item * item)
@@ -653,7 +643,19 @@ UINT d912pxy_pso_cache::IsCompileQueueFree()
 
 void d912pxy_pso_cache::LockCompileQue(UINT lock)
 {
-	InterlockedExchange(&externalLock, lock);
+	if (lock)
+	{
+		if (externalLock.GetValue())
+			return;
+
+		externalLock.SetValue(1);
+
+		SignalWork();
+
+		externalLock.Wait(2);
+	}
+	else
+		externalLock.SetValue(0);
 }
 
 void d912pxy_pso_cache::LoadCachedData()
@@ -786,6 +788,19 @@ void d912pxy_pso_cache::SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc
 
 		d912pxy_s(vfs)->ReWriteFileH(id + 1, &cacheEntry, sizeof(d912pxy_serialized_pso_key), PXY_VFS_BID_PSO_CACHE_KEYS);
 		d912pxy_s(vfs)->ReWriteFileH(PXY_PSO_CACHE_KEYFILE_NAME, &cacheIncID, 4, PXY_VFS_BID_PSO_CACHE_KEYS);
+	}
+}
+
+void d912pxy_pso_cache::CheckExternalLock()
+{
+	if (externalLock.GetValue() == 1)
+	{
+		externalLock.SetValue(2);
+
+		while (externalLock.GetValue() == 2)
+		{
+			Sleep(1000);
+		}
 	}
 }
 

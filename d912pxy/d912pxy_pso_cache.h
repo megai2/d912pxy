@@ -120,8 +120,6 @@ public:
 
 	void ThreadJob();
 
-	void QueueShaderCleanup(d912pxy_shader* v);
-
 	static D3D12_GRAPHICS_PIPELINE_STATE_DESC cDscBase;
 
 	static UINT psMaxVars;
@@ -147,8 +145,6 @@ private:
 
 	d912pxy_pso_cache_item* cCPSO;
 		
-	d912pxy_ringbuffer<d912pxy_shader*>* shaderCleanupBuffer;
-
 	d912pxy_vdecl* mVDecl;
 
 	ID3D12PipelineState* psoPtr;
@@ -164,7 +160,9 @@ private:
 
 	ID3D12GraphicsCommandList* frameCl;
 
-	LONG externalLock;
+	d912pxy_thread_lock externalLock;
 	d912pxy_thread_lock compileQueLock;
+
+	void CheckExternalLock();
 };
 
