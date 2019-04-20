@@ -38,6 +38,7 @@ typedef enum d912pxy_swapchain_state {
 	SWCS_FOCUS_PENDING,
 	SWCS_RESETUP,
 	SWCS_SHUTDOWN,
+	SWCS_SWAP_TEST,
 	SWCS_COUNT
 } d912pxy_swapchain_state;
 
@@ -53,6 +54,7 @@ static const char* d912pxy_swapchain_state_names[] = {
 	"SWCS_FOCUS_PENDING",
 	"SWCS_RESETUP",
 	"SWCS_SHUTDOWN",
+	"SWCS_SWAP_TEST",
 	"SWCS_COUNT"
 };
 
@@ -86,12 +88,16 @@ public:
 	HRESULT Swap();
 	HRESULT SwapCheck();
 
+	d912pxy_swapchain_state GetCurrentState() { return state; };
+
 	void CopyFrameToDXGI(ID3D12GraphicsCommandList* cl);
 
 	void SetGammaRamp(DWORD Flags, CONST D3DGAMMARAMP* pRamp);
 	void GetGammaRamp(D3DGAMMARAMP* pRamp);
 
 	LRESULT DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	void ReanimateDXGI();
 
 private:	
 	void ChangeState(d912pxy_swapchain_state newState);
@@ -124,6 +130,7 @@ private:
 	HRESULT SwapHandle_ReSetup();
 	HRESULT SwapHandle_Focus_Pending();
 	HRESULT SwapHandle_Focus_Lost_Switch();
+	HRESULT SwapHandle_Swap_Test();
 	
 	//DXGI related
 	HRESULT InitDXGISwapChain();
@@ -133,7 +140,7 @@ private:
 	HRESULT ChangeDXGISwapChain();
 	HRESULT SetDXGIFullscreen();
 	DXGI_FORMAT GetDXGIFormatForBackBuffer(D3DFORMAT fmt);
-
+	UINT DXGIFullscreenInterrupt(UINT inactive);
 	void CacheDXGITearingSupport();
 
 	ComPtr<IDXGISwapChain4> dxgiSwapchain;

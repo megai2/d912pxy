@@ -66,6 +66,7 @@ d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT
 	swapHandlers[SWCS_RESETUP] = &d912pxy_swapchain::SwapHandle_ReSetup;
 	swapHandlers[SWCS_FOCUS_PENDING] = &d912pxy_swapchain::SwapHandle_Focus_Pending;
 	swapHandlers[SWCS_SHUTDOWN] = &d912pxy_swapchain::SwapHandle_Default;
+	swapHandlers[SWCS_SWAP_TEST] = &d912pxy_swapchain::SwapHandle_Swap_Test;
 
 	CacheDXGITearingSupport();
 	ResetFrameTargets();
@@ -101,7 +102,6 @@ ULONG d912pxy_swapchain::Release(void)
 		FreeFrameTargets();
 		FreeDXGISwapChain();
 
-		d912pxy_s(psoCache)->LockCompileQue(0);
 		swapCheckValue = D3DERR_DEVICELOST;		
 	}
 
@@ -360,34 +360,49 @@ void d912pxy_swapchain::GetGammaRamp(D3DGAMMARAMP* pRamp)
 
 LRESULT d912pxy_swapchain::DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	LOG_DBG_DTDM2("DXGI_WP MSG = %u", uMsg);
+	//megai2: this procedure is called out of context, beware various conditions!
+
+	LOG_DBG_DTDM2("DXGI_WP MSG = %04X", uMsg);
 
 	switch (uMsg)
 	{
 		//megai2: forward a fullscreen swap interruption to stop present calls before msg pump is locked up
 		case WM_ACTIVATE:
-		{			
+		{
 			if (LOWORD(wParam) == WA_INACTIVE)
-				fullscreenIterrupt.LockedAdd(1);
+				DXGIFullscreenInterrupt(1);
+		}
+		break;
+		case WM_NCACTIVATE:
+		{			
+			if (!wParam)
+				DXGIFullscreenInterrupt(1);					
+		}
+		break;
+		case WM_STYLECHANGING:
+		{
+			DXGIFullscreenInterrupt(1);
 		}
 		break;
 	}
 
-	return CallWindowProc(dxgiOWndProc, hwnd, uMsg,	wParam, lParam);
+	LRESULT ret = CallWindowProc(dxgiOWndProc, hwnd, uMsg,	wParam, lParam);
+
+	LOG_DBG_DTDM2("DXGI_WP MSG = %04X exit ret = %lu", uMsg, ret);
+
+	return ret;
+}
+
+void d912pxy_swapchain::ReanimateDXGI()
+{		
+	fullscreenIterrupt.SetValue(1);
+	fullscreenIterrupt.ResetLock();
 }
 
 void d912pxy_swapchain::ChangeState(d912pxy_swapchain_state newState)
 {
 	LOG_DBG_DTDM3("swapchain state %S=>%S", d912pxy_swapchain_state_names[state], d912pxy_swapchain_state_names[newState]);
 	state = newState;
-
-	if (!currentPP.Windowed)
-	{
-		if (state == SWCS_SWAPPABLE_EXCLUSIVE)		
-			d912pxy_s(psoCache)->LockCompileQue(0);		
-		else
-			d912pxy_s(psoCache)->LockCompileQue(1);
-	}
 }
 
 void d912pxy_swapchain::ThrowCritialError(HRESULT ret, const char * msg)
@@ -466,10 +481,7 @@ HRESULT d912pxy_swapchain::SwapHandle_Setup()
 	errorCount = 0;
 	swapCheckValue = D3D_OK;
 
-	if (currentPP.Windowed)
-		ChangeState(SWCS_SWAPPABLE);
-	else 
-		ChangeState(SWCS_SWAPPABLE_EXCLUSIVE);
+	ChangeState(SWCS_SWAP_TEST);
 
 	return D3D_OK;
 }
@@ -508,18 +520,13 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable()
 
 HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
 {
-	//HRESULT ret = dxgiSwapchain->Present(0, DXGI_PRESENT_TEST);
-
-	//if (ret == S_OK)
-
 	HRESULT ret;
 
 	fullscreenIterrupt.Hold();
 
 	if (fullscreenIterrupt.GetValue())
 	{
-		ret = DXGI_STATUS_OCCLUDED;
-		fullscreenIterrupt.SetValue(0);
+		ret = DXGI_STATUS_OCCLUDED;		
 	}
 	else 
 		ret = dxgiSwapchain->Present(currentPP.PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, dxgiPresentFlags);
@@ -528,7 +535,7 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
 
 	if (ret == DXGI_STATUS_OCCLUDED)
 	{
-		swapCheckValue = D3DERR_DEVICELOST;		
+		swapCheckValue = D3DERR_DEVICELOST;
 		ChangeState(SWCS_FOCUS_LOST_SWITCH);
 	} else if (FAILED(ret))
 	{
@@ -566,10 +573,7 @@ HRESULT d912pxy_swapchain::SwapHandle_Reconfigure()
 		errorCount = 0;
 		swapCheckValue = D3D_OK;
 
-		if (currentPP.Windowed)
-			ChangeState(SWCS_SWAPPABLE);
-		else
-			ChangeState(SWCS_SWAPPABLE_EXCLUSIVE);
+		ChangeState(SWCS_SWAP_TEST);
 	}
 
 	return D3D_OK;
@@ -614,14 +618,10 @@ HRESULT d912pxy_swapchain::SwapHandle_ReSetup()
 HRESULT d912pxy_swapchain::SwapHandle_Focus_Pending()
 {
 	if (GetForegroundWindow() == currentPP.hDeviceWindow)
-	{
+	{		
 		swapCheckValue = D3DERR_DEVICENOTRESET;
 		ChangeState(SWCS_RECONFIGURE);
 	}
-
-	d912pxy_s(iframe)->End();
-	d912pxy_s(GPUque)->Flush(0);	
-	d912pxy_s(iframe)->Start();
 
 	return D3D_OK;
 }
@@ -630,6 +630,37 @@ HRESULT d912pxy_swapchain::SwapHandle_Focus_Lost_Switch()
 {
 	dxgiSwapchain->SetFullscreenState(0, NULL);
 	ChangeState(SWCS_FOCUS_LOST);
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Swap_Test()
+{
+	HRESULT ret = dxgiSwapchain->Present(0, DXGI_PRESENT_TEST);
+
+	if (ret == DXGI_STATUS_OCCLUDED)
+	{
+		swapCheckValue = D3DERR_DEVICELOST;
+		ChangeState(SWCS_FOCUS_LOST_SWITCH);
+	}
+	else if (FAILED(ret))
+	{
+		LOG_ERR_DTDM("error: %llX", ret);
+		ChangeState(SWCS_SWAP_ERROR);
+	}
+	else {
+		if (fullscreenIterrupt.GetValue())
+		{
+			DXGIFullscreenInterrupt(0);
+			return D3D_OK;
+		}
+
+		if (currentPP.Windowed)
+			ChangeState(SWCS_SWAPPABLE);
+		else 			
+			ChangeState(SWCS_SWAPPABLE_EXCLUSIVE);		
+	}
+		
 
 	return D3D_OK;
 }
@@ -675,7 +706,7 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 		}
 	}
 	else {
-		dxgiResizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+		dxgiResizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;	
 	}
 
 
@@ -687,8 +718,6 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 	swapChainFullscreenDsc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	swapChainFullscreenDsc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swapChainFullscreenDsc.Windowed = currentPP.Windowed;
-
-
 	
 	ComPtr<IDXGISwapChain1> swapChain1;
 
@@ -736,13 +765,16 @@ void d912pxy_swapchain::FreeDXGISwapChain()
 		dxgiSwapchain->SetFullscreenState(0, NULL);
 	}
 
+	DXGIFullscreenInterrupt(0);
+
+	//megai2: keep wndproc intact here, should be fine
+	/*
 	if (dxgiOWndProc)
 	{
 		//megai2: restore ogirinal wnd proc
-		SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)dxgiOWndProc);
-		fullscreenIterrupt.SetValue(0);
+		SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)dxgiOWndProc);		
 		dxgiOWndProc = NULL;
-	}
+	}*/
 
 	dxgiSwapchain = nullptr;
 }
@@ -796,8 +828,6 @@ HRESULT d912pxy_swapchain::SetDXGIFullscreen()
 
 		if (FAILED(cr))
 			return cr;
-
-		fullscreenIterrupt.SetValue(0);
 	}
 
 	return dxgiSwapchain->SetFullscreenState(!currentPP.Windowed, NULL);
@@ -818,6 +848,27 @@ DXGI_FORMAT d912pxy_swapchain::GetDXGIFormatForBackBuffer(D3DFORMAT fmt)
 {
 	DXGI_FORMAT ret = d912pxy_helper::DXGIFormatFromDX9FMT(currentPP.BackBufferFormat);
 	return ret;
+}
+
+UINT d912pxy_swapchain::DXGIFullscreenInterrupt(UINT inactive)
+{	
+	LOG_DBG_DTDM3("DXGI Interrupt %u", inactive);
+
+	if (inactive && currentPP.Windowed)
+		return 1;
+
+	if (inactive)
+	{
+		fullscreenIterrupt.SetValue(1);
+		d912pxy_s(psoCache)->LockCompileQue(1);							
+	}
+	else
+	{
+		fullscreenIterrupt.SetValue(0);
+		d912pxy_s(psoCache)->LockCompileQue(0);		
+	}
+
+	return 0;
 }
 
 void d912pxy_swapchain::CacheDXGITearingSupport()
