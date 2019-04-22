@@ -119,7 +119,7 @@ void d912pxy_thread_lock::Wait(LONG cond)
 	//megai2: simple spin wait
 	UINT spin = 0;
 
-	while (!InterlockedAdd(&spinLock, 0) != cond)
+	while (InterlockedAdd(&spinLock, 0) != cond)
 	{
 		if (spin > 32)
 			Sleep(0);
