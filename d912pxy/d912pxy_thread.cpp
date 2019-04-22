@@ -109,23 +109,19 @@ void d912pxy_thread::ThreadJob()
 
 void d912pxy_thread::SignalWork()
 {	
-	workEventSync.SetValue(1);
-
 	if (!workEventSync.TryHold())
 	{
-		SetEvent(workEvent);
-	} else 
+		if (!workEventSync.GetValue())
+			SetEvent(workEvent);
+	}
+	else {
+		workEventSync.SetValue(1);
 		workEventSync.Release();
+	}
 }
 
 void d912pxy_thread::WaitForJob()
 {
-	if (workEventSync.SpinOnce(1))
-	{
-		workEventSync.SetValue(0);
-		return;
-	}
-
 	workEventSync.Hold();
 
 	if (!workEventSync.GetValue())
@@ -189,6 +185,7 @@ UINT d912pxy_thread::WaitForIssuedWorkCompletionTimeout(DWORD timeout)
 	}
 
 	workIssued.Release();
+
 	return 1;
 }
 
