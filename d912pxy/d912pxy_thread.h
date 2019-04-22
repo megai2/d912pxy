@@ -66,6 +66,7 @@ private:
 	HANDLE thrdHandle;
 
 	d912pxy_thread_lock workIssued;	
+	HANDLE workCompleteEvent;
 
 	UINT isRunning;
 

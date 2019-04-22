@@ -57,6 +57,7 @@ d912pxy_thread::d912pxy_thread(const char* threadName, UINT suspend)
 {
 	isRunning = 1;
 	workEvent = CreateEvent(NULL, 0, 0, NULL);	
+	workCompleteEvent = CreateEvent(NULL, 0, 0, NULL);
 
 	thrdHandle = CreateThread(
 		NULL,
@@ -85,6 +86,7 @@ void d912pxy_thread::Stop()
 	WaitForSingleObject(thrdHandle, INFINITE);
 	CloseHandle(thrdHandle);
 	CloseHandle(workEvent);	
+	CloseHandle(workCompleteEvent);
 }
 
 void d912pxy_thread::ThreadProc()
@@ -132,7 +134,14 @@ void d912pxy_thread::IgnoreJob()
 
 void d912pxy_thread::SignalWorkCompleted()
 {
-	workIssued.Add(-1);
+	if (!workIssued.Add(-1))
+	{
+		if (workIssued.TryHold())
+		{
+			workIssued.Release();
+		} else 
+			SetEvent(workCompleteEvent);
+	}
 }
 
 void d912pxy_thread::IssueWork()
@@ -153,7 +162,22 @@ void d912pxy_thread::WaitForIssuedWorkCompletion()
 
 UINT d912pxy_thread::WaitForIssuedWorkCompletionTimeout(DWORD timeout)
 {
-	return workIssued.WaitTimeout(0, timeout);
+	if (workIssued.SpinOnce(0))
+		return 1;
+
+	workIssued.Hold();
+
+	if (workIssued.GetValue())
+	{
+		if (WaitForSingleObject(workCompleteEvent, timeout) == ERROR_TIMEOUT)
+		{
+			workIssued.Release();
+			return 0;
+		}
+	}
+
+	workIssued.Release();
+	return 1;
 }
 
 void d912pxy_thread::ThreadInitProc()

@@ -42,9 +42,11 @@ public:
 	void WaitHold(LONG cond);
 	void HoldWait(LONG cond);
 
+	LONG SpinOnce(LONG cond);
+
 	LONG Add(LONG val);
 	void Wait(LONG cond);
-	UINT WaitTimeout(LONG cond, DWORD ms);
+	UINT WaitTimeout(LONG cond, DWORD ms);	
 
 	LONG GetValue();
 	void SetValue(LONG val);

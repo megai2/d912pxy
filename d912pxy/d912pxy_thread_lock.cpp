@@ -83,6 +83,32 @@ void d912pxy_thread_lock::HoldWait(LONG cond)
 	Wait(cond);
 }
 
+LONG d912pxy_thread_lock::SpinOnce(LONG cond)
+{
+	//megai2: simple spin wait
+	UINT spin = 0;
+
+	while (InterlockedAdd(&spinLock, 0) != cond)
+	{
+		if (spin > 64)
+			return 0;
+		else if (spin > 32)
+			Sleep(0);
+		else if (spin > 12)
+			SwitchToThread();
+		else
+		{
+			int loops = (1 << spin); //1..12 ==> 2..4096
+			while (loops > 0)
+				loops -= 1;
+		}
+
+		++spin;
+	}
+
+	return 1;
+}
+
 LONG d912pxy_thread_lock::Add(LONG val)
 {
 	return InterlockedAdd(&spinLock, val);
@@ -93,7 +119,7 @@ void d912pxy_thread_lock::Wait(LONG cond)
 	//megai2: simple spin wait
 	UINT spin = 0;
 
-	while (InterlockedAdd(&spinLock, 0) != cond)
+	while (!InterlockedAdd(&spinLock, 0) != cond)
 	{
 		if (spin > 32)
 			Sleep(0);
