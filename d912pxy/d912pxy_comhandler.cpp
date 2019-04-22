@@ -29,12 +29,15 @@ d912pxy_comhandler::d912pxy_comhandler(const wchar_t* moduleText) : d912pxy_nonc
 	refc = 1;
 	thrdRefc = 0;
 	beingWatched = 0;
+	poolSync.LockedSet(1);
 }
 
 d912pxy_comhandler::d912pxy_comhandler(d912pxy_device * dev, const wchar_t * moduleText) : d912pxy_noncom(dev, moduleText)
 {
 	refc = 1;
 	thrdRefc = 0;
+	beingWatched = 0;
+	poolSync.LockedSet(1);
 }
 
 d912pxy_comhandler::~d912pxy_comhandler()
@@ -130,7 +133,9 @@ void d912pxy_comhandler::ThreadRef(INT ic)
 
 void d912pxy_comhandler::NoteDeletion(UINT32 time)
 {
+	poolSync.Hold();
 	timestamp = time;
+	poolSync.Release();
 }
 
 UINT d912pxy_comhandler::CheckExpired(UINT32 nt, UINT32 lifetime)
@@ -144,24 +149,26 @@ UINT32 d912pxy_comhandler::PooledAction(UINT32 use)
 
 	poolSync.Hold();
 
-	if (use)
+	LONG state = poolSync.GetValue();
+
+	ret = state ^ use;
+
+	if (ret)
 	{
-		if (timestamp == 1)
+		if (!use)
 		{
-			timestamp = 0;
-			ret = 1;
-		}
-		else {
-			timestamp = 0;			
-		}
+			if (timestamp > 0)
+			{
+				timestamp = 0;
+				poolSync.SetValueAsync(0);
+			}
+			else
+				ret = 0;
+		} else 
+			poolSync.SetValueAsync(1);
 	}
-	else {
-		if (timestamp > 1)
-		{
-			timestamp = 1;
-			ret = 1;
-		}		
-	}
+	else if (use)
+		timestamp = 0;
 
 	poolSync.Release();
 

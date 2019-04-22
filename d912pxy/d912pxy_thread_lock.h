@@ -50,6 +50,7 @@ public:
 
 	LONG GetValue();
 	void SetValue(LONG val);
+	void SetValueAsync(LONG val);
 
 	void ResetLock();
 	

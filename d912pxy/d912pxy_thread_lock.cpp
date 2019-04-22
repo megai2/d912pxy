@@ -176,6 +176,11 @@ void d912pxy_thread_lock::SetValue(LONG val)
 	InterlockedExchange(&spinLock, val);
 }
 
+void d912pxy_thread_lock::SetValueAsync(LONG val)
+{
+	spinLock = val;
+}
+
 void d912pxy_thread_lock::ResetLock()
 {
 	DeleteCriticalSection(&cs);
