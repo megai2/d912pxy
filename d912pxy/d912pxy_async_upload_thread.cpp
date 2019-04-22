@@ -43,6 +43,7 @@ d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread(
 template<class QueItemType, class ProcImpl>
 d912pxy_async_upload_thread<QueItemType, ProcImpl>::~d912pxy_async_upload_thread()
 {
+	Stop();
 	delete buffer;
 	delete finishList;
 }
