@@ -109,27 +109,39 @@ void d912pxy_thread::ThreadJob()
 
 void d912pxy_thread::SignalWork()
 {	
-	workEventSync.Hold();
+	workEventSync.SetValue(1);
 
-	if (!workEventSync.GetValue())
+	if (!workEventSync.TryHold())
 	{
-		SetEvent(workEvent);		
-		workEventSync.SetValue(1);
-	} 		
-
-	workEventSync.Release();
+		SetEvent(workEvent);
+	} else 
+		workEventSync.Release();
 }
 
 void d912pxy_thread::WaitForJob()
 {
-	WaitForSingleObject(workEvent, INFINITE);
-	workEventSync.LockedSet(0);	
+	if (workEventSync.SpinOnce(1))
+	{
+		workEventSync.SetValue(0);
+		return;
+	}
+
+	workEventSync.Hold();
+
+	if (!workEventSync.GetValue())
+	{
+		WaitForSingleObject(workEvent, INFINITE);
+	}
+
+	workEventSync.SetValue(0);
+
+	workEventSync.Release();
 }
 
 void d912pxy_thread::IgnoreJob()
 {
 	ResetEvent(workEvent);
-	workEventSync.LockedSet(0);
+	workEventSync.SetValue(0);
 }
 
 void d912pxy_thread::SignalWorkCompleted()
