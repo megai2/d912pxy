@@ -26,8 +26,6 @@ SOFTWARE.
 
 #define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[stackTop]; it->type = x
 
-__declspec(thread) static ID3D12PipelineState* replay_thread_pso;
-
 d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 {
 	d912pxy_s(CMDReplay) = this;
@@ -254,17 +252,15 @@ void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, 
 	StateTransit(tgt, prevState);
 }
 
-void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList * cl, void** context)
 {	
-	(this->*replay_handlers[it->type])(&it->ptr, cl);
+	(this->*replay_handlers[it->type])(&it->ptr, cl, context);
 }
 
 void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd)
 {
 	LOG_DBG_DTDM("replay range [%u , %u, %u]", start, end, stackTop);
 	
-	replay_thread_pso = NULL;
-
 	UINT i = start;		
 	UINT maxRI = 0;
 
@@ -274,9 +270,11 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	if (!maxRI)
 		return;
 
+	ID3D12PipelineState* context = NULL;
+
 	if (start > 0)
 	{		
-		TransitCLState(cl, start, thrd->GetId());
+		TransitCLState(cl, start, thrd->GetId(), (void**)&context);
 	}
 	
 	//execute operations
@@ -286,7 +284,7 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 
 		while (i < maxRI)
 		{
-			PlayId(&stack[i], cl);
+			PlayId(&stack[i], cl, (void**)&context);
 			++i;
 		}
 		
@@ -441,12 +439,12 @@ d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type
 	return nullptr;
 }
 
-void d912pxy_replay::TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base)
+void d912pxy_replay::TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base, void** context)
 {
 	d912pxy_replay_item * it = BacktraceItemType(type, depth, base);
 
 	if (it)
-		PlayId(it, cl);
+		PlayId(it, cl, context);
 }
 
 void d912pxy_replay::SaveCLState(UINT thread)
@@ -474,7 +472,7 @@ void d912pxy_replay::SaveCLState(UINT thread)
 	trd->cpso = d912pxy_s(psoCache)->GetCurrentCPSO();
 }
 
-void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, UINT thread)
+void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, UINT thread, void** context)
 {
 	d912pxy_replay_thread_transit_data* trd = &transitData[thread];
 
@@ -486,7 +484,7 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 	surfBind.rt.dsv = trd->surfBind[0];
 	surfBind.rt.rtv = trd->surfBind[1];
 
-	PlayId(&surfBind, cl);
+	PlayId(&surfBind, cl, context);
 
 	d912pxy_replay_item streamBind;
 	streamBind.type = DRPL_IFVB;
@@ -501,18 +499,18 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 		streamBind.vb.slot = i;
 		streamBind.vb.stride = trd->streams[i].stride;
 
-		PlayId(&streamBind, cl);
+		PlayId(&streamBind, cl, context);
 	}
 
 	streamBind.type = DRPL_IFIB;
 	streamBind.ib.buf = trd->indexBuf;
-	PlayId(&streamBind, cl);
+	PlayId(&streamBind, cl, context);
 
 	if (trd->srefStk != -1)	
-		PlayId(&stack[trd->srefStk], cl);
+		PlayId(&stack[trd->srefStk], cl, context);
 
 	if (trd->bfacStk != -1)
-		PlayId(&stack[trd->bfacStk], cl);
+		PlayId(&stack[trd->bfacStk], cl, context);
 
 	d912pxy_replay_item psoSet;
 
@@ -525,7 +523,7 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 		psoSet.type = DRPL_RPSO;
 		psoSet.rawPso.rawState = trd->pso;
 	}
-	PlayId(&psoSet, cl);
+	PlayId(&psoSet, cl, context);
 
 	cl->RSSetViewports(1, &trd->main_viewport);
 	cl->RSSetScissorRects(1, &trd->main_scissor);
@@ -534,35 +532,35 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 }
 
 
-void d912pxy_replay::RHA_TRAN(d912pxy_replay_state_transit * it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_TRAN(d912pxy_replay_state_transit * it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	it->res->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->to, it->from, cl);
 }
 
-void d912pxy_replay::RHA_OMSR(d912pxy_replay_om_sr* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_OMSR(d912pxy_replay_om_sr* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	cl->OMSetStencilRef(it->dRef);	
 }
 
-void d912pxy_replay::RHA_OMBF(d912pxy_replay_om_bf* it, ID3D12GraphicsCommandList * cl) 
+void d912pxy_replay::RHA_OMBF(d912pxy_replay_om_bf* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	cl->OMSetBlendFactor(it->color);
 }
 
-void d912pxy_replay::RHA_RSVP(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_RSVP(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	cl->RSSetViewports(1, &it->viewport);
 	cl->RSSetScissorRects(1, &it->scissor);
 }
 
-void d912pxy_replay::RHA_RSSR(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_RSSR(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl, void** unused)
 {	
 	cl->RSSetScissorRects(1, &it->scissor);	
 }
 
-void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context)
 {
-	if (!replay_thread_pso)
+	if (!*context)
 		return;
 
 	d912pxy_s(batch)->PreDIP(cl, it->StartInstanceLocation);
@@ -577,7 +575,7 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 	);
 }
 
-void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[2];
 	D3D12_CPU_DESCRIPTOR_HANDLE* bindedRTV = 0;
@@ -601,48 +599,52 @@ void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12Graphic
 		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);
 }
 
-void d912pxy_replay::RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	it->buf->IFrameBindVB(it->stride, it->slot, it->offset, cl);
 }
 
-void d912pxy_replay::RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	it->buf->IFrameBindIB(cl);
 }
 
-void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	it->tgt->ClearAsRTV(it->clr, cl);
 }
 
-void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	it->tgt->ClearAsDSV(it->depth, it->stencil, it->flag, cl);
 }
 
-void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context)
 {
-	replay_thread_pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0)->GetPtr();
+	ID3D12PipelineState* pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0)->GetPtr();
 	
-	if (replay_thread_pso)
-		cl->SetPipelineState(replay_thread_pso);	
+	if (pso)
+		cl->SetPipelineState(pso);
+
+	*context = pso;
 }
 
-void d912pxy_replay::RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context)
 {	
-	replay_thread_pso = it->psoItem->GetPtr();
+	ID3D12PipelineState* pso = it->psoItem->GetPtr();
 
-	if (replay_thread_pso)
-		cl->SetPipelineState(replay_thread_pso);
+	if (pso)
+		cl->SetPipelineState(pso);
+
+	*context = pso;
 }
 
-void d912pxy_replay::RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl, void** unused)
 {	
 	*it->feedbackPtr = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0);	
 }
 
-void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl)
+void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
 	d912pxy_surface* sSrc = it->src;
 	d912pxy_surface* sDst = it->dst;
