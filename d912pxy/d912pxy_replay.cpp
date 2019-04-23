@@ -33,7 +33,7 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 	stackTop = 0;
 	stopMarker = 1;
 
-	numThreads = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_REPLAY_THREADS);
+	numThreads = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_MT_REPLAY_THREADS);
 
 	dev->AddActiveThreads(numThreads);
 

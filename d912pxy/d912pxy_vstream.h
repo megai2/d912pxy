@@ -83,6 +83,10 @@ public:
 
 	void FinishUpload(ID3D12GraphicsCommandList * cl);
 
+	void ConstructResource();
+
+	static UINT32 threadedCtor;
+
 private:	
 	union bindData {
 		D3D12_VERTEX_BUFFER_VIEW v;
@@ -96,6 +100,6 @@ private:
 	d912pxy_upload_item* ulObj;
 
 	d912pxy_vstream_lock_data lockInfo[PXY_INNER_MAX_LOCK_DEPTH];
-	LONG lockDepth;
+	LONG lockDepth;	
 };
 

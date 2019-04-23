@@ -114,6 +114,9 @@ void d912pxy_device::InitClassFields()
 
 	d912pxy_hlsl_generator::FillHandlers();
 	d912pxy_hlsl_generator::allowPP_suffix = d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ALLOW_PP_SUFFIX);
+
+	d912pxy_vstream::threadedCtor = d912pxy_s(config)->GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
+	d912pxy_surface::threadedCtor = d912pxy_s(config)->GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);
 }
 
 void d912pxy_device::InitThreadSyncObjects()
@@ -125,7 +128,7 @@ void d912pxy_device::InitSingletons()
 {
 	new d912pxy_gpu_que(this, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
 
-	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_REPLAY_MT_BEHAIVOUR))
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_MT_REPLAY_BEHAIVOUR))
 		new d912pxy_replay(this);
 	else
 		new d912pxy_replay_passthru(this);
@@ -168,7 +171,7 @@ void d912pxy_device::InitComPatches()
 void d912pxy_device::InitNullSRV()
 {
 	UINT uuLc = 1;
-	mNullTexture = new d912pxy_surface(this, 1, 1, D3DFMT_A8B8G8R8, 0, &uuLc, 6);
+	mNullTexture = new d912pxy_surface(this, 1, 1, D3DFMT_A8B8G8R8, 0, &uuLc, 6, NULL);
 	D3DLOCKED_RECT lr;
 
 	for (int i = 0; i != 6; ++i)

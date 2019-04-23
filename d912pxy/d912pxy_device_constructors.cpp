@@ -209,7 +209,7 @@ HRESULT WINAPI d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Heig
 	}
 
 	UINT levels = 1;
-	d912pxy_surface* ret = new d912pxy_surface(this, Width, Height, Format, D3DUSAGE_D912PXY_FORCE_RT, &levels, 1);
+	d912pxy_surface* ret = new d912pxy_surface(this, Width, Height, Format, D3DUSAGE_D912PXY_FORCE_RT, &levels, 1, NULL);
 
 	*ppSurface = (IDirect3DSurface9*)ret;
 

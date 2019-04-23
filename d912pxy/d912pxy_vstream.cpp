@@ -45,10 +45,10 @@ D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC *pDesc)
 	return D3DERR_INVALIDCALL;
 }
 
+UINT32 d912pxy_vstream::threadedCtor = 0;
+
 d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(dev, isIB ? RTID_IBUF : RTID_VBUF, isIB ? L"vstream i" : L"vstream v")
-{
-	d12res_buffer(Length, D3D12_HEAP_TYPE_DEFAULT);
-	
+{		
 	lockDepth = 0;
 
 	ulObj = NULL;
@@ -66,6 +66,9 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 	dx9desc.Usage = Usage;
 
 	NoteFormatChange(fmt, isIB);
+
+	if (!threadedCtor)
+		ConstructResource();		
 }
 
 d912pxy_vstream::~d912pxy_vstream()
@@ -116,6 +119,12 @@ D912PXY_METHOD_IMPL(Unlock)(THIS)
 
 void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12GraphicsCommandList * cl)
 {	
+	if (!m_res)
+	{
+		cl->IASetVertexBuffers(slot, 1, 0);
+		return;
+	}
+
 	D3D12_VERTEX_BUFFER_VIEW bindDataLocal;
 
 	bindDataLocal = bindData.v;
@@ -132,14 +141,16 @@ void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12Gr
 
 void d912pxy_vstream::IFrameBindIB(ID3D12GraphicsCommandList * cl)
 {
-	cl->IASetIndexBuffer(&bindData.i);
+	if (!m_res)	
+		cl->IASetIndexBuffer(0);
+	else 
+		cl->IASetIndexBuffer(&bindData.i);
 }
 
 void d912pxy_vstream::NoteFormatChange(DWORD fmt, DWORD isIB)
-{
+{	
 	if (isIB)
-	{
-		bindData.i.BufferLocation = m_res->GetGPUVirtualAddress();
+	{		
 		if (fmt == D3DFMT_INDEX16)
 			bindData.i.Format = DXGI_FORMAT_R16_UINT;
 		else
@@ -147,8 +158,7 @@ void d912pxy_vstream::NoteFormatChange(DWORD fmt, DWORD isIB)
 
 		bindData.i.SizeInBytes = dx9desc.Size;
 	}
-	else {
-		bindData.v.BufferLocation = m_res->GetGPUVirtualAddress();
+	else {		
 		bindData.v.SizeInBytes = dx9desc.Size;
 		bindData.v.StrideInBytes = 0;
 	}
@@ -191,22 +201,32 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 
 	if (use)
 	{		
-		d12res_buffer(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
+		if (!threadedCtor)
+			ConstructResource();
+
 		data = malloc(dx9desc.Size);		
 	}
 	else {
-		m_res->Release();
-		m_res = NULL;
+		if (m_res)
+		{
+			m_res->Release();
+			m_res = NULL;
+		}
 
 		free(data);
 		data = NULL;
 	}
+
+	PooledActionExit();
 
 	return 0;
 }
 
 void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl)
 {			
+	if (!m_res)
+		ConstructResource();
+
 	if (!ulObj)
 	{
 		BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
@@ -224,6 +244,12 @@ void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
 	BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
 	ulObj->Release();
 	ulObj = NULL;
+}
+
+void d912pxy_vstream::ConstructResource()
+{
+	d12res_buffer(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
+	bindData.i.BufferLocation = m_res->GetGPUVirtualAddress();
 }
 
 void d912pxy_vstream::UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size)

@@ -38,10 +38,12 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_USE_PSO_PRECOMPILE,
 	PXY_CFG_SDB_USE_PSO_KEY_CACHE,
 	PXY_CFG_SDB_ALLOW_PP_SUFFIX,
-	PXY_CFG_REPLAY_MT_BEHAIVOUR,
-	PXY_CFG_REPLAY_THREADS,	
+	PXY_CFG_MT_REPLAY_BEHAIVOUR,
+	PXY_CFG_MT_REPLAY_THREADS,	
+	PXY_CFG_MT_VSTREAM_CTOR,
+	PXY_CFG_MT_SURFACE_CTOR,
 	PXY_CFG_LOG_P7CONFIG,
-	PXY_CFG_UPLOAD_TEX_ASYNC,
+	PXY_CFG_UPLOAD_TEX_ASYNC,	
 	PXY_CFG_MISC_GPU_TIMEOUT,
 	PXY_CFG_CNT
 } d912pxy_config_value;
@@ -82,8 +84,10 @@ private:
 		{L"sdb", L"use_pso_precompile", L"0"},//PXY_CFG_SDB_USE_PSO_PRECOMPILE
 		{L"sdb", L"use_pso_key_cache", L"0"},//PXY_CFG_SDB_USE_PSO_KEY_CACHE
 		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX
-		{L"replay", L"mt", L"1"},//PXY_CFG_REPLAY_MT_BEHAIVOUR
-		{L"replay", L"threads", L"1"},//PXY_CFG_REPLAY_THREADS
+		{L"mt", L"replay", L"1"},//PXY_CFG_MT_REPLAY_BEHAIVOUR
+		{L"mt", L"replay_threads", L"1"},//PXY_CFG_MT_REPLAY_THREADS
+		{L"mt", L"vstream_ctor", L"0"},//PXY_CFG_MT_VSTREAM_CTOR
+		{L"mt", L"surface_ctor", L"0"},//PXY_CFG_MT_SURFACE_CTOR
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG
 		{L"upload",L"tex_async",L"0"},//PXY_CFG_UPLOAD_TEX_ASYNC
 		{L"misc",L"gpu_timeout",L"5000"}//PXY_CFG_MISC_GPU_TIMEOUT

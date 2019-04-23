@@ -28,7 +28,7 @@ SOFTWARE.
 class d912pxy_surface : public IDirect3DSurface9, public d912pxy_resource
 {
 public:
-	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, UINT* levels, UINT arrSz);
+	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, UINT* levels, UINT arrSz, UINT32* srvFeedback);
 	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, INT surfType);	
 	~d912pxy_surface();
 
@@ -78,6 +78,7 @@ public:
 	UINT FinalReleaseCB();
 	UINT32 PooledAction(UINT32 use);
 	void MarkPooled(UINT uid) { isPooled = uid; };
+	void SetDHeapIDFeedbackPtr(UINT32* feedbackPtr) { dheapIdFeedback = feedbackPtr; };
 	
 	void initInternalBuf();
 	void UpdateDescCache();
@@ -88,9 +89,12 @@ public:
 
 	void FinishUpload();
 
+	static UINT32 threadedCtor;
+
 private:
 	D3D12_CPU_DESCRIPTOR_HANDLE rtdsHPtr;
 	UINT dheapId;
+	UINT32* dheapIdFeedback;
 
 	UINT isPooled;
 	DXGI_FORMAT m_fmt;

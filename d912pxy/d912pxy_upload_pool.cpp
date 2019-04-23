@@ -280,5 +280,8 @@ UINT32 d912pxy_upload_item::PooledAction(UINT32 use)
 		mappedMemWofs = NULL;
 	}
 
+
+	PooledActionExit();
+
 	return 0;
 }

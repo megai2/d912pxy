@@ -64,7 +64,7 @@ d912pxy_surface_pool::~d912pxy_surface_pool()
 	free(this->rwMutex);
 }
 
-d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz)
+d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT32* srvFeedback)
 {
 	UINT uidPrecursor[] = {
 		width,
@@ -82,11 +82,12 @@ d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DF
 
 	if (!ret)
 	{
-		ret = new d912pxy_surface(m_dev, width, height, fmt, 0, &levels, arrSz);
+		ret = new d912pxy_surface(m_dev, width, height, fmt, 0, &levels, arrSz, srvFeedback);
 		ret->MarkPooled(uid);
 	}
 	else {
-		ret->PooledAction(1);
+		ret->SetDHeapIDFeedbackPtr(srvFeedback);
+		ret->PooledAction(1);	
 	}
 
 	return ret;

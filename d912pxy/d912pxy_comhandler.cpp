@@ -170,9 +170,15 @@ UINT32 d912pxy_comhandler::PooledAction(UINT32 use)
 	else if (use)
 		timestamp = 0;
 
-	poolSync.Release();
+	if (!ret)
+		poolSync.Release();
 
 	return ret;
+}
+
+void d912pxy_comhandler::PooledActionExit()
+{
+	poolSync.Release();
 }
 
 int d912pxy_comhandler::Watching(LONG v)

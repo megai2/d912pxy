@@ -73,6 +73,7 @@ public:
 	void NoteDeletion(UINT32 time);
 	UINT CheckExpired(UINT32 nt, UINT32 lifetime);
 	virtual UINT32 PooledAction(UINT32 use);
+	void PooledActionExit();
 
 	int Watching(LONG v);
 

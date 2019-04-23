@@ -166,22 +166,21 @@ HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt,
 
 void d912pxy_resource::EvictFromGPU()
 {
-	if (!evicted)
-	{
-		ID3D12Pageable* mr = (ID3D12Pageable*)m_res;
-		d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->Evict(1, &mr), "Evict");
-		evicted = 1;
-	}
+	if (evicted || !m_res)
+		return;
+
+	ID3D12Pageable* mr = (ID3D12Pageable*)m_res;
+	d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->Evict(1, &mr), "Evict");
+	evicted = 1;	
 }
 
 void d912pxy_resource::MakeGPUResident()
 {
-	if (!evicted)
+	if (!evicted || !m_res)
 		return;
 
 	ID3D12Pageable* mr = (ID3D12Pageable*)m_res;
-	d912pxy_s(DXDev)->MakeResident(1, &mr);
-
+	d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->MakeResident(1, &mr), "MakeResident");
 	evicted = 0;
 }
 

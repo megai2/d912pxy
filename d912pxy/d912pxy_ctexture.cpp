@@ -40,9 +40,9 @@ d912pxy_ctexture::d912pxy_ctexture(d912pxy_device* dev, UINT edgeLength, UINT Le
 		LOG_ERR_THROW2(-1, "cubemap ds");// baseSurface = new d912pxy_surface(dev, edgeLength, edgeLength, Format, D3DMULTISAMPLE_NONE, 0, 0, 1);
 	else if (m_levels != 0)
 	{
-		baseSurface = d912pxy_s(pool_surface)->GetSurface(edgeLength, edgeLength, Format, m_levels, 6);
+		baseSurface = d912pxy_s(pool_surface)->GetSurface(edgeLength, edgeLength, Format, m_levels, 6, &srvIDc[0]);
 	} else 
-		baseSurface = new d912pxy_surface(dev, edgeLength, edgeLength, Format, Usage, &m_levels, 6);
+		baseSurface = new d912pxy_surface(dev, edgeLength, edgeLength, Format, Usage, &m_levels, 6, &srvIDc[0]);
 
 	for (int i = 0; i != 6; ++i)
 	{		

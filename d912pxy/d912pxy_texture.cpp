@@ -53,9 +53,9 @@ d912pxy_texture::d912pxy_texture(d912pxy_device* dev, UINT Width, UINT Height, U
 		LOG_DBG_DTDM("texture as SRV");
 		if (m_levels != 0)
 		{
-			baseSurface = d912pxy_s(pool_surface)->GetSurface(Width, Height, Format, m_levels, 1);
+			baseSurface = d912pxy_s(pool_surface)->GetSurface(Width, Height, Format, m_levels, 1, &srvIDc[0]);
 		} else 
-			baseSurface = new d912pxy_surface(dev, Width, Height, Format, Usage, &m_levels, 1);
+			baseSurface = new d912pxy_surface(dev, Width, Height, Format, Usage, &m_levels, 1, &srvIDc[0]);
 		rtTrans = 0;
 	}
 
