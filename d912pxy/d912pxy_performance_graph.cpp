@@ -112,13 +112,13 @@ void d912pxy_performance_graph::RecordPresent(int batchCount)
 
 void d912pxy_performance_graph::DrawOverlay()
 {
-	DrawLineH(1023);
+	//DrawLineH(1023);
 	DrawLineH(768);
 	DrawLineH(512);	
 	DrawLineH(256);
 	DrawLineH(128);
 	DrawLineH(64);
-	DrawLineH(0);
+	//DrawLineH(0);
 
 	DrawLineV(256);	
 	DrawLineV(512);
