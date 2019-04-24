@@ -68,6 +68,7 @@ d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UI
 
 	if (!ret)
 	{
+		LOG_DBG_DTDM2("vstream pool miss: %u %u %u", size, fmt, isIB);
 		PoolRW(mc, &ret, 1);
 	}
 	else {
