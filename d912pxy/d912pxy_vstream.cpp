@@ -119,11 +119,8 @@ D912PXY_METHOD_IMPL(Unlock)(THIS)
 
 void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12GraphicsCommandList * cl)
 {	
-	if (!m_res)
-	{
-		cl->IASetVertexBuffers(slot, 1, 0);
-		return;
-	}
+	if (!m_res)	
+		ConstructResource();				
 
 	D3D12_VERTEX_BUFFER_VIEW bindDataLocal;
 
@@ -142,9 +139,9 @@ void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12Gr
 void d912pxy_vstream::IFrameBindIB(ID3D12GraphicsCommandList * cl)
 {
 	if (!m_res)	
-		cl->IASetIndexBuffer(0);
-	else 
-		cl->IASetIndexBuffer(&bindData.i);
+		ConstructResource();
+	 
+	cl->IASetIndexBuffer(&bindData.i);
 }
 
 void d912pxy_vstream::NoteFormatChange(DWORD fmt, DWORD isIB)
@@ -248,8 +245,15 @@ void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
 
 void d912pxy_vstream::ConstructResource()
 {
+	ctorSync.Hold();
+
+	if (m_res)
+		return;
+
 	d12res_buffer(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
 	bindData.i.BufferLocation = m_res->GetGPUVirtualAddress();
+
+	ctorSync.Release();
 }
 
 void d912pxy_vstream::UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size)
