@@ -142,13 +142,13 @@ void d912pxy_thread::IgnoreJob()
 
 void d912pxy_thread::SignalWorkCompleted()
 {
-	if (!workIssued.Add(-1))
+	if (workIssued.TryHold())
 	{
-		if (workIssued.TryHold())
-		{
-			workIssued.Release();
-		} else 
-			SetEvent(workCompleteEvent);
+		workIssued.Add(-1);
+		workIssued.Release();
+	}
+	else {	
+		SetEvent(workCompleteEvent);		
 	}
 }
 
@@ -181,7 +181,9 @@ UINT d912pxy_thread::WaitForIssuedWorkCompletionTimeout(DWORD timeout)
 		{
 			workIssued.Release();
 			return 0;
-		}
+		}		
+
+		workIssued.SetValue(0);
 	}
 
 	workIssued.Release();
