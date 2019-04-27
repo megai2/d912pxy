@@ -250,8 +250,10 @@ void d912pxy_vstream::ConstructResource()
 	if (m_res)
 		return;
 
-	d12res_buffer(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
-	bindData.i.BufferLocation = m_res->GetGPUVirtualAddress();
+	ID3D12Resource* tmpLocation = d12res_buffer_target(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
+	bindData.i.BufferLocation = tmpLocation->GetGPUVirtualAddress();
+
+	m_res = tmpLocation;
 
 	ctorSync.Release();
 }

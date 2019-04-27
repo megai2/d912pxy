@@ -69,6 +69,7 @@ public:
 
 	HRESULT	d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width, UINT height, DXGI_FORMAT clearVFmt);
 	HRESULT	d12res_rtgt(DXGI_FORMAT fmt, float* clearV, UINT width, UINT height);
+	ID3D12Resource*	d12res_buffer_target(size_t size, D3D12_HEAP_TYPE heap);
 	HRESULT	d12res_buffer(size_t size, D3D12_HEAP_TYPE heap);
 	HRESULT	d12res_readback_buffer(size_t size);
 	HRESULT	d12res_uav_buffer(size_t size, D3D12_HEAP_TYPE heap);

@@ -260,33 +260,41 @@ HRESULT d912pxy_resource::d12res_rtgt(DXGI_FORMAT fmt, float * clearV, UINT widt
 	return D3D_OK;
 }
 
-HRESULT d912pxy_resource::d12res_buffer(size_t size, D3D12_HEAP_TYPE heap)
+ID3D12Resource * d912pxy_resource::d12res_buffer_target(size_t size, D3D12_HEAP_TYPE heap)
 {
 	D3D12_HEAP_PROPERTIES rhCfg = m_dev->GetResourceHeap(heap);
-	
+
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_BUFFER, 0,
 		size, 1, 1, 1,
 		DXGI_FORMAT_UNKNOWN, {1, 0},
 		D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE
 	};
-	
+
+	ID3D12Resource* ret;
+
 	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
-		&rsDesc, 
+		&rsDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		0,
-		IID_PPV_ARGS(&m_res)
+		IID_PPV_ARGS(&ret)
 	));
 
-	if (heap == D3D12_HEAP_TYPE_UPLOAD)	
-		LOG_DX_SET_NAME(m_res, L"upload buffer");
-	else 
-		LOG_DX_SET_NAME(m_res, L"vmem buffer");
+	if (heap == D3D12_HEAP_TYPE_UPLOAD)
+		LOG_DX_SET_NAME(ret, L"upload buffer");
+	else
+		LOG_DX_SET_NAME(ret, L"vmem buffer");
 
 	stateCache = D3D12_RESOURCE_STATE_GENERIC_READ;
 
+	return ret;
+}
+
+HRESULT d912pxy_resource::d12res_buffer(size_t size, D3D12_HEAP_TYPE heap)
+{
+	m_res = d12res_buffer_target(size, heap);
 	return D3D_OK;
 }
 
