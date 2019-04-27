@@ -27,7 +27,9 @@ SOFTWARE.
 d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_async_upload_thread(dev, PXY_INNER_MAX_ASYNC_BUFFERLOADS, PXY_INNER_THREADID_BUF_LOADER, 10, L"buffer upload thread", "d912pxy bufld")
 {
 	d912pxy_s(bufloadThread) = this;
+
 	d912pxy_s(GPUque)->EnableGID(CLG_BUF, PXY_INNER_CLG_PRIO_ASYNC_LOAD);	
+	Resume();
 }
 
 d912pxy_buffer_loader::~d912pxy_buffer_loader()

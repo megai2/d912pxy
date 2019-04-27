@@ -35,9 +35,7 @@ d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread(
 
 	finishList = new d912pxy_ringbuffer<void*>(64, 2);
 
-	dev->AddActiveThreads(1);
-
-	Resume();
+	dev->AddActiveThreads(1);	
 }
 
 template<class QueItemType, class ProcImpl>

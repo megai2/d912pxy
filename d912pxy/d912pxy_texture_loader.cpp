@@ -35,6 +35,8 @@ d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_as
 		asyncLoadPendingItems = new d912pxy_ringbuffer<d912pxy_surface*>(64, 2);
 	else
 		asyncLoadPendingItems = NULL;
+
+	Resume();
 }
 
 d912pxy_texture_loader::~d912pxy_texture_loader()
