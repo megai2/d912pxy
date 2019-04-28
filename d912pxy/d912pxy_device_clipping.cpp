@@ -30,7 +30,11 @@ HRESULT WINAPI d912pxy_device::SetClipPlane(DWORD Index, CONST float* pPlane)
 {
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLIP_P0, 1, (float*)pPlane);  return D3D_OK;
+	if (Index > 0)
+		return D3D_OK;
+
+	d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLIP_P0, 1, (float*)pPlane);  
+	return D3D_OK;
 
 	API_OVERHEAD_TRACK_END(0)
 }
@@ -43,7 +47,7 @@ HRESULT WINAPI d912pxy_device::SetScissorRect(CONST RECT* pRect)
 
 	API_OVERHEAD_TRACK_START(0)
 
-		d912pxy_s(iframe)->SetScissors((D3D12_RECT*)pRect);
+	d912pxy_s(iframe)->SetScissors((D3D12_RECT*)pRect);
 
 	API_OVERHEAD_TRACK_END(0)
 

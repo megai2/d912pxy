@@ -406,11 +406,11 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 #ifdef TRACK_SHADER_BUGS_PROFILE
 		DX9RSvalues[State] = Value;
 #endif
-		d912pxy_s(textureState)->SetTexture(29, Value);
+		//d912pxy_s(textureState)->SetTexture(29, Value);
 		if (!Value)
 		{
-			float zvf4[4] = { 0, 0, 0, 0 };
-			m_dev->SetPixelShaderConstantF(256 - 2, zvf4, 1);
+			const float zvf4[4] = { 0, 0, 0, 0 };
+			d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLIP_P0, 1, (float*)zvf4);
 		}
 		break;
 	}
