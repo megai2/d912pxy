@@ -67,15 +67,18 @@ struct batchDataType
 	uint sampler_s30;
 	uint sampler_s31;	
 	float4 valv[PXY_INNER_MAX_SHADER_CONSTS];
-	float4 valp[PXY_INNER_MAX_SHADER_CONSTS-2];
+	float4 valp[PXY_INNER_MAX_SHADER_CONSTS];	
 	float4 clipplane0;
 	float4 halfpixelFix;
-};
-
-struct heapIndexes
-{
-	uint texStateId;
-	uint shaderVariablesId;
+	uint extraTextureBind0;
+	uint extraTextureBind1;
+	uint extraTextureBind2;
+	uint extraTextureBind3;
+	uint extraTextureSampler0;
+	uint extraTextureSampler1;
+	uint extraTextureSampler2;
+	uint extraTextureSampler3;	
+	float4 extraVars[12];
 };
 
 #define texState batchData
@@ -95,25 +98,6 @@ float4 getPassedVSFv(uint idx)
 float4 getPassedPSFv(uint idx)
 {
 	return  batchData.valp[idx];
-}
-
-float4 reassembled_cmp_func(float4 cmpVal, float4 passEd, float4 notPassEd)
-{
-	float4 retCFN = notPassEd;
-
-	if (cmpVal.x >= 0)
-		retCFN.x = passEd.x;
-		
-	if (cmpVal.y >= 0)
-		retCFN.y = passEd.y;		
-		
-	if (cmpVal.z >= 0)
-		retCFN.z = passEd.z;				
-		
-	if (cmpVal.w >= 0)
-		retCFN.w = passEd.w;				
-
-	return retCFN;
 }
 
 float dx9_alphatest_emulation_proc(uint data, float avf)
@@ -172,8 +156,6 @@ float4 color_lin2s(float4 cs)
 
 #define dx9_texture_srgb_read_proc(ret, mask) if (texState.texture_s30 & mask) { ret = color_s2lin(ret); }
 
-#define dx9_clip_plane_vs(pos, cpi) if (texState.texture_s29 > 0) { pos.w = dot(getPassedPSFv(PXY_INNER_MAX_SHADER_CONSTS-2-cpi),pos) >= 0 ? pos.w : 0; }
-#define dx9_clip_plane_ps(pos, cpi) if (texState.texture_s29 > 0) clip(dot(getPassedPSFv(PXY_INNER_MAX_SHADER_CONSTS-2-cpi),pos));
 #define vs_clip_plane0_def [clipplanes(texState.clipplane0)]
 
 #define dx9_ps_write_emulation(color) 
@@ -202,7 +184,6 @@ float4 dx9texldl_tex2d(Texture2DArray tex, sampler spl, float4 uv, float w, uint
 	
 	return ret;
 }
-
 
 float4 dx9texldl_depth(Texture2DArray tex, sampler spl, float4 uv, float w, uint srgbMask)
 {
@@ -235,34 +216,6 @@ float4 dx9texld_tex2d(Texture2DArray tex, sampler spl, float4 uv, uint srgbMask)
 	float4 ret = tex.Sample(spl, auv);
 	
 	dx9_texture_srgb_read(ret, srgbMask);
-	
-	return ret;
-}
-
-float3 texcoord_cube3d_to_array2d(float3 orig)
-{
-	float3 ao = abs(orig);
-	float3 ret;
-	if (ao.x > ao.y)
-	{
-		if (ao.x > ao.z)
-		{
-			ret.xy = ao.yz;
-			ret.z = (orig.x >= 0) ? 0 : 1;
-		} else {
-			ret.xy = ao.xy;
-			ret.z = (orig.z >= 0) ? 4 : 5;
-		}
-	} else {
-		if (ao.y > ao.z)
-		{
-			ret.xy = ao.xz;
-			ret.z = (orig.y >= 0) ? 2 : 3;		
-		} else {
-			ret.xy = ao.xy;
-			ret.z = (orig.z >= 0) ? 4 : 5;							
-		}	
-	}
 	
 	return ret;
 }

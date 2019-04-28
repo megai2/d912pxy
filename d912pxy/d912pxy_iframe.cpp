@@ -475,7 +475,7 @@ void d912pxy_iframe::SetViewport(D3D12_VIEWPORT * pViewport)
 			fixupfv[1] = 0;
 		}
 		
-		d912pxy_s(batch)->SetShaderConstF(0, PXY_INNER_MAX_SHADER_CONSTS_IDX * 2 - 1, 1, fixupfv);
+		d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_HALFPIXEL_FIX, 1, fixupfv);
 	}
 
 	main_viewport = *pViewport;

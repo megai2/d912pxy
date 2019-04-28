@@ -1,5 +1,5 @@
 #define threadBlockSize 32
-#define dstBufferStride 8448
+#define dstBufferStride 8704
 #define PXY_INNER_MAX_IFRAME_BATCH_COUNT 4096*2
 
 RWByteAddressBuffer dstBuffer : register(u0); 
