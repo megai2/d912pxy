@@ -28,8 +28,7 @@ SOFTWARE.
 class d912pxy_surface : public IDirect3DSurface9, public d912pxy_resource
 {
 public:
-	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, UINT* levels, UINT arrSz, UINT32* srvFeedback);
-	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, INT surfType);	
+	d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback);
 	~d912pxy_surface();
 
 	/*** IUnknown methods ***/

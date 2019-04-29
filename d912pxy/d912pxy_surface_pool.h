@@ -31,7 +31,7 @@ public:
 	d912pxy_surface_pool(d912pxy_device* dev);
 	~d912pxy_surface_pool();
 
-	d912pxy_surface* GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT32* srvFeedback);
+	d912pxy_surface* GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback);
 
 	d912pxy_surface* AllocProc(UINT32 cat);
 	d912pxy_ringbuffer<d912pxy_surface*>* GetCatBuffer(UINT32 cat);

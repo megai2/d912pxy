@@ -26,11 +26,16 @@ SOFTWARE.
 
 UINT32 d912pxy_surface::threadedCtor = 0;
 
-d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, INT surfType) : d912pxy_resource(dev, RTID_SURFACE, L"surface drt")
+
+d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(dev, RTID_SURFACE, L"surface texture")
 {
-	isPooled = 0;
-	dHeap = dev->GetDHeap(PXY_INNER_HEAP_SRV);
-	
+	isPooled = 0;	
+	ul = NULL;
+	layers = NULL;
+	dheapId = -1;
+	dheapIdFeedback = srvFeedback;
+	dHeap = dev->GetDHeap(PXY_INNER_HEAP_SRV);	
+
 	surf_dx9dsc.Format = Format;
 	surf_dx9dsc.Width = Width;
 	surf_dx9dsc.Height = Height;
@@ -38,79 +43,37 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 	surf_dx9dsc.MultiSampleQuality = MultisampleQuality;
 	surf_dx9dsc.Pool = D3DPOOL_DEFAULT;
 	surf_dx9dsc.Type = D3DRTYPE_SURFACE;
-	surf_dx9dsc.Usage = D3DUSAGE_DEPTHSTENCIL * surfType + D3DUSAGE_RENDERTARGET * (surfType == 0);
-
-	m_fmt = d912pxy_helper::DXGIFormatFromDX9FMT(Format);
-	LOG_DBG_DTDM("fmt %u => %u", Format, m_fmt);
-
-	if (Format == D3DFMT_NULL)//FOURCC NULL DX9 no rendertarget trick
-	{
-		subresFootprints = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT*)malloc(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*1);
-		subresSizes = (size_t*)malloc(sizeof(size_t)*1);
-
-		LOG_DBG_DTDM("w %u h %u u %u FCC NULL", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
-		return;
-	}
-
-	if (surfType)
-		d12res_zbuf(ConvertInnerDSVFormat(), 1.0f, Width, Height, GetDSVFormat());
-	else {
-		float white[4] = { 1.0f,1.0f,1.0f,1.0f };
-		d12res_rtgt(m_fmt, white, Width, Height);
-	}
-	
-	UpdateDescCache();
-
-	if (!surfType)
-	{
-		d912pxy_dheap* rtvHeap = dev->GetDHeap(PXY_INNER_HEAP_RTV);
-		
-		rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));
-	}
-	else
-	{
-		d912pxy_dheap* dsvHeap = dev->GetDHeap(PXY_INNER_HEAP_DSV);
-
-		D3D12_DEPTH_STENCIL_VIEW_DESC dsc2;
-		dsc2.Format = GetDSVFormat();
-		dsc2.Flags = D3D12_DSV_FLAG_NONE;
-		dsc2.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		dsc2.Texture2D.MipSlice = 0;
-
-		rtdsHPtr = dsvHeap->GetDHeapHandle(dsvHeap->CreateDSV(m_res, &dsc2));
-	}
-
-	layers = NULL;
-	dheapId = -1;
-
-	LOG_DBG_DTDM("w %u h %u u %u", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
-}
-
-d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(dev, RTID_SURFACE, L"surface texture")
-{
-	isPooled = 0;	
-	ul = NULL;
-	dheapIdFeedback = srvFeedback;
-	dHeap = dev->GetDHeap(PXY_INNER_HEAP_SRV);	
-
-	surf_dx9dsc.Format = Format;
-	surf_dx9dsc.Width = Width;
-	surf_dx9dsc.Height = Height;
-	surf_dx9dsc.MultiSampleType = D3DMULTISAMPLE_NONE;
-	surf_dx9dsc.MultiSampleQuality = 0;
-	surf_dx9dsc.Pool = D3DPOOL_DEFAULT;
-	surf_dx9dsc.Type = D3DRTYPE_SURFACE;
 	surf_dx9dsc.Usage = Usage;
 	
 	m_fmt = d912pxy_helper::DXGIFormatFromDX9FMT(Format);
 	LOG_DBG_DTDM("fmt %u => %u", Format, m_fmt);
 
+	if (Format == D3DFMT_NULL)//FOURCC NULL DX9 no rendertarget trick
+	{
+		subresFootprints = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT*)malloc(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1);
+		subresSizes = (size_t*)malloc(sizeof(size_t) * 1);
+
+		LOG_DBG_DTDM("w %u h %u u %u FCC NULL", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
+		return;
+	}
+
 	if (Usage == D3DUSAGE_D912PXY_FORCE_RT)
 	{
 		float white[4] = { 1.0f,1.0f,1.0f,1.0f };
 		d12res_rtgt(m_fmt, white, Width, Height);
-	} else if (!threadedCtor || (*levels == 0))
+	}
+	else if (Usage == D3DUSAGE_DEPTHSTENCIL)
+	{
+		d12res_zbuf(ConvertInnerDSVFormat(), 1.0f, Width, Height, GetDSVFormat());
+	} else if (Usage == D3DUSAGE_RENDERTARGET)
+	{
+		float white[4] = { 1.0f,1.0f,1.0f,1.0f };
+		d12res_rtgt(m_fmt, white, Width, Height);		
+	}
+	else if (!threadedCtor || (*levels == 0)) {
+		dheapId = 0;
 		d12res_tex2d(Width, Height, m_fmt, (UINT16*)levels, arrSz);
+	}
 	else {
 		descCache = {
 			D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0,
@@ -121,20 +84,38 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 	}
 
 	UpdateDescCache();
-
 	initInternalBuf();
 
-	if (!threadedCtor)
-		dheapId = AllocateSRV();
-	else
-		dheapId = 0;
+	if (Usage == D3DUSAGE_DEPTHSTENCIL)
+	{
+		d912pxy_dheap* dsvHeap = dev->GetDHeap(PXY_INNER_HEAP_DSV);
 
-	AllocateLayers();
+		D3D12_DEPTH_STENCIL_VIEW_DESC dsc2;
+		dsc2.Format = GetDSVFormat();
+		dsc2.Flags = D3D12_DSV_FLAG_NONE;
+		dsc2.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		dsc2.Texture2D.MipSlice = 0;
 
-	rtdsHPtr.ptr = 0;
+		rtdsHPtr = dsvHeap->GetDHeapHandle(dsvHeap->CreateDSV(m_res, &dsc2));
+	} else if (Usage == D3DUSAGE_RENDERTARGET)
+	{
+		d912pxy_dheap* rtvHeap = dev->GetDHeap(PXY_INNER_HEAP_RTV);
 
+		rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));		
+	}
+	else {
+
+		if (!threadedCtor)
+			dheapId = AllocateSRV();
+		else
+			dheapId = 0;
+
+		AllocateLayers();
+
+		rtdsHPtr.ptr = 0;
+	}
 	
-	LOG_DBG_DTDM("w %u h %u u %u ls %u", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage, *levels);
+	LOG_DBG_DTDM("w %u h %u u %u", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
 }
 
 d912pxy_surface::~d912pxy_surface()
@@ -145,7 +126,7 @@ d912pxy_surface::~d912pxy_surface()
 
 	if (rtdsHPtr.ptr == 0)
 	{
-		if (m_res != nullptr)
+		if (m_res)
 		{			
 			FreeObjAndSlot();
 			FreeLayers();
@@ -154,12 +135,15 @@ d912pxy_surface::~d912pxy_surface()
 	{
 		LOG_DBG_DTDM2("rt/dsv srv freeing");
 
-		FreeObjAndSlot();
-		
-		if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-			m_dev->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
-		else 
-			m_dev->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
+		if (m_res)
+		{
+			FreeObjAndSlot();
+
+			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+				m_dev->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
+			else
+				m_dev->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
+		}
 	}
 }
 
@@ -385,21 +369,68 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 		return 0;
 	}
 
-	if (use)
+	if (!rtdsHPtr.ptr)
 	{
-		if (!threadedCtor)
+		if (use)
 		{
-			d12res_tex2d(surf_dx9dsc.Width, surf_dx9dsc.Height, m_fmt, &descCache.MipLevels, descCache.DepthOrArraySize);
-			dheapId = AllocateSRV();
+			if (!threadedCtor)
+			{
+				d12res_tex2d(surf_dx9dsc.Width, surf_dx9dsc.Height, m_fmt, &descCache.MipLevels, descCache.DepthOrArraySize);
+				dheapId = AllocateSRV();
+			}
+			else
+				dheapId = 0;
+
+			AllocateLayers();
 		}
-		else
-			dheapId = 0;
-				
-		AllocateLayers();
+		else {
+			FreeObjAndSlot();
+			FreeLayers();
+		}
 	}
-	else {		
-		FreeObjAndSlot();
-		FreeLayers();		
+	else {
+		if (surf_dx9dsc.Format == D3DFMT_NULL)
+		{
+			PooledActionExit();
+
+			return 0;
+		}
+
+		if (use)
+		{
+			if (surf_dx9dsc.Usage == D3DUSAGE_DEPTHSTENCIL)
+			{
+				d12res_zbuf(ConvertInnerDSVFormat(), 1.0f, surf_dx9dsc.Width, surf_dx9dsc.Height, GetDSVFormat());
+
+				d912pxy_dheap* dsvHeap = m_dev->GetDHeap(PXY_INNER_HEAP_DSV);
+
+				D3D12_DEPTH_STENCIL_VIEW_DESC dsc2;
+				dsc2.Format = GetDSVFormat();
+				dsc2.Flags = D3D12_DSV_FLAG_NONE;
+				dsc2.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+				dsc2.Texture2D.MipSlice = 0;
+
+				rtdsHPtr = dsvHeap->GetDHeapHandle(dsvHeap->CreateDSV(m_res, &dsc2));
+			}
+			else if (surf_dx9dsc.Usage == D3DUSAGE_RENDERTARGET)
+			{
+				float white[4] = { 1.0f,1.0f,1.0f,1.0f };
+				d12res_rtgt(m_fmt, white, surf_dx9dsc.Width, surf_dx9dsc.Height);
+
+				d912pxy_dheap* rtvHeap = m_dev->GetDHeap(PXY_INNER_HEAP_RTV);
+
+				rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));
+			}
+
+			dheapId = -1;
+		} else {
+			FreeObjAndSlot();
+
+			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+				m_dev->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
+			else
+				m_dev->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
+		}
 	}
 
 	PooledActionExit();

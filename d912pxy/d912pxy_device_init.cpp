@@ -171,7 +171,7 @@ void d912pxy_device::InitComPatches()
 void d912pxy_device::InitNullSRV()
 {
 	UINT uuLc = 1;
-	mNullTexture = new d912pxy_surface(this, 1, 1, D3DFMT_A8B8G8R8, 0, &uuLc, 6, NULL);
+	mNullTexture = new d912pxy_surface(this, 1, 1, D3DFMT_A8B8G8R8, 0, D3DMULTISAMPLE_NONE, 0, 0, &uuLc, 6, NULL);
 	D3DLOCKED_RECT lr;
 
 	for (int i = 0; i != 6; ++i)
