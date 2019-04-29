@@ -47,8 +47,8 @@ public:
 	void DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation);
 
 	void RT(d912pxy_surface* rtv, d912pxy_surface* dsv);
-	void RTClear(d912pxy_surface* tgt, float* clr);
-	void DSClear(d912pxy_surface* tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag);
+	void RTClear(d912pxy_surface* tgt, float* clr, D3D12_VIEWPORT* currentVWP);
+	void DSClear(d912pxy_surface* tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP);
 	void StretchRect(d912pxy_surface* src, d912pxy_surface* dst);
 
 	//actual execute code and thread managment

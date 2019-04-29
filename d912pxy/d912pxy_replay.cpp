@@ -217,7 +217,7 @@ void d912pxy_replay::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
 	StateTransit(dst, prevD);
 }
 
-void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr)
+void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT* currentVWP)
 {
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
 	StateTransit(tgt, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -229,13 +229,17 @@ void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr)
 	it->clrRt.clr[2] = clr[1];
 	it->clrRt.clr[3] = clr[0];
 	it->clrRt.tgt = tgt;
+	it->clrRt.clearRect.left = (LONG)currentVWP->TopLeftX;
+	it->clrRt.clearRect.top = (LONG)currentVWP->TopLeftY;
+	it->clrRt.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
+	it->clrRt.clearRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
 
 	++stackTop;
 
 	StateTransit(tgt, prevState);
 }
 
-void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag)
+void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP)
 {
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
 	StateTransit(tgt, D3D12_RESOURCE_STATE_DEPTH_WRITE);
@@ -246,6 +250,10 @@ void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, 
 	it->clrDs.flag = flag;
 	it->clrDs.stencil = stencil;
 	it->clrDs.tgt = tgt;
+	it->clrDs.clearRect.left = (LONG)currentVWP->TopLeftX;
+	it->clrDs.clearRect.top = (LONG)currentVWP->TopLeftY;
+	it->clrDs.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
+	it->clrDs.clearRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
 
 	++stackTop;
 
@@ -611,12 +619,12 @@ void d912pxy_replay::RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsComman
 
 void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
-	it->tgt->ClearAsRTV(it->clr, cl);
+	it->tgt->ClearAsRTV(it->clr, cl, &it->clearRect);
 }
 
 void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
-	it->tgt->ClearAsDSV(it->depth, it->stencil, it->flag, cl);
+	it->tgt->ClearAsDSV(it->depth, it->stencil, it->flag, cl, &it->clearRect);
 }
 
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context)

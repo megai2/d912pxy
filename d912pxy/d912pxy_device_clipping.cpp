@@ -60,7 +60,7 @@ HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
 
 	API_OVERHEAD_TRACK_START(0)
 
-		D3D12_VIEWPORT main_viewport;
+	D3D12_VIEWPORT main_viewport;
 	main_viewport.Height = pViewport->Height * 1.0f;
 	main_viewport.Width = pViewport->Width * 1.0f;
 	main_viewport.TopLeftX = pViewport->X * 1.0f;

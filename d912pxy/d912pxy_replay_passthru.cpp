@@ -137,24 +137,38 @@ void d912pxy_replay_passthru::RT(d912pxy_surface * rtv, d912pxy_surface * dsv)
 		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);
 }
 
-void d912pxy_replay_passthru::RTClear(d912pxy_surface * tgt, float * clr)
+void d912pxy_replay_passthru::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT* currentVWP)
 {
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
 	StateTransit(tgt, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	float clrRemap[4] = { clr[3], clr[2], clr[1], clr[0] };
 
-	tgt->ClearAsRTV(clrRemap, cl);
+	D3D12_RECT vwpRect;
+
+	vwpRect.left = (LONG)currentVWP->TopLeftX;
+	vwpRect.top = (LONG)currentVWP->TopLeftY;
+	vwpRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
+	vwpRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
+
+	tgt->ClearAsRTV(clrRemap, cl, &vwpRect);
 
 	StateTransit(tgt, prevState);
 }
 
-void d912pxy_replay_passthru::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag)
+void d912pxy_replay_passthru::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP)
 {
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
 	StateTransit(tgt, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-	tgt->ClearAsDSV(depth, stencil, flag, cl);
+	D3D12_RECT vwpRect;
+	
+	vwpRect.left = (LONG)currentVWP->TopLeftX;
+	vwpRect.top = (LONG)currentVWP->TopLeftY;
+	vwpRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
+	vwpRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
+
+	tgt->ClearAsDSV(depth, stencil, flag, cl, &vwpRect);
 
 	StateTransit(tgt, prevState);
 }

@@ -216,17 +216,17 @@ D912PXY_METHOD_IMPL(ReleaseDC)(THIS_ HDC hdc)
 
 #undef D912PXY_METHOD_IMPL_CN
 
-void d912pxy_surface::ClearAsRTV(FLOAT * color4f, ID3D12GraphicsCommandList * cl)
+void d912pxy_surface::ClearAsRTV(FLOAT * color4f, ID3D12GraphicsCommandList * cl, D3D12_RECT* clearRect)
 {
 	const float* cc4f;
 	cc4f = color4f;
 
-	cl->ClearRenderTargetView(rtdsHPtr, cc4f, 0, 0);
+	cl->ClearRenderTargetView(rtdsHPtr, cc4f, 1, (const D3D12_RECT*)clearRect);
 }
 
-void d912pxy_surface::ClearAsDSV(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList * cl)
+void d912pxy_surface::ClearAsDSV(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList * cl, D3D12_RECT* clearRect)
 {
-	cl->ClearDepthStencilView(rtdsHPtr, flag, Depth, Stencil, 0, 0);
+	cl->ClearDepthStencilView(rtdsHPtr, flag, Depth, Stencil, 1, (const D3D12_RECT*)clearRect);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE d912pxy_surface::GetDHeapHandle()

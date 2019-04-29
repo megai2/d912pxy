@@ -55,8 +55,8 @@ public:
 
 	//inner metods
 
-	void ClearAsRTV(FLOAT* color4f, ID3D12GraphicsCommandList* cl);
-	void ClearAsDSV(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList* cl);
+	void ClearAsRTV(FLOAT* color4f, ID3D12GraphicsCommandList* cl, D3D12_RECT* clearRect);
+	void ClearAsDSV(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList* cl, D3D12_RECT* clearRect);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDHeapHandle();
 	UINT GetSRVHeapId();

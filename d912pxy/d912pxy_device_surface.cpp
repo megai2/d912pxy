@@ -132,7 +132,7 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 		d912pxy_surface* surf = d912pxy_s(iframe)->GetBindedSurface(1);
 
 		if (surf)
-			d912pxy_s(CMDReplay)->RTClear(surf, fvColor);
+			d912pxy_s(CMDReplay)->RTClear(surf, fvColor, d912pxy_s(iframe)->GetViewport());
 		//iframe->GetBindedSurface(1)->d912_rtv_clear(fvColor, Count, (D3D12_RECT*)pRects);//megai2: rect is 4 uint structure, may comply
 	}
 
@@ -143,7 +143,7 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 		d912pxy_surface* surf = d912pxy_s(iframe)->GetBindedSurface(0);
 
 		if (surf)
-			d912pxy_s(CMDReplay)->DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf);
+			d912pxy_s(CMDReplay)->DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf, d912pxy_s(iframe)->GetViewport());
 
 		//	surf->d912_dsv_clear(Z, Stencil & 0xFF, Count, (D3D12_RECT*)pRects, (D3D12_CLEAR_FLAGS)cvtCf);
 	}
