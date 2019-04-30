@@ -62,9 +62,11 @@ Video by reddit u/moriz0, running WvW in 4k: https://www.youtube.com/watch?v=RQA
 
 # Installing
 
-[**Install instructions** (English)](https://github.com/megai2/d912pxy/wiki/Installing)
+[**Install instructions** (EN)](https://github.com/megai2/d912pxy/wiki/Installing)
 
-[**Руководство по установке** (Russian)](https://github.com/megai2/d912pxy/wiki/InstallingRU)
+[**Руководство по установке** (RU)](https://github.com/megai2/d912pxy/wiki/InstallingRU)
+
+[**Tutoriel d'installation** (FR)](https://www.youtube.com/watch?v=hfSSIBICG6E)
 
 # Known bugs
 
