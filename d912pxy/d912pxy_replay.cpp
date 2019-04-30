@@ -200,6 +200,9 @@ void d912pxy_replay::IBbind(d912pxy_vstream * buf)
 
 void d912pxy_replay::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
 {
+	if (!src->GetD12Obj() || !dst->GetD12Obj())
+		return;
+
 	D3D12_RESOURCE_STATES prevS = src->GetCurrentState();
 	D3D12_RESOURCE_STATES prevD = dst->GetCurrentState();
 

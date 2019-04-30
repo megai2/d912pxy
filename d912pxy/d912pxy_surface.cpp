@@ -369,7 +369,7 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 		return 0;
 	}
 
-	if (!rtdsHPtr.ptr)
+	if ((surf_dx9dsc.Usage != D3DUSAGE_DEPTHSTENCIL) && (surf_dx9dsc.Usage != D3DUSAGE_RENDERTARGET))
 	{
 		if (use)
 		{
