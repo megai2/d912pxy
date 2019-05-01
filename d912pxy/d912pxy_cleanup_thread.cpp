@@ -55,7 +55,7 @@ void d912pxy_cleanup_thread::ThreadJob()
 		
 		if (obj->CheckExpired(GetTickCount(), lifetime))
 		{
-			if (obj->PooledAction(0))
+			if (obj->PooledAction(0) && IsThreadRunning())
 				Sleep(iterationSubsleep);
 
 			buffer->IterRemove();
