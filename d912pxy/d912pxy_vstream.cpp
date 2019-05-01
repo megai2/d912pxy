@@ -216,7 +216,7 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 
 	PooledActionExit();
 
-	return 0;
+	return 1;
 }
 
 void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl)

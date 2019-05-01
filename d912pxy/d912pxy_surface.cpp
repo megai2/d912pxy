@@ -435,7 +435,7 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 
 	PooledActionExit();
 
-	return 0;
+	return 1;
 }
 
 d912pxy_surface_layer * d912pxy_surface::GetLayer(UINT32 mip, UINT32 ar)
