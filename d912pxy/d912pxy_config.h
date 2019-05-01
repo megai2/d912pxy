@@ -72,7 +72,7 @@ public:
 private:
 
 	d912pxy_config_value_dsc data[PXY_CFG_CNT] = {
-		{L"pooling", L"upload_alloc_step", L"0"},//PXY_CFG_POOLING_UPLOAD_ALLOC_STEP
+		{L"pooling", L"upload_alloc_step", L"16"},//PXY_CFG_POOLING_UPLOAD_ALLOC_STEP
 		{L"pooling", L"upload_limits", L"0x0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 L00"},//PXY_CFG_POOLING_UPLOAD_LIMITS		
 		{L"pooling", L"vstream_limits", L"0x0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 L00"},//PXY_CFG_POOLING_VSTREAM_LIMITS
 		{L"pooling", L"surface_limits",L"00000"},//PXY_CFG_POOLING_SURFACE_LIMITS
@@ -80,7 +80,7 @@ private:
 		{L"samplers", L"min_lod", L"0"},//PXY_CFG_SAMPLERS_MIN_LOD		
 		{L"cleanup", L"period",L"10000"},//PXY_CFG_CLEANUP_PERIOD
 		{L"cleanup", L"subsleep",L"250"},//PXY_CFG_CLEANUP_SUBSLEEP	
-		{L"sdb", L"keep_pairs", L"0"},//PXY_CFG_SDB_KEEP_PAIRS
+		{L"sdb", L"keep_pairs", L"1"},//PXY_CFG_SDB_KEEP_PAIRS
 		{L"sdb", L"use_pso_precompile", L"0"},//PXY_CFG_SDB_USE_PSO_PRECOMPILE
 		{L"sdb", L"use_pso_key_cache", L"0"},//PXY_CFG_SDB_USE_PSO_KEY_CACHE
 		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX
