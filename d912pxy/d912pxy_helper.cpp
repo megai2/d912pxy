@@ -106,7 +106,7 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 				d912pxy_s(log)->WriteCrashLogLine((wchar_t*)pwz);
 
 				//megai2: check for D3D12 device removal message
-				if (!lstrcmpW(pwz, L"D3D12: Removing Device."))
+				if (wcsstr(pwz, L"D3D12: Removing Device"))
 				{
 					if (d912pxy_s(DXDev))
 						LOG_ERR_DTDM("Recived D3D12 device removal message due to %lX", d912pxy_s(DXDev)->GetDeviceRemovedReason());
