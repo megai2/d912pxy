@@ -27,9 +27,7 @@ SOFTWARE.
 d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread(threadName, 1)
 {
 	exchRI = new d912pxy_ringbuffer<UINT32>(5, 0);
-	listGrp = iListGrp;
-
-	Resume();
+	listGrp = iListGrp;	
 }
 
 d912pxy_replay_thread::~d912pxy_replay_thread()
@@ -56,7 +54,7 @@ void d912pxy_replay_thread::ThreadJob()
 	else 
 		LOG_ERR_THROW2(-1, "Device is not interrupting threads while replaying thread exits from proc");
 
-	IgnoreJob();
+//	IgnoreJob();
 }
 
 void d912pxy_replay_thread::ExecRange(UINT start, UINT end)

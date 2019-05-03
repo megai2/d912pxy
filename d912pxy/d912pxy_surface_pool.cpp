@@ -69,7 +69,7 @@ d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DF
 	UINT uidPrecursor[] = {
 		width + (height << 16),		
 		levels + (arrSz << 8),
-		fmt,
+		(UINT)fmt,
 		Usage
 	};
 

@@ -413,9 +413,7 @@ void d912pxy_iframe::Start()
 		mHeaps[i]->CleanupSlots(PXY_INNER_MAX_DHEAP_CLEANUP_PER_SYNC);
 
 	d912pxy_s(psoCache)->MarkDirty(0);
-
-	d912pxy_s(CMDReplay)->Start();
-
+	
 	if (mSwapChain)
 		mSwapChain->StartFrame();
 

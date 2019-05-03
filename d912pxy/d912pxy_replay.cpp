@@ -31,7 +31,7 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 	d912pxy_s(CMDReplay) = this;
 
 	stackTop = 0;
-	stopMarker = 1;
+	stopMarker = 0;
 
 	numThreads = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_MT_REPLAY_THREADS);
 
@@ -52,6 +52,9 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 	}
 
 	ReRangeThreads(PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
+
+	for (int i = 0; i != numThreads; ++i)
+		threads[i]->Resume();
 
 	replay_handlers[DRPL_TRAN] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_TRAN;
 	replay_handlers[DRPL_OMSR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMSR;

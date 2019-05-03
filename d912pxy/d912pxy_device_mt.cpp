@@ -73,6 +73,8 @@ void d912pxy_device::LockAsyncThreads()
 	}
 
 	threadLock.Release();
+
+	d912pxy_s(CMDReplay)->Start();
 	
 	FRAME_METRIC_SYNC(0)
 }
