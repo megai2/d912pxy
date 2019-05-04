@@ -247,13 +247,24 @@ typedef struct d912pxy_device_streamsrc {
 typedef enum d912pxy_gpu_cmd_list_group {
 	CLG_TOP = 0,
 	CLG_TEX = 1,
-	CLG_BUF = 2,
+	CLG_BUF = 2,	
 	CLG_RP1 = 3,
 	CLG_RP2 = 4,
 	CLG_RP3 = 5,
 	CLG_RP4 = 6,
 	CLG_SEQ = 7
 } d912pxy_gpu_cmd_list_group;
+
+static const wchar_t* d912pxy_gpu_cmd_list_group_name [] = {
+	L"CLG_TOP",
+	L"CLG_TEX",
+	L"CLG_BUF",
+	L"CLG_RP1",
+	L"CLG_RP2",
+	L"CLG_RP3",
+	L"CLG_RP4",
+	L"CLG_SEQ"
+};
 
 #define PXY_INNER_MAX_GPU_CMD_LIST_GROUPS 8
 

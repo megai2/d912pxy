@@ -162,10 +162,8 @@ void d912pxy_gpu_cmd_list::CleanupReferenced(UINT items)
 void d912pxy_gpu_cmd_list::EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio)
 {
 	mActCL[totalActCLs] = mCL[id];
-
-	wchar_t buf[256];
-	wsprintf(buf, L"gpu cmd list %u", id);
-	LOG_DX_SET_NAME(mCL[totalActCLs].cl, buf);
+	
+	LOG_DX_SET_NAME(mCL[totalActCLs].cl, d912pxy_gpu_cmd_list_group_name[id]);
 	mCLPrio[totalActCLs] = prio;
 
 	++totalActCLs;
