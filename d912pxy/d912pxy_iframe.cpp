@@ -418,6 +418,7 @@ void d912pxy_iframe::Start()
 		mSwapChain->StartFrame();
 
 	d912pxy_s(batch)->FrameStart();
+	d912pxy_s(CMDReplay)->IFrameStart();
 
 	SetViewport(&main_viewport);
 	//SetScissors(&main_scissor);

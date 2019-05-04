@@ -432,6 +432,10 @@ void d912pxy_replay::Start()
 	InterlockedDecrement(&stopMarker);
 }
 
+void d912pxy_replay::IFrameStart()
+{
+}
+
 d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type type, UINT depth, UINT base)
 {
 	if (stackTop == 0)

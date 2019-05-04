@@ -55,6 +55,7 @@ public:
 
 	void Finish();
 	void Start();
+	void IFrameStart();
 	void IssueWork(UINT batch);
 
 	void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd);
@@ -64,5 +65,7 @@ public:
 private:
 	ID3D12GraphicsCommandList* cl;
 	ID3D12PipelineState* psoPtr;
+
+	d912pxy_thread_lock drawSync;
 };
 

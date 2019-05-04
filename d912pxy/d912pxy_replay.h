@@ -214,6 +214,7 @@ public:
 
 	virtual void Finish() = 0;
 	virtual void Start() = 0;
+	virtual void IFrameStart() = 0;
 	virtual void IssueWork(UINT batch) = 0;
 
 	virtual void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd) = 0;
@@ -254,6 +255,7 @@ public:
 
 	void Finish();
 	void Start();
+	void IFrameStart();
 	void IssueWork(UINT batch);
 	void ReRangeThreads(UINT batches);
 

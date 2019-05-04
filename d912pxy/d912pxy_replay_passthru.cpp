@@ -24,6 +24,16 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+#ifdef FORCE_REPLAY_MT_SAFETY
+	#define REPLAY_SYNC_START drawSync.Hold()
+	#define REPLAY_SYNC_STOP drawSync.Release()
+	#define REPLAY_SYNC_RETURN(x) drawSync.Release(); return x
+#else
+	#define REPLAY_SYNC_START
+	#define REPLAY_SYNC_STOP 
+	#define REPLAY_SYNC_RETURN(x) return x
+#endif
+
 d912pxy_replay_passthru::d912pxy_replay_passthru(d912pxy_device * dev) : d912pxy_replay_base(dev)
 {
 	d912pxy_s(CMDReplay) = this;
@@ -39,30 +49,43 @@ d912pxy_replay_passthru::~d912pxy_replay_passthru()
 
 UINT d912pxy_replay_passthru::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
 {
+	REPLAY_SYNC_START;
+
 	if (res->GetCurrentState() != to)
 	{
 		res->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, to, cl);
-		return 1;
+		REPLAY_SYNC_RETURN(1);
 	}
 	else
-		return 0;
-
+		REPLAY_SYNC_RETURN(0);
 }
 
 void d912pxy_replay_passthru::OMStencilRef(DWORD ref)
 {
+	REPLAY_SYNC_START;
+
 	cl->OMSetStencilRef(ref);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::OMBlendFac(float * color)
 {
+	REPLAY_SYNC_START;
+
 	cl->OMSetBlendFactor(color);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::RSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor)
 {
+	REPLAY_SYNC_START;
+
 	cl->RSSetViewports(1, &viewport);
 	cl->RSSetScissorRects(1, &scissor);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::PSOCompiled(d912pxy_pso_cache_item * dsc)
@@ -70,7 +93,13 @@ void d912pxy_replay_passthru::PSOCompiled(d912pxy_pso_cache_item * dsc)
 	psoPtr = dsc->GetPtr();
 
 	if (psoPtr)
+	{
+		REPLAY_SYNC_START;
+
 		cl->SetPipelineState(psoPtr);
+
+		REPLAY_SYNC_STOP;
+	}
 }
 
 void d912pxy_replay_passthru::PSORaw(d912pxy_trimmed_dx12_pso * dsc)
@@ -78,7 +107,13 @@ void d912pxy_replay_passthru::PSORaw(d912pxy_trimmed_dx12_pso * dsc)
 	psoPtr = d912pxy_s(psoCache)->UseByDesc(dsc, 0)->GetPtr();
 
 	if (psoPtr)
+	{
+		REPLAY_SYNC_START;
+
 		cl->SetPipelineState(psoPtr);
+
+		REPLAY_SYNC_STOP;
+	}
 }
 
 void d912pxy_replay_passthru::PSORawFeedback(d912pxy_trimmed_dx12_pso * dsc, void ** ptr)
@@ -88,18 +123,28 @@ void d912pxy_replay_passthru::PSORawFeedback(d912pxy_trimmed_dx12_pso * dsc, voi
 
 void d912pxy_replay_passthru::VBbind(d912pxy_vstream * buf, UINT stride, UINT slot, UINT offset)
 {
+	REPLAY_SYNC_START;
+
 	buf->IFrameBindVB(stride, slot, offset, cl);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::IBbind(d912pxy_vstream * buf)
 {
+	REPLAY_SYNC_START;
+
 	buf->IFrameBindIB(cl);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
 	if (!psoPtr)
 		return;
+
+	REPLAY_SYNC_START;
 
 	d912pxy_s(batch)->PreDIP(cl, StartInstanceLocation);
 
@@ -111,6 +156,8 @@ void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCoun
 		BaseVertexLocation,
 		0
 	);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::RT(d912pxy_surface * rtv, d912pxy_surface * dsv)
@@ -131,14 +178,20 @@ void d912pxy_replay_passthru::RT(d912pxy_surface * rtv, d912pxy_surface * dsv)
 		bindedSurfacesDH[1] = dsv->GetDHeapHandle();
 	}
 
+	REPLAY_SYNC_START;
+
 	if (rtv)
 		cl->OMSetRenderTargets(1, bindedRTV, 0, bindedDSV);
 	else
 		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT* currentVWP)
 {
+	REPLAY_SYNC_START;
+
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
 	StateTransit(tgt, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
@@ -154,10 +207,14 @@ void d912pxy_replay_passthru::RTClear(d912pxy_surface * tgt, float * clr, D3D12_
 	tgt->ClearAsRTV(clrRemap, cl, &vwpRect);
 
 	StateTransit(tgt, prevState);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP)
 {
+	REPLAY_SYNC_START;
+
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
 	StateTransit(tgt, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
@@ -171,11 +228,17 @@ void d912pxy_replay_passthru::DSClear(d912pxy_surface * tgt, float depth, UINT8 
 	tgt->ClearAsDSV(depth, stencil, flag, cl, &vwpRect);
 
 	StateTransit(tgt, prevState);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
 {
+	REPLAY_SYNC_START;
+
 	src->BCopyTo(dst, 3, cl);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::Finish()
@@ -183,6 +246,10 @@ void d912pxy_replay_passthru::Finish()
 }
 
 void d912pxy_replay_passthru::Start()
+{
+}
+
+void d912pxy_replay_passthru::IFrameStart()
 {
 	psoPtr = NULL;
 
