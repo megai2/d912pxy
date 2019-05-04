@@ -50,7 +50,9 @@ d912pxy_ctexture::d912pxy_ctexture(d912pxy_device* dev, UINT edgeLength, UINT Le
 	}
 
 	srvIDc[1] = 0;
-	srvIDc[0] = baseSurface->GetSRVHeapId();
+	
+	if (!srvIDc[1])
+		srvIDc[0] = baseSurface->GetSRVHeapId();
 }
 
 

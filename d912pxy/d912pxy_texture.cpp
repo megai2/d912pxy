@@ -41,7 +41,9 @@ d912pxy_texture::d912pxy_texture(d912pxy_device* dev, UINT Width, UINT Height, U
 		baseSurface = new d912pxy_surface(dev, Width, Height, Format, Usage, D3DMULTISAMPLE_NONE,0,	0, &m_levels, 1, &srvIDc[0]);
 
 	srvIDc[1] = (Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL);
-	srvIDc[0] = baseSurface->GetSRVHeapId();
+
+	if (!srvIDc[1])
+		srvIDc[0] = baseSurface->GetSRVHeapId();
 }
 
 
