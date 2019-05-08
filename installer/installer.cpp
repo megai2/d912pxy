@@ -85,33 +85,25 @@ int action_install()
 
 	if (!ReadUserYN(1))
 	{
-		std::cout << "Select configuration: \n\n";
-		std::cout << "1. Release_ps  - troubleshoot shader profiles \n";
-		std::cout << "2. Release_pp  - performance data collection \n";
-		std::cout << "3. Release_d   - in-depth debug logging \n";
-		std::cout << "4. Debug       - DXGI/DX12 debug output enabled build\n";
-		std::cout << "5. Release_pb  - DX9-DX12 performance bench enabled build\n";
+		std::cout << "Select configuration: \n\n";		
+		std::cout << "1. Release_pp  - performance data collection \n";
+		std::cout << "2. Release_d   - in-depth debug logging \n";
+		std::cout << "3. Debug       - debug build\n";		
 
-		std::cout << "\n[default: Release_ps]: ";
+		std::cout << "\n[default: Release_pp]: ";
 
 		int mode = read_user_integer(1);
 
 		switch (mode)
 		{
 		case 1:
-			installSource = "release_ps\\";
-			break;
-		case 2:
 			installSource = "release_pp\\";
 			break;
-		case 3:
+		case 2:
 			installSource = "release_d\\";
 			break;
-		case 4:
+		case 3:
 			installSource = "debug\\";
-			break;
-		case 5:
-			installSource = "release_pb\\";
 			break;
 		default:
 			std::cout << "Incorrect parameter; exiting.\n";
