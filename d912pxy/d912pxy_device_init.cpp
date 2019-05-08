@@ -282,14 +282,15 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 }
 
 ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
-{	
-	d912pxy_helper::d3d12_EnableDebugLayer();
-
+{
 	ComPtr<IDXGIFactory4> dxgiFactory;
 	UINT createFactoryFlags = 0;
-#ifdef _DEBUG
-	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#endif
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_DX_DBG_RUNTIME))
+	{
+		d912pxy_helper::d3d12_EnableDebugLayer();
+		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+	}
 
 	LOG_ERR_THROW2(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)), "DXGI factory @ GetAdapter");
 

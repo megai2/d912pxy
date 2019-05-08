@@ -46,6 +46,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_LOG_P7CONFIG,
 	PXY_CFG_UPLOAD_TEX_ASYNC,	
 	PXY_CFG_MISC_GPU_TIMEOUT,
+	PXY_CFG_DX_DBG_RUNTIME,
 	PXY_CFG_QUERY_OCCLUSION,
 	PXY_CFG_CNT
 } d912pxy_config_value;
@@ -93,6 +94,7 @@ private:
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG
 		{L"upload",L"tex_async",L"0"},//PXY_CFG_UPLOAD_TEX_ASYNC
 		{L"misc",L"gpu_timeout",L"5000"},//PXY_CFG_MISC_GPU_TIMEOUT
+		{L"misc",L"dx_debug",L"0"},//PXY_CFG_DX_DBG_RUNTIME
 		{L"query",L"occlusion",L"1"}//PXY_CFG_QUERY_OCCLUSION
 	};
 };
