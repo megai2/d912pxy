@@ -45,20 +45,44 @@ HRESULT WINAPI d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pT
 
 	d912pxy_s(textureState)->SetTexture(Stage, (UINT32)srvId);
 
-#ifdef TRACK_SHADER_BUGS_PROFILE
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK; 
+}
+
+HRESULT WINAPI d912pxy_device::SetTexture_PS(IDirect3DDevice9* self, DWORD Stage, IDirect3DBaseTexture9* pTexture)
+{
+	d912pxy_device* _self = (d912pxy_device*)self;
+
+	API_OVERHEAD_TRACK_START(0)
+
+	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
+
+	UINT64 srvId = 0;//megai2: make this to avoid memory reading. but we must be assured that mNullTextureSRV is equal to this constant!
+
+	if (pTexture)
+	{
+		srvId = *(UINT64*)((intptr_t)pTexture - 0x8);//megai2: HOT
+		if (srvId & 0x100000000)
+		{
+			srvId = pTexture->GetPriority();
+		}
+	}
+
+	d912pxy_s(textureState)->SetTexture(Stage, (UINT32)srvId);
+
 	if (pTexture)
 	{
 		d912pxy_basetexture* btex = dynamic_cast<d912pxy_basetexture*>(pTexture);
 
-		stageFormatsTrack[Stage] = btex->GetBaseSurface()->GetDX9DescAtLevel(0).Format;
+		_self->stageFormatsTrack[Stage] = btex->GetBaseSurface()->GetDX9DescAtLevel(0).Format;
 	}
 	else
-		stageFormatsTrack[Stage] = D3DFMT_UNKNOWN;
-#endif
+		_self->stageFormatsTrack[Stage] = D3DFMT_UNKNOWN;
 
 	API_OVERHEAD_TRACK_END(0)
 
-	return D3D_OK; 
+	return D3D_OK;
 }
 
 HRESULT WINAPI d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)

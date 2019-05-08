@@ -29,21 +29,13 @@ d912pxy_device* d912translator;
 IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* obj)
 {
 	
-#ifndef PERFORMANCE_GRAPH_WRITE_DX9
-	if (dev->GetOrigD3D9Call()->DeviceType != D3DDEVTYPE_HAL)
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_MISC_USE_DX9))
+	{
+		dev->InitPerfGraph();
 		return dev;
-#else 
-	if (dev->GetOrigD3D9Call()->DeviceType != D3DDEVTYPE_HAL)
-		return dev;
-	else {
-		if (!d912pxy_helper::IsFileExist("performance_graph_dx9.png"))
-		{
-			dev->InitPerfGraph();
-			return dev;
-		}
-	}
-#endif
-	
+	} else 
+		if (dev->GetOrigD3D9Call()->DeviceType != D3DDEVTYPE_HAL)
+			return dev;		
 		
 	d912translator = new d912pxy_device(dev, obj);
 	return (IDirect3DDevice9*)d912translator;

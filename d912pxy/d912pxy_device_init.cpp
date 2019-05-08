@@ -174,6 +174,17 @@ void d912pxy_device::InitComPatches()
 
 		queryObj->Release();
 	}
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x41, &d912pxy_device::SetTexture_PS);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_PS);
+	}
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x11, &d912pxy_device::Present_PG);
+	}
 }
 
 void d912pxy_device::InitNullSRV()
@@ -240,9 +251,8 @@ void d912pxy_device::PrintInfoBanner()
 	d912pxy_helper::InstallVehHandler();
 
 
-#ifdef TRACK_SHADER_BUGS_PROFILE
-	LOG_INFO_DTDM("Running ps build, expect performance drops");
-#endif
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+		LOG_INFO_DTDM("Running ps build, expect performance drops");
 
 	UINT64 memKb = 0;
 
