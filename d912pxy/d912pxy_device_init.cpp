@@ -166,6 +166,14 @@ void d912pxy_device::InitComPatches()
 		d912pxy_com_set_method((IDirect3DPixelShader9*)psPatch, 2, &d912pxy_pshader::ReleaseWithPairRemoval);
 		psPatch->Release();
 	}
+
+	if (!d912pxy_s(config)->GetValueUI64(PXY_CFG_QUERY_OCCLUSION))
+	{
+		d912pxy_query* queryObj = new d912pxy_query(this, D3DQUERYTYPE_OCCLUSION);
+		d912pxy_com_set_method((IDirect3DQuery9*)queryObj, 7, &d912pxy_query::GetDataZeroOverride);
+
+		queryObj->Release();
+	}
 }
 
 void d912pxy_device::InitNullSRV()
@@ -274,7 +282,7 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 }
 
 ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
-{
+{	
 	d912pxy_helper::d3d12_EnableDebugLayer();
 
 	ComPtr<IDXGIFactory4> dxgiFactory;
