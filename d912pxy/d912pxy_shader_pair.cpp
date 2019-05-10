@@ -30,9 +30,7 @@ d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d
 
 	UINT32 msz = sizeof(d912pxy_pso_cache_item*)*maxPsoId;
 
-	//psoItems = (d912pxy_pso_cache_item**)malloc(msz);
 	PXY_MALLOC(psoItems, msz);
-
 	ZeroMemory(psoItems, msz);
 
 	node = nodeId;
@@ -70,7 +68,6 @@ d912pxy_shader_pair::~d912pxy_shader_pair()
 		}
 	}
 
-	//free(psoItems);
 	PXY_FREE(psoItems);
 }
 

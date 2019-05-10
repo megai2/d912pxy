@@ -441,7 +441,6 @@ void d912pxy_hlsl_generator::Process()
 		{
 			fwrite(lines[i], 1, strlen(lines[i]), of);
 			fwrite(newLine, 1, 2, of);
-			//free(lines[i]);
 			PXY_FREE(lines[i]);
 		}
 	}
@@ -766,7 +765,6 @@ void d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)
 	char tb[d912pxy_hlsl_generator_max_line_length];
 
 	PXY_MALLOC(lines[procOffsetPredef], d912pxy_hlsl_generator_max_line_length);
-	//lines[procOffsetPredef] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(tb, fmt, args);
@@ -808,11 +806,9 @@ void d912pxy_hlsl_generator::WriteHeadILine(UINT prio, const char * fmt, ...)
 	}
 
 	if (lines[idx]) {
-		//free(lines[idx]);
 		PXY_FREE(lines[idx]);
 	}
 	PXY_MALLOC(lines[idx], d912pxy_hlsl_generator_max_line_length);
-	//lines[idx] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(lines[idx], fmt, args);
@@ -834,7 +830,6 @@ void d912pxy_hlsl_generator::WriteHeadOLine(UINT prio, const char * fmt, ...)
 	}
 
 	PXY_MALLOC(lines[idx], d912pxy_hlsl_generator_max_line_length);
-	//lines[idx] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(lines[idx], fmt, args);
@@ -1227,7 +1222,6 @@ void d912pxy_hlsl_generator::LoadBugDefs()
 			}
 		}
 
-		//free(data);
 		PXY_FREE(data);
 	}
 }

@@ -30,7 +30,6 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, co
 	
 	mUID = d912pxy_s(sdb)->GetUID((DWORD*)fun, &oLen);
 
-	//oCode = (DWORD*)malloc(oLen*4);
 	PXY_MALLOC(oCode, oLen * 4);
 	memcpy(oCode, fun, oLen * 4);
 
@@ -64,11 +63,9 @@ d912pxy_shader::~d912pxy_shader()
 	delete pairs;
 
 	if (oCode) {
-		//free(oCode);
 		PXY_FREE(oCode);
 	}
 	if ((!bytecode.blob) && (bytecode.code)) {
-		//free(bytecode.code);
 		PXY_FREE(bytecode.code);
 	}
 }

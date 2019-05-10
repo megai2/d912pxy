@@ -203,5 +203,4 @@ void d912pxy_batch::InitCopyCS()
 	//cleanup
 	if (!CScode.blob)
 		PXY_FREE(CScode.code);
-		//free(CScode.code);
 }

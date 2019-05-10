@@ -53,7 +53,6 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 	ulObj = NULL;
 
-	//data = malloc(Length);
 	PXY_MALLOC(data, Length);
 
 	dx9desc.FVF = 0;
@@ -75,7 +74,6 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 d912pxy_vstream::~d912pxy_vstream()
 {
 	if (data) {
-		//free(data);
 		PXY_FREE(data);
 	}
 	
@@ -205,7 +203,6 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 		if (!threadedCtor)
 			ConstructResource();
 
-		//data = malloc(dx9desc.Size);	
 		PXY_MALLOC(data, dx9desc.Size);
 	}
 	else {
@@ -215,8 +212,6 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 			m_res = NULL;
 		}
 
-		//free(data);
-		//data = NULL;
 		PXY_FREE(data);
 	}
 

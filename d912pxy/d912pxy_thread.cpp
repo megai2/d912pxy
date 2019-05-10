@@ -76,7 +76,6 @@ d912pxy_thread::d912pxy_thread(const char* threadName, UINT suspend)
 
 d912pxy_thread::~d912pxy_thread()
 {
-	//free(name);
 	PXY_FREE(name);
 }
 

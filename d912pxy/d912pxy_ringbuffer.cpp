@@ -29,7 +29,6 @@ d912pxy_ringbuffer<ElementType>::d912pxy_ringbuffer(UINT iMaxElements, UINT iGro
 {
 	UINT memSize = sizeof(ElementType)*iMaxElements;
 
-	//bufferData = (intptr_t)malloc(memSize); 
 	PXY_MALLOC(bufferData, memSize);
 
 	maxElements = iMaxElements;
@@ -43,9 +42,7 @@ d912pxy_ringbuffer<ElementType>::d912pxy_ringbuffer(UINT iMaxElements, UINT iGro
 template<class ElementType>
 d912pxy_ringbuffer<ElementType>::~d912pxy_ringbuffer()
 {
-	//free((void*)bufferData);
 	PXY_FREE(bufferData);
-	// Alrai: watch this one.
 
 }
 

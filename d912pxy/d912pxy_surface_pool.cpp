@@ -31,7 +31,6 @@ d912pxy_surface_pool::d912pxy_surface_pool(d912pxy_device* dev) : d912pxy_pool<d
 
 	table = new d912pxy_memtree2(4, 4096, 2);
 
-	//this->rwMutex = (d912pxy_thread_lock*)malloc(sizeof(d912pxy_thread_lock)*1);
 	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1);
 
 	this->rwMutex[0].Init();
@@ -63,7 +62,6 @@ d912pxy_surface_pool::~d912pxy_surface_pool()
 
 	delete table;
 
-	//free(this->rwMutex);
 	PXY_FREE(this->rwMutex);
 }
 
