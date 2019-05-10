@@ -203,5 +203,6 @@ private:
 	UINT64 regDefined[(D3DSPR_PREDICATE + 1) * 32];
 	
 	static d912pxy_hlsl_generator_sio_handler SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt];	
+	d912pxy_mem_mgr memMgr;
 };
 

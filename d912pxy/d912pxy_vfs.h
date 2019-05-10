@@ -87,6 +87,7 @@ private:
 
 	d912pxy_memtree2* m_vfsFileOffsets[PXY_VFS_MAX_BID];
 	UINT64 m_vfsLastFileOffset[PXY_VFS_MAX_BID];
+	d912pxy_mem_mgr memMgr;
 
 };
 

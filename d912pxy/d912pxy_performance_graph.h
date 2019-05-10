@@ -52,5 +52,6 @@ private:
 	UINT32 dataAcm[PXY_PERFGRPH_BATCH_PTS* PXY_PERFGRPH_FRAMETIME_PTS];
 
 	UINT8* imgData;
+	//d912pxy_mem_mgr memMgr;
 };
 

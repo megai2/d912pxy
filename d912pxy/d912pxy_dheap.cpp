@@ -233,7 +233,9 @@ UINT d912pxy_dheap::CreateSRV_at(ID3D12Resource* resource, D3D12_SHADER_RESOURCE
 
 d912pxy_dheap_slot_stack::d912pxy_dheap_slot_stack(UINT32 size)
 {
-	data = (d912pxy_dheap_slot_type*)malloc(size * sizeof(d912pxy_dheap_slot_type));
+
+	if (!memMgr.pxy_malloc_retry((void**)&data, (size * sizeof(d912pxy_dheap_slot_type)), PXY_MEM_MGR_TRIES, "d912pxy_dheap")) return;
+	//data = (d912pxy_dheap_slot_type*)malloc(size * sizeof(d912pxy_dheap_slot_type));
 	top = 0;
 }
 

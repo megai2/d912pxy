@@ -103,5 +103,6 @@ private:
 	LONG lockDepth;	
 
 	d912pxy_thread_lock ctorSync;
+	d912pxy_mem_mgr memMgr;
 };
 

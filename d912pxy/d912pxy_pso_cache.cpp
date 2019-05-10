@@ -670,7 +670,9 @@ void d912pxy_pso_cache::LoadCachedData()
 		if (max && *max)
 		{
 			cacheIncID = *max;
-			psoKeyCache = (d912pxy_serialized_pso_key**)malloc(sizeof(d912pxy_serialized_pso_key*) * (*max + 2));
+
+			if (!memMgr.pxy_malloc_retry((void**)&psoKeyCache, sizeof(d912pxy_serialized_pso_key*) * (*max + 2), PXY_MEM_MGR_TRIES, "d912pxy_pso_cache")) return;
+			//psoKeyCache = (d912pxy_serialized_pso_key**)malloc(sizeof(d912pxy_serialized_pso_key*) * (*max + 2));
 
 			for (int i = 1; i != (*max+1); ++i)
 			{
@@ -760,12 +762,16 @@ void d912pxy_pso_cache::LoadCachedData()
 
 			for (int i = 1; i != (*max+1); ++i)
 			{
-				free(psoKeyCache[i]);
+				memMgr.pxy_free(psoKeyCache[i]);
+				//free(psoKeyCache[i]);
 			}
 
-			free(psoKeyCache);
+			
+			memMgr.pxy_free(psoKeyCache);
+			//free(psoKeyCache);
 
-			free(max);
+			memMgr.pxy_free(max);
+			//free(max);
 		}
 	}
 }
@@ -809,7 +815,9 @@ d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_tri
 	//m_status = 0;
 	retPtr = NULL;
 	obj = nullptr;
-	desc = (d912pxy_trimmed_dx12_pso*)malloc(sizeof(d912pxy_trimmed_dx12_pso));
+
+	if (!memMgr.pxy_malloc_retry((void**)&desc, sizeof(d912pxy_trimmed_dx12_pso), PXY_MEM_MGR_TRIES, "d912pxy_pso_cache")) return;
+	//desc = (d912pxy_trimmed_dx12_pso*)malloc(sizeof(d912pxy_trimmed_dx12_pso));
 	*desc = *sDsc;
 
 	desc->VS->ThreadRef(1);
@@ -834,7 +842,8 @@ void d912pxy_pso_cache_item::Compile()
 		psObj->ThreadRef(-1);
 		vdclObj->ThreadRef(-1);
 
-		free(desc);
+		memMgr.pxy_free(desc);
+		//free(desc);
 
 		//m_status = 2;
 
@@ -901,7 +910,8 @@ void d912pxy_pso_cache_item::Compile()
 			psObj->ThreadRef(-1);
 			vdclObj->ThreadRef(-1);
 
-			free(desc);
+			memMgr.pxy_free(desc);
+			//free(desc);
 
 			//m_status = 2;
 
@@ -916,5 +926,6 @@ void d912pxy_pso_cache_item::Compile()
 	psObj->ThreadRef(-1);
 	vdclObj->ThreadRef(-1);
 
-	free(desc);
+	memMgr.pxy_free(desc);
+	//free(desc);
 }

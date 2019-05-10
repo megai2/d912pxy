@@ -92,5 +92,7 @@ private:
 		{L"upload",L"tex_async",L"0"},//PXY_CFG_UPLOAD_TEX_ASYNC
 		{L"misc",L"gpu_timeout",L"5000"}//PXY_CFG_MISC_GPU_TIMEOUT
 	};
+
+	d912pxy_mem_mgr memMgr;
 };
 

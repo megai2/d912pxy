@@ -32,7 +32,8 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 	bitCnt = iBitLimit - iBitIgnore;
 	instantUnload = 0;
 
-	limits = (UINT16*)malloc(sizeof(UINT16)*bitCnt);
+	if (!memMgr.pxy_malloc_retry((void**)& limits, sizeof(UINT16)*bitCnt, PXY_MEM_MGR_TRIES, "d912pxy_pool_memcat")) return;
+	//limits = (UINT16*)malloc(sizeof(UINT16)*bitCnt);
 	ZeroMemory(limits, sizeof(UINT16)*bitCnt);
 
 	UINT performaWarmUp = 0;
@@ -61,8 +62,14 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 		}		
 	}
 
-	memTable = (d912pxy_ringbuffer<ElementType>**)malloc(sizeof(void*)*bitCnt);
-	this->rwMutex = (d912pxy_thread_lock*)malloc(sizeof(d912pxy_thread_lock)*bitCnt);
+
+	//Alrai: working.
+	if (!memMgr.pxy_malloc_retry((void**)&memTable, (sizeof(void*)*bitCnt), PXY_MEM_MGR_TRIES, "d912pxy_pool_memcat")) return;
+	//memTable = (d912pxy_ringbuffer<ElementType>**)malloc(sizeof(void*)*bitCnt);
+
+	//Alrai: working
+	if (!memMgr.pxy_malloc_retry((void**)&this->rwMutex, (sizeof(d912pxy_thread_lock)*bitCnt), PXY_MEM_MGR_TRIES, "d912pxy_pool_memcat")) return;
+	//this->rwMutex = (d912pxy_thread_lock*)malloc(sizeof(d912pxy_thread_lock)*bitCnt);
 
 	for (int i = 0; i != bitCnt; ++i)
 	{

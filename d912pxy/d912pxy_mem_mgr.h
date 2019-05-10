@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2019 AlraiLux
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -21,43 +21,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+Alrai: Let's do this.
 */
+
 #pragma once
-#include "stdafx.h"
+#include"stdafx.h"
+//#include "d912pxy_noncom.h"
 
-#define PXY_INNER_MAX_SHADER_LISTING_LEN 1024 * 1024
 
-class d912pxy_shader : public d912pxy_comhandler
-{
+class d912pxy_mem_mgr : public d912pxy_noncom {
+
 public:
-	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, const DWORD* fun);
-	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, d912pxy_shader_uid uid);
-	~d912pxy_shader();
 
-	/*** IDirect3DVertexShader9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(GetFunction)(THIS_ void* arg, UINT* pSizeOfData);
+	d912pxy_mem_mgr();
+	~d912pxy_mem_mgr();
 
-	D912PXY_METHOD_(ULONG, ReleaseWithPairRemoval)(THIS);	
-	
-	D3D12_SHADER_BYTECODE* GetCode();
-
-	d912pxy_shader_uid GetID();
-
-	void NotePairUsage(d912pxy_shader_pair_hash_type pairHash);
-	
-	UINT FinalReleaseCB();
-
-	void RemovePairs();
+	bool pxy_realloc(void** cp, size_t sz);  // Returns success or fail. Passed pointer shouldn't get changed if realloc failed.
+	bool pxy_malloc(void** cp, size_t sz); // Returns success or fail. Will only attempt once.
+	bool pxy_malloc(void** cp, size_t sz, const char* source); // For debugging.
+	bool pxy_malloc_retry(void** cp, size_t sz, UINT tries); // Returns success or fail. Will attempt until max number of retries then fail.
+	bool pxy_malloc_retry(void** cp, size_t sz, UINT tries, const char* source); // For debugging.
+	bool pxy_realloc_retry(void** cp, size_t sz, UINT tries); // Returns success or fail. Will attempt until max number of retries then fail.
+	void pxy_free(void* cp); // Frees and NULLs the given pointer.
 
 private:
-	d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>* pairs;
 
-	d912pxy_shader_code bytecode;
-	d912pxy_shader_uid mUID;
+	void* inRealloc(void* block, size_t sz);
+	void* inMalloc(size_t sz);
+	void inFree(void* cp);
+	
 
-	UINT oLen;	
-	DWORD* oCode;
-	d912pxy_mem_mgr memMgr;
 };
-

@@ -72,6 +72,7 @@ private:
 	ComPtr<ID3D12PipelineState> obj;
 
 	d912pxy_trimmed_dx12_pso* desc;
+	d912pxy_mem_mgr memMgr;
 	//UINT m_status;
 };
 
@@ -164,5 +165,6 @@ private:
 	d912pxy_thread_lock compileQueLock;
 
 	void CheckExternalLock();
+	d912pxy_mem_mgr memMgr;
 };
 

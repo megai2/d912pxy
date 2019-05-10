@@ -36,6 +36,7 @@ d912pxy_performance_graph::d912pxy_performance_graph(UINT isDX9)
 
 d912pxy_performance_graph::~d912pxy_performance_graph()
 {
+	//if (!memMgr.pxy_malloc_retry((void**)&imgData, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 3, PXY_MEM_MGR_TRIES)) return; // Leaving this alone for now.
 	imgData = (UINT8*)malloc(PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 3);
 
 	for (int j = 0; j != PXY_PERFGRPH_BATCH_PTS; ++j)

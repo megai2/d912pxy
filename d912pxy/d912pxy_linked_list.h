@@ -61,5 +61,6 @@ private:
 
 	d912pxy_linked_list_element* iter;
 	d912pxy_linked_list_element* iterPrev;
+	d912pxy_mem_mgr memMgr;
 };
 

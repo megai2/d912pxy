@@ -50,8 +50,11 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 
 	if (Format == D3DFMT_NULL)//FOURCC NULL DX9 no rendertarget trick
 	{
-		subresFootprints = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT*)malloc(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1);
-		subresSizes = (size_t*)malloc(sizeof(size_t) * 1);
+		if (!memMgr.pxy_malloc_retry((void**)&subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1, PXY_MEM_MGR_TRIES, "d912pxy_surface::d912pxy_surface().subresFootprints")) return;
+		//subresFootprints = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT*)malloc(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1);
+
+		if (!memMgr.pxy_malloc_retry((void**)&subresSizes, sizeof(size_t) * 1, PXY_MEM_MGR_TRIES, "d912pxy_surface::d912pxy_sufrace().subresSizes")) return;
+		//subresSizes = (size_t*)malloc(sizeof(size_t) * 1);
 
 		LOG_DBG_DTDM("w %u h %u u %u FCC NULL", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
 		return;
@@ -120,9 +123,14 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 
 d912pxy_surface::~d912pxy_surface()
 {
-	free(subresFootprints);
-	free(subresSizes);
-	free(ul);
+	memMgr.pxy_free(subresFootprints);
+	//free(subresFootprints);
+
+	memMgr.pxy_free(subresSizes);
+	//free(subresSizes);
+
+	memMgr.pxy_free(ul);
+	//free(ul);
 
 	if (rtdsHPtr.ptr == 0)
 	{
@@ -488,11 +496,17 @@ void d912pxy_surface::UpdateDescCache()
 	subresCountCache = descCache.DepthOrArraySize * descCache.MipLevels;
 
 	UINT32 ulArrSize = sizeof(d912pxy_upload_item*) * subresCountCache;
-	ul = (d912pxy_upload_item**)malloc(ulArrSize);
+
+	if (!memMgr.pxy_malloc_retry((void**)&ul, ulArrSize, PXY_MEM_MGR_TRIES, "d912pxy_surface::UpdateDescCache().ul")) return;
+	//ul = (d912pxy_upload_item**)malloc(ulArrSize);
+
 	ZeroMemory(ul, ulArrSize);
 
-	subresFootprints = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT*)malloc(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache);
-	subresSizes = (size_t*)malloc(sizeof(size_t)*subresCountCache);
+	if (!memMgr.pxy_malloc_retry((void**)&subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache, PXY_MEM_MGR_TRIES, "d912pxy_surface::UpdateDescCache().subresFootprints")) return;
+	//subresFootprints = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT*)malloc(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache);
+
+	if (!memMgr.pxy_malloc_retry((void**)&subresSizes, sizeof(size_t)*subresCountCache, PXY_MEM_MGR_TRIES, "d912pxy_surface::UpdateDescCache().subresSizes")) return;
+	//subresSizes = (size_t*)malloc(sizeof(size_t)*subresCountCache);
 
 	d912pxy_s(DXDev)->GetCopyableFootprints(
 		&descCache,
@@ -580,7 +594,8 @@ UINT32 d912pxy_surface::AllocateSRV()
 
 void d912pxy_surface::AllocateLayers()
 {
-	layers = (d912pxy_surface_layer**)malloc(sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels);
+	if (!memMgr.pxy_malloc_retry((void**)&layers, (sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels), PXY_MEM_MGR_TRIES, "d912pxy_surface::AllocateLayers().layers")) return;
+	//layers = (d912pxy_surface_layer**)malloc(sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels);
 
 	for (int i = 0; i != descCache.DepthOrArraySize; ++i)
 	{
@@ -611,7 +626,8 @@ void d912pxy_surface::FreeLayers()
 		}
 	}
 
-	free(layers);
+	memMgr.pxy_free(layers);
+	//free(layers);
 }
 
 void d912pxy_surface::FreeObjAndSlot()

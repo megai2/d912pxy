@@ -35,7 +35,7 @@ d912pxy_memtree::d912pxy_memtree(UINT nMemSz, UINT iMaxNodes, UINT iGrow, const 
 #ifdef CAPTURE_JMP_MAP
 	if (!iJmpMap)
 	{
-		memDiffData = (UINT8*)malloc(nMemSz);
+		memDiffData = (UINT8*)malloc(nMemSz);  // Alrai: Going to leave these mallocs for now.
 		ZeroMemory(memDiffData, nMemSz);
 		memDiffCnt = (UINT64*)malloc(nMemSz * 8);
 		ZeroMemory(memDiffCnt, nMemSz * 8);

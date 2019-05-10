@@ -113,6 +113,8 @@ SOFTWARE.
 
 #define PXY_INNER_REPLAY_THREADS_MAX 4
 
+#define PXY_MEM_MGR_TRIES 100
+
 //shader profile defs =======================
 
 #define PXY_INNER_SHDR_BUG_PCF_SAMPLER 0
@@ -234,6 +236,7 @@ class d912pxy_vfs;
 class d912pxy_metrics;
 class d912pxy_config;
 class d912pxy_log;
+class d912pxy_mem_mgr;
 struct d912pxy_trimmed_dx12_pso;
 
 
@@ -295,6 +298,7 @@ public:
 	static d912pxy_metrics* metrics;
 	static d912pxy_config* config;
 	static d912pxy_log* log;
+	//static d912pxy_mem_mgr* memMgr; // DELETE_ME
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a

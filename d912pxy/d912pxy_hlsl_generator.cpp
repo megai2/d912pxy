@@ -764,7 +764,8 @@ void d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)
 
 	char tb[d912pxy_hlsl_generator_max_line_length];
 
-	lines[procOffsetPredef] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
+	if (!memMgr.pxy_malloc_retry((void**)&lines[procOffsetPredef], d912pxy_hlsl_generator_max_line_length, PXY_MEM_MGR_TRIES, "d912pxy_hlsl_generator")) return;
+	//lines[procOffsetPredef] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(tb, fmt, args);
@@ -808,7 +809,9 @@ void d912pxy_hlsl_generator::WriteHeadILine(UINT prio, const char * fmt, ...)
 	if (lines[idx])
 		free(lines[idx]);
 
-	lines[idx] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
+
+	if (!memMgr.pxy_malloc_retry((void**)&lines[idx], d912pxy_hlsl_generator_max_line_length, PXY_MEM_MGR_TRIES, "d912pxy_hlsl_generator")) return;
+	//lines[idx] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(lines[idx], fmt, args);
@@ -829,7 +832,8 @@ void d912pxy_hlsl_generator::WriteHeadOLine(UINT prio, const char * fmt, ...)
 		idx += prio;
 	}
 
-	lines[idx] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
+	if (!memMgr.pxy_malloc_retry((void**)&lines[idx], d912pxy_hlsl_generator_max_line_length, PXY_MEM_MGR_TRIES, "d912pxy_hlsl_generator")) return;
+	//lines[idx] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(lines[idx], fmt, args);

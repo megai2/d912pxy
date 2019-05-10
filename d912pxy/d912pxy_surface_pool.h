@@ -48,5 +48,6 @@ private:
 	d912pxy_thread_lock mtMutex;
 
 	UINT64 config;
+	d912pxy_mem_mgr memMgr;
 };
 
