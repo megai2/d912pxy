@@ -75,7 +75,7 @@ bool d912pxy_mem_mgr::pxy_realloc(void** cp, size_t sz, const char* file, const 
 
 bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz, const char* file, const int line, const char* function, UINT i) { // Returns success or fail. cp will be set to new pointer if successful. Will only attempt once. Debugging.
 	if (*cp != NULL) { // Were we passed a non null pointer to malloc? Possible memory leak condition.
-		LOG_ERR_DTDM("A malloc was called with a possible valid pointer. Size requested: %I. %S %I %S", sz, file, line, function);
+		LOG_ERR_DTDM("A malloc was called with a possible valid pointer. Size requested: %u. %s %u %s", sz, file, line, function);
 		//pxy_free(*cp); // Let's free that current pointer to avoid a memory leak. // Nevermind, we can't assume just because it isn't null that we should free it... but we will log it.
 	}
 
