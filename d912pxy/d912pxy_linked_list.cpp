@@ -46,7 +46,6 @@ d912pxy_linked_list<ElementType>::~d912pxy_linked_list()
 	while (nodePool->HaveElements())
 	{
 		free(nodePool->GetElement());
-		nodePool->GetElement() = NULL;
 		//PXY_FREE(nodePool->GetElement());
 		nodePool->Next();
 		// Alrai: Watch this one.
