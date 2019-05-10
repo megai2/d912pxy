@@ -765,6 +765,7 @@ void d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)
 	char tb[d912pxy_hlsl_generator_max_line_length];
 
 	PXY_MALLOC(lines[procOffsetPredef], d912pxy_hlsl_generator_max_line_length);
+	//lines[procOffsetPredef] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(tb, fmt, args);
@@ -809,6 +810,7 @@ void d912pxy_hlsl_generator::WriteHeadILine(UINT prio, const char * fmt, ...)
 		free(lines[idx]);
 
 	PXY_MALLOC(lines[idx], d912pxy_hlsl_generator_max_line_length);
+	//lines[idx] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(lines[idx], fmt, args);
@@ -830,6 +832,7 @@ void d912pxy_hlsl_generator::WriteHeadOLine(UINT prio, const char * fmt, ...)
 	}
 
 	PXY_MALLOC(lines[idx], d912pxy_hlsl_generator_max_line_length);
+	//lines[idx] = (char*)malloc(d912pxy_hlsl_generator_max_line_length);
 
 	va_start(args, fmt);
 	vsprintf(lines[idx], fmt, args);

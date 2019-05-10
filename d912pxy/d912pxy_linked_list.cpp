@@ -135,7 +135,9 @@ d912pxy_linked_list_element * d912pxy_linked_list<ElementType>::PooledNode()
 		nodePool->Next();
 	}
 	else {
+
 		PXY_MALLOC(ret, sizeof(d912pxy_linked_list_element));
+		//ret = (d912pxy_linked_list_element*)malloc(sizeof(d912pxy_linked_list_element));
 	}
 
 	return ret;

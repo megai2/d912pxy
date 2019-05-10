@@ -144,7 +144,6 @@ void d912pxy_device::InitSingletons()
 	new d912pxy_vstream_pool(this);
 	new d912pxy_surface_pool(this);
 	new d912pxy_cleanup_thread(this);
-
 }
 
 void d912pxy_device::InitComPatches()

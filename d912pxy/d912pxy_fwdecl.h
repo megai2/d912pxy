@@ -109,13 +109,9 @@ SOFTWARE.
 
 #define PXY_MEM_MGR_TRIES 100
 
-
 #define PXY_MALLOC(pointer, size) (d912pxy_s(memMgr)->pxy_malloc_retry((void**)&pointer, size, PXY_MEM_MGR_TRIES, __FILE__, __LINE__, __FUNCTION__))
-#define PXY_FREE(pointer) (d912pxy_s(memMgr)->pxy_free((void**)&pointer))
 #define PXY_REALLOC(pointer, size) (d912pxy_s(memMgr)->pxy_realloc_retry((void**)&pointer, size, PXY_MEM_MGR_TRIES, __FILE__, __LINE__, __FUNCTION__))
-
-//bool pxy_malloc_retry(void** cp, size_t sz, UINT tries, const char* source); // For debugging.
-//#define PXY_MALLOC(a,b) d912pxy_s(mem_mgr)->pxy_malloc_dbg(&a, b, __FILE__, __FUNCTION__, __LINE__)
+#define PXY_FREE(pointer) (d912pxy_s(memMgr)->pxy_free((void**)&pointer))
 
 
 //shader profile defs =======================
