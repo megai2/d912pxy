@@ -30,8 +30,9 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, co
 	
 	mUID = d912pxy_s(sdb)->GetUID((DWORD*)fun, &oLen);
 
-	if (!memMgr.pxy_malloc_retry((void**)&oCode, oLen * 4, PXY_MEM_MGR_TRIES, "d912pxy_shader")) return;
+	//if (!memMgr.pxy_malloc_retry((void**)&oCode, oLen * 4, PXY_MEM_MGR_TRIES, "d912pxy_shader")) return;
 	//oCode = (DWORD*)malloc(oLen*4);
+	PXY_MALLOC(oCode, oLen * 4);
 	memcpy(oCode, fun, oLen * 4);
 
 	bytecode.code = 0;

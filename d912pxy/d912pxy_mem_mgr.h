@@ -25,8 +25,8 @@ Alrai: Let's do this.
 */
 
 #pragma once
-#include"stdafx.h"
-//#include "d912pxy_noncom.h"
+//#include"stdafx.h"
+#include "d912pxy_noncom.h"
 
 
 class d912pxy_mem_mgr : public d912pxy_noncom {
@@ -36,19 +36,18 @@ public:
 	d912pxy_mem_mgr();
 	~d912pxy_mem_mgr();
 
-	bool pxy_realloc(void** cp, size_t sz);  // Returns success or fail. Passed pointer shouldn't get changed if realloc failed.
-	bool pxy_malloc(void** cp, size_t sz); // Returns success or fail. Will only attempt once.
-	bool pxy_malloc(void** cp, size_t sz, const char* source); // For debugging.
-	bool pxy_malloc_retry(void** cp, size_t sz, UINT tries); // Returns success or fail. Will attempt until max number of retries then fail.
-	bool pxy_malloc_retry(void** cp, size_t sz, UINT tries, const char* source); // For debugging.
-	bool pxy_realloc_retry(void** cp, size_t sz, UINT tries); // Returns success or fail. Will attempt until max number of retries then fail.
-	void pxy_free(void** cp); // Frees and NULLs the given pointer.
+
+	bool pxy_malloc(void** cp, size_t sz, const char* file, const int line, const char* function, UINT i); // For debugging.	
+	bool pxy_realloc(void** cp, size_t sz, const char* file, const int line, const char* function, UINT i);  // Returns success or fail. Passed pointer shouldn't get changed if realloc failed.
+	void pxy_free(void** cp); // Frees and NULLs the given pointer.	
+
+	bool pxy_malloc_retry(void** cp, size_t sz, UINT tries, const char* file, const int line, const char* function); // Returns success or fail. Will attempt until max number of retries then fail.
+	bool pxy_realloc_retry(void** cp, size_t sz, UINT tries, const char* file, const int line, const char* function); // Returns success or fail. Will attempt until max number of retries then fail.
 
 private:
 
-	void* inRealloc(void* block, size_t sz);
 	void* inMalloc(size_t sz);
+	void* inRealloc(void* block, size_t sz);
 	void inFree(void* cp);
-	
 
 };

@@ -109,6 +109,6 @@ private:
 
 	UINT ulMarked;
 	d912pxy_upload_item** ul;
-	d912pxy_mem_mgr memMgr;
+
 };
 

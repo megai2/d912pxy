@@ -104,6 +104,5 @@ private:
 		{L"query",L"occlusion",L"1"}//PXY_CFG_QUERY_OCCLUSION
 	};
 
-	d912pxy_mem_mgr memMgr;
 };
 

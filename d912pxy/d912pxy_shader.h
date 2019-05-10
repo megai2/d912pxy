@@ -58,6 +58,6 @@ private:
 
 	UINT oLen;	
 	DWORD* oCode;
-	d912pxy_mem_mgr memMgr;
+
 };
 

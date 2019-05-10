@@ -44,7 +44,6 @@ private:
 	LONG top;
 
 	d912pxy_thread_lock lock;
-	d912pxy_mem_mgr memMgr;
 };
 
 #define PXY_DHEAP_STACK_FREE 0

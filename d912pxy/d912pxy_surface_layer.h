@@ -74,6 +74,6 @@ private:
 	UINT memPerPix;
 
 	UINT intRefc;
-	d912pxy_mem_mgr memMgr;
+
 };
 

@@ -71,9 +71,7 @@ d912pxy_config::d912pxy_config()
 
 
 	wchar_t* fileContent = NULL;
-	if (!memMgr.pxy_malloc_retry((void**)&fileContent, fsz, 10, "d912pxy_config")) return;
-
-	//wchar_t* fileContent = (wchar_t*)malloc(fsz);
+	PXY_MALLOC(fileContent, fsz);
 
 	fread(fileContent, 1, fsz, f);
 

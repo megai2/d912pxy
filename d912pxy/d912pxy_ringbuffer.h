@@ -56,6 +56,6 @@ private:
 	LONG writed;
 
 	d912pxy_thread_lock growthLock;
-	d912pxy_mem_mgr memMgr;
+
 };
 

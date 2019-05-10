@@ -34,10 +34,7 @@ d912pxy_memtree2::d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow) : d9
 
 	UINT32 memSz = maxNodes * sizeof(d912pxy_memtree2_node);
 
-
-	if (!memMgr.pxy_malloc_retry((void**)&nodePool, memSz, PXY_MEM_MGR_TRIES, "d912pxy_memtree2")) return; // Alrai: Cleaner way to handle a fail or should tries be set crazy big?
-	//nodePool = (d912pxy_memtree2_node*)malloc(memSz);
-
+	PXY_MALLOC(nodePool, memSz);
 
 	ZeroMemory(nodePool, memSz);
 	ZeroMemory(&base, sizeof(d912pxy_memtree2_node));
@@ -197,10 +194,7 @@ UINT64 d912pxy_memtree2::PointAtMem(void * mem, UINT32 dataMemSz2)
 					maxNodes *= grow;
 					UINT32 memSz = maxNodes * sizeof(d912pxy_memtree2_node);
 
-
-					if (!memMgr.pxy_realloc((void**)&nodePool, memSz)) return -1; 
-					//nodePool = (d912pxy_memtree2_node*)realloc(nodePool, memSz);
-
+					PXY_MALLOC(nodePool, memSz);
 					ZeroMemory(&nodePool[nodePoolIdx], memSz / grow);
 				}
 				else {

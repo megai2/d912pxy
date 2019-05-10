@@ -30,8 +30,9 @@ d912pxy_ringbuffer<ElementType>::d912pxy_ringbuffer(UINT iMaxElements, UINT iGro
 	UINT memSize = sizeof(ElementType)*iMaxElements;
 
 
-	if (!memMgr.pxy_malloc_retry((void**)&bufferData, memSize, PXY_MEM_MGR_TRIES, "d912pxy_ringbuffer")) return;
+	//if (!memMgr.pxy_malloc_retry((void**)&bufferData, memSize, PXY_MEM_MGR_TRIES, "d912pxy_ringbuffer")) return;
 	//bufferData = (intptr_t)malloc(memSize); 
+	PXY_MALLOC(bufferData, memSize);
 
 	maxElements = iMaxElements;
 	grow = iGrow;
@@ -66,8 +67,9 @@ void d912pxy_ringbuffer<ElementType>::WriteElement(ElementType ele)
 			writePoint -= bufferData;
 			readPoint -= bufferData;
 
-			if (!memMgr.pxy_realloc((void**)&bufferData, addMemSize + oldMemSize)) return;
+			//if (!memMgr.pxy_realloc((void**)&bufferData, addMemSize + oldMemSize)) return;
 			//bufferData = (intptr_t)realloc((void*)bufferData, addMemSize + oldMemSize);
+			PXY_REALLOC(bufferData, addMemSize + oldMemSize);
 
 			writePoint += bufferData;
 			readPoint += bufferData;

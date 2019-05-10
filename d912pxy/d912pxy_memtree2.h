@@ -79,7 +79,6 @@ private:
 	UINT32 grow;
 
 	d912pxy_thread_lock lock;
-	d912pxy_mem_mgr memMgr;
 
 #ifdef CAPTURE_JMP_MAP
 	UINT8* memDiffData;

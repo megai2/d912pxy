@@ -666,8 +666,9 @@ void d912pxy_pso_cache::LoadCachedData()
 		{
 			cacheIncID = *max;
 
-			if (!memMgr.pxy_malloc_retry((void**)&psoKeyCache, sizeof(d912pxy_serialized_pso_key*) * (*max + 2), PXY_MEM_MGR_TRIES, "d912pxy_pso_cache")) return;
+			//if (!memMgr.pxy_malloc_retry((void**)&psoKeyCache, sizeof(d912pxy_serialized_pso_key*) * (*max + 2), PXY_MEM_MGR_TRIES, "d912pxy_pso_cache")) return;
 			//psoKeyCache = (d912pxy_serialized_pso_key**)malloc(sizeof(d912pxy_serialized_pso_key*) * (*max + 2));
+			PXY_MALLOC(psoKeyCache, sizeof(d912pxy_serialized_pso_key*) * (*max + 2));
 
 			for (int i = 1; i != (*max+1); ++i)
 			{
@@ -757,16 +758,19 @@ void d912pxy_pso_cache::LoadCachedData()
 
 			for (int i = 1; i != (*max+1); ++i)
 			{
-				memMgr.pxy_free((void**)&psoKeyCache[i]);
+				//memMgr.pxy_free((void**)&psoKeyCache[i]);
 				//free(psoKeyCache[i]);
+				PXY_FREE(psoKeyCache[i]);
 			}
 
 			
-			memMgr.pxy_free((void**)&psoKeyCache);
+			//memMgr.pxy_free((void**)&psoKeyCache);
 			//free(psoKeyCache);
+			PXY_FREE(psoKeyCache);
 
-			memMgr.pxy_free((void**)&max);
+			//memMgr.pxy_free((void**)&max);
 			//free(max);
+			PXY_FREE(max);
 		}
 	}
 }
@@ -811,8 +815,10 @@ d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_tri
 	retPtr = NULL;
 	obj = nullptr;
 
-	if (!memMgr.pxy_malloc_retry((void**)&desc, sizeof(d912pxy_trimmed_dx12_pso), PXY_MEM_MGR_TRIES, "d912pxy_pso_cache")) return;
+	//if (!memMgr.pxy_malloc_retry((void**)&desc, sizeof(d912pxy_trimmed_dx12_pso), PXY_MEM_MGR_TRIES, "d912pxy_pso_cache")) return;
 	//desc = (d912pxy_trimmed_dx12_pso*)malloc(sizeof(d912pxy_trimmed_dx12_pso));
+	PXY_MALLOC(desc, sizeof(d912pxy_trimmed_dx12_pso));
+
 	*desc = *sDsc;
 
 	desc->VS->ThreadRef(1);
@@ -837,8 +843,9 @@ void d912pxy_pso_cache_item::Compile()
 		psObj->ThreadRef(-1);
 		vdclObj->ThreadRef(-1);
 
-		memMgr.pxy_free((void**)&desc);
+		//memMgr.pxy_free((void**)&desc);
 		//free(desc);
+		PXY_FREE(desc);
 
 		//m_status = 2;
 
@@ -905,8 +912,9 @@ void d912pxy_pso_cache_item::Compile()
 			psObj->ThreadRef(-1);
 			vdclObj->ThreadRef(-1);
 
-			memMgr.pxy_free((void**)&desc);
+			//memMgr.pxy_free((void**)&desc);
 			//free(desc);
+			PXY_FREE(desc);
 
 			//m_status = 2;
 
@@ -921,6 +929,7 @@ void d912pxy_pso_cache_item::Compile()
 	psObj->ThreadRef(-1);
 	vdclObj->ThreadRef(-1);
 
-	memMgr.pxy_free((void**)&desc);
+	//memMgr.pxy_free((void**)&desc);
 	//free(desc);
+	PXY_FREE(desc);
 }

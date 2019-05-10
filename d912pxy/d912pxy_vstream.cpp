@@ -53,8 +53,9 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 	ulObj = NULL;
 
-	if (!memMgr.pxy_malloc_retry((void**)&data, Length, PXY_MEM_MGR_TRIES, "d912pxy_vstream")) return;
+	//if (!memMgr.pxy_malloc_retry((void**)&data, Length, PXY_MEM_MGR_TRIES, "d912pxy_vstream")) return;
 	//data = malloc(Length);
+	PXY_MALLOC(data, Length);
 
 	dx9desc.FVF = 0;
 	dx9desc.Pool = D3DPOOL_DEFAULT;
@@ -202,8 +203,9 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 		if (!threadedCtor)
 			ConstructResource();
 
-		if(!memMgr.pxy_malloc_retry((void**)&data, dx9desc.Size, PXY_MEM_MGR_TRIES, "d912pxy_vstream")) return NULL;
-		//data = malloc(dx9desc.Size);		
+		//if(!memMgr.pxy_malloc_retry((void**)&data, dx9desc.Size, PXY_MEM_MGR_TRIES, "d912pxy_vstream")) return NULL;
+		//data = malloc(dx9desc.Size);	
+		PXY_MALLOC(data, dx9desc.Size);
 	}
 	else {
 		if (m_res)

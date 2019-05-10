@@ -163,8 +163,10 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 
 		if (m_vfsCacheSize[id])
 		{
-			if (!memMgr.pxy_malloc_retry((void**)&m_vfsCache[id], m_vfsCacheSize[id], PXY_MEM_MGR_TRIES, "d912pxy_vfs")) return NULL;
+			//if (!memMgr.pxy_malloc_retry((void**)&m_vfsCache[id], m_vfsCacheSize[id], PXY_MEM_MGR_TRIES, "d912pxy_vfs")) return NULL;
 			//m_vfsCache[id] = malloc(m_vfsCacheSize[id]);
+			PXY_MALLOC(m_vfsCache[id], m_vfsCacheSize[id]);
+
 
 			fseek(m_vfsBlocks[id], PXY_VFS_BID_TABLE_SIZE+PXY_VFS_BID_TABLE_START, SEEK_SET);
 
@@ -239,8 +241,9 @@ void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 
 
 		void* ret = NULL;
-		if (!memMgr.pxy_malloc_retry((void**)&ret, *sz, PXY_MEM_MGR_TRIES, "d912pxy_vfs")) return NULL;
+		//if (!memMgr.pxy_malloc_retry((void**)&ret, *sz, PXY_MEM_MGR_TRIES, "d912pxy_vfs")) return NULL;
 		//void* ret = malloc(*sz);
+		PXY_MALLOC(ret, *sz);
 
 		memcpy(ret, ((void*)((intptr_t)m_vfsCache[id] + offset + 4)), *sz);
 
@@ -253,8 +256,9 @@ void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 
 
 	void* ret = NULL;
-	if (!memMgr.pxy_malloc_retry((void**)&ret, *sz, PXY_MEM_MGR_TRIES, "d912pxy_vfs")) return NULL;
+	//if (!memMgr.pxy_malloc_retry((void**)&ret, *sz, PXY_MEM_MGR_TRIES, "d912pxy_vfs")) return NULL;
 	//void* ret = malloc(*sz);
+	PXY_MALLOC(ret, *sz);
 
 	fread(ret, 1, *sz, m_vfsBlocks[id]);
 

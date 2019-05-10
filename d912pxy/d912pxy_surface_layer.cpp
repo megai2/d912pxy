@@ -34,15 +34,17 @@ d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_surface * iBase, UINT32 iSu
 	width = iWidth;
 	memPerPix = imemPerPix;	
 
-	if (!memMgr.pxy_malloc_retry((void**)&surfMem, iBSize, PXY_MEM_MGR_TRIES, "d912pxy_surface_layer")) return;
+	//if (!memMgr.pxy_malloc_retry((void**)&surfMem, iBSize, PXY_MEM_MGR_TRIES, "d912pxy_surface_layer")) return;
 	//surfMem = malloc(iBSize);	
+	PXY_MALLOC(surfMem, iBSize);
 
 	intRefc = 0;
 }
 
 d912pxy_surface_layer::~d912pxy_surface_layer()
 {
-	free(surfMem);
+	PXY_FREE(surfMem);
+	//free(surfMem);
 }
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_surface_layer

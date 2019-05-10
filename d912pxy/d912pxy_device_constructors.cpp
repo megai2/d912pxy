@@ -32,15 +32,9 @@ HRESULT WINAPI d912pxy_device::CreateTexture(UINT Width, UINT Height, UINT Level
 
 	API_OVERHEAD_TRACK_START(0)
 
-
-	// Alrai: I know, this is a fucking train wreck.
-	d912pxy_mem_mgr memMgr;
 	void* extendedPlace = NULL;
-	if (!memMgr.pxy_malloc_retry((void**)&extendedPlace, sizeof(d912pxy_texture) + 8, PXY_MEM_MGR_TRIES, "d912pxy_device_constructors")) return E_OUTOFMEMORY;
+	PXY_MALLOC(extendedPlace, sizeof(d912pxy_texture) + 8);
 	extendedPlace = (void*)((intptr_t)extendedPlace + 8);
-
-
-	//void* extendedPlace = (void*)((intptr_t) malloc(sizeof(d912pxy_texture) + 8)	+ 8);
 		
 	*ppTexture = new (extendedPlace) d912pxy_texture(this, Width, Height, Levels, Usage, Format);
 
@@ -68,16 +62,9 @@ HRESULT WINAPI d912pxy_device::CreateCubeTexture(UINT EdgeLength, UINT Levels, D
 
 	API_OVERHEAD_TRACK_START(0)
 
-
-	// Alrai: I know, this is a fucking train wreck.
-	d912pxy_mem_mgr memMgr;
 	void* extendedPlace = NULL;
-	if (!memMgr.pxy_malloc_retry((void**)&extendedPlace, sizeof(d912pxy_ctexture) + 8, PXY_MEM_MGR_TRIES, "d912pxy_device_constructors")) return E_OUTOFMEMORY;
+	PXY_MALLOC(extendedPlace, sizeof(d912pxy_ctexture) + 8);
 	extendedPlace = (void*)((intptr_t)extendedPlace + 8);
-
-
-
-	//void* extendedPlace = (void*)((intptr_t)malloc(sizeof(d912pxy_ctexture) + 8) + 8);
 
 	*ppCubeTexture = new (extendedPlace) d912pxy_ctexture(this, EdgeLength, Levels, Usage, Format);
 

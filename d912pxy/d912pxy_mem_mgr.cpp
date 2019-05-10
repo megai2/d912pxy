@@ -29,7 +29,6 @@ system is under stress or whenever alloc calls just decide to fail.
 
 #include "stdafx.h"
 
-
 d912pxy_mem_mgr::d912pxy_mem_mgr() : d912pxy_noncom(NULL, L"mem_mgr") { 
 
 }
@@ -56,7 +55,7 @@ void d912pxy_mem_mgr::inFree(void* block) {
 }
 
 
-bool d912pxy_mem_mgr::pxy_realloc(void** cp, size_t sz) {  // Returns success or fail. cp current pointer shouldn't get changed if realloc failed.
+bool d912pxy_mem_mgr::pxy_realloc(void** cp, size_t sz, const char* file, const int line, const char* function, UINT i) {  // Returns success or fail. cp current pointer shouldn't get changed if realloc failed.
 	void* tempPointer = *cp;
 
 	tempPointer = inRealloc(*cp, sz);
@@ -65,17 +64,17 @@ bool d912pxy_mem_mgr::pxy_realloc(void** cp, size_t sz) {  // Returns success or
 		return true;
 	}
 	else {
-		LOG_ERR_DTDM("A realloc failed with nullptr.");
+		LOG_ERR_DTDM("A realloc failed. Attempt:%i. Debug Info: %S %I %S", i, file, line, function);
 		return false;
 	}	
 
 }
 
 
-bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz) { // Returns success or fail. cp will be set to new pointer if successful. Will only attempt once.
+bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz, const char* file, const int line, const char* function, UINT i) { // Returns success or fail. cp will be set to new pointer if successful. Will only attempt once. Debugging.
 	if (*cp != NULL) { // Were we passed a non null pointer to malloc? Possible memory leak condition.
-		LOG_ERR_DTDM("A malloc was called with an already valid pointer. Possible memory leak condition.");
-	//	free(*cp); // Let's free that current pointer to avoid a memory leak. // Actually, this breaks the heap in some cases. Leaving it be for now.
+		LOG_ERR_DTDM("A malloc was called with a possible valid pointer. %S %I %S", file, line, function);
+		pxy_free(cp); // Let's free that current pointer to avoid a memory leak. // THis currently corrupts the heap. Yay.
 	}
 
 	void* tempPointer = inMalloc(sz);
@@ -85,47 +84,16 @@ bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz) { // Returns success or f
 		return true;
 	}
 	else {
-		LOG_ERR_DTDM("A malloc failed with nullptr.");
+		LOG_ERR_DTDM("A malloc failed. Attempt:%i. Debug Info: %S %I %S", i, file, line, function);
 		return false;
 	}
 
 }
 
-bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz, const char* source) { // Returns success or fail. cp will be set to new pointer if successful. Will only attempt once. Debugging.
-	if (*cp != NULL) { // Were we passed a non null pointer to malloc? Possible memory leak condition.
-		LOG_ERR_DTDM("A malloc was called from %S with an already valid pointer. Possible memory leak condition.", source);
-		//	free(*cp); // Let's free that current pointer to avoid a memory leak. // THis currently corrupts the heap. Yay.
-	}
-
-	void* tempPointer = inMalloc(sz);
-
-	if (tempPointer != NULL) {
-		*cp = tempPointer;
-		return true;
-	}
-	else {
-		LOG_ERR_DTDM("A malloc failed with nullptr.");
-		return false;
-	}
-
-}
-
-bool d912pxy_mem_mgr::pxy_malloc_retry(void** cp, size_t sz, UINT tries) { // Calls pxy_malloc until it gets a success or fails after trying "tries" times.
-	
-	for (UINT i = 0; i < tries; i++) {
-		if (pxy_malloc(cp, sz)) return true;
-		Sleep(3); // Wait a moment before trying again- but not too long.
-
-	}
-	
-	return false;
-
-}
-
-bool d912pxy_mem_mgr::pxy_malloc_retry(void** cp, size_t sz, UINT tries, const char* source) { // Calls pxy_malloc until it gets a success or fails after trying "tries" times.
+bool d912pxy_mem_mgr::pxy_malloc_retry(void** cp, size_t sz, UINT tries, const char* file, const int line, const char* function) { // Calls pxy_malloc until it gets a success or fails after trying "tries" times.
 
 	for (UINT i = 0; i < tries; i++) {
-		if (pxy_malloc(cp, sz, source)) return true;
+		if (pxy_malloc(cp, sz, file, line, function, i)) return true;
 		Sleep(3); // Wait a moment
 
 	}
@@ -134,12 +102,11 @@ bool d912pxy_mem_mgr::pxy_malloc_retry(void** cp, size_t sz, UINT tries, const c
 
 }
 
-bool d912pxy_mem_mgr::pxy_realloc_retry(void** cp, size_t sz, UINT tries) { // Calls pxy_realloc until it gets a success or fails after trying "tries" times.
+bool d912pxy_mem_mgr::pxy_realloc_retry(void** cp, size_t sz, UINT tries, const char* file, const int line, const char* function) { // Calls pxy_realloc until it gets a success or fails after trying "tries" times.
 
 	for (UINT i = 0; i < tries; i++) {
-		if (pxy_malloc(cp, sz)) return true;
+		if (pxy_realloc(cp, sz, file, line, function, i)) return true;
 		Sleep(3); // Wait a moment
-
 	}
 
 	return false;
