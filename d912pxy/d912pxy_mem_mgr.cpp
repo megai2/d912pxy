@@ -29,8 +29,9 @@ system is under stress or whenever alloc calls just decide to fail.
 
 #include "stdafx.h"
 
-d912pxy_mem_mgr::d912pxy_mem_mgr() : d912pxy_noncom(NULL, L"mem_mgr") { 
 
+d912pxy_mem_mgr::d912pxy_mem_mgr(d912pxy_device* dev) : d912pxy_noncom(NULL, L"mem_mgr") {
+	d912pxy_s(memMgr) = this;
 }
 
 d912pxy_mem_mgr::~d912pxy_mem_mgr() {
@@ -73,8 +74,8 @@ bool d912pxy_mem_mgr::pxy_realloc(void** cp, size_t sz, const char* file, const 
 
 bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz, const char* file, const int line, const char* function, UINT i) { // Returns success or fail. cp will be set to new pointer if successful. Will only attempt once. Debugging.
 	if (*cp != NULL) { // Were we passed a non null pointer to malloc? Possible memory leak condition.
-		LOG_ERR_DTDM("A malloc was called with a possible valid pointer. %S %I %S", file, line, function);
-		pxy_free(cp); // Let's free that current pointer to avoid a memory leak. // THis currently corrupts the heap. Yay.
+		LOG_ERR_DTDM("A malloc was called with a possible valid pointer. Size requested: %I. %S %I %S", sz, file, line, function);
+		//pxy_free(cp); // Let's free that current pointer to avoid a memory leak. // THis currently corrupts the heap. Yay.
 	}
 
 	void* tempPointer = inMalloc(sz);

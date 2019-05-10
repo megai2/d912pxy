@@ -30,7 +30,9 @@ using namespace Microsoft::WRL;
 
 d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(L"device")
 {
-	d912pxy_s(dev) = this;	
+	d912pxy_s(dev) = this;
+
+
 	PrintInfoBanner();
 
 	initPtr = par;

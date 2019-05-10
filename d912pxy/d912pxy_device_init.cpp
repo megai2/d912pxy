@@ -126,6 +126,7 @@ void d912pxy_device::InitThreadSyncObjects()
 
 void d912pxy_device::InitSingletons()
 {
+	new d912pxy_mem_mgr(this);
 	new d912pxy_gpu_que(this, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
 
 	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_MT_REPLAY_BEHAIVOUR))
@@ -143,6 +144,7 @@ void d912pxy_device::InitSingletons()
 	new d912pxy_vstream_pool(this);
 	new d912pxy_surface_pool(this);
 	new d912pxy_cleanup_thread(this);
+
 }
 
 void d912pxy_device::InitComPatches()

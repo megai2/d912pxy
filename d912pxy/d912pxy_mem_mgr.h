@@ -33,7 +33,7 @@ class d912pxy_mem_mgr : public d912pxy_noncom {
 
 public:
 
-	d912pxy_mem_mgr();
+	d912pxy_mem_mgr(d912pxy_device* dev);
 	~d912pxy_mem_mgr();
 
 
