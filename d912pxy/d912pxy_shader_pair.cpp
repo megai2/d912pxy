@@ -30,7 +30,6 @@ d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d
 
 	UINT32 msz = sizeof(d912pxy_pso_cache_item*)*maxPsoId;
 
-	//if(!memMgr.pxy_malloc_retry((void**)&psoItems, msz, PXY_MEM_MGR_TRIES, "d912pxy_shader_pair")) return;
 	//psoItems = (d912pxy_pso_cache_item**)malloc(msz);
 	PXY_MALLOC(psoItems, msz);
 
@@ -71,7 +70,8 @@ d912pxy_shader_pair::~d912pxy_shader_pair()
 		}
 	}
 
-	free(psoItems);
+	//free(psoItems);
+	PXY_FREE(psoItems);
 }
 
 void d912pxy_shader_pair::PrecompilePSO(UINT32 idx, d912pxy_trimmed_dx12_pso * dsc)
@@ -97,7 +97,6 @@ void d912pxy_shader_pair::CheckArrayAllocation(UINT32 idx)
 
 		maxPsoId = idx + 100;
 
-		//if(!memMgr.pxy_realloc((void**)&psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*))) return;// Alrai: catch possible bad realloc.
 		//psoItems = (d912pxy_pso_cache_item**)realloc(psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*));
 		PXY_REALLOC(psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*));
 

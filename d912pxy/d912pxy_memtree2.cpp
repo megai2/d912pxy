@@ -71,7 +71,8 @@ d912pxy_memtree2::~d912pxy_memtree2()
 	}
 #endif
 
-	free(nodePool);
+	//free(nodePool);
+	PXY_FREE(nodePool);
 }
 
 UINT64 d912pxy_memtree2::PointAt32(void * mem)

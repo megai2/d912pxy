@@ -62,12 +62,9 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 	}
 
 
-	//if (!memMgr.pxy_malloc_retry((void**)&memTable, (sizeof(void*)*bitCnt), PXY_MEM_MGR_TRIES, "d912pxy_pool_memcat")) return;
 	//memTable = (d912pxy_ringbuffer<ElementType>**)malloc(sizeof(void*)*bitCnt);
 	PXY_MALLOC(memTable, sizeof(void*)*bitCnt);
 
-
-	//if (!memMgr.pxy_malloc_retry((void**)&this->rwMutex, (sizeof(d912pxy_thread_lock)*bitCnt), PXY_MEM_MGR_TRIES, "d912pxy_pool_memcat")) return;
 	//this->rwMutex = (d912pxy_thread_lock*)malloc(sizeof(d912pxy_thread_lock)*bitCnt);
 	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock)*bitCnt);
 
@@ -90,8 +87,11 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 template<class ElementType, class ProcImpl>
 d912pxy_pool_memcat<ElementType, ProcImpl>::~d912pxy_pool_memcat()
 {
-	free(memTable);
-	free(this->rwMutex);
+	//free(memTable);
+	//free(this->rwMutex);
+	PXY_FREE(memTable);
+	PXY_FREE(this->rwMutex);
+
 }
 
 template<class ElementType, class ProcImpl>

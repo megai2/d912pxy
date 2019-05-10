@@ -53,7 +53,6 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 	ulObj = NULL;
 
-	//if (!memMgr.pxy_malloc_retry((void**)&data, Length, PXY_MEM_MGR_TRIES, "d912pxy_vstream")) return;
 	//data = malloc(Length);
 	PXY_MALLOC(data, Length);
 
@@ -75,8 +74,11 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 d912pxy_vstream::~d912pxy_vstream()
 {
-	if (data)
-		free(data);
+	if (data) {
+		//free(data);
+		PXY_FREE(data);
+	}
+	
 }
 
 D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
@@ -203,7 +205,6 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 		if (!threadedCtor)
 			ConstructResource();
 
-		//if(!memMgr.pxy_malloc_retry((void**)&data, dx9desc.Size, PXY_MEM_MGR_TRIES, "d912pxy_vstream")) return NULL;
 		//data = malloc(dx9desc.Size);	
 		PXY_MALLOC(data, dx9desc.Size);
 	}
@@ -214,8 +215,9 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 			m_res = NULL;
 		}
 
-		free(data);
-		data = NULL;
+		//free(data);
+		//data = NULL;
+		PXY_FREE(data);
 	}
 
 	PooledActionExit();

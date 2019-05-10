@@ -151,7 +151,8 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 		}
 	}
 
-	free(data);
+	//free(data);
+	PXY_FREE(data);
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

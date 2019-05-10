@@ -240,7 +240,8 @@ d912pxy_dheap_slot_stack::d912pxy_dheap_slot_stack(UINT32 size)
 
 d912pxy_dheap_slot_stack::~d912pxy_dheap_slot_stack()
 {
-	free(data);
+	//free(data);
+	PXY_FREE(data);
 }
 
 void d912pxy_dheap_slot_stack::Push(d912pxy_dheap_slot_type val)

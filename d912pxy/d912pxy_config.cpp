@@ -156,7 +156,8 @@ d912pxy_config::d912pxy_config()
 	}
 
 
-	free(fileContent);
+	//free(fileContent);
+	PXY_FREE(fileContent);
 	fclose(f);
 }
 

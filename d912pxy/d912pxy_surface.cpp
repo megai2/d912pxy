@@ -50,11 +50,10 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 
 	if (Format == D3DFMT_NULL)//FOURCC NULL DX9 no rendertarget trick
 	{
-		//if (!memMgr.pxy_malloc_retry((void**)&subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1, PXY_MEM_MGR_TRIES, "d912pxy_surface::d912pxy_surface().subresFootprints")) return;
+
 		//subresFootprints = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT*)malloc(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1);
 		PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1);
 
-		//if (!memMgr.pxy_malloc_retry((void**)&subresSizes, sizeof(size_t) * 1, PXY_MEM_MGR_TRIES, "d912pxy_surface::d912pxy_sufrace().subresSizes")) return;
 		//subresSizes = (size_t*)malloc(sizeof(size_t) * 1);
 		PXY_MALLOC(subresSizes, sizeof(size_t) * 1);
 
@@ -125,15 +124,12 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 
 d912pxy_surface::~d912pxy_surface()
 {
-	//memMgr.pxy_free((void**)&subresFootprints);
 	//free(subresFootprints);
 	PXY_FREE(subresFootprints);
 
-	//memMgr.pxy_free((void**)&subresSizes);
 	//free(subresSizes);
 	PXY_FREE(subresSizes);
 
-	//memMgr.pxy_free((void**)&ul);
 	//free(ul);
 	PXY_FREE(ul);
 
@@ -502,17 +498,15 @@ void d912pxy_surface::UpdateDescCache()
 
 	UINT32 ulArrSize = sizeof(d912pxy_upload_item*) * subresCountCache;
 
-	//if (!memMgr.pxy_malloc_retry((void**)&ul, ulArrSize, PXY_MEM_MGR_TRIES, "d912pxy_surface::UpdateDescCache().ul")) return;
+
 	//ul = (d912pxy_upload_item**)malloc(ulArrSize);
 	PXY_MALLOC(ul, ulArrSize);
 
 	ZeroMemory(ul, ulArrSize);
 
-	//if (!memMgr.pxy_malloc_retry((void**)&subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache, PXY_MEM_MGR_TRIES, "d912pxy_surface::UpdateDescCache().subresFootprints")) return;
 	//subresFootprints = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT*)malloc(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache);
 	PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache);
 
-	//if (!memMgr.pxy_malloc_retry((void**)&subresSizes, sizeof(size_t)*subresCountCache, PXY_MEM_MGR_TRIES, "d912pxy_surface::UpdateDescCache().subresSizes")) return;
 	//subresSizes = (size_t*)malloc(sizeof(size_t)*subresCountCache);
 	PXY_MALLOC(subresSizes, sizeof(size_t)*subresCountCache);
 
@@ -604,7 +598,6 @@ UINT32 d912pxy_surface::AllocateSRV()
 void d912pxy_surface::AllocateLayers()
 {
 
-	//if (!memMgr.pxy_malloc_retry((void**)&layers, (sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels), PXY_MEM_MGR_TRIES, "d912pxy_surface::AllocateLayers().layers")) return;
 	//layers = (d912pxy_surface_layer**)malloc(sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels);
 	PXY_MALLOC(layers, sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels);
 
@@ -637,7 +630,7 @@ void d912pxy_surface::FreeLayers()
 		}
 	}
 
-	//memMgr.pxy_free((void**)&layers);
+
 	//free(layers);
 	PXY_FREE(layers);
 }

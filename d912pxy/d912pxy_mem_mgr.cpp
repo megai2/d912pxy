@@ -52,7 +52,7 @@ void* d912pxy_mem_mgr::inMalloc(size_t sz) { // Returns pointer or nullptr if fa
 
 void d912pxy_mem_mgr::inFree(void* block) {
 
-	free(block);
+	free(block); 
 
 }
 

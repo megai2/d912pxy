@@ -46,7 +46,9 @@ d912pxy_linked_list<ElementType>::~d912pxy_linked_list()
 	while (nodePool->HaveElements())
 	{
 		free(nodePool->GetElement());
+		//PXY_FREE(nodePool->GetElement());
 		nodePool->Next();
+		// Alrai: Watch this one.
 	}
 
 	delete nodePool;
@@ -87,7 +89,7 @@ void d912pxy_linked_list<ElementType>::IterNext()
 template<class ElementType>
 void d912pxy_linked_list<ElementType>::IterRemove()
 {
-	iterPrev->next = iter->next;	
+	iterPrev->next = iter->next;
 
 	lock.Hold();
 
@@ -102,9 +104,10 @@ void d912pxy_linked_list<ElementType>::IterRemove()
 
 	if (nodePool->HaveFreeSpace())
 		nodePool->WriteElement(iter);
-	else
-		free(iter);
-
+	else {
+		//free(iter);
+		PXY_FREE(iter);
+	}
 	lock.Release();
 
 	if (iterPrev)
