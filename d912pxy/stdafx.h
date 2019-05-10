@@ -67,7 +67,7 @@ SOFTWARE.
 #include "d912pxy_thread.h"
 #include "d912pxy_helper.h"
 #include "d912pxy_noncom.h"
-#include "d912pxy_mem_mgr.h" ////////////////////////
+#include "d912pxy_mem_mgr.h"
 #include "d912pxy_config.h"
 #include "d912pxy_metrics.h"
 #include "d912pxy_ringbuffer.h"

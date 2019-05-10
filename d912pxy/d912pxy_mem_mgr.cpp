@@ -94,7 +94,7 @@ bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz) { // Returns success or f
 bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz, const char* source) { // Returns success or fail. cp will be set to new pointer if successful. Will only attempt once. Debugging.
 	if (*cp != NULL) { // Were we passed a non null pointer to malloc? Possible memory leak condition.
 		LOG_ERR_DTDM("A malloc was called from %S with an already valid pointer. Possible memory leak condition.", source);
-		//	free(*cp); // Let's free that current pointer to avoid a memory leak. // THis currently corrupts the heap. Yay. Likely just missing some free() nulls?
+		//	free(*cp); // Let's free that current pointer to avoid a memory leak. // THis currently corrupts the heap. Yay.
 	}
 
 	void* tempPointer = inMalloc(sz);
@@ -126,7 +126,7 @@ bool d912pxy_mem_mgr::pxy_malloc_retry(void** cp, size_t sz, UINT tries, const c
 
 	for (UINT i = 0; i < tries; i++) {
 		if (pxy_malloc(cp, sz, source)) return true;
-		Sleep(3); // Wait a moment before trying again- but not too long.
+		Sleep(3); // Wait a moment
 
 	}
 
@@ -138,7 +138,7 @@ bool d912pxy_mem_mgr::pxy_realloc_retry(void** cp, size_t sz, UINT tries) { // C
 
 	for (UINT i = 0; i < tries; i++) {
 		if (pxy_malloc(cp, sz)) return true;
-		Sleep(3); // Wait a moment before trying again- but not too long.
+		Sleep(3); // Wait a moment
 
 	}
 

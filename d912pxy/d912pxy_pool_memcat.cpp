@@ -63,11 +63,9 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 	}
 
 
-	//Alrai: working.
 	if (!memMgr.pxy_malloc_retry((void**)&memTable, (sizeof(void*)*bitCnt), PXY_MEM_MGR_TRIES, "d912pxy_pool_memcat")) return;
 	//memTable = (d912pxy_ringbuffer<ElementType>**)malloc(sizeof(void*)*bitCnt);
 
-	//Alrai: working
 	if (!memMgr.pxy_malloc_retry((void**)&this->rwMutex, (sizeof(d912pxy_thread_lock)*bitCnt), PXY_MEM_MGR_TRIES, "d912pxy_pool_memcat")) return;
 	//this->rwMutex = (d912pxy_thread_lock*)malloc(sizeof(d912pxy_thread_lock)*bitCnt);
 

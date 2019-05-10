@@ -298,7 +298,6 @@ public:
 	static d912pxy_metrics* metrics;
 	static d912pxy_config* config;
 	static d912pxy_log* log;
-	//static d912pxy_mem_mgr* memMgr; // DELETE_ME
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a
