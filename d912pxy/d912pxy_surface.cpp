@@ -123,13 +123,13 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 
 d912pxy_surface::~d912pxy_surface()
 {
-	memMgr.pxy_free(subresFootprints);
+	memMgr.pxy_free((void**)&subresFootprints);
 	//free(subresFootprints);
 
-	memMgr.pxy_free(subresSizes);
+	memMgr.pxy_free((void**)&subresSizes);
 	//free(subresSizes);
 
-	memMgr.pxy_free(ul);
+	memMgr.pxy_free((void**)&ul);
 	//free(ul);
 
 	if (rtdsHPtr.ptr == 0)
@@ -626,7 +626,7 @@ void d912pxy_surface::FreeLayers()
 		}
 	}
 
-	memMgr.pxy_free(layers);
+	memMgr.pxy_free((void**)&layers);
 	//free(layers);
 }
 

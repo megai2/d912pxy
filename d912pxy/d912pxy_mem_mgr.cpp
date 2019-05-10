@@ -146,8 +146,8 @@ bool d912pxy_mem_mgr::pxy_realloc_retry(void** cp, size_t sz, UINT tries) { // C
 
 }
 
-void d912pxy_mem_mgr::pxy_free(void* cp) { // Free and NULL
+void d912pxy_mem_mgr::pxy_free(void** cp) { // Free and NULL
 
-	inFree(cp);
-	cp = NULL;
+	inFree(*cp);
+	*cp = NULL;
 }

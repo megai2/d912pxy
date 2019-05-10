@@ -42,7 +42,7 @@ public:
 	bool pxy_malloc_retry(void** cp, size_t sz, UINT tries); // Returns success or fail. Will attempt until max number of retries then fail.
 	bool pxy_malloc_retry(void** cp, size_t sz, UINT tries, const char* source); // For debugging.
 	bool pxy_realloc_retry(void** cp, size_t sz, UINT tries); // Returns success or fail. Will attempt until max number of retries then fail.
-	void pxy_free(void* cp); // Frees and NULLs the given pointer.
+	void pxy_free(void** cp); // Frees and NULLs the given pointer.
 
 private:
 

@@ -757,15 +757,15 @@ void d912pxy_pso_cache::LoadCachedData()
 
 			for (int i = 1; i != (*max+1); ++i)
 			{
-				memMgr.pxy_free(psoKeyCache[i]);
+				memMgr.pxy_free((void**)&psoKeyCache[i]);
 				//free(psoKeyCache[i]);
 			}
 
 			
-			memMgr.pxy_free(psoKeyCache);
+			memMgr.pxy_free((void**)&psoKeyCache);
 			//free(psoKeyCache);
 
-			memMgr.pxy_free(max);
+			memMgr.pxy_free((void**)&max);
 			//free(max);
 		}
 	}
@@ -837,7 +837,7 @@ void d912pxy_pso_cache_item::Compile()
 		psObj->ThreadRef(-1);
 		vdclObj->ThreadRef(-1);
 
-		memMgr.pxy_free(desc);
+		memMgr.pxy_free((void**)&desc);
 		//free(desc);
 
 		//m_status = 2;
@@ -905,7 +905,7 @@ void d912pxy_pso_cache_item::Compile()
 			psObj->ThreadRef(-1);
 			vdclObj->ThreadRef(-1);
 
-			memMgr.pxy_free(desc);
+			memMgr.pxy_free((void**)&desc);
 			//free(desc);
 
 			//m_status = 2;
@@ -921,6 +921,6 @@ void d912pxy_pso_cache_item::Compile()
 	psObj->ThreadRef(-1);
 	vdclObj->ThreadRef(-1);
 
-	memMgr.pxy_free(desc);
+	memMgr.pxy_free((void**)&desc);
 	//free(desc);
 }
