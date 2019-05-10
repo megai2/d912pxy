@@ -199,6 +199,15 @@ public:
 
 	void ExternalFlush();
 
+
+	//megai2: variants of API calls
+	static HRESULT WINAPI DrawIndexedPrimitive_PS(IDirect3DDevice9* self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
+	static HRESULT WINAPI SetTexture_PS(IDirect3DDevice9* self, DWORD Stage, IDirect3DBaseTexture9* pTexture);
+	static HRESULT WINAPI Present_PG(IDirect3DDevice9* self, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
+
+	HRESULT InnerPresentExecute();
+	void InnerPresentFinish();
+
 private:
 	LONG threadInterruptState;	
 	d912pxy_thread_lock threadLockdEvents[PXY_INNER_THREADID_MAX];
@@ -236,12 +245,7 @@ private:
 	//dx9 api hacks
 	UINT32 gpuWriteDsc;
 
-#ifdef PERFORMANCE_GRAPH_WRITE	
 	d912pxy_performance_graph* perfGraph;
-#endif
-
-#ifdef TRACK_SHADER_BUGS_PROFILE
 	D3DFORMAT stageFormatsTrack[1024];
-#endif	
 };
 

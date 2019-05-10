@@ -364,9 +364,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		cDsc.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
 		break; //189,   /* D3DCMPFUNC fn.  ccw Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true */
 	case D3DRS_SRGBWRITEENABLE:
-#ifdef TRACK_SHADER_BUGS_PROFILE
 		DX9RSvalues[State] = Value;
-#endif
 		//d912pxy_s(iframe)->TST()->SetTexStage(29, Value);
 		break;
 
@@ -403,10 +401,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		break;
 	case D3DRS_CLIPPLANEENABLE:
 	{
-#ifdef TRACK_SHADER_BUGS_PROFILE
-		DX9RSvalues[State] = Value;
-#endif
-		//d912pxy_s(textureState)->SetTexture(29, Value);
+		DX9RSvalues[State] = Value;		
 		if (!Value)
 		{
 			const float zvf4[4] = { 0, 0, 0, 0 };

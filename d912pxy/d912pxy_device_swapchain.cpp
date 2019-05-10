@@ -84,38 +84,65 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 	return ret; 
 }
 
-HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
-{ 
+HRESULT d912pxy_device::InnerPresentExecute()
+{
 	LOG_DBG_DTDM(__FUNCTION__);
 
 	API_OVERHEAD_TRACK_START(0)
 
 	swapOpLock.Hold();
-	
+
 	d912pxy_s(iframe)->End();
-	API_OVERHEAD_TRACK_END(0)	
+	API_OVERHEAD_TRACK_END(0)
 	FRAME_METRIC_PRESENT(0)
 
 	LOG_DBG_DTDM2("Present Exec GPU");
-	HRESULT ret = d912pxy_s(GPUque)->ExecuteCommands(1);
+	return d912pxy_s(GPUque)->ExecuteCommands(1);
+}
 
-#ifdef PERFORMANCE_GRAPH_WRITE
-	perfGraph->RecordPresent(d912pxy_s(iframe)->GetBatchCount());
-#endif
+void d912pxy_device::InnerPresentFinish()
+{
+	LOG_DBG_DTDM(__FUNCTION__);
+
+	FRAME_METRIC_PRESENT(1)
+	API_OVERHEAD_TRACK_START(0)
+
+	mDrawUPStreamPtr = 0;
+	d912pxy_s(iframe)->Start();
+
+	swapOpLock.Release();
+
+	API_OVERHEAD_TRACK_END(0)
+}
+
+HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
+{ 
+	HRESULT ret = InnerPresentExecute();
 
 #ifdef ENABLE_METRICS
 	d912pxy_s(metrics)->TrackDrawCount(d912pxy_s(iframe)->GetBatchCount());
 	d912pxy_s(metrics)->FlushIFrameValues();	
 #endif 
 	
-	FRAME_METRIC_PRESENT(1)
-	API_OVERHEAD_TRACK_START(0)
-	mDrawUPStreamPtr = 0;
-	d912pxy_s(iframe)->Start();
+	InnerPresentFinish();
 
-	swapOpLock.Release();
+	return ret;
+}
 
-	API_OVERHEAD_TRACK_END(0)	
+HRESULT __stdcall d912pxy_device::Present_PG(IDirect3DDevice9 * self, const RECT * pSourceRect, const RECT * pDestRect, HWND hDestWindowOverride, const RGNDATA * pDirtyRegion)
+{
+	d912pxy_device* _self = (d912pxy_device*)self;
+
+	HRESULT ret = _self->InnerPresentExecute();
+
+	_self->perfGraph->RecordPresent(d912pxy_s(iframe)->GetBatchCount());
+
+#ifdef ENABLE_METRICS
+	d912pxy_s(metrics)->TrackDrawCount(d912pxy_s(iframe)->GetBatchCount());
+	d912pxy_s(metrics)->FlushIFrameValues();
+#endif s
+
+	_self->InnerPresentFinish();
 
 	return ret;
 }

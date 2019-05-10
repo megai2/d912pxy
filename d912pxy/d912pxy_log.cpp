@@ -103,6 +103,9 @@ void d912pxy_log::WriteCrashLogLine(wchar_t * buf)
 		{
 			++i;
 			sprintf(fn, "%s%u.txt", PXY_CRASH_LOG_FILE_PATH, i);
+
+			if (i >= 10)
+				break;
 		}
 
 		crashLog = fopen(fn, "w");

@@ -166,6 +166,25 @@ void d912pxy_device::InitComPatches()
 		d912pxy_com_set_method((IDirect3DPixelShader9*)psPatch, 2, &d912pxy_pshader::ReleaseWithPairRemoval);
 		psPatch->Release();
 	}
+
+	if (!d912pxy_s(config)->GetValueUI64(PXY_CFG_QUERY_OCCLUSION))
+	{
+		d912pxy_query* queryObj = new d912pxy_query(this, D3DQUERYTYPE_OCCLUSION);
+		d912pxy_com_set_method((IDirect3DQuery9*)queryObj, 7, &d912pxy_query::GetDataZeroOverride);
+
+		queryObj->Release();
+	}
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x41, &d912pxy_device::SetTexture_PS);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_PS);
+	}
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x11, &d912pxy_device::Present_PG);
+	}
 }
 
 void d912pxy_device::InitNullSRV()
@@ -232,9 +251,8 @@ void d912pxy_device::PrintInfoBanner()
 	d912pxy_helper::InstallVehHandler();
 
 
-#ifdef TRACK_SHADER_BUGS_PROFILE
-	LOG_INFO_DTDM("Running ps build, expect performance drops");
-#endif
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+		LOG_INFO_DTDM("Running ps build, expect performance drops");
 
 	UINT64 memKb = 0;
 
@@ -275,13 +293,14 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 
 ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 {
-	d912pxy_helper::d3d12_EnableDebugLayer();
-
 	ComPtr<IDXGIFactory4> dxgiFactory;
 	UINT createFactoryFlags = 0;
-#ifdef _DEBUG
-	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#endif
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_DX_DBG_RUNTIME))
+	{
+		d912pxy_helper::d3d12_EnableDebugLayer();
+		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+	}
 
 	LOG_ERR_THROW2(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)), "DXGI factory @ GetAdapter");
 

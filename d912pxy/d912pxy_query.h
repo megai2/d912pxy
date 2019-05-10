@@ -43,8 +43,10 @@ public:
 	D912PXY_METHOD(Issue)(THIS_ DWORD dwIssueFlags);
 	D912PXY_METHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
 
-private:
+	static D912PXY_METHOD(GetDataZeroOverride)(IDirect3DQuery9* self, void* pData, DWORD dwSize, DWORD dwGetDataFlags);
 
+private:
+	
 	D3DQUERYTYPE m_type;
 };
 

@@ -41,10 +41,11 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comha
 	FRAME_METRIC_PRESENT(1)
 #endif
 
-#ifdef PERFORMANCE_GRAPH_WRITE
-	perfGraph = new d912pxy_performance_graph(0);
-#endif
-
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+		perfGraph = new d912pxy_performance_graph(0);
+	else
+		perfGraph = NULL;
+		 
 	LOG_INFO_DTDM2(InitClassFields(),									"Startup step  1/10");
 	LOG_INFO_DTDM2(InitVFS(),											"Startup step  2/10");
 	LOG_INFO_DTDM2(InitThreadSyncObjects(),								"Startup step  3/10");
@@ -98,9 +99,8 @@ d912pxy_device::~d912pxy_device(void)
 	delete d912pxy_s(metrics);
 #endif
 
-#ifdef PERFORMANCE_GRAPH_WRITE
-	delete perfGraph;
-#endif
+	if (perfGraph)
+		delete perfGraph;
 
 	if (initPtr)
 		((IDirect3D9*)initPtr)->Release();

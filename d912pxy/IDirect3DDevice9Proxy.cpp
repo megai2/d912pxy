@@ -54,9 +54,7 @@ IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevi
 	memcpy(&origPP, cp.pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS));
 	cp.pPresentationParameters = &origPP;
 
-#ifdef PERFORMANCE_GRAPH_WRITE
 	perfGraph = NULL;
-#endif
 }
 
 IDirect3DDevice9Proxy::~IDirect3DDevice9Proxy(void){
@@ -64,10 +62,8 @@ IDirect3DDevice9Proxy::~IDirect3DDevice9Proxy(void){
 	log_trace->P7_DEBUG(log_module, TM("freed"));
 #endif
 
-#ifdef PERFORMANCE_GRAPH_WRITE
 	if (perfGraph)
 		delete perfGraph;
-#endif
 }
 
 HRESULT IDirect3DDevice9Proxy::QueryInterface(REFIID riid, void** ppvObj){
@@ -169,10 +165,11 @@ HRESULT IDirect3DDevice9Proxy::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 HRESULT IDirect3DDevice9Proxy::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion){
 	HRESULT res = (origIDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion));
 
-#ifdef PERFORMANCE_GRAPH_WRITE
-	perfGraph->RecordPresent(batchCnt);
+	if (perfGraph)
+		perfGraph->RecordPresent(batchCnt);
+
 	batchCnt = 0;
-#endif
+
 
 	return res;
 }

@@ -78,3 +78,11 @@ D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFla
 }
 
 #undef D912PXY_METHOD_IMPL_CN
+
+D912PXY_METHOD(d912pxy_query::GetDataZeroOverride)(IDirect3DQuery9 * self, void * pData, DWORD dwSize, DWORD dwGetDataFlags)
+{
+	if (dwSize == 4)
+		((DWORD*)pData)[0] = 0;
+
+	return S_OK;
+}
