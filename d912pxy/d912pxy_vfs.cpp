@@ -58,6 +58,9 @@ d912pxy_vfs::~d912pxy_vfs()
 			fclose(m_vfsBlocks[i]);
 
 			delete m_vfsFileOffsets[i];
+
+			if (m_vfsCache[i])
+				PXY_FREE(m_vfsCache[i]);
 		}
 	}
 
@@ -163,7 +166,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 
 		if (m_vfsCacheSize[id])
 		{
-			PXY_MALLOC(m_vfsCache[id], m_vfsCacheSize[id]);
+			PXY_MALLOC(m_vfsCache[id], m_vfsCacheSize[id], void*);
 
 
 			fseek(m_vfsBlocks[id], PXY_VFS_BID_TABLE_SIZE+PXY_VFS_BID_TABLE_START, SEEK_SET);
@@ -240,7 +243,7 @@ void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 
 		void* ret = NULL;
 
-		PXY_MALLOC(ret, *sz);
+		PXY_MALLOC(ret, *sz, void*);
 
 		memcpy(ret, ((void*)((intptr_t)m_vfsCache[id] + offset + 4)), *sz);
 
@@ -253,7 +256,7 @@ void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 
 
 	void* ret = NULL;
-	PXY_MALLOC(ret, *sz);
+	PXY_MALLOC(ret, *sz, void*);
 
 	fread(ret, 1, *sz, m_vfsBlocks[id]);
 

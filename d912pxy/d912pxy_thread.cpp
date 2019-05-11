@@ -70,7 +70,8 @@ d912pxy_thread::d912pxy_thread(const char* threadName, UINT suspend)
 
 	SetThreadName(GetThreadId(thrdHandle), (char*)threadName);
 
-	name = _strdup(threadName);
+	PXY_MALLOC(name, strlen(threadName) + 1, char*);
+	strcpy(name, threadName);	
 }
 
 

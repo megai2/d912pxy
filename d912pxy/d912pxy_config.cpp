@@ -68,10 +68,10 @@ d912pxy_config::d912pxy_config()
 
 	int fptr = 0;
 
-
-
 	wchar_t* fileContent = NULL;
-	PXY_MALLOC(fileContent, fsz);
+	
+	//megai2: config loaded when nothing initialized
+	fileContent = (wchar_t*)malloc(fsz);
 
 	fread(fileContent, 1, fsz, f);
 
@@ -155,7 +155,8 @@ d912pxy_config::d912pxy_config()
 		}
 	}
 
-	PXY_FREE(fileContent);
+	free(fileContent);
+
 	fclose(f);
 }
 

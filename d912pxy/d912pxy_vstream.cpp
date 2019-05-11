@@ -53,7 +53,7 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 	ulObj = NULL;
 
-	PXY_MALLOC(data, Length);
+	PXY_MALLOC(data, Length, void*);
 
 	dx9desc.FVF = 0;
 	dx9desc.Pool = D3DPOOL_DEFAULT;
@@ -203,7 +203,7 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 		if (!threadedCtor)
 			ConstructResource();
 
-		PXY_MALLOC(data, dx9desc.Size);
+		PXY_MALLOC(data, dx9desc.Size, void*);
 	}
 	else {
 		if (m_res)

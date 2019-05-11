@@ -37,7 +37,7 @@ d912pxy_performance_graph::d912pxy_performance_graph(UINT isDX9)
 d912pxy_performance_graph::~d912pxy_performance_graph()
 {
 
-	PXY_MALLOC(imgData, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 3);
+	PXY_MALLOC(imgData, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 3, UINT8*);
 	//if (!memMgr.pxy_malloc_retry((void**)&imgData, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 3, PXY_MEM_MGR_TRIES)) return;
 
 	for (int j = 0; j != PXY_PERFGRPH_BATCH_PTS; ++j)
@@ -82,6 +82,8 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 		stbi_write_png("performance_graph_dx9.png", PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 3, imgData, 0);
 	else
 		stbi_write_png("performance_graph.png", PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 3, imgData, 0);
+
+	PXY_FREE(imgData);
 }
 
 

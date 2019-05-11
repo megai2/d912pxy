@@ -25,10 +25,6 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-#ifdef _DEBUG
-#define DEBUG_LEAKOBJ
-#endif
-
 class d912pxy_noncom
 {
 public:
@@ -45,7 +41,7 @@ protected:
 
 	d912pxy_device* m_dev;	
 
-#ifdef DEBUG_LEAKOBJ
+#ifdef _DEBUG
 	UINT lkObjTrace;
 #endif
 

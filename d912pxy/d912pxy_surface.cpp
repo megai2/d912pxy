@@ -51,8 +51,10 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 	if (Format == D3DFMT_NULL)//FOURCC NULL DX9 no rendertarget trick
 	{
 
-		PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1);
-		PXY_MALLOC(subresSizes, sizeof(size_t) * 1);
+		PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
+		PXY_MALLOC(subresSizes, sizeof(size_t) * 1, size_t*);
+		PXY_MALLOC(ul, 8, d912pxy_upload_item**);
+		ZeroMemory(ul, 8);
 
 		LOG_DBG_DTDM("w %u h %u u %u FCC NULL", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
 		return;
@@ -124,7 +126,7 @@ d912pxy_surface::~d912pxy_surface()
 	PXY_FREE(subresFootprints);
 	PXY_FREE(subresSizes);
 	PXY_FREE(ul);
-
+	
 	if (rtdsHPtr.ptr == 0)
 	{
 		if (m_res)
@@ -490,13 +492,12 @@ void d912pxy_surface::UpdateDescCache()
 
 	UINT32 ulArrSize = sizeof(d912pxy_upload_item*) * subresCountCache;
 
-	PXY_MALLOC(ul, ulArrSize);
+	PXY_MALLOC(ul, ulArrSize, d912pxy_upload_item**);
 	ZeroMemory(ul, ulArrSize);
 
-	PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache);
-	PXY_MALLOC(subresSizes, sizeof(size_t)*subresCountCache);
-
-
+	PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
+	PXY_MALLOC(subresSizes, sizeof(size_t)*subresCountCache, size_t*);
+	
 	d912pxy_s(DXDev)->GetCopyableFootprints(
 		&descCache,
 		0,
@@ -584,7 +585,7 @@ UINT32 d912pxy_surface::AllocateSRV()
 void d912pxy_surface::AllocateLayers()
 {
 
-	PXY_MALLOC(layers, sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels);
+	PXY_MALLOC(layers, sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels, d912pxy_surface_layer**);
 
 	for (int i = 0; i != descCache.DepthOrArraySize; ++i)
 	{

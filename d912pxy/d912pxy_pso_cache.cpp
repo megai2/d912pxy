@@ -666,7 +666,7 @@ void d912pxy_pso_cache::LoadCachedData()
 		{
 			cacheIncID = *max_;
 
-			PXY_MALLOC(psoKeyCache, sizeof(d912pxy_serialized_pso_key*) * (*max_ + 2));
+			PXY_MALLOC(psoKeyCache, sizeof(d912pxy_serialized_pso_key*) * (*max_ + 2), d912pxy_serialized_pso_key**);
 
 			for (int i = 1; i != (*max_+1); ++i)
 			{
@@ -805,7 +805,7 @@ d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_tri
 	retPtr = NULL;
 	obj = nullptr;
 
-	PXY_MALLOC(desc, sizeof(d912pxy_trimmed_dx12_pso));
+	PXY_MALLOC(desc, sizeof(d912pxy_trimmed_dx12_pso), d912pxy_trimmed_dx12_pso*);
 
 	*desc = *sDsc;
 

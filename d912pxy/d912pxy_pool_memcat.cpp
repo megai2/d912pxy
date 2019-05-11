@@ -32,7 +32,7 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 	bitCnt = iBitLimit - iBitIgnore;
 	instantUnload = 0;
 
-	PXY_MALLOC(limits, sizeof(UINT16)*bitCnt);
+	PXY_MALLOC(limits, sizeof(UINT16)*bitCnt, UINT16*);
 	ZeroMemory(limits, sizeof(UINT16)*bitCnt);
 
 	UINT performaWarmUp = 0;
@@ -61,8 +61,8 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 		}		
 	}
 
-	PXY_MALLOC(memTable, sizeof(void*)*bitCnt);
-	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock)*bitCnt);
+	PXY_MALLOC(memTable, sizeof(void*)*bitCnt, d912pxy_ringbuffer<ElementType>**);
+	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock)*bitCnt, d912pxy_thread_lock*);
 
 	for (int i = 0; i != bitCnt; ++i)
 	{
@@ -83,7 +83,7 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 template<class ElementType, class ProcImpl>
 d912pxy_pool_memcat<ElementType, ProcImpl>::~d912pxy_pool_memcat()
 {
-
+	PXY_FREE(limits);
 	PXY_FREE(memTable);
 	PXY_FREE(this->rwMutex);
 

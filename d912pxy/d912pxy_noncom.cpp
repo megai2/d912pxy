@@ -27,14 +27,10 @@ SOFTWARE.
 #ifdef _DEBUG
 LONG g_ObjectsCounter = 0;
 
-#ifdef DEBUG_LEAKOBJ
-
 #include <map>
 
 std::map<UINT, const wchar_t*>  gLeakTracker;
 HANDLE gLeakMapLock;
-
-#endif
 
 #endif
 
@@ -48,7 +44,6 @@ d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
 	LONG ouid = InterlockedIncrement(&g_ObjectsCounter);
 	LOG_DBG_DTDM("obj %u is %s", ouid, logModule);
 
-#ifdef DEBUG_LEAKOBJ
 	if (ouid == 1)
 	{
 		gLeakMapLock = CreateMutex(0, 0, 0);
@@ -58,7 +53,6 @@ d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
 	WaitForSingleObject(gLeakMapLock, INFINITE);
 	gLeakTracker[lkObjTrace] = logModule;
 	ReleaseMutex(gLeakMapLock);
-#endif 
 
 #endif
 
@@ -68,9 +62,8 @@ d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
 d912pxy_noncom::~d912pxy_noncom()
 {
 #ifdef _DEBUG	
-	InterlockedDecrement(&g_ObjectsCounter);
+	//InterlockedDecrement(&g_ObjectsCounter);
 
-#ifdef DEBUG_LEAKOBJ
 	LOG_DBG_DTDM("Objs last = %u", g_ObjectsCounter);
 
 	WaitForSingleObject(gLeakMapLock, INFINITE);
@@ -86,8 +79,7 @@ d912pxy_noncom::~d912pxy_noncom()
 		}		
 	}
 
-#endif
-	if (g_ObjectsCounter == 0)
+	if (gLeakTracker.empty())
 	{
 		LOG_DBG_DTDM3("all d912pxy objects are freed. Freedom!");
 	}
