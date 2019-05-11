@@ -31,7 +31,7 @@ d912pxy_surface_pool::d912pxy_surface_pool(d912pxy_device* dev) : d912pxy_pool<d
 
 	table = new d912pxy_memtree2(4, 4096, 2);
 
-	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1);
+	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1, d912pxy_thread_lock*);
 
 	this->rwMutex[0].Init();
 }

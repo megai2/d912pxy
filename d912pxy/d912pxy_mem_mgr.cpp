@@ -32,10 +32,22 @@ system is under stress or whenever alloc calls just decide to fail.
 
 d912pxy_mem_mgr::d912pxy_mem_mgr(d912pxy_device* dev) : d912pxy_noncom(NULL, L"mem_mgr") {
 	d912pxy_s(memMgr) = this;
+
+	blocksAllocated.SetValue(0);
+	blockList.clear();
 }
 
 d912pxy_mem_mgr::~d912pxy_mem_mgr() {
 
+	if (!blockList.empty())
+	{
+		LOG_ERR_DTDM("found %llu leaked dynamic allocated blocks", blockList.size());
+
+		for (std::map<UINT, d912pxy_dbg_mem_block*>::iterator it = blockList.begin(); it != blockList.end(); ++it)
+		{
+			LOG_ERR_DTDM("%S %u %S : %u bytes", it->second->file, it->second->line, it->second->function, it->second->sz);
+		}
+	}
 }
 
 void* d912pxy_mem_mgr::inRealloc(void* block, size_t sz) { // Returns pointer or nullptr if failed.
@@ -57,67 +69,179 @@ void d912pxy_mem_mgr::inFree(void* block) {
 }
 
 
-bool d912pxy_mem_mgr::pxy_realloc(void** cp, size_t sz, const char* file, const int line, const char* function, UINT i) {  // Returns success or fail. cp current pointer shouldn't get changed if realloc failed.
-	void* tempPointer = *cp;
+bool d912pxy_mem_mgr::pxy_malloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function) { // Calls pxy_malloc until it gets a success or fails after trying "tries" times.
 
-	tempPointer = inRealloc(*cp, sz);
-	if (tempPointer != NULL) {
-		*cp = tempPointer;
-		return true;
-	}
-	else {
-		LOG_ERR_DTDM("A realloc failed. Attempt:%u. Debug Info: %S %u %S", i, file, line, function);
-		return false;
-	}	
-
-}
-
-
-bool d912pxy_mem_mgr::pxy_malloc(void** cp, size_t sz, const char* file, const int line, const char* function, UINT i) { // Returns success or fail. cp will be set to new pointer if successful. Will only attempt once. Debugging.
 	if (*cp != NULL) { // Were we passed a non null pointer to malloc? Possible memory leak condition.
 		LOG_ERR_DTDM("A malloc was called with a possible valid pointer. Size requested: %u. %S %u %S", sz, file, line, function);
 		//pxy_free(*cp); // Let's free that current pointer to avoid a memory leak. // Nevermind, we can't assume just because it isn't null that we should free it... but we will log it.
 	}
 
+	sz += sizeof(d912pxy_dbg_mem_block);
+
 	void* tempPointer = inMalloc(sz);
 
-	if (tempPointer != NULL) {
-		*cp = tempPointer;
-		return true;
+	if (!tempPointer)
+	{
+		LOG_ERR_DTDM("malloc_retry(%llu) called @ %S %u %S", sz, file, line, function);
+
+		tempPointer = pxy_malloc_retry(sz);
+
+		if (!tempPointer)
+		{
+			LOG_ERR_DTDM("A malloc failed. Debug Info: %S %u %S", file, line, function);			
+			return false;
+		}
+	}
+
+	d912pxy_dbg_mem_block* blkdsc = (d912pxy_dbg_mem_block*)tempPointer;
+
+	blkdsc->file = (char*)file;
+	blkdsc->function = (char*)function;
+	blkdsc->line = line;
+	blkdsc->sz = sz;
+	blkdsc->trashCheck = 0xAAAAAAAA;
+
+	*cp = (void*)((intptr_t)tempPointer + sizeof(d912pxy_dbg_mem_block));
+
+	blocksAllocated.Hold();
+	blockList[blocksAllocated.Add(1)] = blkdsc;
+	blkdsc->uid = blocksAllocated.GetValue();
+	blocksAllocated.Release();
+
+	return true;
+}
+
+bool d912pxy_mem_mgr::pxy_realloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function) { // Calls pxy_realloc until it gets a success or fails after trying "tries" times.
+	
+	void* origBlk = (void*)((intptr_t)(*cp) - sizeof(d912pxy_dbg_mem_block));
+
+	sz += sizeof(d912pxy_dbg_mem_block);
+
+	void* tempPointer = inRealloc(origBlk, sz);
+
+	if (!tempPointer)
+	{
+		LOG_ERR_DTDM("realloc_retry(%llu) called @ %S %u %S", sz, file, line, function);
+
+		tempPointer = pxy_realloc_retry(origBlk, sz);
+
+		if (!tempPointer)
+		{
+			LOG_ERR_DTDM("A realloc failed. Debug Info: %S %u %S", file, line, function);
+			return false;
+		}
+	}
+
+	d912pxy_dbg_mem_block* blkdsc = (d912pxy_dbg_mem_block*)tempPointer;
+
+	blkdsc->file = (char*)file;
+	blkdsc->function = (char*)function;
+	blkdsc->line = line;
+	blkdsc->sz = sz;
+	blkdsc->trashCheck = 0xAAAAAAAA;
+
+	*cp = (void*)((intptr_t)tempPointer + sizeof(d912pxy_dbg_mem_block));
+
+	return true;
+
+}
+
+void d912pxy_mem_mgr::pxy_free_dbg(void** cp, const char* file, const int line, const char* function) { // Free and NULL
+
+	if (*cp == NULL)
+	{
+		LOG_ERR_DTDM("free(NULL) @ %S %u %S", file, line, function);		
+	}
+
+	void* origBlk = (void*)((intptr_t)(*cp) - sizeof(d912pxy_dbg_mem_block));
+	d912pxy_dbg_mem_block* blkdsc = (d912pxy_dbg_mem_block*)origBlk;
+
+	if (blkdsc->trashCheck != 0xAAAAAAAA)
+	{
+		LOG_ERR_DTDM("free trash check failed @ %S %u %S", file, line, function);
+		*cp = NULL;
+		return;
 	}
 	else {
-		LOG_ERR_DTDM("A malloc failed. Attempt:%u. Debug Info: %S %u %S", i, file, line, function);
-		return false;
+		blkdsc->trashCheck = 0;
 	}
+
+	blocksAllocated.Hold();
+	blockList.erase(blkdsc->uid);	
+	blocksAllocated.Release();
+
+	inFree(origBlk);
+	*cp = NULL;	
+}
+
+void * d912pxy_mem_mgr::pxy_malloc_retry(size_t sz)
+{
+	void* tempPointer;
+
+	for (UINT i = 0; i < PXY_MEM_MGR_TRIES; i++) {
+
+		tempPointer = inMalloc(sz);
+
+		if (tempPointer != NULL) {		
+			return tempPointer;
+		}
+
+		Sleep(PXY_MEM_MGR_RETRY_WAIT); // Wait a moment
+	}
+
+	return NULL;
+}
+
+void * d912pxy_mem_mgr::pxy_realloc_retry(void * block, size_t sz)
+{
+	void* tempPointer;
+
+	for (UINT i = 0; i < PXY_MEM_MGR_TRIES; i++) {
+
+		tempPointer = inRealloc(block, sz);
+
+		if (tempPointer != NULL) {			
+			return tempPointer;
+		}
+
+		Sleep(PXY_MEM_MGR_RETRY_WAIT); // Wait a moment
+	}
+
+	return NULL;
+}
+
+void * d912pxy_mem_mgr::pxy_malloc(size_t sz)
+{
+	void* ret = inMalloc(sz);
+
+	if (!ret)
+	{
+		ret = pxy_malloc_retry(sz);
+
+		if (!ret)
+			LOG_ERR_THROW2(-1, "out of memory @ malloc");
+	}
+
+	return ret;
+}
+
+void * d912pxy_mem_mgr::pxy_realloc(void * block, size_t sz)
+{
+	void* ret = inRealloc(block, sz);
+
+	if (!ret)
+	{
+		ret = pxy_realloc_retry(block, sz);
+
+		if (!ret)
+			LOG_ERR_THROW2(-1, "out of memory @ realloc");
+	}
+
+	return ret;
 
 }
 
-
-bool d912pxy_mem_mgr::pxy_malloc_retry(void** cp, size_t sz, UINT tries, const char* file, const int line, const char* function) { // Calls pxy_malloc until it gets a success or fails after trying "tries" times.
-
-	for (UINT i = 0; i < tries; i++) {
-		if (pxy_malloc(cp, sz, file, line, function, i)) return true;
-		Sleep(3); // Wait a moment
-
-	}
-
-	return false;
-
-}
-
-bool d912pxy_mem_mgr::pxy_realloc_retry(void** cp, size_t sz, UINT tries, const char* file, const int line, const char* function) { // Calls pxy_realloc until it gets a success or fails after trying "tries" times.
-
-	for (UINT i = 0; i < tries; i++) {
-		if (pxy_realloc(cp, sz, file, line, function, i)) return true;
-		Sleep(3); // Wait a moment
-	}
-
-	return false;
-
-}
-
-void d912pxy_mem_mgr::pxy_free(void** cp) { // Free and NULL
-
-	inFree(*cp);
-	*cp = NULL;
+void d912pxy_mem_mgr::pxy_free(void * block)
+{
+	inFree(block);
 }

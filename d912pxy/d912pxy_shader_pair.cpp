@@ -30,7 +30,7 @@ d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d
 
 	UINT32 msz = sizeof(d912pxy_pso_cache_item*)*maxPsoId;
 
-	PXY_MALLOC(psoItems, msz);
+	PXY_MALLOC(psoItems, msz, d912pxy_pso_cache_item**);
 	ZeroMemory(psoItems, msz);
 
 	node = nodeId;
@@ -95,7 +95,7 @@ void d912pxy_shader_pair::CheckArrayAllocation(UINT32 idx)
 		maxPsoId = idx + 100;
 
 		//psoItems = (d912pxy_pso_cache_item**)realloc(psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*));
-		PXY_REALLOC(psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*));
+		PXY_REALLOC(psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*), d912pxy_pso_cache_item**);
 
 		ZeroMemory((void*)((intptr_t)psoItems + oldEnd), extendSize);
 	}

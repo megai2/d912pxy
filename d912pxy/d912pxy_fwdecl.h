@@ -108,10 +108,21 @@ SOFTWARE.
 //memory manager ============================
 
 #define PXY_MEM_MGR_TRIES 100
+#define PXY_MEM_MGR_RETRY_WAIT 100
 
-#define PXY_MALLOC(pointer, size) (d912pxy_s(memMgr)->pxy_malloc_retry((void**)&pointer, size, PXY_MEM_MGR_TRIES, __FILE__, __LINE__, __FUNCTION__))
-#define PXY_REALLOC(pointer, size) (d912pxy_s(memMgr)->pxy_realloc_retry((void**)&pointer, size, PXY_MEM_MGR_TRIES, __FILE__, __LINE__, __FUNCTION__))
-#define PXY_FREE(pointer) (d912pxy_s(memMgr)->pxy_free((void**)&pointer))
+#ifdef _DEBUG
+
+#define PXY_MALLOC(pointer, size, tcast) (d912pxy_s(memMgr)->pxy_malloc_dbg((void**)&pointer, size, __FILE__, __LINE__, __FUNCTION__))
+#define PXY_REALLOC(pointer, size, tcast) (d912pxy_s(memMgr)->pxy_realloc_dbg((void**)&pointer, size, __FILE__, __LINE__, __FUNCTION__))
+#define PXY_FREE(pointer) (d912pxy_s(memMgr)->pxy_free_dbg((void**)&pointer, __FILE__, __LINE__, __FUNCTION__))
+
+#else
+
+#define PXY_MALLOC(pointer, size, tcast) pointer = (tcast)(d912pxy_s(memMgr)->pxy_malloc(size))
+#define PXY_REALLOC(pointer, size, tcast) pointer = (tcast)(d912pxy_s(memMgr)->pxy_realloc((void*)pointer, size))
+#define PXY_FREE(pointer) (d912pxy_s(memMgr)->pxy_free((void*)pointer))
+
+#endif
 
 
 //shader profile defs =======================

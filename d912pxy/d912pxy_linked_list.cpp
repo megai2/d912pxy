@@ -107,6 +107,7 @@ void d912pxy_linked_list<ElementType>::IterRemove()
 		nodePool->WriteElement(iter);
 	else
 		PXY_FREE(iter);
+
 	lock.Release();
 
 	if (iterPrev)
@@ -137,8 +138,7 @@ d912pxy_linked_list_element * d912pxy_linked_list<ElementType>::PooledNode()
 		nodePool->Next();
 	}
 	else {
-
-		PXY_MALLOC(ret, sizeof(d912pxy_linked_list_element));
+		PXY_MALLOC(ret, sizeof(d912pxy_linked_list_element), d912pxy_linked_list_element *);
 	}
 
 	return ret;

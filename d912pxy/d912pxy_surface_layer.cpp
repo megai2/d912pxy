@@ -34,7 +34,7 @@ d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_surface * iBase, UINT32 iSu
 	width = iWidth;
 	memPerPix = imemPerPix;	
 
-	PXY_MALLOC(surfMem, iBSize);
+	PXY_MALLOC(surfMem, iBSize, void*);
 
 	intRefc = 0;
 }

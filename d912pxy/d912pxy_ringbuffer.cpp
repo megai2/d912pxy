@@ -29,7 +29,7 @@ d912pxy_ringbuffer<ElementType>::d912pxy_ringbuffer(UINT iMaxElements, UINT iGro
 {
 	UINT memSize = sizeof(ElementType)*iMaxElements;
 
-	PXY_MALLOC(bufferData, memSize);
+	PXY_MALLOC(bufferData, memSize, intptr_t);
 
 	maxElements = iMaxElements;
 	grow = iGrow;
@@ -66,7 +66,7 @@ void d912pxy_ringbuffer<ElementType>::WriteElement(ElementType ele)
 			readPoint -= bufferData;
 
 			//bufferData = (intptr_t)realloc((void*)bufferData, addMemSize + oldMemSize);
-			PXY_REALLOC(bufferData, addMemSize + oldMemSize);
+			PXY_REALLOC(bufferData, addMemSize + oldMemSize, intptr_t);
 
 			writePoint += bufferData;
 			readPoint += bufferData;
