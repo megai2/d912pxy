@@ -33,7 +33,9 @@ d912pxy_memtree2::d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow) : d9
 	nodePoolIdx = 1;
 
 	UINT32 memSz = maxNodes * sizeof(d912pxy_memtree2_node);
-	nodePool = (d912pxy_memtree2_node*)malloc(memSz);
+
+	PXY_MALLOC(nodePool, memSz);
+
 	ZeroMemory(nodePool, memSz);
 	ZeroMemory(&base, sizeof(d912pxy_memtree2_node));
 }
@@ -68,7 +70,7 @@ d912pxy_memtree2::~d912pxy_memtree2()
 	}
 #endif
 
-	free(nodePool);
+	PXY_FREE(nodePool);
 }
 
 UINT64 d912pxy_memtree2::PointAt32(void * mem)
@@ -191,7 +193,10 @@ UINT64 d912pxy_memtree2::PointAtMem(void * mem, UINT32 dataMemSz2)
 				{
 					maxNodes *= grow;
 					UINT32 memSz = maxNodes * sizeof(d912pxy_memtree2_node);
-					nodePool = (d912pxy_memtree2_node*)realloc(nodePool, memSz);	
+
+					PXY_REALLOC(nodePool, memSz);
+					//nodePool = (d912pxy_memtree2_node*)realloc(nodePool, memSz);
+
 					ZeroMemory(&nodePool[nodePoolIdx], memSz / grow);
 				}
 				else {

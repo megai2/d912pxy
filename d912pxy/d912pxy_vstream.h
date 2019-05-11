@@ -103,5 +103,6 @@ private:
 	LONG lockDepth;	
 
 	d912pxy_thread_lock ctorSync;
+
 };
 

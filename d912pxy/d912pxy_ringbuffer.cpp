@@ -28,7 +28,8 @@ template<class ElementType>
 d912pxy_ringbuffer<ElementType>::d912pxy_ringbuffer(UINT iMaxElements, UINT iGrow) : d912pxy_noncom(0, L"ringbuffer")
 {
 	UINT memSize = sizeof(ElementType)*iMaxElements;
-	bufferData = (intptr_t)malloc(memSize);
+
+	PXY_MALLOC(bufferData, memSize);
 
 	maxElements = iMaxElements;
 	grow = iGrow;
@@ -41,7 +42,8 @@ d912pxy_ringbuffer<ElementType>::d912pxy_ringbuffer(UINT iMaxElements, UINT iGro
 template<class ElementType>
 d912pxy_ringbuffer<ElementType>::~d912pxy_ringbuffer()
 {
-	free((void*)bufferData);
+	PXY_FREE(bufferData);
+
 }
 
 template<class ElementType>
@@ -63,7 +65,8 @@ void d912pxy_ringbuffer<ElementType>::WriteElement(ElementType ele)
 			writePoint -= bufferData;
 			readPoint -= bufferData;
 
-			bufferData = (intptr_t)realloc((void*)bufferData, addMemSize + oldMemSize);
+			//bufferData = (intptr_t)realloc((void*)bufferData, addMemSize + oldMemSize);
+			PXY_REALLOC(bufferData, addMemSize + oldMemSize);
 
 			writePoint += bufferData;
 			readPoint += bufferData;
@@ -71,6 +74,9 @@ void d912pxy_ringbuffer<ElementType>::WriteElement(ElementType ele)
 
 			//it's not end yet, cuz we allocating memory to point of overruning so we must copy memory to be readed into end of new memory block
 			memcpy((void*)(readPoint + addMemSize), (void*)(readPoint), oldMemSize - (readPoint - bufferData));
+
+
+
 			readPoint += addMemSize;
 			maxElements += expandElements;
 

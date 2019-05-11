@@ -103,5 +103,6 @@ private:
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
 		{L"query",L"occlusion",L"1"}//PXY_CFG_QUERY_OCCLUSION
 	};
+
 };
 

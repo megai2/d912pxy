@@ -34,13 +34,15 @@ d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_surface * iBase, UINT32 iSu
 	width = iWidth;
 	memPerPix = imemPerPix;	
 
-	surfMem = malloc(iBSize);	
+	PXY_MALLOC(surfMem, iBSize);
+
 	intRefc = 0;
 }
 
 d912pxy_surface_layer::~d912pxy_surface_layer()
 {
-	free(surfMem);
+	PXY_FREE(surfMem);
+
 }
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_surface_layer

@@ -30,7 +30,7 @@ d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d
 
 	UINT32 msz = sizeof(d912pxy_pso_cache_item*)*maxPsoId;
 
-	psoItems = (d912pxy_pso_cache_item**)malloc(msz);
+	PXY_MALLOC(psoItems, msz);
 	ZeroMemory(psoItems, msz);
 
 	node = nodeId;
@@ -68,7 +68,7 @@ d912pxy_shader_pair::~d912pxy_shader_pair()
 		}
 	}
 
-	free(psoItems);
+	PXY_FREE(psoItems);
 }
 
 void d912pxy_shader_pair::PrecompilePSO(UINT32 idx, d912pxy_trimmed_dx12_pso * dsc)
@@ -93,7 +93,9 @@ void d912pxy_shader_pair::CheckArrayAllocation(UINT32 idx)
 		intptr_t extendSize = ((idx - maxPsoId) + 100) * sizeof(d912pxy_pso_cache_item*);
 
 		maxPsoId = idx + 100;
-		psoItems = (d912pxy_pso_cache_item**)realloc(psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*));
+
+		//psoItems = (d912pxy_pso_cache_item**)realloc(psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*));
+		PXY_REALLOC(psoItems, maxPsoId * sizeof(d912pxy_pso_cache_item*));
 
 		ZeroMemory((void*)((intptr_t)psoItems + oldEnd), extendSize);
 	}

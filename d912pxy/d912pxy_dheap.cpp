@@ -233,13 +233,14 @@ UINT d912pxy_dheap::CreateSRV_at(ID3D12Resource* resource, D3D12_SHADER_RESOURCE
 
 d912pxy_dheap_slot_stack::d912pxy_dheap_slot_stack(UINT32 size)
 {
-	data = (d912pxy_dheap_slot_type*)malloc(size * sizeof(d912pxy_dheap_slot_type));
+
+	PXY_MALLOC(data, size * sizeof(d912pxy_dheap_slot_type));
 	top = 0;
 }
 
 d912pxy_dheap_slot_stack::~d912pxy_dheap_slot_stack()
 {
-	free(data);
+	PXY_FREE(data);
 }
 
 void d912pxy_dheap_slot_stack::Push(d912pxy_dheap_slot_type val)

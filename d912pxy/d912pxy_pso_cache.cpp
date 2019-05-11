@@ -658,16 +658,17 @@ void d912pxy_pso_cache::LoadCachedData()
 	if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_READ)
 	{
 		UINT fsz = 0;
-		UINT32* max = (UINT32*)d912pxy_s(vfs)->LoadFileH(PXY_PSO_CACHE_KEYFILE_NAME, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS);
+		UINT32* max_ = (UINT32*)d912pxy_s(vfs)->LoadFileH(PXY_PSO_CACHE_KEYFILE_NAME, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS); // Alrai: I had to change the name of max as it was being considered a macro in PXY_MALLOC.
 
 		psoKeyCache = NULL;
 
-		if (max && *max)
+		if (max_ && *max_)
 		{
-			cacheIncID = *max;
-			psoKeyCache = (d912pxy_serialized_pso_key**)malloc(sizeof(d912pxy_serialized_pso_key*) * (*max + 2));
+			cacheIncID = *max_;
 
-			for (int i = 1; i != (*max+1); ++i)
+			PXY_MALLOC(psoKeyCache, sizeof(d912pxy_serialized_pso_key*) * (*max_ + 2));
+
+			for (int i = 1; i != (*max_+1); ++i)
 			{
 				d912pxy_serialized_pso_key* psoTrimmedDsc = (d912pxy_serialized_pso_key*)d912pxy_s(vfs)->LoadFileH(i+1, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS);
 
@@ -719,7 +720,7 @@ void d912pxy_pso_cache::LoadCachedData()
 							continue;
 						}
 
-						for (int i = 1; i != (*max + 1); ++i)
+						for (int i = 1; i != (*max_ + 1); ++i)
 						{
 							if (entry->compiled[i >> 6] & (1ULL << (i & 0x3F)))
 							{
@@ -753,14 +754,13 @@ void d912pxy_pso_cache::LoadCachedData()
 				}
 			}
 
-			for (int i = 1; i != (*max+1); ++i)
+			for (int i = 1; i != (*max_ +1); ++i)
 			{
-				free(psoKeyCache[i]);
+				PXY_FREE(psoKeyCache[i]);
 			}
 
-			free(psoKeyCache);
-
-			free(max);
+			PXY_FREE(psoKeyCache);
+			PXY_FREE(max_);
 		}
 	}
 }
@@ -804,7 +804,9 @@ d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_tri
 	//m_status = 0;
 	retPtr = NULL;
 	obj = nullptr;
-	desc = (d912pxy_trimmed_dx12_pso*)malloc(sizeof(d912pxy_trimmed_dx12_pso));
+
+	PXY_MALLOC(desc, sizeof(d912pxy_trimmed_dx12_pso));
+
 	*desc = *sDsc;
 
 	desc->VS->ThreadRef(1);
@@ -829,7 +831,7 @@ void d912pxy_pso_cache_item::Compile()
 		psObj->ThreadRef(-1);
 		vdclObj->ThreadRef(-1);
 
-		free(desc);
+		PXY_FREE(desc);
 
 		//m_status = 2;
 
@@ -896,7 +898,7 @@ void d912pxy_pso_cache_item::Compile()
 			psObj->ThreadRef(-1);
 			vdclObj->ThreadRef(-1);
 
-			free(desc);
+			PXY_FREE(desc);
 
 			//m_status = 2;
 
@@ -911,5 +913,5 @@ void d912pxy_pso_cache_item::Compile()
 	psObj->ThreadRef(-1);
 	vdclObj->ThreadRef(-1);
 
-	free(desc);
+	PXY_FREE(desc);
 }
