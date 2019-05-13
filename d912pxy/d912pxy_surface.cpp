@@ -131,9 +131,15 @@ d912pxy_surface::~d912pxy_surface()
 	{
 		if (m_res)
 		{			
-			FreeObjAndSlot();
+			FreeObjAndSlot();		
 			FreeLayers();
 		}
+
+		//megai2: some objects can stuck in m_res == NULL and AllocateLayers() called with threaded ctor, 
+		//so we need to clean them this way to avoid memleack
+		if (layers)
+			FreeLayers();
+
 	} else 
 	{
 		LOG_DBG_DTDM2("rt/dsv srv freeing");
@@ -584,7 +590,6 @@ UINT32 d912pxy_surface::AllocateSRV()
 
 void d912pxy_surface::AllocateLayers()
 {
-
 	PXY_MALLOC(layers, sizeof(d912pxy_surface_layer*) * descCache.DepthOrArraySize * descCache.MipLevels, d912pxy_surface_layer**);
 
 	for (int i = 0; i != descCache.DepthOrArraySize; ++i)
@@ -617,6 +622,7 @@ void d912pxy_surface::FreeLayers()
 	}
 
 	PXY_FREE(layers);
+	layers = NULL;
 }
 
 void d912pxy_surface::FreeObjAndSlot()

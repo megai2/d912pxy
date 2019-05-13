@@ -639,7 +639,7 @@ void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommand
 
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context)
 {
-	ID3D12PipelineState* pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0)->GetPtr();
+	ID3D12PipelineState * pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0);
 	
 	if (pso)
 		cl->SetPipelineState(pso);
@@ -659,7 +659,7 @@ void d912pxy_replay::RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCom
 
 void d912pxy_replay::RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl, void** unused)
 {	
-	*it->feedbackPtr = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0);	
+	*it->feedbackPtr = d912pxy_s(psoCache)->GetByDescMT(&it->rawState, 0);	
 }
 
 void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void** unused)

@@ -30,6 +30,8 @@ system is under stress or whenever alloc calls just decide to fail.
 #include "stdafx.h"
 #include "d912pxy_stackwalker.h"
 
+static UINT32 recordOprtNewCaller = 0;
+
 void * operator new(std::size_t n)
 {
 #ifdef _DEBUG
@@ -39,7 +41,10 @@ void * operator new(std::size_t n)
 		return d912pxy_mem_mgr::pxy_malloc_dbg_uninit(n, __FILE__, __LINE__, __FUNCTION__);
 	}
 	else {
-		d912pxy_s(memMgr)->pxy_malloc_dbg(&ret, n, 0, 0, "operator new");
+		if (recordOprtNewCaller)
+			d912pxy_s(memMgr)->pxy_malloc_dbg(&ret, n, 0, 0, "operator new");
+		else 
+			d912pxy_s(memMgr)->pxy_malloc_dbg(&ret, n, "<no data on new caller>", __LINE__, "operator new");
 	}
 
 #else
@@ -348,4 +353,6 @@ void d912pxy_mem_mgr::LogLeaked()
 
 void d912pxy_mem_mgr::PostInit()
 {
+	NonCom_Init(NULL, L"memmgr");
+	recordOprtNewCaller = d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER);
 }

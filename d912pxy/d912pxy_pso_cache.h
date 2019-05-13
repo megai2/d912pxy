@@ -105,7 +105,8 @@ public:
 	UINT UseWithFeedbackPtr(void** feedback);
 
 	d912pxy_pso_cache_item* UseByDesc(d912pxy_trimmed_dx12_pso* dsc, UINT32 frameStartTime);
-	d912pxy_pso_cache_item* UseByDescMT(d912pxy_trimmed_dx12_pso* dsc, UINT32 frameStartTime);
+	d912pxy_pso_cache_item* GetByDescMT(d912pxy_trimmed_dx12_pso* dsc, UINT32 frameStartTime);
+	ID3D12PipelineState* UseByDescMT(d912pxy_trimmed_dx12_pso* dsc, UINT32 frameStartTime);
 
 	void SetRootSignature(ComPtr<ID3D12RootSignature> sig);
 

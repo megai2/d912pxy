@@ -557,7 +557,32 @@ d912pxy_pso_cache_item* d912pxy_pso_cache::UseByDesc(d912pxy_trimmed_dx12_pso* d
 	return item;
 }
 
-d912pxy_pso_cache_item * d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso * dsc, UINT32 frameStartTime)
+d912pxy_pso_cache_item * d912pxy_pso_cache::GetByDescMT(d912pxy_trimmed_dx12_pso * dsc, UINT32 frameStartTime)
+{
+	dsc->vdeclHash = dsc->InputLayout->GetHash();
+
+	UINT32 dscHash = cacheIndexes->memHash32((void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset));
+	UINT64 id = cacheIndexes->PointAtMemMTR(&dscHash, 4);
+
+	if (id == 0)
+	{
+		id = cacheIndexes->PointAtMemMTRW(&dscHash, 4);
+
+		if (!id)
+			id = ++cacheIncID;
+
+		cacheIndexes->PointAtMemMTW(id);
+
+		SaveKeyToCache(id, dsc);
+	}
+
+	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
+		return NULL;
+
+	return d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc);
+}
+
+ID3D12PipelineState* d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso * dsc, UINT32 frameStartTime)
 {
 	dsc->vdeclHash = dsc->InputLayout->GetHash();
 	
@@ -579,7 +604,7 @@ d912pxy_pso_cache_item * d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso
 	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
 		return NULL;
 	
-	return d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc);
+	return d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc)->GetPtr();
 }
 
 void d912pxy_pso_cache::SetRootSignature(ComPtr<ID3D12RootSignature> sig)

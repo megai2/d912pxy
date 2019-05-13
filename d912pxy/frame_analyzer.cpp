@@ -61,7 +61,7 @@ void d912pxy_first_init()
 	new (malloc(sizeof(d912pxy_config))) d912pxy_config();
 	new (malloc(sizeof(d912pxy_log))) d912pxy_log();
 
-	d912pxy_s(memMgr)->NonCom_Init(NULL, L"memmgr");
+	d912pxy_s(memMgr)->PostInit();
 
 	D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
 	D3D9ProxyCb_set_OnDevDestroy(&app_cb_D3D9Dev_destroy);
