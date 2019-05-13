@@ -29,11 +29,14 @@ class d912pxy_noncom
 {
 public:
 	d912pxy_noncom(d912pxy_device* dev, const wchar_t* logModule);
+	d912pxy_noncom();
 	~d912pxy_noncom();
 
 	void ThrowErrorDbg(HRESULT hr, const char* msg);
 
 	HRESULT WINAPI GetDevice(IDirect3DDevice9** ppDevice);
+
+	void NonCom_Init(d912pxy_device* dev, const wchar_t* logModule);
 
 protected:
 

@@ -29,34 +29,18 @@ LONG g_ObjectsCounter = 0;
 
 #include <map>
 
-std::map<UINT, const wchar_t*>  gLeakTracker;
+std::map<UINT, const wchar_t*>*  gLeakTracker;
 HANDLE gLeakMapLock;
 
 #endif
 
 d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
 {
-	d912pxy_s(log)->RegisterModule(logModule, &LGC_DEFAULT);
+	NonCom_Init(dev, logModule);
+}
 
-	LOG_DBG_DTDM("new %s", logModule);
-
-#ifdef _DEBUG
-	LONG ouid = InterlockedIncrement(&g_ObjectsCounter);
-	LOG_DBG_DTDM("obj %u is %s", ouid, logModule);
-
-	if (ouid == 1)
-	{
-		gLeakMapLock = CreateMutex(0, 0, 0);
-		gLeakTracker.clear();
-	}
-	lkObjTrace = ouid;
-	WaitForSingleObject(gLeakMapLock, INFINITE);
-	gLeakTracker[lkObjTrace] = logModule;
-	ReleaseMutex(gLeakMapLock);
-
-#endif
-
-	m_dev = dev;
+d912pxy_noncom::d912pxy_noncom()
+{
 }
 
 d912pxy_noncom::~d912pxy_noncom()
@@ -67,21 +51,23 @@ d912pxy_noncom::~d912pxy_noncom()
 	LOG_DBG_DTDM("Objs last = %u", g_ObjectsCounter);
 
 	WaitForSingleObject(gLeakMapLock, INFINITE);
-	gLeakTracker.erase(lkObjTrace);
+	gLeakTracker->erase(lkObjTrace);
 	ReleaseMutex(gLeakMapLock);
 
 	if (lkObjTrace == 1)
 	{
 		CloseHandle(gLeakMapLock);
-		for (std::map<UINT, const wchar_t*>::iterator it = gLeakTracker.begin(); it != gLeakTracker.end(); ++it)
+		for (std::map<UINT, const wchar_t*>::iterator it = gLeakTracker->begin(); it != gLeakTracker->end(); ++it)
 		{
 			LOG_DBG_DTDM3("obj %s is leaked", it->second);
 		}		
 	}
 
-	if (gLeakTracker.empty())
+	if (gLeakTracker->empty())
 	{
 		LOG_DBG_DTDM3("all d912pxy objects are freed. Freedom!");
+
+		delete gLeakTracker;
 	}
 #endif
 }
@@ -101,4 +87,30 @@ HRESULT d912pxy_noncom::GetDevice(IDirect3DDevice9 ** ppDevice)
 	LOG_DBG_DTDM(__FUNCTION__);
 	*ppDevice = m_dev;
 	return D3D_OK;
+}
+
+void d912pxy_noncom::NonCom_Init(d912pxy_device * dev, const wchar_t * logModule)
+{
+	d912pxy_s(log)->RegisterModule(logModule, &LGC_DEFAULT);
+
+	LOG_DBG_DTDM("new %s", logModule);
+
+#ifdef _DEBUG
+	LONG ouid = InterlockedIncrement(&g_ObjectsCounter);
+	LOG_DBG_DTDM("obj %u is %s", ouid, logModule);
+
+	if (ouid == 1)
+	{
+		gLeakMapLock = CreateMutex(0, 0, 0);
+		gLeakTracker = new std::map<UINT, const wchar_t*>();
+		gLeakTracker->clear();
+	}
+	lkObjTrace = ouid;
+	WaitForSingleObject(gLeakMapLock, INFINITE);
+	gLeakTracker[0][lkObjTrace] = logModule;
+	ReleaseMutex(gLeakMapLock);
+
+#endif
+
+	m_dev = dev;
 }

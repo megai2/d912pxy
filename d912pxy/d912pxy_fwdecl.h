@@ -247,6 +247,7 @@ class d912pxy_metrics;
 class d912pxy_config;
 class d912pxy_log;
 class d912pxy_mem_mgr;
+class d912pxy_StackWalker;
 struct d912pxy_trimmed_dx12_pso;
 
 

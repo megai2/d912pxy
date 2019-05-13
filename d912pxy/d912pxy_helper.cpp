@@ -44,7 +44,7 @@ LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
 	case EXCEPTION_FLT_DIVIDE_BY_ZERO:
 	case EXCEPTION_STACK_OVERFLOW:		
 	{
-		d912pxy_StackWalker sw;		
+		d912pxy_StackWalker sw(0x3F,0);		
 		sw.ShowCallstack();
 		return EXCEPTION_CONTINUE_SEARCH;
 	}		
@@ -109,7 +109,7 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 					else
 						LOG_ERR_DTDM("Recived D3D12 device removal message due to unknown error");
 
-					d912pxy_StackWalker sw;
+					d912pxy_StackWalker sw(0x3F,0);
 					sw.ShowCallstack();
 
 

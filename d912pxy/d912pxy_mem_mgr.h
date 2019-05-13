@@ -42,7 +42,7 @@ class d912pxy_mem_mgr : public d912pxy_noncom {
 
 public:
 
-	d912pxy_mem_mgr(d912pxy_device* dev);
+	d912pxy_mem_mgr();
 	~d912pxy_mem_mgr();
 
 	bool pxy_malloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function); 
@@ -56,12 +56,30 @@ public:
 	void* pxy_realloc(void* block, size_t sz);  // Returns success or fail. Passed pointer shouldn't get changed if realloc failed.
 	void pxy_free(void* block);
 
+	static void* pxy_malloc_dbg_uninit(size_t sz, const char* file, const int line, const char* function);
+
+	void LogLeaked();
+
+	void PostInit();
+#ifdef _DEBUG
+	void StartTrackingBlocks() { allowTrackBlocks = 1; };
+#else 
+	void StartTrackingBlocks() { };
+#endif
+
 private:
 
 	void* inMalloc(size_t sz);
 	void* inRealloc(void* block, size_t sz);
 	void inFree(void* cp);
 
+#ifdef _DEBUG
 	d912pxy_thread_lock blocksAllocated;
-	std::map<UINT, d912pxy_dbg_mem_block*> blockList;	
+	std::map<UINT, d912pxy_dbg_mem_block*> blockList;
+
+	UINT8 recursionCheck;
+	UINT8 allowTrackBlocks = 0;
+
+	d912pxy_StackWalker* stkWlk;
+#endif
 };

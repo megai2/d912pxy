@@ -25,11 +25,20 @@ SOFTWARE.
 #include "stdafx.h"
 #include "../thirdparty/StackWalker/StackWalker.h"
 
-class d912pxy_StackWalker : public StackWalker, public d912pxy_noncom
+class d912pxy_StackWalker : public StackWalker
 {
 public:
-	d912pxy_StackWalker();
+	d912pxy_StackWalker(UINT32 opts, UINT32 saveCaller);
 	~d912pxy_StackWalker();
 
 	void OnOutput(LPCSTR szText);
+	void OnCallstackEntry(CallstackEntryType eType, CallstackEntry& entry);
+
+	char* ReturnCaller();
+	
+private:
+	UINT32 saveCallerToBuffer;
+	UINT32 callerLineNr;	
+
+	char* caller;
 };

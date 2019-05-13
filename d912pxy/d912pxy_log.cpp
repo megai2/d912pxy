@@ -56,6 +56,10 @@ d912pxy_log::d912pxy_log()
 d912pxy_log::~d912pxy_log()
 {
 #ifndef DISABLE_P7LIB
+	
+	//megai2: wait a bit for final datas to be processed
+	Sleep(2000);
+
 	p7cli->Release();
 #else
 	if (logfile)
