@@ -79,5 +79,7 @@ private:
 
 	UINT8 recursionCheck;
 	UINT8 allowTrackBlocks = 0;
+
+	d912pxy_StackWalker* stkWlk;
 #endif
 };

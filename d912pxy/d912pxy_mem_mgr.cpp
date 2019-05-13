@@ -28,21 +28,24 @@ system is under stress or whenever alloc calls just decide to fail.
 */
 
 #include "stdafx.h"
+#include "d912pxy_stackwalker.h"
 
 void * operator new(std::size_t n)
 {
 #ifdef _DEBUG
 	void* ret = NULL;
 
-	if (!d912pxy_s(memMgr))
-		return d912pxy_mem_mgr::pxy_malloc_dbg_uninit(n, __FILE__, __LINE__, __FUNCTION__);	
+	if (!d912pxy_s(memMgr)) {			   
+		return d912pxy_mem_mgr::pxy_malloc_dbg_uninit(n, __FILE__, __LINE__, __FUNCTION__);
+	}
+	else {
+		d912pxy_s(memMgr)->pxy_malloc_dbg(&ret, n, 0, 0, "operator new");
+	}
 
 #else
 	void* ret;
-#endif
-	
-
 	PXY_MALLOC(ret, n, void*);
+#endif	
 	return ret;
 }
 
@@ -57,6 +60,8 @@ d912pxy_mem_mgr::d912pxy_mem_mgr() : d912pxy_noncom() {
 	blocksAllocated.SetValue(0);
 	blockList.clear();
 
+	stkWlk = new d912pxy_StackWalker(3, 4);
+
 	recursionCheck = 0;
 #endif
 
@@ -64,7 +69,10 @@ d912pxy_mem_mgr::d912pxy_mem_mgr() : d912pxy_noncom() {
 }
 
 d912pxy_mem_mgr::~d912pxy_mem_mgr() {
+#ifdef _DEBUG
+	delete stkWlk;	
 	LogLeaked();
+#endif
 
 /*	free(d912pxy_s(memMgr));
 	d912pxy_s(memMgr) = NULL;*/
@@ -133,6 +141,14 @@ bool d912pxy_mem_mgr::pxy_malloc_dbg(void** cp, size_t sz, const char* file, con
 	}
 
 	recursionCheck = 1;
+
+	if (file == NULL)
+	{
+		stkWlk->ShowCallstack();
+
+		
+		blkdsc->file = stkWlk->ReturnCaller();
+	}
 
 	blockList[blocksAllocated.Add(1)] = blkdsc;
 	blkdsc->uid = blocksAllocated.GetValue();
@@ -207,6 +223,9 @@ void d912pxy_mem_mgr::pxy_free_dbg(void** cp, const char* file, const int line, 
 	blocksAllocated.Hold();
 	blockList.erase(blkdsc->uid);	
 	blocksAllocated.Release();
+
+	if (blkdsc->line == 0)
+		free(blkdsc->file);
 
 justFree:
 	inFree(origBlk);
