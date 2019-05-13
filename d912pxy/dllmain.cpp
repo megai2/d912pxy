@@ -47,13 +47,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     {
     case DLL_PROCESS_ATTACH:
 	{
-		//megai2: load config at dll load
-		new d912pxy_config();		
-		new d912pxy_log();
-
-		D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
-		D3D9ProxyCb_set_OnDevDestroy(&app_cb_D3D9Dev_destroy);
-
+		d912pxy_first_init();
 		break;
 	}
     case DLL_THREAD_ATTACH:
@@ -61,7 +55,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_THREAD_DETACH:
 		break;
     case DLL_PROCESS_DETACH:
-        break;
+	{
+		d912pxy_final_cleanup();
+		break;
+	}
     }
     return TRUE;
 }
