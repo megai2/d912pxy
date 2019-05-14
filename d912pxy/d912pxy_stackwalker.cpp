@@ -25,22 +25,50 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_stackwalker.h"
 
-d912pxy_StackWalker::d912pxy_StackWalker() : StackWalker(), d912pxy_noncom(NULL, L"StkWalk")
+d912pxy_StackWalker::d912pxy_StackWalker(UINT32 opts, UINT32 saveCaller) : StackWalker(opts)
 {
-	d912pxy_s(log)->SyncCrashWrite(1);
+	if (!saveCaller)
+		d912pxy_s(log)->SyncCrashWrite(1);
+
+	saveCallerToBuffer = saveCaller;
+	callerLineNr = 0;
+	caller = 0;
 }
 
 d912pxy_StackWalker::~d912pxy_StackWalker()
 {
-	d912pxy_s(log)->SyncCrashWrite(0);
+	if (!saveCallerToBuffer)
+		d912pxy_s(log)->SyncCrashWrite(0);
 }
 
 void d912pxy_StackWalker::OnOutput(LPCSTR szText)
 {
-	wchar_t buf[4096];
-	wsprintf(buf, L"%S", szText);
+	if (!saveCallerToBuffer)
+	{
+		wchar_t buf[4096];
+		wsprintf(buf, L"%S", szText);
 
-	LOG_ERR_DTDM("%s", buf);
+		//LOG_ERR_DTDM("%s", buf);
 
-	d912pxy_s(log)->WriteCrashLogLine(buf);
+		d912pxy_s(log)->WriteCrashLogLine(buf);
+	}
+	else if (saveCallerToBuffer == callerLineNr)
+	{
+		caller = _strdup(szText);
+	}
+
+}
+
+void d912pxy_StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry & entry)
+{
+	if (saveCallerToBuffer)
+		++callerLineNr;
+	
+	StackWalker::OnCallstackEntry(eType, entry);
+}
+
+char * d912pxy_StackWalker::ReturnCaller()
+{
+	callerLineNr = 0;
+	return caller;
 }

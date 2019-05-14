@@ -46,6 +46,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_MT_SURFACE_CTOR,
 	PXY_CFG_LOG_P7CONFIG,
 	PXY_CFG_LOG_PERF_GRAPH,
+	PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER,
 	PXY_CFG_UPLOAD_TEX_ASYNC,	
 	PXY_CFG_MISC_GPU_TIMEOUT,
 	PXY_CFG_DX_DBG_RUNTIME,
@@ -97,11 +98,13 @@ private:
 		{L"mt", L"surface_ctor", L"0"},//PXY_CFG_MT_SURFACE_CTOR
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG
 		{L"log", L"perf_graph", L"0"},//PXY_CFG_LOG_PERF_GRAPH		
+		{L"log", L"dbg_mem_mgr_save_new_caller", L"0"},//PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER
 		{L"upload",L"tex_async",L"0"},//PXY_CFG_UPLOAD_TEX_ASYNC
 		{L"misc",L"gpu_timeout",L"5000"},//PXY_CFG_MISC_GPU_TIMEOUT
 		{L"misc",L"dx_debug",L"0"},//PXY_CFG_DX_DBG_RUNTIME
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
 		{L"query",L"occlusion",L"1"}//PXY_CFG_QUERY_OCCLUSION
 	};
+
 };
 

@@ -109,5 +109,6 @@ private:
 
 	UINT ulMarked;
 	d912pxy_upload_item** ul;
+
 };
 

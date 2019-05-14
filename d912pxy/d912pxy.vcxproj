@@ -548,6 +548,7 @@
     <ClInclude Include="d912pxy_log.h" />
     <ClInclude Include="d912pxy_memtree.h" />
     <ClInclude Include="d912pxy_memtree2.h" />
+    <ClInclude Include="d912pxy_mem_mgr.h" />
     <ClInclude Include="d912pxy_metrics.h" />
     <ClInclude Include="d912pxy_noncom.h" />
     <ClInclude Include="d912pxy_performance_graph.h" />
@@ -630,6 +631,7 @@
     <ClCompile Include="d912pxy_log.cpp" />
     <ClCompile Include="d912pxy_memtree.cpp" />
     <ClCompile Include="d912pxy_memtree2.cpp" />
+    <ClCompile Include="d912pxy_mem_mgr.cpp" />
     <ClCompile Include="d912pxy_metrics.cpp" />
     <ClCompile Include="d912pxy_noncom.cpp" />
     <ClCompile Include="d912pxy_performance_graph.cpp" />

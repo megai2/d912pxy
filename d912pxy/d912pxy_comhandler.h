@@ -79,6 +79,8 @@ public:
 
 	LONG GetCOMRefCount() { return refc; };
 
+	LONG GetCurrentPoolSyncValue() { return poolSync.GetValue(); };
+
 private:
 	LONG thrdRefc;
 	LONG refc;

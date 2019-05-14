@@ -30,7 +30,8 @@ using namespace Microsoft::WRL;
 
 d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(L"device")
 {
-	d912pxy_s(dev) = this;	
+	d912pxy_s(dev) = this;
+
 	PrintInfoBanner();
 
 	initPtr = par;
@@ -147,8 +148,16 @@ ULONG WINAPI d912pxy_device::Release(void)
 	{
 		LOG_INFO_DTDM("Device last reference removal");
 		lastDev = NULL;
-	}
-	return d912pxy_comhandler::Release();	
+
+		d912pxy_comhandler::Release();
+
+		//d912pxy_s(memMgr)->LogLeaked();
+		d912pxy_final_cleanup();
+
+		return 0;
+
+	} else 
+		return d912pxy_comhandler::Release();	
 }
 
 UINT WINAPI d912pxy_device::GetAvailableTextureMem(void)

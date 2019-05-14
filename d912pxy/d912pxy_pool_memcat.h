@@ -46,7 +46,6 @@ private:
 	UINT32 instantUnload;
 
 	UINT16* limits;
-	
 
 protected:
 	d912pxy_ringbuffer<ElementType>** memTable;

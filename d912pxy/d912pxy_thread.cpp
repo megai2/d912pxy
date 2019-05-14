@@ -70,13 +70,14 @@ d912pxy_thread::d912pxy_thread(const char* threadName, UINT suspend)
 
 	SetThreadName(GetThreadId(thrdHandle), (char*)threadName);
 
-	name = _strdup(threadName);
+	PXY_MALLOC(name, strlen(threadName) + 1, char*);
+	strcpy(name, threadName);	
 }
 
 
 d912pxy_thread::~d912pxy_thread()
 {
-	free(name);
+	PXY_FREE(name);
 }
 
 void d912pxy_thread::Stop()

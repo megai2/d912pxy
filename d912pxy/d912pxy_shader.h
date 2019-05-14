@@ -58,5 +58,6 @@ private:
 
 	UINT oLen;	
 	DWORD* oCode;
+
 };
 

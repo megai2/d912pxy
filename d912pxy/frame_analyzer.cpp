@@ -28,6 +28,7 @@ d912pxy_device* d912translator;
 
 IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* obj)
 {
+	d912pxy_first_init();
 	
 	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_MISC_USE_DX9))
 	{
@@ -37,11 +38,47 @@ IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* 
 		if (dev->GetOrigD3D9Call()->DeviceType != D3DDEVTYPE_HAL)
 			return dev;		
 		
+	d912pxy_s(memMgr)->StartTrackingBlocks();
 	d912translator = new d912pxy_device(dev, obj);
 	return (IDirect3DDevice9*)d912translator;
 }
 
 void app_cb_D3D9Dev_destroy(IDirect3DDevice9 * dev)
 {
+}
 
+void d912pxy_first_init()
+{
+	if (d912pxy_s(memMgr) != NULL)	
+		return;	
+
+	//megai2: load config at dll load
+	//also do dirty tricks with memmgr
+
+	d912pxy_s(memMgr) = NULL;
+
+	new (malloc(sizeof(d912pxy_mem_mgr))) d912pxy_mem_mgr();
+	new (malloc(sizeof(d912pxy_config))) d912pxy_config();
+	new (malloc(sizeof(d912pxy_log))) d912pxy_log();
+
+	d912pxy_s(memMgr)->PostInit();
+
+	D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
+	D3D9ProxyCb_set_OnDevDestroy(&app_cb_D3D9Dev_destroy);
+}
+
+void d912pxy_final_cleanup()
+{
+	if (!d912pxy_s(memMgr))
+		return;
+
+	d912pxy_s(memMgr)->~d912pxy_mem_mgr();
+	d912pxy_s(log)->~d912pxy_log();
+	d912pxy_s(config)->~d912pxy_config();
+
+	free(d912pxy_s(memMgr));
+	free(d912pxy_s(log));
+	free(d912pxy_s(config));
+
+	d912pxy_s(memMgr) = NULL;	
 }

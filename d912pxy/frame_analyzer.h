@@ -26,3 +26,6 @@ SOFTWARE.
 
 IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* obj);
 void app_cb_D3D9Dev_destroy(IDirect3DDevice9* dev);
+
+void d912pxy_first_init();
+void d912pxy_final_cleanup();
