@@ -169,9 +169,13 @@ void d912pxy_resource::EvictFromGPU()
 	if (evicted || !m_res)
 		return;
 
+	FRAME_METRIC_RESIDENCY(1)
+
 	ID3D12Pageable* mr = (ID3D12Pageable*)m_res;
 	d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->Evict(1, &mr), "Evict");
 	evicted = 1;	
+
+	FRAME_METRIC_RESIDENCY(0)
 }
 
 void d912pxy_resource::MakeGPUResident()
@@ -179,9 +183,13 @@ void d912pxy_resource::MakeGPUResident()
 	if (!evicted || !m_res)
 		return;
 
+	FRAME_METRIC_RESIDENCY(1)
+
 	ID3D12Pageable* mr = (ID3D12Pageable*)m_res;
 	d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->MakeResident(1, &mr), "MakeResident");
 	evicted = 0;
+
+	FRAME_METRIC_RESIDENCY(0)
 }
 
 void d912pxy_resource::BTransitGID(UINT subres, D3D12_RESOURCE_STATES to, d912pxy_gpu_cmd_list_group id)
