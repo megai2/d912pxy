@@ -280,6 +280,8 @@ void * d912pxy_mem_mgr::pxy_malloc(size_t sz)
 
 	if (!ret)
 	{
+		LOG_ERR_DTDM("malloc_retry(%llu) called", sz);
+
 		ret = pxy_malloc_retry(sz);
 
 		if (!ret)
@@ -295,6 +297,8 @@ void * d912pxy_mem_mgr::pxy_realloc(void * block, size_t sz)
 
 	if (!ret)
 	{
+		LOG_ERR_DTDM("realloc_retry(%llu) called", sz);
+
 		ret = pxy_realloc_retry(block, sz);
 
 		if (!ret)
