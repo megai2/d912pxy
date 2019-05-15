@@ -135,7 +135,7 @@ d912pxy_surface::~d912pxy_surface()
 			FreeLayers();
 		}
 
-		//megai2: some objects can stuck in m_res == NULL and AllocateLayers() called with threaded ctor, 
+		//megai2: some objects can stuck in m_res == NULL and AllocateLayers() called with threaded ctor, without pooling
 		//so we need to clean them this way to avoid memleack
 		if (layers)
 			FreeLayers();

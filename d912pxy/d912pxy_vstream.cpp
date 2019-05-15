@@ -73,8 +73,7 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 d912pxy_vstream::~d912pxy_vstream()
 {
-	//megai2: NOTE on exit clenup thread desync crash due to (dtor & PooledAction(0)) at the same time, should be fixed in unload sequence but i keep the note
-	if (data) {
+	if (GetCurrentPoolSyncValue()) {
 		PXY_FREE(data);
 	}
 }
