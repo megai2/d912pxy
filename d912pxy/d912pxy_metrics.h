@@ -121,6 +121,7 @@ private:
 	tUINT8 metricIFrameDraws;
 	tUINT8 metricIFrameCleans;
 	tUINT8 metricIFrameUploadOffset;
+	tUINT8 metricTotalMemUsed;
 	tUINT8 metricIFramePerBatchPrep;
 	tUINT8 metricIFramePerBatchOverhead;
 	tUINT8 metricIFrameAppPrep;	
