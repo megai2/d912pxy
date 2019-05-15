@@ -120,7 +120,8 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfol
 
 	if ((compRet != S_OK) && (eret == NULL))
 	{
-		if (compRet != ERROR_FILE_NOT_FOUND)
+		//megai2: that should be converted via hresult processing, but nah
+		if (compRet != 0x80070002)//ERROR_FILE_NOT_FOUND
 			LOG_ERR_DTDM("shd compiler err = %08lX", compRet);
 
 		d912pxy_shader_code ret2;
