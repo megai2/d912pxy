@@ -67,7 +67,7 @@ public:
 #else 
 	void StartTrackingBlocks() { };
 
-	UINT32 GetMemoryUsed() { return 0; };
+	UINT32 GetMemoryUsedMB() { return 0; };
 #endif
 
 private:
