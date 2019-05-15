@@ -168,6 +168,7 @@ bool d912pxy_mem_mgr::pxy_malloc_dbg(void** cp, size_t sz, const char* file, con
 
 bool d912pxy_mem_mgr::pxy_realloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function) { // Calls pxy_realloc until it gets a success or fails after trying "tries" times.
 	
+#ifdef _DEBUG
 	void* origBlk = (void*)((intptr_t)(*cp) - sizeof(d912pxy_dbg_mem_block));
 
 	sz += sizeof(d912pxy_dbg_mem_block);
@@ -199,7 +200,7 @@ bool d912pxy_mem_mgr::pxy_realloc_dbg(void** cp, size_t sz, const char* file, co
 	*cp = (void*)((intptr_t)tempPointer + sizeof(d912pxy_dbg_mem_block));
 
 	return true;
-
+#endif
 }
 
 void d912pxy_mem_mgr::pxy_free_dbg(void** cp, const char* file, const int line, const char* function) { // Free and NULL
