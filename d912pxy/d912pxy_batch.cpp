@@ -143,29 +143,33 @@ void d912pxy_batch::PreDIP(ID3D12GraphicsCommandList* cl, UINT bid)
 
 void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 {
-	UINT32* mDataDltRefL = mDataDltRef;
-		
-	UINT32 bn = batchNum;
-
 	memcpy(&streamData[streamIdx], src, size << 4);
+	
+	//43-59 ss
+	//125 mt
+	//306 ps
+	d912pxy_s(CMDReplay)->GPUW(streamIdx, offset, size, batchNum);
+	//GPUWriteControl(streamIdx, offset, size, batchNum);	
 
-	/* hot 77% */
-	UINT32 i = offset;
-	while (i != (offset + size))
+	streamIdx += size;
+}
+
+void d912pxy_batch::GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)
+{
+	UINT64 i = of;
+	while (i != (of + cnt))
 	{
-		d912pxy_batch_stream_control_entry* ctl = &streamControl[streamIdx];
+		d912pxy_batch_stream_control_entry* ctl = &streamControl[si];
 
-		ctl->dstOffset = i;
-		ctl->startBatch = bn;
+		ctl->dstOffset = (UINT32)i;
+		ctl->startBatch = (UINT32)bn;
+		
+		streamControl[mDataDltRef[i]].endBatch = (UINT32)bn;
+		mDataDltRef[i] = (UINT32)si;
 
-		streamControl[mDataDltRefL[i]].endBatch = bn;				
-		mDataDltRefL[i] = streamIdx;
-
-		++streamIdx;
+		++si;
 		++i;
 	}
-	/* hot */
-	
 }
 
 void d912pxy_batch::InitCopyCS()

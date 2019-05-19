@@ -442,8 +442,6 @@ void d912pxy_iframe::End()
 
 	indexBind = NULL;*/
 
-	d912pxy_s(batch)->FrameEnd();
-
 	if (mSwapChain)
 		mSwapChain->EndFrame();
 

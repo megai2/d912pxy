@@ -81,6 +81,7 @@ public:
 
 	void SetShaderConstF(UINT type, UINT start, UINT cnt4, float* data);
 	void GPUWrite(void* src, UINT size, UINT offset);
+	void GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);
 	
 	void FrameStart();
 	void FrameEnd();

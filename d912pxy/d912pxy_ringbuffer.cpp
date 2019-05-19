@@ -98,6 +98,26 @@ void d912pxy_ringbuffer<ElementType>::WriteElement(ElementType ele)
 }
 
 template<class ElementType>
+void d912pxy_ringbuffer<ElementType>::WriteElementFast(ElementType ele)
+{
+	*((ElementType*)writePoint) = ele;
+	writePoint += sizeof(ElementType);
+
+	if (writePoint == bufferEnd)
+		writePoint = bufferData;
+}
+
+template<class ElementType>
+void d912pxy_ringbuffer<ElementType>::WriteElementMT(ElementType ele)
+{
+	writeLock.Hold();
+
+	WriteElement(ele);
+
+	writeLock.Release();
+}
+
+template<class ElementType>
 ElementType d912pxy_ringbuffer<ElementType>::GetElement()
 {
 	return *((ElementType*)readPoint);
@@ -108,6 +128,19 @@ ElementType d912pxy_ringbuffer<ElementType>::PopElement()
 {
 	ElementType ret = GetElement();
 	Next();
+
+	return ret;
+}
+
+template<class ElementType>
+ElementType d912pxy_ringbuffer<ElementType>::PopElementFast()
+{
+	ElementType ret = GetElement();
+
+	readPoint += sizeof(ElementType);
+
+	if (readPoint >= bufferEnd)
+		readPoint = bufferData;
 
 	return ret;
 }
@@ -166,3 +199,4 @@ template class d912pxy_ringbuffer<UINT64>;
 template class d912pxy_ringbuffer<d912pxy_linked_list_element*>;
 template class d912pxy_ringbuffer<d912pxy_vstream_lock_data>;
 template class d912pxy_ringbuffer<void*>;
+template class d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>;
