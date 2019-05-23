@@ -41,6 +41,7 @@ typedef enum d912pxy_replay_item_type {
 	DRPL_RPSF,
 	DRPL_CPSO,
 	DRPL_RECT,
+	DRPL_GPUW,
 	DRPL_COUNT
 } d912pxy_replay_item_type;
 
@@ -59,7 +60,8 @@ static const wchar_t* d912pxy_replay_item_type_dsc[] = {
 	L"DRPL_RPSO",
 	L"DRPL_RPSF",
 	L"DRPL_CPSO",
-	L"DRPL_RECT"	
+	L"DRPL_RECT",
+	L"DRPL_GPUW"
 };
 
 typedef struct d912pxy_replay_state_transit {
@@ -141,6 +143,13 @@ typedef struct d912pxy_replay_pso_compiled {
 	d912pxy_pso_cache_item* psoItem;
 } d912pxy_replay_pso_compiled;
 
+typedef struct d912pxy_replay_gpu_write_control {
+	UINT32 streamIdx;
+	UINT16 offset;
+	UINT16 size;
+	UINT16 bn;
+} d912pxy_replay_gpu_write_control;
+
 typedef struct d912pxy_replay_item {
 	d912pxy_replay_item_type type;
 	union {
@@ -158,6 +167,7 @@ typedef struct d912pxy_replay_item {
 		d912pxy_replay_pso_compiled compiledPso;
 		d912pxy_replay_pso_raw_feedback rawPsoFeedback;
 		d912pxy_replay_rect srect;				
+		d912pxy_replay_gpu_write_control gpuw_ctl;
 		UINT64 ptr;
 	};
 } d912pxy_replay_item;
@@ -209,6 +219,7 @@ public:
 	virtual void RTClear(d912pxy_surface* tgt, float* clr, D3D12_VIEWPORT* currentVWP) = 0;
 	virtual void DSClear(d912pxy_surface* tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP) = 0;
 	virtual void StretchRect(d912pxy_surface* src, d912pxy_surface* dst) = 0;
+	virtual void GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn) = 0;
 
 	//actual execute code and thread managment
 
@@ -247,6 +258,8 @@ public:
 	void DSClear(d912pxy_surface* tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP);
 	void StretchRect(d912pxy_surface* src, d912pxy_surface* dst);
 
+	void GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn);
+
 	//actual execute code and thread managment
 
 	void PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList* cl, void** context);
@@ -272,6 +285,12 @@ public:
 	void TransitCLState(ID3D12GraphicsCommandList* cl, UINT base, UINT thread, void** context);
 	void SaveCLState(UINT thread);
 
+#ifdef _DEBUG
+	UINT DbgStackGet();
+	void DbgStackIncrement();
+	UINT DbgStackIgnore();
+#endif
+
 private:
 	d912pxy_replay_handler_func replay_handlers[DRPL_COUNT];
 
@@ -290,6 +309,8 @@ private:
 	void RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context);
 	void RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl, void** unused);
 	void RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void** unused);
+	void RHA_GPUW(d912pxy_replay_gpu_write_control* it, ID3D12GraphicsCommandList * cl, void** unused);
+	void RHA_GPUW_MT(d912pxy_replay_gpu_write_control* it, ID3D12GraphicsCommandList * cl, void** unused);
 	
 	d912pxy_replay_item stack[PXY_INNER_MAX_IFRAME_BATCH_REPLAY];
 
@@ -309,5 +330,12 @@ private:
 
 	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS_MAX];
 	LONG stopMarker;
+
+	d912pxy_thread_lock gpuw_sync;
+	d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>* gpuw_que;
+
+#ifdef _DEBUG
+	d912pxy_thread_lock simThreadAcc;
+#endif
 };
 

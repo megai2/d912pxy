@@ -241,6 +241,11 @@ void d912pxy_replay_passthru::StretchRect(d912pxy_surface * src, d912pxy_surface
 	REPLAY_SYNC_STOP;
 }
 
+void d912pxy_replay_passthru::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
+{
+	d912pxy_s(batch)->GPUWriteControl(si, of, cnt, bn);
+}
+
 void d912pxy_replay_passthru::Finish()
 {
 }

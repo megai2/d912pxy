@@ -24,7 +24,15 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[stackTop]; it->type = x
+#ifdef _DEBUG
+	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[DbgStackGet()]; it->type = x
+	#define REPLAY_STACK_INCREMENT DbgStackIncrement()
+	#define REPLAY_STACK_IGNORE return DbgStackIgnore()
+#else
+	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[stackTop]; it->type = x
+	#define REPLAY_STACK_INCREMENT ++stackTop
+	#define REPLAY_STACK_IGNORE return 0
+#endif
 
 d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 {
@@ -70,12 +78,24 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 	replay_handlers[DRPL_RPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSO;
 	replay_handlers[DRPL_RPSF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSF;
 	replay_handlers[DRPL_CPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_CPSO;
-	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;
+	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;	
+
+	if (numThreads > 1)
+	{
+		gpuw_que = new d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>(PXY_INNER_MAX_IFRAME_BATCH_REPLAY, 0);
+		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW_MT;
+	}
+	else {
+		gpuw_que = NULL;
+		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;
+	}
+
 }
 
 d912pxy_replay::~d912pxy_replay()
 {	
-		
+	if (numThreads > 1)
+		delete gpuw_que;
 }
 
 UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
@@ -85,7 +105,7 @@ UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES 
 	D3D12_RESOURCE_STATES cstate = res->GetCurrentState();
 
 	if (to == cstate)
-		return 0;
+		REPLAY_STACK_IGNORE;
 
 	it->transit.res = res;
 	it->transit.to = to;
@@ -93,7 +113,7 @@ UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES 
 
 	res->ATransit(to);
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 
 	return 1;
 }
@@ -104,7 +124,7 @@ void d912pxy_replay::PSOCompiled(d912pxy_pso_cache_item * dsc)
 
 	it->compiledPso.psoItem = dsc;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::PSORaw(d912pxy_trimmed_dx12_pso * dsc)
@@ -113,7 +133,7 @@ void d912pxy_replay::PSORaw(d912pxy_trimmed_dx12_pso * dsc)
 
 	it->rawPso.rawState = *dsc;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::PSORawFeedback(d912pxy_trimmed_dx12_pso * dsc, void ** ptr)
@@ -123,7 +143,7 @@ void d912pxy_replay::PSORawFeedback(d912pxy_trimmed_dx12_pso * dsc, void ** ptr)
 	it->rawPsoFeedback.rawState = *dsc;
 	it->rawPsoFeedback.feedbackPtr = ptr;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::OMStencilRef(DWORD ref)
@@ -132,7 +152,7 @@ void d912pxy_replay::OMStencilRef(DWORD ref)
 
 	it->omsr.dRef = ref;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::OMBlendFac(float * color)
@@ -144,7 +164,7 @@ void d912pxy_replay::OMBlendFac(float * color)
 	it->ombf.color[2] = color[2];
 	it->ombf.color[3] = color[3];
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::RSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor)
@@ -154,7 +174,7 @@ void d912pxy_replay::RSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor)
 	it->rs.scissor = scissor;
 	it->rs.viewport = viewport;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
@@ -167,7 +187,7 @@ void d912pxy_replay::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT S
 	it->dip.BaseVertexLocation = BaseVertexLocation;
 	it->dip.StartInstanceLocation = StartInstanceLocation;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::RT(d912pxy_surface * rtv, d912pxy_surface * dsv)
@@ -177,7 +197,7 @@ void d912pxy_replay::RT(d912pxy_surface * rtv, d912pxy_surface * dsv)
 	it->rt.dsv = dsv;
 	it->rt.rtv = rtv;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::VBbind(d912pxy_vstream * buf, UINT stride, UINT slot, UINT offset)
@@ -189,7 +209,7 @@ void d912pxy_replay::VBbind(d912pxy_vstream * buf, UINT stride, UINT slot, UINT 
 	it->vb.slot = slot;
 	it->vb.offset = offset;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::IBbind(d912pxy_vstream * buf)
@@ -198,7 +218,7 @@ void d912pxy_replay::IBbind(d912pxy_vstream * buf)
 
 	it->ib.buf = buf;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
@@ -217,10 +237,27 @@ void d912pxy_replay::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
 	it->srect.src = src;
 	it->srect.dst = dst;
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 
 	StateTransit(src, prevS);
 	StateTransit(dst, prevD);
+}
+
+void d912pxy_replay::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
+{
+	REPLAY_STACK_GET(DRPL_GPUW);
+
+	it->gpuw_ctl.bn = bn;
+	it->gpuw_ctl.size = cnt;
+	it->gpuw_ctl.offset = of;
+	it->gpuw_ctl.streamIdx = si;
+
+	if (gpuw_que)
+	{
+		gpuw_que->WriteElementFast(&it->gpuw_ctl);
+	}
+
+	REPLAY_STACK_INCREMENT;
 }
 
 void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT* currentVWP)
@@ -240,7 +277,7 @@ void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT*
 	it->clrRt.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
 	it->clrRt.clearRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 
 	StateTransit(tgt, prevState);
 }
@@ -261,7 +298,7 @@ void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, 
 	it->clrDs.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
 	it->clrDs.clearRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
 
-	++stackTop;
+	REPLAY_STACK_INCREMENT;
 
 	StateTransit(tgt, prevState);
 }
@@ -305,12 +342,13 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 		maxRI = WaitForData(i, maxRI, end, thrd);			
 
 		if (!maxRI)
-			return;		
+			return;
 	}
 
 	//megai2: unlock thread only when stopMarker is set
 	while (!InterlockedAdd(&stopMarker, 0))	
-		thrd->WaitForJob();		
+		thrd->WaitForJob();	
+
 }
 
 UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_thread * thrd)
@@ -489,6 +527,32 @@ void d912pxy_replay::SaveCLState(UINT thread)
 
 	trd->cpso = d912pxy_s(psoCache)->GetCurrentCPSO();
 }
+
+#ifdef _DEBUG
+
+UINT d912pxy_replay::DbgStackGet()
+{
+	if (!simThreadAcc.TryHold())
+	{
+		LOG_ERR_THROW2(-1, "replay stack mt corruption");
+	}
+
+	return stackTop;
+}
+
+void d912pxy_replay::DbgStackIncrement()
+{
+	++stackTop;
+	simThreadAcc.Release();
+}
+
+UINT d912pxy_replay::DbgStackIgnore()
+{
+	simThreadAcc.Release();
+	return 0;
+}
+
+#endif 
 
 void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, UINT thread, void** context)
 {
@@ -683,6 +747,18 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 		//megai2: TODO allow non similar texture copy via custom pass
 		;
 	}
+}
+
+void d912pxy_replay::RHA_GPUW(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void ** unused)
+{
+	d912pxy_s(batch)->GPUWriteControl(it->streamIdx, it->offset, it->size, it->bn);
+}
+
+void d912pxy_replay::RHA_GPUW_MT(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void ** unused)
+{
+	gpuw_sync.Hold();
+	RHA_GPUW(gpuw_que->PopElementFast(), cl, unused);
+	gpuw_sync.Release();
 }
 
 d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")

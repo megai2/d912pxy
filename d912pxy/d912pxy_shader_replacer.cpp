@@ -120,7 +120,9 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfol
 
 	if ((compRet != S_OK) && (eret == NULL))
 	{
-		LOG_ERR_DTDM("shd compiler err = %08lX", compRet);
+		//megai2: that should be converted via hresult processing, but nah
+		if (compRet != 0x80070002)//ERROR_FILE_NOT_FOUND
+			LOG_ERR_DTDM("shd compiler err = %08lX", compRet);
 
 		d912pxy_shader_code ret2;
 
@@ -146,7 +148,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfol
 
 		if (eret != NULL)
 		{
-			LOG_WARN_DTDM("shd compile warning = %S", eret->GetBufferPointer());
+			LOG_DBG_DTDM3("shd compile warning = %S", eret->GetBufferPointer());
 		}
 
 		d912pxy_shader_code ret2;
@@ -173,28 +175,6 @@ d912pxy_shader_code d912pxy_shader_replacer::LoadFromCSO(const char* bfolder)
 	ret.blob = nullptr;
 		
 	ret.code = d912pxy_s(vfs)->LoadFileH(mUID, (UINT*)&ret.sz, PXY_VFS_BID_CSO);
-
-	/*FILE* f = _wfopen(replFn, L"rb");
-
-	if (f)
-	{
-		fseek(f, 0, SEEK_END);
-		size_t fsz = ftell(f);
-		fseek(f, 0, SEEK_SET);
-
-		if (fsz)
-		{
-			void* otherData = malloc(fsz);
-
-			fread((void*)otherData, 1, fsz, f);
-
-			fclose(f);
-
-			ret.code = otherData;
-			ret.sz = fsz;
-		} else
-			fclose(f);
-	}*/
 
 	return ret;
 

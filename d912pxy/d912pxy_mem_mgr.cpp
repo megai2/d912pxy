@@ -1,8 +1,7 @@
-//#include "d912pxy_mem_mgr.h"
 /*
 MIT License
 
-Copyright(c) 2019 AlraiLux
+Copyright(c) 2019 AlraiLux, megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -68,6 +67,7 @@ d912pxy_mem_mgr::d912pxy_mem_mgr() : d912pxy_noncom() {
 	stkWlk = new d912pxy_StackWalker(3, 4);
 
 	recursionCheck = 0;
+	memUsed = 0;
 #endif
 
 	d912pxy_s(memMgr) = this;
@@ -134,6 +134,8 @@ bool d912pxy_mem_mgr::pxy_malloc_dbg(void** cp, size_t sz, const char* file, con
 	blkdsc->sz = sz;
 	blkdsc->trashCheck = 0xAAAAAAAA;
 
+	InterlockedAdd64(&memUsed, sz);
+
 	*cp = (void*)((intptr_t)tempPointer + sizeof(d912pxy_dbg_mem_block));
 
 	blocksAllocated.Hold();
@@ -149,9 +151,7 @@ bool d912pxy_mem_mgr::pxy_malloc_dbg(void** cp, size_t sz, const char* file, con
 
 	if (file == NULL)
 	{
-		stkWlk->ShowCallstack();
-
-		
+		stkWlk->ShowCallstack();				
 		blkdsc->file = stkWlk->ReturnCaller();
 	}
 
@@ -168,6 +168,7 @@ bool d912pxy_mem_mgr::pxy_malloc_dbg(void** cp, size_t sz, const char* file, con
 
 bool d912pxy_mem_mgr::pxy_realloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function) { // Calls pxy_realloc until it gets a success or fails after trying "tries" times.
 	
+#ifdef _DEBUG
 	void* origBlk = (void*)((intptr_t)(*cp) - sizeof(d912pxy_dbg_mem_block));
 
 	sz += sizeof(d912pxy_dbg_mem_block);
@@ -189,6 +190,8 @@ bool d912pxy_mem_mgr::pxy_realloc_dbg(void** cp, size_t sz, const char* file, co
 
 	d912pxy_dbg_mem_block* blkdsc = (d912pxy_dbg_mem_block*)tempPointer;
 
+	InterlockedAdd64(&memUsed, sz - blkdsc->sz);
+
 	blkdsc->file = (char*)file;
 	blkdsc->function = (char*)function;
 	blkdsc->line = line;
@@ -197,7 +200,7 @@ bool d912pxy_mem_mgr::pxy_realloc_dbg(void** cp, size_t sz, const char* file, co
 	*cp = (void*)((intptr_t)tempPointer + sizeof(d912pxy_dbg_mem_block));
 
 	return true;
-
+#endif
 }
 
 void d912pxy_mem_mgr::pxy_free_dbg(void** cp, const char* file, const int line, const char* function) { // Free and NULL
@@ -233,6 +236,9 @@ void d912pxy_mem_mgr::pxy_free_dbg(void** cp, const char* file, const int line, 
 		free(blkdsc->file);
 
 justFree:
+	if (this)
+		InterlockedAdd64(&memUsed, -((LONG64)blkdsc->sz));
+
 	inFree(origBlk);
 	*cp = NULL;	
 #endif
@@ -280,6 +286,8 @@ void * d912pxy_mem_mgr::pxy_malloc(size_t sz)
 
 	if (!ret)
 	{
+		LOG_ERR_DTDM("malloc_retry(%llu) called", sz);
+
 		ret = pxy_malloc_retry(sz);
 
 		if (!ret)
@@ -295,6 +303,8 @@ void * d912pxy_mem_mgr::pxy_realloc(void * block, size_t sz)
 
 	if (!ret)
 	{
+		LOG_ERR_DTDM("realloc_retry(%llu) called", sz);
+
 		ret = pxy_realloc_retry(block, sz);
 
 		if (!ret)
@@ -328,7 +338,7 @@ void * d912pxy_mem_mgr::pxy_malloc_dbg_uninit(size_t sz, const char * file, cons
 	blkdsc->file = (char*)file;
 	blkdsc->function = (char*)function;
 	blkdsc->line = line;
-	blkdsc->sz = sz;
+	blkdsc->sz = 0;
 	blkdsc->trashCheck = 0xAAAAAAA9;	
 
 	return (void*)((intptr_t)tempPointer + sizeof(d912pxy_dbg_mem_block));

@@ -75,15 +75,15 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(swapchains[0]->Release(),		 "Swapchain stopped");
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
-		
-	LOG_INFO_DTDM2(delete d912pxy_s(bufloadThread),		"Final cleanups  1/11");
-	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups  2/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(iframe),			"Final cleanups  3/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(sdb),				"Final cleanups  4/12");
 
-	LOG_INFO_DTDM2(delete d912pxy_s(thread_cleanup),	"Final cleanups  5/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(thread_cleanup),	"Final cleanups  1/12");
 	swapOpLock.Release();
-
+		
+	LOG_INFO_DTDM2(delete d912pxy_s(bufloadThread),		"Final cleanups  2/11");
+	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups  3/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(iframe),			"Final cleanups  4/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(sdb),				"Final cleanups  5/12");
+	
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_vstream),		"Final cleanups  6/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_upload),		"Final cleanups  7/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_surface),		"Final cleanups  8/12");

@@ -34,8 +34,11 @@ public:
 	~d912pxy_ringbuffer();
 
 	void WriteElement(ElementType ele);
+	void WriteElementFast(ElementType ele);
+	void WriteElementMT(ElementType ele);
 	ElementType GetElement();
 	ElementType PopElement();
+	ElementType PopElementFast();
 	
 	UINT HaveElements();
 	UINT HaveFreeSpace();
@@ -56,6 +59,7 @@ private:
 	LONG writed;
 
 	d912pxy_thread_lock growthLock;
+	d912pxy_thread_lock writeLock;
 
 };
 

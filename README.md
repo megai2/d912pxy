@@ -96,4 +96,6 @@ WMZ: 442298672293
 
 Bitcoin: 1B46eQtKUcvSLyz1F8QxKcdHACAXbuXGgM
 
+Patreon: https://www.patreon.com/d912pxy
+
 Paypal: megai2@ya.ru

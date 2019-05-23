@@ -73,10 +73,9 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 d912pxy_vstream::~d912pxy_vstream()
 {
-	if (data) {
+	if (GetCurrentPoolSyncValue()) {
 		PXY_FREE(data);
 	}
-	
 }
 
 D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)

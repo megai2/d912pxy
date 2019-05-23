@@ -135,7 +135,7 @@ d912pxy_surface::~d912pxy_surface()
 			FreeLayers();
 		}
 
-		//megai2: some objects can stuck in m_res == NULL and AllocateLayers() called with threaded ctor, 
+		//megai2: some objects can stuck in m_res == NULL and AllocateLayers() called with threaded ctor, without pooling
 		//so we need to clean them this way to avoid memleack
 		if (layers)
 			FreeLayers();
@@ -545,7 +545,7 @@ UINT32 d912pxy_surface::AllocateSRV()
 		switch (m_fmt)
 		{
 		case DXGI_FORMAT_BC5_UNORM:
-			srvDsc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(1, 0, 1, 3);//megai2: need to find proof document on that mapping orders in dx9 hlsl
+			srvDsc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(1, 0, 5, 3);//megai2: need to find proof document on that mapping orders in dx9 hlsl
 			break;
 		case DXGI_FORMAT_R8G8_UNORM:
 			srvDsc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(0, 0, 0, 1);
