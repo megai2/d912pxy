@@ -394,3 +394,4 @@ bin/d912pxy/log.txt
 *.diagsession
 bin/d912pxy/crash*.txt
 bin/renderdoc.lnk
+bin/d912pxy/dx12_perf_graph.html
