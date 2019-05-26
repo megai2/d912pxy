@@ -88,13 +88,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 
 			double pv = (double)dataAcm[i] / ((double)maxValue2);
 
-			if (dx9)
 			{
-				fwrite(&pv, 1, 8, of);
-				fwrite(&j, 1, 4, of);
-				fwrite(&k, 1, 4, of);
-			}
-			else {
 				if (pv <= 0)
 					continue;
 
