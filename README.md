@@ -14,7 +14,7 @@ This project is in beta. Expect some bugs, crashes, hangs, stalls and some other
 
 # Showcase
 
-Profiling shows that the API overhead for d912pxy is up to 70% less than that of plain DirectX9.
+Profiling shows that the API overhead for d912pxy is up to 86% (r255,custom config) less than that of plain DirectX9.
 Real performance differs based on the scene and the hardware.
 
 Benchmarking results on i7-7700/GTX960:
