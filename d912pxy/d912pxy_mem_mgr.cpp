@@ -31,6 +31,8 @@ system is under stress or whenever alloc calls just decide to fail.
 
 static UINT32 recordOprtNewCaller = 0;
 
+HANDLE g_procHeap = GetProcessHeap();
+
 void * operator new(std::size_t n)
 {
 #ifdef _DEBUG
@@ -85,19 +87,19 @@ d912pxy_mem_mgr::~d912pxy_mem_mgr() {
 
 void* d912pxy_mem_mgr::inRealloc(void* block, size_t sz) { // Returns pointer or nullptr if failed.
 	
-	return realloc(block, sz);
+	return HeapReAlloc(g_procHeap, 0, block, sz);
 
 }
 
 void* d912pxy_mem_mgr::inMalloc(size_t sz) { // Returns pointer or nullptr if failed.
 
-	return malloc(sz);
+	return HeapAlloc(g_procHeap, 0, sz);
 
 }
 
 void d912pxy_mem_mgr::inFree(void* block) {
 
-	free(block); 
+	HeapFree(g_procHeap, 0, block);
 
 }
 
@@ -324,7 +326,7 @@ void * d912pxy_mem_mgr::pxy_malloc_dbg_uninit(size_t sz, const char * file, cons
 {
 	sz += sizeof(d912pxy_dbg_mem_block);
 
-	void* tempPointer = malloc(sz);
+	void* tempPointer = HeapAlloc(g_procHeap, 0, sz);
 
 	if (!tempPointer)
 	{

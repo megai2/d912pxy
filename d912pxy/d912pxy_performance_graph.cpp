@@ -38,7 +38,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 {
 	FILE* of = NULL;
 
-	char* stringAcm[4];
+	char* stringAcm[4] = { 0 };
 	size_t acmEndpoint[4];
 
 	if (dx9)
