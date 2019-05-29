@@ -50,8 +50,8 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 	d912pxy_pso_cache::cDscBase.SampleDesc.Count = 1;
 	d912pxy_pso_cache::cDscBase.SampleDesc.Quality = 0;
 	d912pxy_pso_cache::cDscBase.SampleMask = 0xFFFFFFFF;
-	cDsc.RasterizerState.DepthBiasClamp = 0;
-	cDsc.RasterizerState.DepthClipEnable = 1;
+	d912pxy_pso_cache::cDscBase.RasterizerState.DepthBiasClamp = 0;
+	d912pxy_pso_cache::cDscBase.RasterizerState.DepthClipEnable = 1;
 	d912pxy_pso_cache::cDscBase.GS.pShaderBytecode = NULL;
 	d912pxy_pso_cache::cDscBase.DS.pShaderBytecode = NULL;
 	d912pxy_pso_cache::cDscBase.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -290,12 +290,12 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		break; //23,   /* D3DCMPFUNC */
 
 	case D3DRS_ALPHABLENDENABLE:
-		cDsc.BlendStateRT0.BlendEnable = Value;
+		cDsc.BlendStateRT0.BlendEnable = (UINT8)Value;
 		//FIXME! must set this to all active RT's somewhere
 		break; //27,   /* TRUE to enable alpha blending */
 
 	case D3DRS_STENCILENABLE:
-		cDsc.DepthStencilState.StencilEnable = Value;
+		cDsc.DepthStencilState.StencilEnable = (UINT8)Value;
 		break; //52,   /* BOOL enable/disable stenciling */
 
 	case D3DRS_STENCILFAIL:
@@ -341,7 +341,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		break; //175,
 
 	case D3DRS_ANTIALIASEDLINEENABLE:
-		cDsc.RasterizerState.AntialiasedLineEnable = Value;
+		cDsc.RasterizerState.AntialiasedLineEnable = (UINT8)Value;
 		break; //176,
 
 	case D3DRS_TWOSIDEDSTENCILMODE:
@@ -865,11 +865,45 @@ void d912pxy_pso_cache_item::Compile()
 	d912pxy_pso_cache::cDscBase.InputLayout = vdclObj->GetD12IA_InputElementFmt();
 
 	d912pxy_pso_cache::cDscBase.NumRenderTargets = desc->NumRenderTargets;
-	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0] = desc->BlendStateRT0;
-	d912pxy_pso_cache::cDscBase.RasterizerState = desc->RasterizerState;
-	d912pxy_pso_cache::cDscBase.DepthStencilState = desc->DepthStencilState;
-	d912pxy_pso_cache::cDscBase.RTVFormats[0] = desc->RTVFormat0;
-	d912pxy_pso_cache::cDscBase.DSVFormat = desc->DSVFormat;
+	//d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].  = desc->BlendStateRT0;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].SrcBlend = (D3D12_BLEND)desc->BlendStateRT0.SrcBlend;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].SrcBlendAlpha = (D3D12_BLEND)desc->BlendStateRT0.SrcBlendAlpha;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].DestBlend = (D3D12_BLEND)desc->BlendStateRT0.DestBlend;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].DestBlendAlpha = (D3D12_BLEND)desc->BlendStateRT0.DestBlendAlpha;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].BlendEnable = desc->BlendStateRT0.BlendEnable;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].RenderTargetWriteMask = desc->BlendStateRT0.RenderTargetWriteMask;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].BlendOp = (D3D12_BLEND_OP)desc->BlendStateRT0.BlendOp;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].BlendOpAlpha = (D3D12_BLEND_OP)desc->BlendStateRT0.BlendOpAlpha;
+
+
+//	d912pxy_pso_cache::cDscBase.RasterizerState. = desc->RasterizerState.;
+
+	d912pxy_pso_cache::cDscBase.RasterizerState.FillMode = (D3D12_FILL_MODE)desc->RasterizerState.FillMode;
+	d912pxy_pso_cache::cDscBase.RasterizerState.CullMode = (D3D12_CULL_MODE)desc->RasterizerState.CullMode;
+	d912pxy_pso_cache::cDscBase.RasterizerState.SlopeScaledDepthBias = desc->RasterizerState.SlopeScaledDepthBias;
+	d912pxy_pso_cache::cDscBase.RasterizerState.AntialiasedLineEnable = desc->RasterizerState.AntialiasedLineEnable;
+	d912pxy_pso_cache::cDscBase.RasterizerState.DepthBias = desc->RasterizerState.DepthBias;
+
+	//d912pxy_pso_cache::cDscBase.DepthStencilState = desc->DepthStencilState;
+
+	d912pxy_pso_cache::cDscBase.DepthStencilState.DepthEnable = desc->DepthStencilState.DepthEnable;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.DepthWriteMask = (D3D12_DEPTH_WRITE_MASK)desc->DepthStencilState.DepthWriteMask;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.DepthFunc = (D3D12_COMPARISON_FUNC)desc->DepthStencilState.DepthFunc;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.StencilEnable = desc->DepthStencilState.StencilEnable;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.FrontFace.StencilFailOp = (D3D12_STENCIL_OP)desc->DepthStencilState.FrontFace.StencilFailOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.FrontFace.StencilPassOp = (D3D12_STENCIL_OP)desc->DepthStencilState.FrontFace.StencilPassOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.FrontFace.StencilDepthFailOp = (D3D12_STENCIL_OP)desc->DepthStencilState.FrontFace.StencilDepthFailOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.FrontFace.StencilFunc = (D3D12_COMPARISON_FUNC)desc->DepthStencilState.FrontFace.StencilFunc;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)desc->DepthStencilState.BackFace.StencilFailOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)desc->DepthStencilState.BackFace.StencilPassOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)desc->DepthStencilState.BackFace.StencilDepthFailOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)desc->DepthStencilState.BackFace.StencilFunc;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.StencilReadMask = desc->DepthStencilState.StencilReadMask;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.StencilWriteMask = desc->DepthStencilState.StencilWriteMask;
+	
+
+	d912pxy_pso_cache::cDscBase.RTVFormats[0] = (DXGI_FORMAT)desc->RTVFormat0;
+	d912pxy_pso_cache::cDscBase.DSVFormat = (DXGI_FORMAT)desc->DSVFormat;
 
 	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", vsObj->GetID(), psObj->GetID());
 
