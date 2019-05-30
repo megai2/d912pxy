@@ -200,7 +200,7 @@ const char* d912pxy_hlsl_generator_reg_names_proc_ps[20] = {
 	"reg_constb",
 	"reg_loopc",
 	"reg_t16",
-	"inp.reg_misc",
+	"reg_misc",
 	"reg_lab",
 	"reg_pred"
 };
@@ -223,7 +223,7 @@ const char* d912pxy_hlsl_generator_reg_names_proc_vs[20] = {
 	"reg_constb",
 	"reg_loopc",
 	"reg_t16",
-	"inp.reg_misc",
+	"reg_misc",
 	"reg_lab",
 	"reg_pred"
 };
@@ -317,7 +317,7 @@ void d912pxy_hlsl_generator::Process()
 		HLSL_GEN_WRITE_HEADO(0, "struct PS_OUTPUT");
 		HLSL_GEN_WRITE_HEADO(0, "{");
 
-		HLSL_GEN_WRITE_PROC_PD("PS_OUTPUT main(PS_INPUT inp)");
+		mainFunctionDeclStrIdx = HLSL_GEN_WRITE_PROC_PD("PS_OUTPUT main(PS_INPUT inp)");
 		HLSL_GEN_WRITE_PROC_PD("{ ");
 		++procIdent;
 		HLSL_GEN_WRITE_PROC_PD("PS_OUTPUT ret; ");
@@ -335,7 +335,9 @@ void d912pxy_hlsl_generator::Process()
 			HLSL_GEN_WRITE_PROC_PD("vs_clip_plane0_def");
 		}
 
-		HLSL_GEN_WRITE_PROC_PD("VS_OUTPUT main(VS_INPUT inp)");
+		mainFunctionDeclStrIdx = HLSL_GEN_WRITE_PROC_PD("VS_OUTPUT main(VS_INPUT inp)");
+
+
 		HLSL_GEN_WRITE_PROC_PD("{");
 		++procIdent;
 		HLSL_GEN_WRITE_PROC_PD("VS_OUTPUT ret;");
@@ -353,6 +355,52 @@ void d912pxy_hlsl_generator::Process()
 		LOG_ERR_DTDM("hlsl generator not support %u_%u shader model", majVer, minVer);
 		LOG_ERR_THROW2(-1, "hlsl generator not support shader model specified");
 	}
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_FORCE_UNUSED_REGS))
+	{
+		//megai2: force define not used registers to align vs-ps io properly
+		if (isPS)
+		{
+			UINT dclId = 15;
+	
+			UINT itr = (HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[D3DDECLUSAGE_TEXCOORD], dclId) + headerOffsetI);
+			do
+			{
+				--itr;
+				--dclId;
+	
+				if (lines[itr] == 0)
+				{
+					HLSL_GEN_WRITE_HEADI(
+						itr - headerOffsetI,
+						"	float4 %s%u_s%u: %s%u;",
+						"unused_ireg_", 0, dclId, GetUsageString(D3DDECLUSAGE_TEXCOORD, 1), dclId
+					);
+				}
+			} while (dclId != 0);
+		}
+		else {
+			UINT dclId = 15;
+
+			UINT itr = (HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[D3DDECLUSAGE_TEXCOORD], dclId) + headerOffsetO);
+			do
+			{
+				--itr;
+				--dclId;
+
+				if (lines[itr] == 0)
+				{
+					HLSL_GEN_WRITE_HEADO(
+						itr - headerOffsetO,
+						"	float4 %s%u_s%u: %s%u;",
+						"unused_ireg_", 0, dclId, GetUsageString(D3DDECLUSAGE_TEXCOORD, 1), dclId
+					);
+				}
+			} while (dclId != 0);
+		}
+	}
+
+
 
 	UINT ocIdx=1;
 	while (ocIdx != oLen)
@@ -758,7 +806,7 @@ UINT d912pxy_hlsl_generator::GetDstModifier(DWORD op)
 	return ret;
 }
 
-void d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)
+int d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)
 {
 	va_list args;
 
@@ -776,6 +824,8 @@ void d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)
 		sprintf(lines[procOffsetPredef], "%s", tb);
 
 	++procOffsetPredef;
+
+	return procOffsetPredef - 1;
 }
 
 void d912pxy_hlsl_generator::WriteProcLine(const char * fmt, ...)
@@ -828,6 +878,10 @@ void d912pxy_hlsl_generator::WriteHeadOLine(UINT prio, const char * fmt, ...)
 	if (!isPS)
 	{
 		idx += prio;
+	}
+
+	if (lines[idx]) {
+		PXY_FREE(lines[idx]);
 	}
 
 	PXY_MALLOC(lines[idx], d912pxy_hlsl_generator_max_line_length, char*);
@@ -1467,6 +1521,9 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 							"	float4 %s%u: SV_POSITION;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum
 						);
+
+						HLSL_GEN_WRITE_PROC_PD("float4 %s%u = inp.%s%u;", d912pxy_hlsl_generator_reg_names[dstReg], regNum, d912pxy_hlsl_generator_reg_names[dstReg], regNum);
+
 						if (isPS)
 						{
 							PSpositionUsed = 1;
@@ -1485,11 +1542,13 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					}
 					else if (regNum == D3DSMO_FACE)
 					{
-						HLSL_GEN_WRITE_HEADI(
-							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
-							"	float4 %s%u: VFACE;",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum
-						);
+						lines[mainFunctionDeclStrIdx][strlen(lines[mainFunctionDeclStrIdx])-1] = 0;
+						strcat(lines[mainFunctionDeclStrIdx], ", bool glob_isFrontFace: SV_IsFrontFace)");
+
+						HLSL_GEN_WRITE_PROC_PD("float4 glob_vecOne = { 1, 1, 1, 1 };");
+						HLSL_GEN_WRITE_PROC_PD("float4 glob_vecMinusOne = { -1, -1, -1, -1 };");
+
+						HLSL_GEN_WRITE_PROC_PD("float4 %s%u = glob_isFrontFace ? glob_vecOne : glob_vecMinusOne;", d912pxy_hlsl_generator_reg_names[dstReg], regNum);						
 					} else 
 						LOG_ERR_THROW2(-1, "hlsl reg type misc unk");
 				}
@@ -1581,6 +1640,9 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 							"	float4 %s%u: SV_POSITION;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum
 						);
+
+						HLSL_GEN_WRITE_PROC_PD("float4 %s%u = inp.%s%u;", d912pxy_hlsl_generator_reg_names[dstReg], regNum, d912pxy_hlsl_generator_reg_names[dstReg], regNum);
+
 						if (isPS)
 						{
 							PSpositionUsed = 1;
@@ -1599,11 +1661,13 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					}
 					else if (regNum == D3DSMO_FACE)
 					{
-						HLSL_GEN_WRITE_HEADI(
-							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
-							"	float4 %s%u: VFACE;",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum
-						);
+						lines[mainFunctionDeclStrIdx][strlen(lines[mainFunctionDeclStrIdx])-1] = 0;
+						strcat(lines[mainFunctionDeclStrIdx], ", bool glob_isFrontFace: SV_IsFrontFace)");
+
+						HLSL_GEN_WRITE_PROC_PD("float4 glob_vecOne = { 1, 1, 1, 1 };");
+						HLSL_GEN_WRITE_PROC_PD("float4 glob_vecMinusOne = { -1, -1, -1, -1 };");
+
+						HLSL_GEN_WRITE_PROC_PD("float4 %s%u = glob_isFrontFace ? glob_vecOne : glob_vecMinusOne;", d912pxy_hlsl_generator_reg_names[dstReg], regNum);
 					}
 					else
 						LOG_ERR_THROW2(-1, "hlsl reg type misc unk");
@@ -1681,6 +1745,25 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 							"	float4 %s%u: %s%u;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(usageType, 1), dclId
 						);
+
+						if (dclId > 0)
+						{
+							UINT itr = (HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId) + headerOffsetO);
+							do
+							{
+								--itr;
+								--dclId;
+
+								if (lines[itr] == 0)
+								{
+									HLSL_GEN_WRITE_HEADO(
+										itr - headerOffsetO,
+										"	float4 %s%u_s%u: %s%u;",
+										"unused_oreg_", regNum, dclId, GetUsageString(op[1] & 0x1F, 1), dclId
+									);
+								}
+							} while (dclId != 0);
+						}
 					}
 				}
 				break;

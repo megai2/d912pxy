@@ -50,12 +50,12 @@ static const UINT HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[] = {
 	3,//D3DDECLUSAGE_BLENDINDICES,  // 2
 	4,//D3DDECLUSAGE_NORMAL,        // 3
 	5,//D3DDECLUSAGE_PSIZE,         // 4
-	14,//D3DDECLUSAGE_TEXCOORD,      // 5
+	10,//D3DDECLUSAGE_TEXCOORD,      // 5
 	6,//D3DDECLUSAGE_TANGENT,       // 6
 	7,//D3DDECLUSAGE_BINORMAL,      // 7
 	8,//D3DDECLUSAGE_TESSFACTOR,    // 8
 	9,//D3DDECLUSAGE_POSITIONT,     // 9
-	10,//D3DDECLUSAGE_COLOR,         // 10
+	14,//D3DDECLUSAGE_COLOR,         // 10
 	15,//D3DDECLUSAGE_FOG,           // 11
 	12,//D3DDECLUSAGE_DEPTH,         // 12
 	13//D3DDECLUSAGE_SAMPLE// 13
@@ -107,7 +107,7 @@ public:
 	UINT64 FormatCmpString(DWORD op);
 	UINT GetDstModifier(DWORD op);
 
-	void WriteProcLinePredef(const char* fmt, ...);
+	int WriteProcLinePredef(const char* fmt, ...);
 	void WriteProcLine(const char* fmt, ...);
 	void WriteHeadILine(UINT prio, const char* fmt, ...);
 	void WriteHeadOLine(UINT prio, const char* fmt, ...);
@@ -191,6 +191,7 @@ private:
 	UINT headerOffsetI;
 	UINT procOffsetPredef;
 	UINT procOffset;
+	UINT mainFunctionDeclStrIdx;
 
 	UINT8 forcePCFsampler[32];
 	UINT genAlphatest;
