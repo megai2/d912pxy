@@ -126,7 +126,9 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 
 void d912pxy_helper::InstallVehHandler()
 {
-	AddVectoredExceptionHandler(TRUE, VexDbgHandler);
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_ENABLE_VEH))
+		AddVectoredExceptionHandler(TRUE, VexDbgHandler);
+
 	d912pxy_s(log)->RegisterModule(L"helper", &LGC_DEFAULT);
 }
 
