@@ -229,7 +229,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	d912pxy_s(psoCache)->Use();
 
-	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, d912pxy_s(batch)->NextBatch());
+	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch());
 
 	instanceCount = 1;
 

@@ -177,7 +177,7 @@ void d912pxy_replay::RSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor)
 	REPLAY_STACK_INCREMENT;
 }
 
-void d912pxy_replay::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
+void d912pxy_replay::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation, UINT batchId)
 {
 	REPLAY_STACK_GET(DRPL_DIIP);
 
@@ -186,6 +186,7 @@ void d912pxy_replay::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT S
 	it->dip.StartIndexLocation = StartIndexLocation;
 	it->dip.BaseVertexLocation = BaseVertexLocation;
 	it->dip.StartInstanceLocation = StartInstanceLocation;
+	it->dip.batchId = batchId;
 
 	REPLAY_STACK_INCREMENT;
 }
@@ -645,7 +646,7 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 	if (!*context)
 		return;
 
-	d912pxy_s(batch)->PreDIP(cl, it->StartInstanceLocation);
+	d912pxy_s(batch)->PreDIP(cl, it->batchId);
 
 	//cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	cl->DrawIndexedInstanced(
@@ -653,7 +654,7 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 		it->InstanceCount,
 		it->StartIndexLocation,
 		it->BaseVertexLocation,
-		0
+		it->StartInstanceLocation
 	);
 }
 
