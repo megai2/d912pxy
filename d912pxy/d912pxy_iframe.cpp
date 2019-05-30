@@ -417,8 +417,15 @@ void d912pxy_iframe::Start()
 	if (mSwapChain)
 		mSwapChain->StartFrame();
 
+	LOG_DBG_DTDM("batch frame start called");
+
 	d912pxy_s(batch)->FrameStart();
+
+	LOG_DBG_DTDM("CMDreplay iframe start called");
+
 	d912pxy_s(CMDReplay)->IFrameStart();
+
+	LOG_DBG_DTDM("SetViewport called");
 
 	SetViewport(&main_viewport);
 	//SetScissors(&main_scissor);
