@@ -52,6 +52,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_MISC_GPU_TIMEOUT,
 	PXY_CFG_DX_DBG_RUNTIME,
 	PXY_CFG_MISC_USE_DX9,
+	PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH,
 	PXY_CFG_QUERY_OCCLUSION,
 	PXY_CFG_CNT
 } d912pxy_config_value;
@@ -105,6 +106,7 @@ private:
 		{L"misc",L"gpu_timeout",L"5000"},//PXY_CFG_MISC_GPU_TIMEOUT
 		{L"misc",L"dx_debug",L"0"},//PXY_CFG_DX_DBG_RUNTIME
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
+		{L"misc",L"draw_up_buffer_length", L"FFFF"},//PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH
 		{L"query",L"occlusion",L"0"}//PXY_CFG_QUERY_OCCLUSION
 	};
 
