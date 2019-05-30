@@ -112,6 +112,8 @@ void d912pxy_device::InnerPresentFinish()
 
 	swapOpLock.Release();
 
+	LOG_DBG_DTDM("Present finished");
+
 	API_OVERHEAD_TRACK_END(0)
 }
 

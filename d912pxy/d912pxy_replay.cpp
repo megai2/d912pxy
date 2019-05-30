@@ -331,10 +331,10 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	//execute operations
 	while (i != end)
 	{
-		LOG_DBG_DTDM("RP TY %u %s",i, d912pxy_replay_item_type_dsc[stack[i].type]);
-
 		while (i < maxRI)
 		{
+			LOG_DBG_DTDM("RP TY %u %s", i, d912pxy_replay_item_type_dsc[stack[i].type]);
+
 			PlayId(&stack[i], cl, (void**)&context);
 			++i;
 		}
@@ -693,6 +693,8 @@ void d912pxy_replay::RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsComman
 
 void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl, void** unused)
 {
+	LOG_DBG_DTDM("RCLR tgt %llX", it->tgt);
+
 	it->tgt->ClearAsRTV(it->clr, cl, &it->clearRect);
 }
 
