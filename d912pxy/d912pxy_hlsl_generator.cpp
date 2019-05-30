@@ -1460,7 +1460,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 				break;
 				case D3DSPR_MISCTYPE:
 				{
-					if (regNum == 0)
+					if (regNum == D3DSMO_POSITION)
 					{
 						HLSL_GEN_WRITE_HEADI(
 							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
@@ -1482,6 +1482,14 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 								regNum
 							);
 						}
+					}
+					else if (regNum == D3DSMO_FACE)
+					{
+						HLSL_GEN_WRITE_HEADI(
+							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
+							"	float4 %s%u: VFACE;",
+							d912pxy_hlsl_generator_reg_names[dstReg], regNum
+						);
 					} else 
 						LOG_ERR_THROW2(-1, "hlsl reg type misc unk");
 				}
@@ -1565,8 +1573,8 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 				}
 				break;
 				case D3DSPR_MISCTYPE:
-				{
-					if (regNum == 0)
+				{   
+					if (regNum == D3DSMO_POSITION)
 					{
 						HLSL_GEN_WRITE_HEADI(
 							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
@@ -1588,6 +1596,14 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 								regNum
 							);
 						}
+					}
+					else if (regNum == D3DSMO_FACE)
+					{
+						HLSL_GEN_WRITE_HEADI(
+							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
+							"	float4 %s%u: VFACE;",
+							d912pxy_hlsl_generator_reg_names[dstReg], regNum
+						);
 					}
 					else
 						LOG_ERR_THROW2(-1, "hlsl reg type misc unk");
