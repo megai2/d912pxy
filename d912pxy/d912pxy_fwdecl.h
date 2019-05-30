@@ -212,6 +212,8 @@ SOFTWARE.
 #define d912pxy_shader_db_bugs_dir "shaders/bugs"
 #define PXY_CRASH_LOG_FILE_PATH "d912pxy/crash"
 #define PXY_LOG_FILE_NAME "d912pxy/log.txt"
+#define d912pxy_perf_graph_outfile "./d912pxy/dx12_perf_graph.html"
+#define d912pxy_perf_graph_dx9_outfile "./d912pxy/dx9_perf_graph.html"
 
 //forward class defenitions =======================
 

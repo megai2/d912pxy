@@ -29,18 +29,61 @@ SOFTWARE.
 
 #define d912pxy_trimmed_pso_static_data_size (sizeof(d912pxy_trimmed_dx12_pso) - d912pxy_trimmed_dx12_pso_hash_offset)
 
+#pragma pack(push, 1)
+
+typedef struct d912pxy_trimmed_render_target_blend_desc
+{
+	UINT8 BlendEnable;
+	UINT8 SrcBlend;
+	UINT8 DestBlend;
+	UINT8 BlendOp;
+	UINT8 SrcBlendAlpha;
+	UINT8 DestBlendAlpha;
+	UINT8 BlendOpAlpha;
+	UINT8 RenderTargetWriteMask;
+} d912pxy_trimmed_render_target_blend_desc;
+
+typedef struct d912pxy_trimmed_rasterizer_desc
+{
+	UINT8 FillMode;
+	UINT8 CullMode;
+	INT DepthBias;
+	FLOAT SlopeScaledDepthBias;
+	UINT8 AntialiasedLineEnable;
+} d912pxy_trimmed_rasterizer_desc;
+
+typedef struct d912pxy_trimmed_depth_stencilop_desc
+{
+	UINT8 StencilFailOp;
+	UINT8 StencilDepthFailOp;
+	UINT8 StencilPassOp;
+	UINT8 StencilFunc;
+} d912pxy_trimmed_depth_stencilop_desc;
+
+typedef struct d912pxy_trimmed_depth_stencil_desc
+{
+	UINT8 DepthEnable;
+	UINT8 DepthWriteMask;
+	UINT8 DepthFunc;
+	UINT8 StencilEnable;
+	UINT8 StencilReadMask;
+	UINT8 StencilWriteMask;
+	d912pxy_trimmed_depth_stencilop_desc FrontFace;
+	d912pxy_trimmed_depth_stencilop_desc BackFace;
+} d912pxy_trimmed_depth_stencil_desc;
+
 typedef struct d912pxy_trimmed_dx12_pso {
 	d912pxy_vshader* VS;
 	d912pxy_pshader* PS;
 	d912pxy_vdecl* InputLayout;
 
 	UINT vdeclHash;
-	D3D12_RENDER_TARGET_BLEND_DESC BlendStateRT0;
-	D3D12_RASTERIZER_DESC RasterizerState;
-	D3D12_DEPTH_STENCIL_DESC DepthStencilState;
-	DXGI_FORMAT RTVFormat0;
-	DXGI_FORMAT DSVFormat;
-	UINT NumRenderTargets;
+	d912pxy_trimmed_render_target_blend_desc BlendStateRT0;
+	d912pxy_trimmed_rasterizer_desc RasterizerState;
+	d912pxy_trimmed_depth_stencil_desc DepthStencilState;
+	UINT8 RTVFormat0;
+	UINT8 DSVFormat;
+	UINT8 NumRenderTargets;
 } d912pxy_trimmed_dx12_pso;
 
 typedef struct d912pxy_serialized_pso_key {
@@ -49,6 +92,8 @@ typedef struct d912pxy_serialized_pso_key {
 	UINT8 staticPsoDesc[d912pxy_trimmed_pso_static_data_size];
 	
 } d912pxy_serialized_pso_key;
+
+#pragma pack(pop)
 
 class d912pxy_pso_cache_item : public d912pxy_comhandler {
 
