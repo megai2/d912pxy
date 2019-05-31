@@ -83,6 +83,8 @@ public:
 
 	void ForceStateRebind();
 
+	UINT ForceActiveStreams(UINT forceValue);
+
 private:	
 
 	void InitRootSignature();

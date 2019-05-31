@@ -602,7 +602,10 @@ ID3D12PipelineState* d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso * d
 	}
 
 	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
+	{
+		LOG_DBG_DTDM3("fixed pipe draw issued, skipping");
 		return NULL;
+	}
 	
 	return d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc)->GetPtr();
 }

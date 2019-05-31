@@ -1271,6 +1271,12 @@ void d912pxy_hlsl_generator::LoadBugDefs()
 			case PXY_INNER_SHDR_BUG_CLIPPLANE0:
 				genVSClipplane0 = 1;
 				break;
+			case PXY_INNER_SHDR_BUG_UINT_NORMALS:
+				genUintNormals = 1;
+				break;
+			case PXY_INNER_SHDR_BUG_UINT_TANGENTS:
+				genUintTangents = 1;
+				break;
 			default:
 				LOG_ERR_DTDM("found unindentified bug %u for %016llX. SKIP!", i, mUID);
 				break;
@@ -1769,7 +1775,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 				break;
 				case D3DSPR_INPUT:
 				{
-					if ((op[1] & 0x1F) == D3DDECLUSAGE_BLENDINDICES)
+					if (((op[1] & 0x1F) == D3DDECLUSAGE_BLENDINDICES) || (((op[1] & 0x1F) == D3DDECLUSAGE_NORMAL) && genUintNormals) || (((op[1] & 0x1F) == D3DDECLUSAGE_TANGENT) && genUintTangents))
 					{
 						HLSL_GEN_WRITE_HEADI(
 							0,

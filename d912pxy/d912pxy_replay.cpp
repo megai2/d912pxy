@@ -646,9 +646,9 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 	if (!*context)
 		return;
 
-	d912pxy_s(batch)->PreDIP(cl, it->batchId);
+	d912pxy_s(batch)->PreDIP(cl, it->batchId & 0xFFFF);
 
-	//cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)(it->batchId >> 16));
 	cl->DrawIndexedInstanced(
 		it->IndexCountPerInstance,
 		it->InstanceCount,
@@ -708,8 +708,8 @@ void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandL
 {
 	ID3D12PipelineState * pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0);
 	
-	if (pso)
-		cl->SetPipelineState(pso);
+	if (pso)			
+		cl->SetPipelineState(pso);	
 
 	*context = pso;
 }

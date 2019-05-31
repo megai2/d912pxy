@@ -450,6 +450,9 @@
     <ClInclude Include="d912pxy_resource.h">
       <Filter>d3d9_impl\resource</Filter>
     </ClInclude>
+    <ClInclude Include="..\thirdparty\renderdoc_app.h">
+      <Filter>utils\3rd_party</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />

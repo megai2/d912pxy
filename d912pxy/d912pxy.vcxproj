@@ -191,7 +191,7 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetName>d3d9</TargetName>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\debug\</OutDir>
-    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -217,7 +217,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\release\</OutDir>
     <TargetName>d3d9</TargetName>
-    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ps|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -522,7 +522,7 @@
   <ItemGroup>
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3d9.h" />
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3dx9.h" />
-    <ClInclude Include="..\thirdparty\D3D9Proxy\defines.h" />
+    <ClInclude Include="..\thirdparty\renderdoc_app.h" />
     <ClInclude Include="..\thirdparty\StackWalker\StackWalker.h" />
     <ClInclude Include="d3d9_proxy_dll.h" />
     <ClInclude Include="d912pxy_async_upload_thread.h" />

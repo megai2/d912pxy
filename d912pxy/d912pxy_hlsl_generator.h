@@ -198,6 +198,8 @@ private:
 	UINT genSRGBRead;
 	UINT genSRGBWrite;
 	UINT genVSClipplane0;
+	UINT genUintNormals;
+	UINT genUintTangents;
 
 	UINT maxShaderPassedVars;
 

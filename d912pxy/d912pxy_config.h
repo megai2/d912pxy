@@ -49,6 +49,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_LOG_PERF_GRAPH,
 	PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER,
 	PXY_CFG_LOG_ENABLE_VEH,
+	PXY_CFG_LOG_LOAD_RDOC,
 	PXY_CFG_UPLOAD_TEX_ASYNC,	
 	PXY_CFG_MISC_GPU_TIMEOUT,
 	PXY_CFG_DX_DBG_RUNTIME,
@@ -104,6 +105,7 @@ private:
 		{L"log", L"perf_graph", L"0"},//PXY_CFG_LOG_PERF_GRAPH		
 		{L"log", L"dbg_mem_mgr_save_new_caller", L"0"},//PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER
 		{L"log", L"enable_veh", L"1"}, //PXY_CFG_LOG_ENABLE_VEH
+		{L"log", L"load_rdoc", L"0"},//PXY_CFG_LOG_LOAD_RDOC
 		{L"upload",L"tex_async",L"0"},//PXY_CFG_UPLOAD_TEX_ASYNC
 		{L"misc",L"gpu_timeout",L"5000"},//PXY_CFG_MISC_GPU_TIMEOUT
 		{L"misc",L"dx_debug",L"0"},//PXY_CFG_DX_DBG_RUNTIME

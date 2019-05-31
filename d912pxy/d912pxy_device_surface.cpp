@@ -39,6 +39,19 @@ HRESULT WINAPI d912pxy_device::SetRenderTarget(DWORD RenderTargetIndex, IDirect3
 
 	d912pxy_s(iframe)->BindSurface(1 + RenderTargetIndex, rtSurf);
 
+	D3DVIEWPORT9 wp;
+	wp.X = 0;
+	wp.Y = 0;
+
+	D3DSURFACE_DESC sdsc = rtSurf->GetDX9DescAtLevel(0);
+
+	wp.Width = sdsc.Width;
+	wp.Height = sdsc.Height;
+	wp.MaxZ = 1;
+	wp.MinZ = 0;
+
+	SetViewport(&wp);
+
 	API_OVERHEAD_TRACK_END(0)
 
 	return D3D_OK; 
