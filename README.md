@@ -71,6 +71,8 @@ Video by reddit u/moriz0, running WvW in 4k: https://www.youtube.com/watch?v=RQA
 
 [**Tutoriel d'installation** (FR)](https://www.youtube.com/watch?v=hfSSIBICG6E)
 
+[**Using with other addons and overlays**] https://github.com/megai2/d912pxy/wiki/Using-with-other-addons-and-overlays
+
 # Known bugs
 
 **Bug**: Fullscreen crash can hang system videofeed.
