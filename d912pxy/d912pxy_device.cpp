@@ -117,6 +117,11 @@ void d912pxy_device::FreeAdditionalDX9Objects()
 {
 	mDrawUPIbuf->Release();
 	mDrawUPVbuf->Release();
+
+	mDrawUPIVbuf->Release();
+	mDrawUPIIbuf[0]->Release();
+	mDrawUPIIbuf[1]->Release();
+
 	mNullTexture->Release();
 }
 

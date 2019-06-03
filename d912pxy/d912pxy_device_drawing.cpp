@@ -166,28 +166,11 @@ HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, U
 
 	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
-	DWORD pperprim[] = {
-		0,
-		1,//point
-		2,//linelist
-		1,//linestrip
-		3,//trilist
-		1//tristrip		
-	};
-
-	DWORD primsubs[] = {
-		0,
-		0,//point
-		0,//linelist
-		1,//linestrip
-		0,//trilist
-		2//tristrip		
-	};
-
+	UINT vstreamRegLen = VertexStreamZeroStride * d912pxy_s(iframe)->GetIndexCount(PrimitiveCount, PrimitiveType);
 
 	void* dstPtr;
-	mDrawUPVbuf->Lock(mDrawUPStreamPtr, 0, &dstPtr, 0);
-	memcpy(dstPtr, pVertexStreamZeroData, VertexStreamZeroStride * (pperprim[PrimitiveType] * PrimitiveCount + primsubs[PrimitiveType]));
+	mDrawUPVbuf->Lock(mDrawUPStreamPtr, vstreamRegLen, &dstPtr, 0);
+	memcpy(dstPtr, pVertexStreamZeroData, vstreamRegLen);
 	mDrawUPVbuf->Unlock();
 
 	d912pxy_vstream* oi = d912pxy_s(iframe)->GetIBuf();
@@ -199,7 +182,7 @@ HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, U
 	d912pxy_s(iframe)->SetStreamFreq(0, 1);
 	d912pxy_s(iframe)->SetStreamFreq(1, 0);
 
-	mDrawUPStreamPtr += (pperprim[PrimitiveType] * PrimitiveCount + primsubs[PrimitiveType]) * VertexStreamZeroStride;
+	mDrawUPStreamPtr += vstreamRegLen;
 
 	DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);
 
@@ -218,34 +201,45 @@ HRESULT WINAPI d912pxy_device::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Primitive
 {
 	API_OVERHEAD_TRACK_START(0)
 
-	DWORD pperprim[] = {
-		0,
-		1,//point
-		2,//linelist
-		1,//linestrip
-		3,//trilist
-		1//tristrip		
-	};
-
-	DWORD primsubs[] = {
-		0,
-		0,//point
-		0,//linelist
-		1,//linestrip
-		0,//trilist
-		2//tristrip		
-	};
-
-	UINT indBufSz = ((IndexDataFormat == D3DFMT_INDEX32) * 2 + 2)*(PrimitiveCount * pperprim[PrimitiveType] + primsubs[PrimitiveType]);
+	UINT hiInd = IndexDataFormat == D3DFMT_INDEX32;
+	UINT indBufSz = (hiInd * 2 + 2)*d912pxy_s(iframe)->GetIndexCount(PrimitiveCount, PrimitiveType);
 	UINT vertBufSz = VertexStreamZeroStride * (MinVertexIndex + NumVertices);
 
-	d912pxy_vstream* indBuf = d912pxy_s(pool_vstream)->GetVStreamObject(indBufSz, IndexDataFormat, 1);
-	d912pxy_vstream* vertBuf = d912pxy_s(pool_vstream)->GetVStreamObject(vertBufSz, 0, 0);
+	d912pxy_vstream* indBuf = mDrawUPIIbuf[hiInd];
+	d912pxy_vstream* vertBuf = mDrawUPIVbuf;
+
+	if (indBuf->GetLength() <= (mDrawUPIIStreamPtr[hiInd] + indBufSz))
+	{
+		mDrawUPIIbuf[hiInd] = d912pxy_s(pool_vstream)->GetVStreamObject((indBuf->GetLength() * 2) & 0x7FFFFFF, IndexDataFormat, 1);
+		indBuf->Release();
+		indBuf = mDrawUPIIbuf[hiInd];
+		mDrawUPIIStreamPtr[hiInd] = 0;
+
+		if (indBuf->GetLength() <= indBufSz)
+		{
+			LOG_DBG_DTDM3("App asked %lX ibytes to draw, TOO BIG, skipping (dipup %u-%u)", indBufSz, PrimitiveCount, PrimitiveType);
+			return D3D_OK;
+		}
+	}
+
+	if (vertBuf->GetLength() <= (mDrawUPIVStreamPtr + vertBufSz))
+	{
+		mDrawUPIVbuf = d912pxy_s(pool_vstream)->GetVStreamObject((vertBuf->GetLength() * 2) & 0x7FFFFFF, 0, 0);
+		vertBuf->Release();
+		vertBuf = mDrawUPIVbuf;
+		mDrawUPIVStreamPtr = 0;
+
+		if (vertBuf->GetLength() <= vertBufSz)
+		{
+			LOG_DBG_DTDM3("App asked %lX vbytes to draw, TOO BIG, skipping (dipup %u-%u)", vertBufSz, MinVertexIndex, NumVertices);
+			return D3D_OK;
+		}
+	}
 
 	void* indDPtr;
 	void* vertDPtr;
-	indBuf->Lock(0, 0, &indDPtr, 0);
-	vertBuf->Lock(0, 0, &vertDPtr, 0);
+	indBuf->Lock(mDrawUPIIStreamPtr[hiInd], indBufSz, &indDPtr, 0);
+	vertBuf->Lock(mDrawUPIVStreamPtr, vertBufSz, &vertDPtr, 0);
 
 	memcpy(indDPtr, pIndexData, indBufSz);
 	memcpy(vertDPtr, pVertexStreamZeroData, vertBufSz);
@@ -253,25 +247,24 @@ HRESULT WINAPI d912pxy_device::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Primitive
 	indBuf->Unlock();
 	vertBuf->Unlock();
 
-
 	d912pxy_vstream* oi = d912pxy_s(iframe)->GetIBuf();
 	d912pxy_device_streamsrc oss = d912pxy_s(iframe)->GetStreamSource(0);
 	d912pxy_device_streamsrc ossi = d912pxy_s(iframe)->GetStreamSource(1);
 
 	d912pxy_s(iframe)->SetIBuf(indBuf);
-	d912pxy_s(iframe)->SetVBuf(vertBuf, 0, 0, VertexStreamZeroStride);
+	d912pxy_s(iframe)->SetVBuf(vertBuf, 0, mDrawUPIVStreamPtr, VertexStreamZeroStride);
 	d912pxy_s(iframe)->SetStreamFreq(0, 1);
 	d912pxy_s(iframe)->SetStreamFreq(1, 0);
 
-	DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, 0, PrimitiveCount);
+	DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, mDrawUPIIStreamPtr[hiInd] >> (1 + hiInd), PrimitiveCount);
+
+	mDrawUPIIStreamPtr[hiInd] += indBufSz;
+	mDrawUPIVStreamPtr += vertBufSz;
 
 	d912pxy_s(iframe)->SetIBuf(oi);
 	d912pxy_s(iframe)->SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
 	//d912pxy_s(iframe)->SetStreamFreq(0, oss.divider);
 	//d912pxy_s(iframe)->SetStreamFreq(1, ossi.divider);
-
-	indBuf->Release();
-	vertBuf->Release();
 
 	API_OVERHEAD_TRACK_END(0)
 

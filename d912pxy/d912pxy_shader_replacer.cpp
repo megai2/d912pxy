@@ -184,7 +184,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 #ifdef _DEBUG
 	HRESULT compRet = D3DCompile(imem, size, replFn, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES | D3DCOMPILE_DEBUG, 0, &ret, &eret);
 #else
-	HRESULT compRet = D3DCompileFromFile(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
+	HRESULT compRet = D3DCompile(imem, size, replFn, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
 #endif
 
 	if ((compRet != S_OK) && (eret == NULL))
@@ -228,7 +228,17 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 		ret2.blob = ret;
 
 		if (saveSource)
+		{
+#ifdef _DEBUG
+			FILE* tOf = fopen(replFn, "wb+");
+			if (tOf)
+			{
+				fwrite(imem, 1, size, tOf);
+				fclose(tOf);
+			}
+#endif
 			d912pxy_s(vfs)->WriteFileH(mUID, imem, size, PXY_VFS_BID_SHADER_SOURCES);
+		}
 
 		return ret2;
 	}

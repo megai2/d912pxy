@@ -85,6 +85,8 @@ public:
 
 	void ConstructResource();
 
+	UINT GetLength();
+
 	static UINT32 threadedCtor;
 
 private:	

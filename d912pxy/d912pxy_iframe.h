@@ -85,6 +85,8 @@ public:
 
 	UINT ForceActiveStreams(UINT forceValue);
 
+	UINT GetIndexCount(UINT PrimitiveCount, D3DPRIMITIVETYPE PrimitiveType);
+
 private:	
 
 	void InitRootSignature();

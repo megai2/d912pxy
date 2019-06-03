@@ -217,6 +217,14 @@ void d912pxy_device::InitDrawUPBuffers()
 
 	mDrawUPIbuf->Unlock();
 	mDrawUPStreamPtr = 0;
+
+	mDrawUPIVbuf = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, 0, 0);
+	mDrawUPIIbuf[0] = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, D3DFMT_INDEX16, 1);
+	mDrawUPIIbuf[1] = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, D3DFMT_INDEX32, 1);
+
+	mDrawUPIIStreamPtr[0] = 0;
+	mDrawUPIIStreamPtr[1] = 0;
+	mDrawUPIVStreamPtr = 0;
 }
 
 void d912pxy_device::InitDescriptorHeaps()

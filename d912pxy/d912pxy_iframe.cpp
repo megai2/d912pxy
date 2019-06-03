@@ -642,6 +642,31 @@ UINT d912pxy_iframe::ForceActiveStreams(UINT forceValue)
 	return ret;
 }
 
+UINT d912pxy_iframe::GetIndexCount(UINT PrimitiveCount, D3DPRIMITIVETYPE PrimitiveType)
+{
+	DWORD pperprim[] = {
+		0,
+		1,//point
+		2,//linelist
+		1,//linestrip
+		3,//trilist
+		1,//tristrip		
+		0//trifan
+	};
+
+	DWORD primsubs[] = {
+		0,
+		0,//point
+		0,//linelist
+		1,//linestrip
+		0,//trilist
+		2,//tristrip		
+		0//trifan
+	};
+
+	return PrimitiveCount * pperprim[PrimitiveType] + primsubs[PrimitiveType];
+}
+
 void d912pxy_iframe::InitRootSignature()
 {
 	D3D12_DESCRIPTOR_RANGE ranges[3];

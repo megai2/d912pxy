@@ -1002,6 +1002,11 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 		return;
 	}
 
+	/*FILE* tf = fopen("d912pxy/tmp.hlsl", "wb+");
+	fwrite(shdSrc[0], 1, shdSrcSz[0], tf);
+	fwrite(shdSrc[1], 1, shdSrcSz[1], tf);
+	fclose(tf);*/
+
 	//megai2: pass 0 - vdecl to vs input signature typecheck
 	LOG_DBG_DTDM3("PSO RCE P0");	
 
@@ -1011,7 +1016,7 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 
 		if (!semDefPlace)
 		{
-			LOG_DBG_DTDM3("semantic %S not used in vs", d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].SemanticName);
+			LOG_DBG_DTDM("semantic %S not used in vs", d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].SemanticName);
 			continue;
 		}
 
@@ -1046,7 +1051,6 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 		memcpy(replPos, newType, 6);
 
 	}
-
 
 	//megai2: pass 1 - vs output to ps input signature ordering check
 	LOG_DBG_DTDM3("PSO RCE P1");
@@ -1105,10 +1109,10 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	int filterTgt = psInCnt - 1;
 
 	for (int i = 0; i != psInCnt; ++i)
-	{		
+	{	
 		while (strstr(psIn[i], "unused_ireg_"))
 		{
-			if (filterTgt == i)
+			if (filterTgt >= i)
 				break;
 
 			char* tSwp = psIn[i];
@@ -1166,7 +1170,7 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 		}
 	}
 
-	/*FILE* tf = fopen("d912pxy/tmp.hlsl", "wb+");
+	/*FILE* tf2 = fopen("d912pxy/tmp2.hlsl", "wb+");
 	fwrite(shdSrc[0], 1, shdSrcSz[0], tf);
 	fwrite(shdSrc[1], 1, shdSrcSz[1], tf);
 	fclose(tf);*/
