@@ -48,7 +48,7 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d9
 
 	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
 
-	d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID);
+	d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID, 0);
 
 	bytecode = replacer->GetCode();
 
@@ -74,7 +74,7 @@ D3D12_SHADER_BYTECODE * d912pxy_shader::GetCode()
 {
 	if (!bytecode.code)
 	{	
-		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID);
+		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID, 0);
 
 		bytecode = replacer->GetCode();
 

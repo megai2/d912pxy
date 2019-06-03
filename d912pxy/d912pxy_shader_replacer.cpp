@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_replacer::d912pxy_shader_replacer(DWORD * fun, UINT len, d912pxy_shader_uid UID) : d912pxy_noncom(NULL, L"shader replacer")
+d912pxy_shader_replacer::d912pxy_shader_replacer(DWORD * fun, UINT len, d912pxy_shader_uid UID, UINT isVs) : d912pxy_noncom(NULL, L"shader replacer")
 {
 	mUID = UID;
 	oCode = fun;
@@ -32,6 +32,8 @@ d912pxy_shader_replacer::d912pxy_shader_replacer(DWORD * fun, UINT len, d912pxy_
 
 	if (fun)
 		vsSig = CheckTypeSignature();
+	else
+		vsSig = isVs;
 }
 
 d912pxy_shader_replacer::~d912pxy_shader_replacer()
@@ -161,6 +163,72 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfol
 		if (!keepSource)
 			DeleteFile(replFn);
 #endif
+		return ret2;
+	}
+}
+
+d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* bfolder, void* imem, UINT size, UINT saveSource)
+{
+	char replFn[1024];
+
+	//megai2: %016llX bugged out
+	sprintf(replFn, "%S/%016llX.hlsl", bfolder, mUID);
+
+	char targetCompiler[] = "ps_5_1";
+
+	if (vsSig)
+		targetCompiler[0] = L'v';
+
+	ComPtr<ID3DBlob> ret, eret;
+
+#ifdef _DEBUG
+	HRESULT compRet = D3DCompile(imem, size, replFn, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES | D3DCOMPILE_DEBUG, 0, &ret, &eret);
+#else
+	HRESULT compRet = D3DCompileFromFile(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
+#endif
+
+	if ((compRet != S_OK) && (eret == NULL))
+	{
+		//megai2: that should be converted via hresult processing, but nah
+		if (compRet != 0x80070002)//ERROR_FILE_NOT_FOUND
+			LOG_ERR_DTDM("shd compiler err = %08lX", compRet);
+
+		d912pxy_shader_code ret2;
+
+		ret2.code = 0;
+		ret2.sz = 0;
+		ret2.blob = nullptr;
+
+		return ret2;
+
+	}
+	else if (eret != NULL && ret == NULL)
+	{
+		LOG_ERR_DTDM("shd compile err = %S", eret->GetBufferPointer());
+
+		d912pxy_shader_code ret2;
+
+		ret2.code = 0;
+		ret2.sz = 0;
+		ret2.blob = nullptr;
+
+		return ret2;
+	}
+	else {
+
+		if (eret != NULL)
+		{
+			LOG_DBG_DTDM3("shd compile warning = %S", eret->GetBufferPointer());
+		}
+
+		d912pxy_shader_code ret2;
+
+		ret2.code = ret->GetBufferPointer();
+		ret2.sz = ret->GetBufferSize();
+		ret2.blob = ret;
+
+		if (saveSource)
+			d912pxy_s(vfs)->WriteFileH(mUID, imem, size, PXY_VFS_BID_SHADER_SOURCES);
 
 		return ret2;
 	}
@@ -185,8 +253,10 @@ void d912pxy_shader_replacer::SaveCSO(d912pxy_shader_code code, const char * bfo
 	d912pxy_s(vfs)->WriteFileH(mUID, code.code, (UINT32)code.sz, PXY_VFS_BID_CSO);
 }
 
-void d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)
+d912pxy_hlsl_generator_memout* d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)
 {
+	d912pxy_hlsl_generator_memout* ret = 0;
+
 	wchar_t replFn[4096];
 	wsprintf(replFn, L"%s/%08lX%08lX.hlsl", bfolder, (UINT32)(mUID >> 32), (UINT32)(mUID & 0xFFFFFFFF));
 
@@ -194,7 +264,7 @@ void d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)
 
 	try {
 
-		gen->Process(0);
+		ret = gen->Process(1);
 
 	}
 	catch (...)
@@ -203,6 +273,8 @@ void d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)
 	}
 
 	delete gen;
+
+	return ret;
 }
 
 d912pxy_shader_code d912pxy_shader_replacer::GetCode()
@@ -220,8 +292,21 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_custom_dir, 1);
 		if (!ret.code)
 		{
-			GenerateHLSL(d912pxy_shader_db_hlsl_dir);
-			ret = CompileFromHLSL(d912pxy_shader_db_hlsl_dir, 0);
+			d912pxy_hlsl_generator_memout* genRet = GenerateHLSL(d912pxy_shader_db_hlsl_dir);
+			if (!genRet)
+			{
+				LOG_ERR_DTDM("Failed to re-generate shader with UID = %016llX", mUID);
+				LOG_ERR_DTDM("bytecode dump: ");
+				for (UINT i = 0; i != oLen; ++i)
+				{
+					LOG_ERR_DTDM("%04u : %08lX", i, oCode[i]);
+				}
+				LOG_ERR_THROW2(-1, "shader replace error");
+			}
+			ret = CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, genRet->data, genRet->size, 1);
+
+			PXY_FREE(genRet);
+
 			if (!ret.code)
 			{
 				LOG_ERR_DTDM("Failed to replace shader with UID = %016llX", mUID);

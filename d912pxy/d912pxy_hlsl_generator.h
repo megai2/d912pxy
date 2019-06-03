@@ -85,13 +85,20 @@ class d912pxy_hlsl_generator;
 
 typedef void (d912pxy_hlsl_generator::*d912pxy_hlsl_generator_sio_handler)(DWORD* op);
 
+#pragma pack(push, 1)
+typedef struct d912pxy_hlsl_generator_memout {
+	UINT32 size;
+	char data[1024];
+} d912pxy_hlsl_generator_memout;
+#pragma pack(pop)
+
 class d912pxy_hlsl_generator : public d912pxy_noncom
 {
 public:
 	d912pxy_hlsl_generator(DWORD* src, UINT len, wchar_t* ofn, d912pxy_shader_uid uid);
 	~d912pxy_hlsl_generator();
 	
-	void* Process(UINT toMemory);
+	d912pxy_hlsl_generator_memout* Process(UINT toMemory);
 
 	//dxbc lookups
 
@@ -191,7 +198,7 @@ private:
 
 	//output file
 	FILE * of;
-	void* WriteOutput(UINT toMemory);
+	d912pxy_hlsl_generator_memout* WriteOutput(UINT toMemory);
 
 	//output buffering and sorting
 	UINT procIdent;

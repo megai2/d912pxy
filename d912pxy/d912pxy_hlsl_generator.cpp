@@ -260,7 +260,7 @@ d912pxy_hlsl_generator::~d912pxy_hlsl_generator()
 	fclose(of);
 }
 
-void* d912pxy_hlsl_generator::Process(UINT toMemory)
+d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::Process(UINT toMemory)
 {
 	if (!of && !toMemory)
 		return 0;
@@ -278,6 +278,8 @@ void* d912pxy_hlsl_generator::Process(UINT toMemory)
 	while (ocIdx != oLen)
 	{
 		UINT16 sioID = oCode[ocIdx] & 0xFFFF;
+
+		//skip comments
 		if (sioID == 0xFFFE)
 		{
 			ocIdx += ((oCode[ocIdx] >> 16) & 0xFFFF) + 1;
@@ -1173,7 +1175,7 @@ void d912pxy_hlsl_generator::DumpDisassembly()
 ////////////////////////	
 }
 
-void* d912pxy_hlsl_generator::WriteOutput(UINT toMemory)
+d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::WriteOutput(UINT toMemory)
 {
 	const char* newLine = "\r\n";
 	size_t outputSz = 0;
@@ -1185,9 +1187,12 @@ void* d912pxy_hlsl_generator::WriteOutput(UINT toMemory)
 			outputSz += strlen(lines[i]) + 2;
 	}
 
-	void* ret;
-	PXY_MALLOC(ret, outputSz, void*);
-	outputMemPos = (intptr_t)ret;
+	d912pxy_hlsl_generator_memout* ret = NULL;
+	PXY_MALLOC(ret, outputSz+4, d912pxy_hlsl_generator_memout*);
+
+	ret->size = (UINT32)outputSz;
+
+	outputMemPos = (intptr_t)(&ret->data[0]);	
 
 	for (int i = 0; i != d912pxy_hlsl_generator_max_code_lines; ++i)
 	{
@@ -1204,7 +1209,7 @@ void* d912pxy_hlsl_generator::WriteOutput(UINT toMemory)
 
 	if (!toMemory)
 	{
-		fwrite(ret, 1, outputSz, of);
+		fwrite(&ret->data[0], 1, outputSz, of);
 		PXY_FREE(ret);
 		return 0;
 	}
@@ -1633,7 +1638,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					{
 						HLSL_GEN_WRITE_HEADI(
 							0,
-							"	uint4 %s%u: %s%uE;",
+							"	    uint4 %s%u: %s%uE;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(op[1] & 0x1F, 0), (op[1] >> 16) & 0xF
 						);
 					} else {
