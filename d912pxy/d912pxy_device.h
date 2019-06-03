@@ -177,6 +177,8 @@ public:
 
 	void CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATION_PARAMETERS* origPars, D3DPRESENT_PARAMETERS* origPP);
 	void InitVFS();
+	void InitVFSitem(UINT id, const char* name, UINT memCache);
+
 	void InitClassFields();
 	void InitThreadSyncObjects();
 	void InitSingletons();
