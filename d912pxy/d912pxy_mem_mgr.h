@@ -63,7 +63,7 @@ public:
 	void PostInit();
 #ifdef _DEBUG
 	void StartTrackingBlocks() { allowTrackBlocks = 1; };
-	UINT32 GetMemoryUsedMB() { return memUsed >> 20; };
+	UINT32 GetMemoryUsedMB() { return (UINT32)(memUsed >> 20); };
 #else 
 	void StartTrackingBlocks() { };
 

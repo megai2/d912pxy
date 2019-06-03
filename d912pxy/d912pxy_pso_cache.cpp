@@ -25,8 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_pso_cache::cDscBase;
-UINT d912pxy_pso_cache::vsMaxVars;
-UINT d912pxy_pso_cache::psMaxVars;
+UINT d912pxy_pso_cache::allowRealtimeChecks = 0;
 
 d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev, L"PSO cache"), d912pxy_thread("d912pxy pso compile", 0)
 {
@@ -39,8 +38,7 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 
 	cCPSO = NULL;
 
-	d912pxy_pso_cache::vsMaxVars = 0;
-	d912pxy_pso_cache::psMaxVars = 0;
+	d912pxy_pso_cache::allowRealtimeChecks = d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ALLOW_REALTIME_CHECKS);
 
 	ZeroMemory(&d912pxy_pso_cache::cDscBase, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
@@ -814,6 +812,11 @@ void d912pxy_pso_cache::SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc
 	}
 }
 
+UINT32 d912pxy_pso_cache::GetHashedKey(d912pxy_trimmed_dx12_pso * dsc)
+{
+	return cacheIndexes->memHash32((void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset));
+}
+
 void d912pxy_pso_cache::CheckExternalLock()
 {
 	if (externalLock.GetValue() == 1)
@@ -908,65 +911,10 @@ void d912pxy_pso_cache_item::Compile()
 	d912pxy_pso_cache::cDscBase.RTVFormats[0] = (DXGI_FORMAT)desc->RTVFormat0;
 	d912pxy_pso_cache::cDscBase.DSVFormat = (DXGI_FORMAT)desc->DSVFormat;
 
-	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", vsObj->GetID(), psObj->GetID());
-
-	/*d912pxy_shader_uid shaderBlacklist[] = {
-		0xF080FCE66894DD82,
-		0xE4749555EA1CA6AD,
-		0x985FE509D86757E1,
-		0x7814708E60D7D98A,
-		0xDC863F8647D6B899,
-		0x6C9683BF7AA4A47B,
-		0
-	};
-
-	int sblId = 0;
-	int ignoreShader = 0;
-	while (shaderBlacklist[sblId] != 0)
-	{
-		if ((vsObj->GetID() == shaderBlacklist[sblId]) || (psObj->GetID() == shaderBlacklist[sblId]))
-		{
-			ignoreShader = 1;
-			break;
-		}
-		++sblId;
-	}
-
-	if (!ignoreShader)*/
-	{
-		try { 
-			LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj)), "PSO item are not created");
-		}
-		catch (...)
-		{
-			LOG_ERR_DTDM("CreateGraphicsPipelineState error for VS %016llX PS %016llX", vsObj->GetID(), psObj->GetID());
-
-			char dumpString[sizeof(d912pxy_trimmed_dx12_pso)*2 + 1];
-			dumpString[0] = 0;
-
-			for (int i = 0; i != sizeof(d912pxy_trimmed_dx12_pso); ++i)
-			{
-				char tmp[3];
-				sprintf(tmp, "%02X", ((UINT8*)desc)[i]);
-				dumpString[i * 2] = tmp[0];
-				dumpString[i * 2+1] = tmp[1];
-			}
-
-			dumpString[sizeof(d912pxy_trimmed_dx12_pso) * 2] = 0;
-
-			LOG_ERR_DTDM("trimmed pso dump %S", dumpString);
-
-			vsObj->ThreadRef(-1);
-			psObj->ThreadRef(-1);
-			vdclObj->ThreadRef(-1);
-
-			PXY_FREE(desc);
-
-			//m_status = 2;
-
-			return;
-		}
-		InterlockedExchange((unsigned long long *)&retPtr, (unsigned long long)obj.Get());
+	if (d912pxy_pso_cache::allowRealtimeChecks)
+		RealtimeIntegrityCheck();
+	else {
+		CreatePSO();
 	}
 
 	//m_status = 1;
@@ -976,4 +924,270 @@ void d912pxy_pso_cache_item::Compile()
 	vdclObj->ThreadRef(-1);
 
 	PXY_FREE(desc);
+}
+
+void d912pxy_pso_cache_item::CreatePSO()
+{
+	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", desc->VS->GetID(), desc->PS->GetID());
+
+	try {
+		LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj)), "PSO item are not created");
+	}
+	catch (...)
+	{
+		LOG_ERR_DTDM("CreateGraphicsPipelineState error for VS %016llX PS %016llX", desc->VS->GetID(), desc->PS->GetID());
+
+		char dumpString[sizeof(d912pxy_trimmed_dx12_pso) * 2 + 1];
+		dumpString[0] = 0;
+
+		for (int i = 0; i != sizeof(d912pxy_trimmed_dx12_pso); ++i)
+		{
+			char tmp[3];
+			sprintf(tmp, "%02X", ((UINT8*)desc)[i]);
+			dumpString[i * 2] = tmp[0];
+			dumpString[i * 2 + 1] = tmp[1];
+		}
+
+		dumpString[sizeof(d912pxy_trimmed_dx12_pso) * 2] = 0;
+
+		LOG_ERR_DTDM("trimmed pso dump %S", dumpString);
+	}
+	InterlockedExchange((unsigned long long *)&retPtr, (unsigned long long)obj.Get());
+}
+
+void d912pxy_pso_cache_item::CreatePSODerived(UINT64 derivedAlias)
+{
+	void* shdDerCSO[2];
+	UINT shdDerCSOSz[2];
+
+	shdDerCSO[0] = d912pxy_s(vfs)->LoadFileH(derivedAlias, &shdDerCSOSz[0], PXY_VFS_BID_DERIVED_CSO_VS);
+	shdDerCSO[1] = d912pxy_s(vfs)->LoadFileH(derivedAlias, &shdDerCSOSz[1], PXY_VFS_BID_DERIVED_CSO_PS);
+
+	d912pxy_pso_cache::cDscBase.VS.BytecodeLength = shdDerCSOSz[0];
+	d912pxy_pso_cache::cDscBase.PS.BytecodeLength = shdDerCSOSz[1];
+	d912pxy_pso_cache::cDscBase.VS.pShaderBytecode = shdDerCSO[0];
+	d912pxy_pso_cache::cDscBase.PS.pShaderBytecode = shdDerCSO[1];
+
+	CreatePSO();
+
+	PXY_FREE(shdDerCSO[0]);
+	PXY_FREE(shdDerCSO[1]);
+}
+
+void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
+{
+	d912pxy_shader_pair_hash_type pairUID = d912pxy_s(sdb)->GetPairUID(desc->VS, desc->PS);
+	UINT32 psoKey = d912pxy_s(psoCache)->GetHashedKey(desc);
+	UINT64 derivedAlias = pairUID ^ (UINT64)psoKey;
+
+	LOG_DBG_DTDM3("DX9 PSO realtime check emulation for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
+
+	//megai2: both derived cso files are present, just load them to pso and compile on dx12 side
+	if (d912pxy_s(vfs)->IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_PS) && d912pxy_s(vfs)->IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_VS))
+	{
+		CreatePSODerived(derivedAlias);
+		return;
+	}
+
+	char* shdSrc[2];
+	UINT shdSrcSz[2];
+
+	shdSrc[0] = (char*)d912pxy_s(vfs)->LoadFileH(desc->VS->GetID(), &shdSrcSz[0], PXY_VFS_BID_SHADER_SOURCES);
+	shdSrc[1] = (char*)d912pxy_s(vfs)->LoadFileH(desc->PS->GetID(), &shdSrcSz[1], PXY_VFS_BID_SHADER_SOURCES);
+
+	if (!shdSrc[0] || !shdSrc[1])
+	{
+		LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
+		CreatePSO();
+		return;
+	}
+
+	//megai2: pass 0 - vdecl to vs input signature typecheck
+	LOG_DBG_DTDM3("PSO RCE P0");	
+
+	for (int i = 0; i != d912pxy_pso_cache::cDscBase.InputLayout.NumElements; ++i)
+	{
+		char* semDefPlace = strstr(shdSrc[0], d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].SemanticName);
+
+		if (!semDefPlace)
+		{
+			LOG_DBG_DTDM3("semantic %S not used in vs", d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].SemanticName);
+			continue;
+		}
+
+		char* defLine = d912pxy_helper::StrGetCurrentLineStart(semDefPlace);
+		char* replPos = strstr(defLine, "4") - 5;
+
+		const char* newType = "float4";
+
+		switch (d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].Format)
+		{
+			case DXGI_FORMAT_R32_FLOAT:
+			case DXGI_FORMAT_R32G32_FLOAT:
+			case DXGI_FORMAT_R32G32B32_FLOAT:
+			case DXGI_FORMAT_R32G32B32A32_FLOAT:
+			case DXGI_FORMAT_B8G8R8A8_UNORM:	
+			case DXGI_FORMAT_R16G16_SNORM:
+			case DXGI_FORMAT_R16G16B16A16_SNORM:
+			case DXGI_FORMAT_R16G16_UNORM:
+			case DXGI_FORMAT_R16G16B16A16_UNORM:
+			case DXGI_FORMAT_R16G16_FLOAT:
+			case DXGI_FORMAT_R16G16B16A16_FLOAT:
+				break;
+			case DXGI_FORMAT_R16G16_SINT:				
+			case DXGI_FORMAT_R16G16B16A16_SINT:				
+				newType = "  int4";
+				break;
+			case DXGI_FORMAT_R8G8B8A8_UINT:
+				newType = " uint4";
+				break;
+		}
+
+		memcpy(replPos, newType, 6);
+
+	}
+
+
+	//megai2: pass 1 - vs output to ps input signature ordering check
+	LOG_DBG_DTDM3("PSO RCE P1");
+
+	char* vsOut[256] = { NULL };
+	char* psIn[256] = { NULL };
+
+	UINT vsOutCnt = 0;
+	UINT psInCnt = 0;
+
+	//load vs output
+	{
+		char* sdeclLine = strstr(shdSrc[0], "VS_OUTPUT");
+		char* structDclEmt = d912pxy_helper::StrNextLine(sdeclLine);
+
+		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+		while (structDclEmt[0] != '}')
+		{
+			char* lnStart = structDclEmt;
+			structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+			UINT64 lSz = (intptr_t)structDclEmt - (intptr_t)lnStart;
+
+			PXY_MALLOC(vsOut[vsOutCnt], lSz+1, char*);
+
+			memcpy(vsOut[vsOutCnt], lnStart, lSz);
+			vsOut[vsOutCnt][lSz] = 0;
+			++vsOutCnt;
+		}
+	}
+
+	//load ps input
+	{
+		char* sdeclLine = strstr(shdSrc[1], "PS_INPUT");
+		char* structDclEmt = d912pxy_helper::StrNextLine(sdeclLine);
+
+		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+		while (structDclEmt[0] != '}')
+		{
+			char* lnStart = structDclEmt;
+			structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+			UINT64 lSz = (intptr_t)structDclEmt - (intptr_t)lnStart;
+
+			PXY_MALLOC(psIn[psInCnt], lSz+1, char*);
+
+			memcpy(psIn[psInCnt], lnStart, lSz);
+			psIn[psInCnt][lSz] = 0;
+			++psInCnt;
+		}
+	}
+
+	//filter ps unused regs
+	int filterTgt = psInCnt - 1;
+
+	for (int i = 0; i != psInCnt; ++i)
+	{		
+		while (strstr(psIn[i], "unused_ireg_"))
+		{
+			if (filterTgt == i)
+				break;
+
+			char* tSwp = psIn[i];
+			psIn[i] = psIn[filterTgt];
+			psIn[filterTgt] = tSwp;
+			--filterTgt;			
+		}
+	}
+
+	//find inputs in outputs and reorder last one to input sequence
+	for (int i = 0; i != psInCnt; ++i)
+	{
+		char* inputSemantic = strstr(psIn[i], ": ") + 2;
+
+		for (int j = 0; j != vsOutCnt; ++j)
+		{
+			if (strstr(vsOut[j], inputSemantic))
+			{
+				char* strSwp = vsOut[i];			
+				vsOut[i] = vsOut[j];
+				vsOut[j] = strSwp;
+			}
+		}
+	}
+
+	//write declaration back to VS
+
+	{
+		char* sdeclLine = strstr(shdSrc[0], "VS_OUTPUT");
+		char* structDclEmt = d912pxy_helper::StrNextLine(sdeclLine);
+		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+		for (int j = 0; j != vsOutCnt; ++j)
+		{
+			size_t tStrLen = strlen(vsOut[j]);
+			memcpy(structDclEmt, vsOut[j], tStrLen);
+			structDclEmt += tStrLen;
+			PXY_FREE(vsOut[j]);
+		}
+	}	
+
+	//write declaration back to PS due to unused reg filtering
+
+	{
+		char* sdeclLine = strstr(shdSrc[1], "PS_INPUT");
+		char* structDclEmt = d912pxy_helper::StrNextLine(sdeclLine);
+		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+		for (int j = 0; j != psInCnt; ++j)
+		{
+			size_t tStrLen = strlen(psIn[j]);
+			memcpy(structDclEmt, psIn[j], tStrLen);
+			structDclEmt += tStrLen;
+			PXY_FREE(psIn[j]);
+		}
+	}
+
+	/*FILE* tf = fopen("d912pxy/tmp.hlsl", "wb+");
+	fwrite(shdSrc[0], 1, shdSrcSz[0], tf);
+	fwrite(shdSrc[1], 1, shdSrcSz[1], tf);
+	fclose(tf);*/
+
+	d912pxy_shader_replacer* replVS = new d912pxy_shader_replacer(0, 0, 0, 1);
+	d912pxy_shader_replacer* replPS = new d912pxy_shader_replacer(0, 0, 0, 0);
+
+	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, shdSrc[0], shdSrcSz[0], 0);
+	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, shdSrc[1], shdSrcSz[1], 0);
+
+	PXY_FREE(shdSrc[0]);
+	PXY_FREE(shdSrc[1]);
+
+	if ((!bcVS.blob) || (!bcPS.blob))
+		LOG_ERR_DTDM("PSO RCE fail for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
+
+	d912pxy_s(vfs)->WriteFileH(derivedAlias, bcVS.code, (UINT)bcVS.sz, PXY_VFS_BID_DERIVED_CSO_VS);
+	d912pxy_s(vfs)->WriteFileH(derivedAlias, bcPS.code, (UINT)bcPS.sz, PXY_VFS_BID_DERIVED_CSO_PS);
+
+	delete replVS;
+	delete replPS;
+
+	CreatePSODerived(derivedAlias);
 }

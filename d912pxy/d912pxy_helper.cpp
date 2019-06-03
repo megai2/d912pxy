@@ -453,3 +453,27 @@ char * d912pxy_helper::GetCPUBrandString()
 
 	return &CPUBrandString[0];
 }
+
+char * d912pxy_helper::StrGetCurrentLineStart(char * buffer)
+{
+	char* itr = buffer;
+
+	while (itr[0] != '\n')
+	{
+		--itr;
+	}
+
+	return itr+1;
+}
+
+char * d912pxy_helper::StrNextLine(char * buffer)
+{
+	char* itr = buffer;
+
+	while (itr[0] != '\n')
+	{
+		++itr;
+	}
+
+	return itr + 1;
+}

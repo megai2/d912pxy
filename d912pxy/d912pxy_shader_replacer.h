@@ -37,15 +37,16 @@ typedef struct d912pxy_shader_code {
 class d912pxy_shader_replacer : public d912pxy_noncom
 {
 public:
-	d912pxy_shader_replacer(DWORD* fun, UINT len, d912pxy_shader_uid UID);
+	d912pxy_shader_replacer(DWORD* fun, UINT len, d912pxy_shader_uid UID, UINT isVs);
 	~d912pxy_shader_replacer();
 	
 	d912pxy_shader_code CompileFromHLSL(const wchar_t* bfolder, UINT keepSource);
+	d912pxy_shader_code CompileFromHLSL_MEM(const wchar_t* bfolder, void* imem, UINT size, UINT saveSource);
 	d912pxy_shader_code CompileFromHLSL_CS(const wchar_t* bfolder);
 	d912pxy_shader_code LoadFromCSO(const char* bfolder);
 	void SaveCSO(d912pxy_shader_code code, const char* bfolder);
 
-	void GenerateHLSL(const wchar_t * bfolder);
+	d912pxy_hlsl_generator_memout* GenerateHLSL(const wchar_t * bfolder);
 
 	d912pxy_shader_code GetCode();
 	d912pxy_shader_code GetCodeCS();

@@ -41,6 +41,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_ALLOW_PP_SUFFIX,
 	PXY_CFG_SDB_ENABLE_PROFILING,
 	PXY_CFG_SDB_FORCE_UNUSED_REGS,
+	PXY_CFG_SDB_ALLOW_REALTIME_CHECKS,
 	PXY_CFG_MT_REPLAY_BEHAIVOUR,
 	PXY_CFG_MT_REPLAY_THREADS,	
 	PXY_CFG_MT_VSTREAM_CTOR,
@@ -97,6 +98,7 @@ private:
 		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX
 		{L"sdb", L"enable_profiling", L"0"},//PXY_CFG_SDB_ENABLE_PROFILING
 		{L"sdb", L"force_unused_regs", L"0"},//PXY_CFG_SDB_FORCE_UNUSED_REGS
+		{L"sdb", L"allow_realtime_checks", L"0"},//PXY_CFG_SDB_ALLOW_REALTIME_CHECKS
 		{L"mt", L"replay", L"1"},//PXY_CFG_MT_REPLAY_BEHAIVOUR
 		{L"mt", L"replay_threads", L"1"},//PXY_CFG_MT_REPLAY_THREADS
 		{L"mt", L"vstream_ctor", L"0"},//PXY_CFG_MT_VSTREAM_CTOR

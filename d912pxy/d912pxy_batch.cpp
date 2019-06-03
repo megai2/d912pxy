@@ -189,7 +189,7 @@ void d912pxy_batch::InitCopyCS()
 	copyRS = m_dev->ConstructRootSignature(&rootSignatureDesc);
 	
 	//copy cs hlsl code
-	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 3);
+	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 3, 0);
 	d912pxy_shader_code CScode = CScodec->GetCodeCS();
 	delete CScodec;
 
