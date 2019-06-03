@@ -194,7 +194,7 @@ void d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)
 
 	try {
 
-		gen->Process();
+		gen->Process(0);
 
 	}
 	catch (...)
