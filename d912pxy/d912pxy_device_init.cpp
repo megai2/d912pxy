@@ -83,27 +83,21 @@ void d912pxy_device::InitVFS()
 	}
 
 	d912pxy_s(vfs)->SetRoot("./d912pxy/pck");
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_CSO, "shader_cso"))
-	{
-		LOG_ERR_DTDM("shader_cso VFS not loaded");
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
 
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_SHADER_PROFILE, "shader_profiles"))
-	{
-		LOG_ERR_DTDM("shader_profiles VFS not loaded");		
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
+	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			1);
+	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		1);
+	InitVFSitem(PXY_VFS_BID_PSO_CACHE_KEYS,				"pso_cache",			1);
+	InitVFSitem(PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile",		1);
+	InitVFSitem(PXY_VFS_BID_SHADER_SOURCES,				"shader_sources",		0);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_VS,				"derived_cso_vs",	    1);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_PS,				"derived_cso_ps",       1);
+}
 
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_CACHE_KEYS, "pso_cache"))
+void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT memCache)
+{
+	if (!d912pxy_s(vfs)->LoadVFS(id, name, memCache))
 	{
-		LOG_ERR_DTDM("pso_cache VFS not loaded");		
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
-
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_PRECOMPILE_LIST, "pso_precompile"))
-	{
-		LOG_ERR_DTDM("pso_precompile VFS not loaded");		
+		LOG_ERR_DTDM("%S VFS not loaded", name);
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
 }
