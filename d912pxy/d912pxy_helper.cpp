@@ -126,7 +126,9 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 
 void d912pxy_helper::InstallVehHandler()
 {
-	AddVectoredExceptionHandler(TRUE, VexDbgHandler);
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_ENABLE_VEH))
+		AddVectoredExceptionHandler(TRUE, VexDbgHandler);
+
 	d912pxy_s(log)->RegisterModule(L"helper", &LGC_DEFAULT);
 }
 
@@ -235,7 +237,7 @@ DXGI_FORMAT d912pxy_helper::DXGIFormatFromDX9FMT(D3DFORMAT fmt)
 	case D3DFMT_X8B8G8R8: return DXGI_FORMAT_R8G8B8A8_UNORM; break;//33,
 	case D3DFMT_G16R16: return DXGI_FORMAT_R16G16_UNORM; break;//34,
 	case D3DFMT_A2R10G10B10: return DXGI_FORMAT_R10G10B10A2_TYPELESS; break;//35,
-	case D3DFMT_A16B16G16R16: return DXGI_FORMAT_R16G16B16A16_TYPELESS; break;//36,
+	case D3DFMT_A16B16G16R16: return DXGI_FORMAT_R16G16B16A16_UNORM; break;//36,
 	case D3DFMT_A8P8: return DXGI_FORMAT_A8P8; break;//40,
 	case D3DFMT_P8: return DXGI_FORMAT_P8; break;//41,
 	case D3DFMT_L8: return DXGI_FORMAT_R8_UNORM; break;//50,
@@ -258,6 +260,7 @@ DXGI_FORMAT d912pxy_helper::DXGIFormatFromDX9FMT(D3DFORMAT fmt)
 		case D3DFMT_D16: return DXGI_FORMAT_D16_UNORM; break;
 		case D3DFMT_INTZ: return DXGI_FORMAT_R32_TYPELESS; break;//FOURCC INTZ
 		case 0x32495441: return DXGI_FORMAT_BC5_UNORM; break;//ATI2
+		case D3DFMT_A32B32G32R32F: return DXGI_FORMAT_R32G32B32A32_FLOAT;
 		case D3DFMT_NULL: return DXGI_FORMAT_UNKNOWN; break;//megai2: ignore it
 		default: 
 		{
@@ -449,4 +452,28 @@ char * d912pxy_helper::GetCPUBrandString()
 	}
 
 	return &CPUBrandString[0];
+}
+
+char * d912pxy_helper::StrGetCurrentLineStart(char * buffer)
+{
+	char* itr = buffer;
+
+	while (itr[0] != '\n')
+	{
+		--itr;
+	}
+
+	return itr+1;
+}
+
+char * d912pxy_helper::StrNextLine(char * buffer)
+{
+	char* itr = buffer;
+
+	while (itr[0] != '\n')
+	{
+		++itr;
+	}
+
+	return itr + 1;
 }

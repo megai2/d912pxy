@@ -40,6 +40,8 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_USE_PSO_KEY_CACHE,
 	PXY_CFG_SDB_ALLOW_PP_SUFFIX,
 	PXY_CFG_SDB_ENABLE_PROFILING,
+	PXY_CFG_SDB_FORCE_UNUSED_REGS,
+	PXY_CFG_SDB_ALLOW_REALTIME_CHECKS,
 	PXY_CFG_MT_REPLAY_BEHAIVOUR,
 	PXY_CFG_MT_REPLAY_THREADS,	
 	PXY_CFG_MT_VSTREAM_CTOR,
@@ -47,10 +49,12 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_LOG_P7CONFIG,
 	PXY_CFG_LOG_PERF_GRAPH,
 	PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER,
+	PXY_CFG_LOG_ENABLE_VEH,
 	PXY_CFG_UPLOAD_TEX_ASYNC,	
 	PXY_CFG_MISC_GPU_TIMEOUT,
 	PXY_CFG_DX_DBG_RUNTIME,
 	PXY_CFG_MISC_USE_DX9,
+	PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH,
 	PXY_CFG_QUERY_OCCLUSION,
 	PXY_CFG_CNT
 } d912pxy_config_value;
@@ -92,6 +96,8 @@ private:
 		{L"sdb", L"use_pso_key_cache", L"0"},//PXY_CFG_SDB_USE_PSO_KEY_CACHE
 		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX
 		{L"sdb", L"enable_profiling", L"0"},//PXY_CFG_SDB_ENABLE_PROFILING
+		{L"sdb", L"force_unused_regs", L"0"},//PXY_CFG_SDB_FORCE_UNUSED_REGS
+		{L"sdb", L"allow_realtime_checks", L"0"},//PXY_CFG_SDB_ALLOW_REALTIME_CHECKS
 		{L"mt", L"replay", L"1"},//PXY_CFG_MT_REPLAY_BEHAIVOUR
 		{L"mt", L"replay_threads", L"1"},//PXY_CFG_MT_REPLAY_THREADS
 		{L"mt", L"vstream_ctor", L"0"},//PXY_CFG_MT_VSTREAM_CTOR
@@ -99,10 +105,12 @@ private:
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG
 		{L"log", L"perf_graph", L"0"},//PXY_CFG_LOG_PERF_GRAPH		
 		{L"log", L"dbg_mem_mgr_save_new_caller", L"0"},//PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER
+		{L"log", L"enable_veh", L"1"}, //PXY_CFG_LOG_ENABLE_VEH
 		{L"upload",L"tex_async",L"0"},//PXY_CFG_UPLOAD_TEX_ASYNC
 		{L"misc",L"gpu_timeout",L"5000"},//PXY_CFG_MISC_GPU_TIMEOUT
 		{L"misc",L"dx_debug",L"0"},//PXY_CFG_DX_DBG_RUNTIME
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
+		{L"misc",L"draw_up_buffer_length", L"FFFF"},//PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH
 		{L"query",L"occlusion",L"0"}//PXY_CFG_QUERY_OCCLUSION
 	};
 

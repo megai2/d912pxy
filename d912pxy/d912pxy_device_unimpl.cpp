@@ -126,12 +126,6 @@ HRESULT WINAPI d912pxy_device::DrawRectPatch(UINT Handle, CONST float* pNumSegs,
 HRESULT WINAPI d912pxy_device::DrawTriPatch(UINT Handle, CONST float* pNumSegs, CONST D3DTRIPATCH_INFO* pTriPatchInfo) { LOG_DBG_DTDM(__FUNCTION__); return 0; }
 HRESULT WINAPI d912pxy_device::DeletePatch(UINT Handle) { LOG_DBG_DTDM(__FUNCTION__); return 0; }
 
-HRESULT WINAPI d912pxy_device::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride) 
-{
-	LOG_DBG_DTDM(__FUNCTION__); 
-	return D3D_OK;
-}
-
 HRESULT WINAPI d912pxy_device::SetFVF(DWORD FVF)
 { 
 	LOG_DBG_DTDM(__FUNCTION__); 

@@ -83,27 +83,21 @@ void d912pxy_device::InitVFS()
 	}
 
 	d912pxy_s(vfs)->SetRoot("./d912pxy/pck");
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_CSO, "shader_cso"))
-	{
-		LOG_ERR_DTDM("shader_cso VFS not loaded");
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
 
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_SHADER_PROFILE, "shader_profiles"))
-	{
-		LOG_ERR_DTDM("shader_profiles VFS not loaded");		
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
+	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			1);
+	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		1);
+	InitVFSitem(PXY_VFS_BID_PSO_CACHE_KEYS,				"pso_cache",			1);
+	InitVFSitem(PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile",		1);
+	InitVFSitem(PXY_VFS_BID_SHADER_SOURCES,				"shader_sources",		0);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_VS,				"derived_cso_vs",	    1);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_PS,				"derived_cso_ps",       1);
+}
 
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_CACHE_KEYS, "pso_cache"))
+void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT memCache)
+{
+	if (!d912pxy_s(vfs)->LoadVFS(id, name, memCache))
 	{
-		LOG_ERR_DTDM("pso_cache VFS not loaded");		
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
-
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_PRECOMPILE_LIST, "pso_precompile"))
-	{
-		LOG_ERR_DTDM("pso_precompile VFS not loaded");		
+		LOG_ERR_DTDM("%S VFS not loaded", name);
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
 }
@@ -208,12 +202,12 @@ void d912pxy_device::InitNullSRV()
 
 void d912pxy_device::InitDrawUPBuffers()
 {
-	UINT32 tmpUPbufSpace = 0xFFFF;
+	UINT32 tmpUPbufSpace = d912pxy_s(config)->GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
 
 	mDrawUPVbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace, 0, 0)->AsDX9VB();
-	mDrawUPIbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace * 2, D3DFMT_INDEX16, 1)->AsDX9IB();
+	mDrawUPIbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace * 4, D3DFMT_INDEX32, 1)->AsDX9IB();
 
-	UINT16* ibufDt;
+	UINT32* ibufDt;
 	mDrawUPIbuf->Lock(0, 0, (void**)&ibufDt, 0);
 
 	for (int i = 0; i != tmpUPbufSpace; ++i)

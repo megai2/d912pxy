@@ -108,6 +108,8 @@ void d912pxy_gpu_cmd_list::WaitNoCleanup()
 	}
 	++fenceId;
 
+	LOG_DBG_DTDM("GPU wait finished");
+
 	//all data is processed, reset lists and allocator
 	for (int i = 0; i != totalActCLs; ++i)
 	{

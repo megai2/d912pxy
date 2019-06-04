@@ -101,6 +101,8 @@ public:
 	d912pxy_pso_cache_item(d912pxy_device* dev, d912pxy_trimmed_dx12_pso* sDsc);
 
 	void Compile();
+	void CreatePSO();
+	void CreatePSODerived(UINT64 alias);
 
 	~d912pxy_pso_cache_item()
 	{
@@ -110,6 +112,8 @@ public:
 	//UINT Status() { return m_status; };
 
 	ID3D12PipelineState* GetPtr() { return retPtr; };
+
+	void RealtimeIntegrityCheck();
 
 private:
 
@@ -168,8 +172,7 @@ public:
 
 	static D3D12_GRAPHICS_PIPELINE_STATE_DESC cDscBase;
 
-	static UINT psMaxVars;
-	static UINT vsMaxVars;
+	static UINT allowRealtimeChecks;
 
 	void CompileItem(d912pxy_pso_cache_item* item);
 
@@ -184,6 +187,8 @@ public:
 	d912pxy_pso_cache_item* GetCurrentCPSO() { return cCPSO; };
 
 	void SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc);
+
+	UINT32 GetHashedKey(d912pxy_trimmed_dx12_pso * dsc);
 
 private:
 	d912pxy_memtree2* cacheIndexes;

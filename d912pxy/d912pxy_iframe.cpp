@@ -229,7 +229,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	d912pxy_s(psoCache)->Use();
 
-	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, d912pxy_s(batch)->NextBatch());
+	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch());
 
 	instanceCount = 1;
 
@@ -417,8 +417,15 @@ void d912pxy_iframe::Start()
 	if (mSwapChain)
 		mSwapChain->StartFrame();
 
+	LOG_DBG_DTDM("batch frame start called");
+
 	d912pxy_s(batch)->FrameStart();
+
+	LOG_DBG_DTDM("CMDreplay iframe start called");
+
 	d912pxy_s(CMDReplay)->IFrameStart();
+
+	LOG_DBG_DTDM("SetViewport called");
 
 	SetViewport(&main_viewport);
 	//SetScissors(&main_scissor);

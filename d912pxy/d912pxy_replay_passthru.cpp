@@ -139,14 +139,14 @@ void d912pxy_replay_passthru::IBbind(d912pxy_vstream * buf)
 	REPLAY_SYNC_STOP;
 }
 
-void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
+void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation, UINT batchId)
 {
 	if (!psoPtr)
 		return;
 
 	REPLAY_SYNC_START;
 
-	d912pxy_s(batch)->PreDIP(cl, StartInstanceLocation);
+	d912pxy_s(batch)->PreDIP(cl, batchId);
 
 	//cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	cl->DrawIndexedInstanced(
@@ -154,7 +154,7 @@ void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCoun
 		InstanceCount,
 		StartIndexLocation,
 		BaseVertexLocation,
-		0
+		StartInstanceLocation
 	);
 
 	REPLAY_SYNC_STOP;

@@ -33,7 +33,5 @@ SOFTWARE.
 bool d3d9_proxy_dll_main(HINSTANCE hInst, DWORD reason, LPVOID);
 
 void D3D9ProxyCb_set_OnDevCreate(d3d9ProxyCB_OnDevCreate pxFun);
-void D3D9ProxyCb_set_OnDevDestroy(d3d9ProxyCB_OnDevDestroy pxFun);
 
 d3d9ProxyCB_OnDevCreate D3D9ProxyCb_get_OnDevCreate();
-d3d9ProxyCB_OnDevDestroy D3D9ProxyCb_get_OnDevDestroy();

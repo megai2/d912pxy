@@ -43,10 +43,6 @@ IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* 
 	return (IDirect3DDevice9*)d912translator;
 }
 
-void app_cb_D3D9Dev_destroy(IDirect3DDevice9 * dev)
-{
-}
-
 void d912pxy_first_init()
 {
 	if (d912pxy_s(memMgr) != NULL)	
@@ -64,7 +60,6 @@ void d912pxy_first_init()
 	d912pxy_s(memMgr)->PostInit();
 
 	D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
-	D3D9ProxyCb_set_OnDevDestroy(&app_cb_D3D9Dev_destroy);
 }
 
 void d912pxy_final_cleanup()
