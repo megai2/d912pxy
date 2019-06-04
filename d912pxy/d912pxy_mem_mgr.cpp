@@ -89,14 +89,16 @@ void* d912pxy_mem_mgr::inRealloc(void* block, size_t sz) { // Returns pointer or
 	
 	//return HeapReAlloc(g_procHeap, 0, block, sz);
 
-
-
-
 	//make new
 	void* tempPoint = inMalloc(sz);
-	   
+	
+
+	//copy - we need to know the length of the first block...
+	MEMORY_BASIC_INFORMATION memInfo;
+	VirtualQuery(block, &memInfo, sizeof(memInfo));
+
 	//copy
-	CopyMemory(tempPoint, block, sz);
+	CopyMemory(tempPoint, block, memInfo.RegionSize);
 
 	//delete old
 	inFree(block);
