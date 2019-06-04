@@ -108,6 +108,9 @@ void d912pxy_device::InnerPresentFinish()
 	API_OVERHEAD_TRACK_START(0)
 
 	mDrawUPStreamPtr = 0;
+	mDrawUPIIStreamPtr[0] = 0;
+	mDrawUPIIStreamPtr[1] = 0;
+	mDrawUPIVStreamPtr = 0;
 	d912pxy_s(iframe)->Start();
 
 	swapOpLock.Release();

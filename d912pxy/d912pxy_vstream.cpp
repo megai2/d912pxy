@@ -261,6 +261,11 @@ void d912pxy_vstream::ConstructResource()
 	ctorSync.Release();
 }
 
+UINT d912pxy_vstream::GetLength()
+{
+	return dx9desc.Size;
+}
+
 void d912pxy_vstream::UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size)
 {
 	memcpy((void*)ulMem, (void*)((intptr_t)data + offset), size);	

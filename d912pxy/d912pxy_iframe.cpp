@@ -42,6 +42,8 @@ d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d9
 	batchesIssued = 0;
 
 	streamsActive = 0;
+	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
+		streamBinds[i].buffer = 0;
 
 	InitRootSignature();
 
@@ -104,7 +106,8 @@ void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT Offse
 		++streamsActive;
 	else if (!vb && streamsActive)
 	{		
-		--streamsActive;
+		if (streamBinds[StreamNumber].buffer)
+			--streamsActive;
 	}
 
 	batchCommisionDF |= 1;
@@ -136,6 +139,15 @@ d912pxy_device_streamsrc d912pxy_iframe::GetStreamSource(UINT StreamNumber)
 
 void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
+
+#ifdef _DEBUG
+	if (PrimitiveType == D3DPT_TRIANGLEFAN)
+	{
+		LOG_DBG_DTDM3("DP TRIFAN skipping");
+		return;
+	}
+#endif
+
 	DWORD pperprim[] = {
 		0,
 		1,//point
@@ -167,10 +179,16 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	
 	d912pxy_s(textureState)->Use();
 
+	d912pxy_vdecl* vdecl = d912pxy_s(psoCache)->GetIAFormat();
+	DWORD usedStreams = vdecl->GetUsedStreams();
+
 	if (batchDF & 1)
 	{
 		for (int i = 0; i != streamsActive; ++i)
 		{
+			if (!(usedStreams & (1 << i)))
+				continue;
+
 			d912pxy_vstream* sb = streamBinds[i].buffer;
 			if (sb)
 			{
@@ -188,6 +206,15 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 					batchDF |= 8;
 				}
 			}
+		}
+	}
+
+	if (instanceCount > 1)
+	{
+		if ((batchDF & 8) == 0)
+		{
+			instanceCount = 1;
+			batchDF &= ~8;
 		}
 	}
 
@@ -229,7 +256,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	d912pxy_s(psoCache)->Use();
 
-	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch());
+	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch() | (PrimitiveType << 16));
 
 	instanceCount = 1;
 
@@ -433,6 +460,21 @@ void d912pxy_iframe::Start()
 	SetRSigOnList(CLG_TOP);
 	SetRSigOnList(CLG_SEQ);
 
+	SetIBuf(NULL);
+
+	UINT cleanupStreams = streamsActive;
+
+	for (int i = 0; i != cleanupStreams; ++i)
+		SetVBuf(NULL, i, 0, 0);
+
+	SetStreamFreq(0, 1);
+
+	if (streamsActive > 1)
+		for (int i = 1; i != cleanupStreams; ++i)
+			SetStreamFreq(i, 0);
+
+	streamsActive = 0;
+
 	batchesIssued = 0;
 }
 
@@ -589,6 +631,40 @@ void d912pxy_iframe::ForceStateRebind()
 {
 	//megai2: force dirty to rebind all states
 	batchCommisionDF |= 7;
+}
+
+UINT d912pxy_iframe::ForceActiveStreams(UINT forceValue)
+{
+	UINT ret = streamsActive;
+
+	streamsActive = forceValue;
+
+	return ret;
+}
+
+UINT d912pxy_iframe::GetIndexCount(UINT PrimitiveCount, D3DPRIMITIVETYPE PrimitiveType)
+{
+	DWORD pperprim[] = {
+		0,
+		1,//point
+		2,//linelist
+		1,//linestrip
+		3,//trilist
+		1,//tristrip		
+		0//trifan
+	};
+
+	DWORD primsubs[] = {
+		0,
+		0,//point
+		0,//linelist
+		1,//linestrip
+		0,//trilist
+		2,//tristrip		
+		0//trifan
+	};
+
+	return PrimitiveCount * pperprim[PrimitiveType] + primsubs[PrimitiveType];
 }
 
 void d912pxy_iframe::InitRootSignature()

@@ -29,6 +29,7 @@ d912pxy_vdecl::d912pxy_vdecl(d912pxy_device * dev, const D3DVERTEXELEMENT9 * dat
 	m_dev = dev;
 	mHash = 0;
 
+	usedStreamSlots = 0;
 	instancedDecl = 0;
 
 	for (int i = 0; i != PXY_INNER_MAX_VDECL_LEN; ++i)
@@ -43,6 +44,8 @@ d912pxy_vdecl::d912pxy_vdecl(d912pxy_device * dev, const D3DVERTEXELEMENT9 * dat
 		declData[i] = data[i];
 
 		declData12[i].InputSlot = data[i].Stream;
+
+		usedStreamSlots |= 1 << data[i].Stream;
 
 		switch (data[i].Usage)
 		{
@@ -224,15 +227,7 @@ UINT32 d912pxy_vdecl::GetHash()
 
 UINT d912pxy_vdecl::GetUsedStreams()
 {
-	UINT ret = 0;
-
-	for (int i = 0; i != declLen; ++i)
-	{
-		if (declData12[i].InputSlot > ret)
-			ret = declData12[i].InputSlot;
-	}
-
-	return ret;
+	return usedStreamSlots;
 }
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_vdecl

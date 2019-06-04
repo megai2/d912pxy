@@ -146,9 +146,9 @@ void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCoun
 
 	REPLAY_SYNC_START;
 
-	d912pxy_s(batch)->PreDIP(cl, batchId);
+	d912pxy_s(batch)->PreDIP(cl, batchId & 0xFFFF);
 
-	//cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)(batchId >> 16));
 	cl->DrawIndexedInstanced(
 		IndexCountPerInstance,
 		InstanceCount,

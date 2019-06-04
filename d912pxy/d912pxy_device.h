@@ -226,6 +226,11 @@ private:
 	IDirect3DIndexBuffer9* mDrawUPIbuf;
 	UINT mDrawUPStreamPtr;
 
+	d912pxy_vstream* mDrawUPIVbuf;
+	d912pxy_vstream* mDrawUPIIbuf[2];
+	UINT mDrawUPIVStreamPtr;
+	UINT mDrawUPIIStreamPtr[2];
+
 	d912pxy_dheap* m_dheaps[PXY_INNER_MAX_DSC_HEAPS];
 	
 	d912pxy_swapchain* swapchains[PXY_INNER_MAX_SWAP_CHAINS];

@@ -522,7 +522,7 @@
   <ItemGroup>
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3d9.h" />
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3dx9.h" />
-    <ClInclude Include="..\thirdparty\D3D9Proxy\defines.h" />
+    <ClInclude Include="..\thirdparty\renderdoc_app.h" />
     <ClInclude Include="..\thirdparty\StackWalker\StackWalker.h" />
     <ClInclude Include="d3d9_proxy_dll.h" />
     <ClInclude Include="d912pxy_async_upload_thread.h" />

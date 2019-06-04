@@ -23,6 +23,7 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "../thirdparty/renderdoc_app.h"
 
 d912pxy_device* d912translator;
 
@@ -60,6 +61,12 @@ void d912pxy_first_init()
 	d912pxy_s(memMgr)->PostInit();
 
 	D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_LOAD_RDOC))
+	{
+		HMODULE mod = LoadLibraryA("renderdoc.dll");
+	}
+
 }
 
 void d912pxy_final_cleanup()

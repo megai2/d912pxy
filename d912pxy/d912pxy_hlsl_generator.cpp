@@ -1354,8 +1354,8 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 						"	float4 %s%u: %s%u;",
 						d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(usageType,1), dclId
 					);
-
-					if (dclId > 0)
+					
+					if ((dclId > 0) && (!d912pxy_pso_cache::allowRealtimeChecks))
 					{
 						UINT itr = (HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId) + headerOffsetI);
 						do
@@ -1611,7 +1611,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(usageType, 1), dclId
 						);
 
-						if (dclId > 0)
+					/*	if (dclId > 0)
 						{
 							UINT itr = (HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId) + headerOffsetO);
 							do
@@ -1628,7 +1628,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 									);
 								}
 							} while (dclId != 0);
-						}
+						}*/
 					}
 				}
 				break;
