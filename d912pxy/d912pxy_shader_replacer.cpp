@@ -229,14 +229,6 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 
 		if (saveSource)
 		{
-#ifdef _DEBUG
-			FILE* tOf = fopen(replFn, "wb+");
-			if (tOf)
-			{
-				fwrite(imem, 1, size, tOf);
-				fclose(tOf);
-			}
-#endif
 			d912pxy_s(vfs)->WriteFileH(mUID, imem, size, PXY_VFS_BID_SHADER_SOURCES);
 		}
 
