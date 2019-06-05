@@ -148,24 +148,6 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	}
 #endif
 
-	DWORD pperprim[] = {
-		0,
-		1,//point
-		2,//linelist
-		1,//linestrip
-		3,//trilist
-		1//tristrip		
-	};
-
-	DWORD primsubs[] = {
-		0,
-		0,//point
-		0,//linelist
-		1,//linestrip
-		0,//trilist
-		2//tristrip		
-	};
-
 	//bind vb/ib
 	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 1))
 	{
@@ -256,7 +238,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	d912pxy_s(psoCache)->Use();
 
-	d912pxy_s(CMDReplay)->DIIP(primCount*pperprim[PrimitiveType] + primsubs[PrimitiveType], instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch() | (PrimitiveType << 16));
+	d912pxy_s(CMDReplay)->DIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch() | (PrimitiveType << 16));
 
 	instanceCount = 1;
 
@@ -501,6 +483,7 @@ void d912pxy_iframe::End()
 
 void d912pxy_iframe::EndSceneReset()
 {
+	//d912pxy_s(batch)->ClearShaderVars();
 	//SetViewport(&main_viewport);
 }
 

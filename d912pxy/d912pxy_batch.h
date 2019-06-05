@@ -89,6 +89,8 @@ public:
 	
 	void PreDIP(ID3D12GraphicsCommandList* cl, UINT bid);
 
+	void ClearShaderVars();
+
 private:
 	void InitCopyCS();
 

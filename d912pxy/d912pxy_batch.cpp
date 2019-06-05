@@ -141,6 +141,12 @@ void d912pxy_batch::PreDIP(ID3D12GraphicsCommandList* cl, UINT bid)
 	cl->SetGraphicsRootConstantBufferView(3, buffer->DevPtr() + PXY_BATCH_GPU_DRAW_BUFFER_SIZE * bid);
 }
 
+void d912pxy_batch::ClearShaderVars()
+{
+	SetShaderConstF(0, 0, 256, (float*)stateTransfer);
+	SetShaderConstF(1, 0, 256, (float*)stateTransfer);
+}
+
 void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 {
 	memcpy(&streamData[streamIdx], src, size << 4);
