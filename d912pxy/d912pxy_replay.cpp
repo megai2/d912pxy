@@ -79,6 +79,7 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 	replay_handlers[DRPL_RPSF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSF;
 	replay_handlers[DRPL_CPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_CPSO;
 	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;	
+	replay_handlers[DRPL_PRMT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_PRMT;
 
 	if (numThreads > 1)
 	{
@@ -257,6 +258,15 @@ void d912pxy_replay::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 	{
 		gpuw_que->WriteElementFast(&it->gpuw_ctl);
 	}
+
+	REPLAY_STACK_INCREMENT;
+}
+
+void d912pxy_replay::PrimTopo(D3DPRIMITIVETYPE primType)
+{
+	REPLAY_STACK_GET(DRPL_PRMT);
+
+	it->topo.newTopo = primType;
 
 	REPLAY_STACK_INCREMENT;
 }
@@ -646,9 +656,8 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 	if (!*context)
 		return;
 
-	d912pxy_s(batch)->PreDIP(cl, it->batchId & 0xFFFF);
+	d912pxy_s(batch)->PreDIP(cl, it->batchId);
 
-	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)(it->batchId >> 16));
 	cl->DrawIndexedInstanced(
 		it->IndexCountPerInstance,
 		it->InstanceCount,
@@ -707,8 +716,8 @@ void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommand
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context)
 {
 	ID3D12PipelineState * pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0);
-	
-	if (pso)			
+		
+	if (pso && (*context != pso))					
 		cl->SetPipelineState(pso);	
 
 	*context = pso;
@@ -762,6 +771,11 @@ void d912pxy_replay::RHA_GPUW_MT(d912pxy_replay_gpu_write_control * it, ID3D12Gr
 	gpuw_sync.Hold();
 	RHA_GPUW(gpuw_que->PopElementFast(), cl, unused);
 	gpuw_sync.Release();
+}
+
+void d912pxy_replay::RHA_PRMT(d912pxy_replay_primitive_topology * it, ID3D12GraphicsCommandList * cl, void ** unused)
+{
+	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)it->newTopo);
 }
 
 d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")

@@ -119,6 +119,7 @@ private:
 	UINT streamsActive;
 	UINT batchCommisionDF;
 	UINT instanceCount;
+	D3DPRIMITIVETYPE cuPrimType;
 	d912pxy_device_streamsrc streamBinds[PXY_INNER_MAX_VBUF_STREAMS];
 	d912pxy_vstream* indexBind;
 

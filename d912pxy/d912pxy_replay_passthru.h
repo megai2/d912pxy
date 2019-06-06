@@ -52,6 +52,8 @@ public:
 	void StretchRect(d912pxy_surface* src, d912pxy_surface* dst);
 	void GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn);
 
+	void PrimTopo(D3DPRIMITIVETYPE primType);
+
 	//actual execute code and thread managment
 
 	void Finish();

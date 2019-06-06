@@ -180,9 +180,9 @@ HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, U
 
 	mDrawUPStreamPtr += vstreamRegLen;
 
-	DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);
-
 	API_OVERHEAD_TRACK_END(0)
+
+	DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);	
 
 	return D3D_OK;
 }
@@ -209,6 +209,8 @@ HRESULT WINAPI d912pxy_device::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Primitive
 		if (indBuf->GetLength() <= indBufSz)
 		{
 			LOG_DBG_DTDM3("App asked %lX ibytes to draw, TOO BIG, skipping (dipup %u-%u)", indBufSz, PrimitiveCount, PrimitiveType);
+
+			API_OVERHEAD_TRACK_END(0)
 			return D3D_OK;
 		}
 	}
@@ -223,6 +225,8 @@ HRESULT WINAPI d912pxy_device::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Primitive
 		if (vertBuf->GetLength() <= vertBufSz)
 		{
 			LOG_DBG_DTDM3("App asked %lX vbytes to draw, TOO BIG, skipping (dipup %u-%u)", vertBufSz, MinVertexIndex, NumVertices);
+
+			API_OVERHEAD_TRACK_END(0)
 			return D3D_OK;
 		}
 	}
@@ -243,12 +247,12 @@ HRESULT WINAPI d912pxy_device::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE Primitive
 	d912pxy_s(iframe)->SetStreamFreq(0, 1);
 	d912pxy_s(iframe)->SetStreamFreq(1, 0);
 
+	API_OVERHEAD_TRACK_END(0)
+
 	DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, mDrawUPIIStreamPtr[hiInd] >> (1 + hiInd), PrimitiveCount);
 
 	mDrawUPIIStreamPtr[hiInd] += indBufSz;
-	mDrawUPIVStreamPtr += vertBufSz;
-
-	API_OVERHEAD_TRACK_END(0)
+	mDrawUPIVStreamPtr += vertBufSz;	
 
 	return D3D_OK;
 }

@@ -64,6 +64,8 @@ d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d9
 
 	mCurrentFrameIndex = 0;
 
+	cuPrimType = (D3DPRIMITIVETYPE)-1;
+
 	d912pxy_s(psoCache)->LoadCachedData();
 }
 
@@ -116,15 +118,19 @@ void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT Offse
 	streamBinds[StreamNumber].offset = OffsetInBytes;
 	streamBinds[StreamNumber].stride = Stride;
 
-	if (vb)
-		d912pxy_s(CMDReplay)->VBbind(vb, Stride, StreamNumber, OffsetInBytes);
+	//if (vb)
+		//d912pxy_s(CMDReplay)->VBbind(vb, Stride, StreamNumber, OffsetInBytes);
 }
 
 void d912pxy_iframe::SetIBuf(d912pxy_vstream* ib)
 {
+	if (indexBind != ib)
+		batchCommisionDF |= 2;
+
 	indexBind = ib;	
-	if (ib)
-		d912pxy_s(CMDReplay)->IBbind(ib);
+
+	//if (ib)
+		//d912pxy_s(CMDReplay)->IBbind(ib);
 }
 
 d912pxy_vstream* d912pxy_iframe::GetIBuf()
@@ -187,8 +193,15 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 					d912pxy_s(psoCache)->IAFormatInstanced(useInstanced);
 					batchDF |= 8;
 				}
+
+				d912pxy_s(CMDReplay)->VBbind(sb, streamBinds[i].stride, i, streamBinds[i].offset);
 			}
 		}
+	}
+
+	if (batchDF & 2)
+	{
+		d912pxy_s(CMDReplay)->IBbind(indexBind);
 	}
 
 	if (instanceCount > 1)
@@ -238,7 +251,13 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	d912pxy_s(psoCache)->Use();
 
-	d912pxy_s(CMDReplay)->DIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch() | (PrimitiveType << 16));
+	if (PrimitiveType != cuPrimType)
+	{
+		cuPrimType = PrimitiveType;
+		d912pxy_s(CMDReplay)->PrimTopo(cuPrimType);
+	}
+
+	d912pxy_s(CMDReplay)->DIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch());
 
 	instanceCount = 1;
 

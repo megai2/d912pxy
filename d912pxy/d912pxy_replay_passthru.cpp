@@ -146,9 +146,8 @@ void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCoun
 
 	REPLAY_SYNC_START;
 
-	d912pxy_s(batch)->PreDIP(cl, batchId & 0xFFFF);
+	d912pxy_s(batch)->PreDIP(cl, batchId);
 
-	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)(batchId >> 16));
 	cl->DrawIndexedInstanced(
 		IndexCountPerInstance,
 		InstanceCount,
@@ -243,7 +242,20 @@ void d912pxy_replay_passthru::StretchRect(d912pxy_surface * src, d912pxy_surface
 
 void d912pxy_replay_passthru::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 {
+	REPLAY_SYNC_START;
+
 	d912pxy_s(batch)->GPUWriteControl(si, of, cnt, bn);
+
+	REPLAY_SYNC_STOP;
+}
+
+void d912pxy_replay_passthru::PrimTopo(D3DPRIMITIVETYPE primType)
+{
+	REPLAY_SYNC_START;
+
+	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)primType);
+
+	REPLAY_SYNC_STOP;
 }
 
 void d912pxy_replay_passthru::Finish()
