@@ -87,6 +87,8 @@ public:
 
 	UINT GetIndexCount(UINT PrimitiveCount, D3DPRIMITIVETYPE PrimitiveType);
 
+	void OptimizeZeroWriteRT(UINT value);
+
 private:	
 
 	void InitRootSignature();
@@ -110,6 +112,7 @@ private:
 	D3D12_RESOURCE_BARRIER mRBarrierStkData[PXY_INNER_RBSTACK_SIZE];
 
 	d912pxy_surface* bindedSurfaces[1+PXY_INNER_MAX_RENDER_TARGETS];
+	d912pxy_surface* zeroWriteRT;
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[1 + PXY_INNER_MAX_RENDER_TARGETS];
 	D3D12_CPU_DESCRIPTOR_HANDLE* bindedRTV;

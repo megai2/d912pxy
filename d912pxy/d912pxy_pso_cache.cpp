@@ -293,7 +293,10 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		break; //27,   /* TRUE to enable alpha blending */
 
 	case D3DRS_COLORWRITEENABLE:
-		cDsc.BlendStateRT0.RenderTargetWriteMask = Value & 0xF;
+		{
+			d912pxy_s(iframe)->OptimizeZeroWriteRT(Value);
+			cDsc.BlendStateRT0.RenderTargetWriteMask = Value & 0xF;
+		}		
 		break; //168,  // per-channel write enable
 	case D3DRS_COLORWRITEENABLE1: 
 	case D3DRS_COLORWRITEENABLE2: 

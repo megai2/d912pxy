@@ -67,6 +67,8 @@ d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d9
 	cuPrimType = (D3DPRIMITIVETYPE)-1;
 
 	d912pxy_s(psoCache)->LoadCachedData();
+
+	zeroWriteRT = NULL;
 }
 
 d912pxy_iframe::~d912pxy_iframe()
@@ -146,13 +148,11 @@ d912pxy_device_streamsrc d912pxy_iframe::GetStreamSource(UINT StreamNumber)
 void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
 
-#ifdef _DEBUG
 	if (PrimitiveType == D3DPT_TRIANGLEFAN)
 	{
 		LOG_DBG_DTDM3("DP TRIFAN skipping");
 		return;
 	}
-#endif
 
 	//bind vb/ib
 	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 1))
@@ -441,17 +441,17 @@ void d912pxy_iframe::Start()
 		mHeaps[i]->CleanupSlots(PXY_INNER_MAX_DHEAP_CLEANUP_PER_SYNC);
 
 	d912pxy_s(psoCache)->MarkDirty(0);
-	
+
+	LOG_DBG_DTDM("CMDreplay iframe start called");
+
+	d912pxy_s(CMDReplay)->IFrameStart();
+
 	if (mSwapChain)
 		mSwapChain->StartFrame();
 
 	LOG_DBG_DTDM("batch frame start called");
 
 	d912pxy_s(batch)->FrameStart();
-
-	LOG_DBG_DTDM("CMDreplay iframe start called");
-
-	d912pxy_s(CMDReplay)->IFrameStart();
 
 	LOG_DBG_DTDM("SetViewport called");
 
@@ -667,6 +667,26 @@ UINT d912pxy_iframe::GetIndexCount(UINT PrimitiveCount, D3DPRIMITIVETYPE Primiti
 	};
 
 	return PrimitiveCount * pperprim[PrimitiveType] + primsubs[PrimitiveType];
+}
+
+void d912pxy_iframe::OptimizeZeroWriteRT(UINT writeFlag)
+{
+	if (writeFlag == 0)
+	{
+		if (bindedSurfaces[1])
+			zeroWriteRT = bindedSurfaces[1];
+		BindSurface(1, NULL);
+	}
+	else {
+		if (bindedSurfaces[1] == NULL)
+		{
+			BindSurface(1, zeroWriteRT);
+		}
+
+		zeroWriteRT = NULL;
+	}
+
+
 }
 
 void d912pxy_iframe::InitRootSignature()
