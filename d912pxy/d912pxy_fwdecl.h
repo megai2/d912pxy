@@ -49,6 +49,7 @@ SOFTWARE.
 #define UPLOAD_POOL_USE_AND_DISCARD 
 //#define ENABLE_METRICS
 //#define PER_BATCH_FLUSH_DEBUG 1
+//#define USE_PIX_EVENT_ANNOTATIONS
 
 #ifdef _DEBUG
 	#define ENABLE_METRICS
@@ -205,6 +206,14 @@ SOFTWARE.
 
 #define LOG_ERR_THROW(hr) LOG_ERR_THROW2(hr, hr)
 #define LOG_ERR_THROW2(hr, hr2) ThrowErrorDbg(hr, #hr2 )
+
+//pix event wrappers	   
+#ifdef USE_PIX_EVENT_ANNOTATIONS
+	#include <pix3.h>
+#else 
+	#define PIXBeginEvent(a, ...) //
+	#define PIXEndEvent(...) //
+#endif
 
 //paths to files =======================
 

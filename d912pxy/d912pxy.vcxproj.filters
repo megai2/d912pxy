@@ -468,7 +468,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="d3d9_proxy">
