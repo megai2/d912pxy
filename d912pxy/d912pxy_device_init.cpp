@@ -202,29 +202,8 @@ void d912pxy_device::InitNullSRV()
 
 void d912pxy_device::InitDrawUPBuffers()
 {
-	UINT32 tmpUPbufSpace = d912pxy_s(config)->GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
-
-	mDrawUPVbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace, 0, 0)->AsDX9VB();
-	mDrawUPIbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace * 4, D3DFMT_INDEX32, 1)->AsDX9IB();
-
-	UINT32* ibufDt;
-	mDrawUPIbuf->Lock(0, 0, (void**)&ibufDt, 0);
-
-	for (int i = 0; i != tmpUPbufSpace; ++i)
-	{
-		ibufDt[i] = i;
-	}
-
-	mDrawUPIbuf->Unlock();
-	mDrawUPStreamPtr = 0;
-
-	mDrawUPIVbuf = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, 0, 0);
-	mDrawUPIIbuf[0] = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, D3DFMT_INDEX16, 1);
-	mDrawUPIIbuf[1] = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, D3DFMT_INDEX32, 1);
-
-	mDrawUPIIStreamPtr[0] = 0;
-	mDrawUPIIStreamPtr[1] = 0;
-	mDrawUPIVStreamPtr = 0;
+	m_dupEmul = new d912pxy_draw_up(this);
+	m_clearEmul = new d912pxy_surface_clear(this);
 }
 
 void d912pxy_device::InitDescriptorHeaps()

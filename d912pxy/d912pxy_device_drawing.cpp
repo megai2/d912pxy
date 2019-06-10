@@ -162,27 +162,7 @@ HRESULT __stdcall d912pxy_device::DrawIndexedPrimitive_PS(IDirect3DDevice9 * sel
 //megai2: you should know, that there is no apps, that can't storage their data in vertex buffers 
 HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	API_OVERHEAD_TRACK_START(0)
-
-	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
-
-	UINT vstreamRegLen = VertexStreamZeroStride * d912pxy_s(iframe)->GetIndexCount(PrimitiveCount, PrimitiveType);
-
-	void* dstPtr;
-	mDrawUPVbuf->Lock(mDrawUPStreamPtr, vstreamRegLen, &dstPtr, 0);
-	memcpy(dstPtr, pVertexStreamZeroData, vstreamRegLen);
-	mDrawUPVbuf->Unlock();
-	
-	d912pxy_s(iframe)->SetIBuf(d912pxy_vstream_from_index(mDrawUPIbuf));
-	d912pxy_s(iframe)->SetVBuf((d912pxy_vstream*)mDrawUPVbuf, 0, mDrawUPStreamPtr, VertexStreamZeroStride);
-	d912pxy_s(iframe)->SetStreamFreq(0, 1);
-	d912pxy_s(iframe)->SetStreamFreq(1, 0);
-
-	mDrawUPStreamPtr += vstreamRegLen;
-
-	API_OVERHEAD_TRACK_END(0)
-
-	DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);	
+	m_dupEmul->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
 	return D3D_OK;
 }
@@ -190,69 +170,7 @@ HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, U
 
 HRESULT WINAPI d912pxy_device::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	API_OVERHEAD_TRACK_START(0)
-
-	UINT hiInd = IndexDataFormat == D3DFMT_INDEX32;
-	UINT indBufSz = (hiInd * 2 + 2)*d912pxy_s(iframe)->GetIndexCount(PrimitiveCount, PrimitiveType);
-	UINT vertBufSz = VertexStreamZeroStride * (MinVertexIndex + NumVertices);
-
-	d912pxy_vstream* indBuf = mDrawUPIIbuf[hiInd];
-	d912pxy_vstream* vertBuf = mDrawUPIVbuf;
-
-	if (indBuf->GetLength() <= (mDrawUPIIStreamPtr[hiInd] + indBufSz))
-	{
-		mDrawUPIIbuf[hiInd] = d912pxy_s(pool_vstream)->GetVStreamObject((indBuf->GetLength() * 2) & 0x7FFFFFF, IndexDataFormat, 1);
-		indBuf->Release();
-		indBuf = mDrawUPIIbuf[hiInd];
-		mDrawUPIIStreamPtr[hiInd] = 0;
-
-		if (indBuf->GetLength() <= indBufSz)
-		{
-			LOG_DBG_DTDM3("App asked %lX ibytes to draw, TOO BIG, skipping (dipup %u-%u)", indBufSz, PrimitiveCount, PrimitiveType);
-
-			API_OVERHEAD_TRACK_END(0)
-			return D3D_OK;
-		}
-	}
-
-	if (vertBuf->GetLength() <= (mDrawUPIVStreamPtr + vertBufSz))
-	{
-		mDrawUPIVbuf = d912pxy_s(pool_vstream)->GetVStreamObject((vertBuf->GetLength() * 2) & 0x7FFFFFF, 0, 0);
-		vertBuf->Release();
-		vertBuf = mDrawUPIVbuf;
-		mDrawUPIVStreamPtr = 0;
-
-		if (vertBuf->GetLength() <= vertBufSz)
-		{
-			LOG_DBG_DTDM3("App asked %lX vbytes to draw, TOO BIG, skipping (dipup %u-%u)", vertBufSz, MinVertexIndex, NumVertices);
-
-			API_OVERHEAD_TRACK_END(0)
-			return D3D_OK;
-		}
-	}
-
-	void* indDPtr;
-	void* vertDPtr;
-	indBuf->Lock(mDrawUPIIStreamPtr[hiInd], indBufSz, &indDPtr, 0);
-	vertBuf->Lock(mDrawUPIVStreamPtr, vertBufSz, &vertDPtr, 0);
-
-	memcpy(indDPtr, pIndexData, indBufSz);
-	memcpy(vertDPtr, pVertexStreamZeroData, vertBufSz);
-
-	indBuf->Unlock();
-	vertBuf->Unlock();
-
-	d912pxy_s(iframe)->SetIBuf(indBuf);
-	d912pxy_s(iframe)->SetVBuf(vertBuf, 0, mDrawUPIVStreamPtr, VertexStreamZeroStride);
-	d912pxy_s(iframe)->SetStreamFreq(0, 1);
-	d912pxy_s(iframe)->SetStreamFreq(1, 0);
-
-	API_OVERHEAD_TRACK_END(0)
-
-	DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, mDrawUPIIStreamPtr[hiInd] >> (1 + hiInd), PrimitiveCount);
-
-	mDrawUPIIStreamPtr[hiInd] += indBufSz;
-	mDrawUPIVStreamPtr += vertBufSz;	
+	m_dupEmul->DrawIndexedPrimitiveUP(PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
 
 	return D3D_OK;
 }

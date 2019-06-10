@@ -528,6 +528,7 @@
     <ClInclude Include="d912pxy_async_upload_thread.h" />
     <ClInclude Include="d912pxy_com_tools.h" />
     <ClInclude Include="d912pxy_config.h" />
+    <ClInclude Include="d912pxy_draw_up.h" />
     <ClInclude Include="d912pxy_linked_list.h" />
     <ClInclude Include="d912pxy_basetexture.h" />
     <ClInclude Include="d912pxy_batch.h" />
@@ -569,6 +570,7 @@
     <ClInclude Include="d912pxy_shader_replacer.h" />
     <ClInclude Include="d912pxy_stackwalker.h" />
     <ClInclude Include="d912pxy_surface.h" />
+    <ClInclude Include="d912pxy_surface_clear.h" />
     <ClInclude Include="d912pxy_surface_layer.h" />
     <ClInclude Include="d912pxy_surface_pool.h" />
     <ClInclude Include="d912pxy_swapchain.h" />
@@ -611,6 +613,7 @@
     <ClCompile Include="d912pxy_device_swapchain.cpp" />
     <ClCompile Include="d912pxy_device_texstate.cpp" />
     <ClCompile Include="d912pxy_device_unimpl.cpp" />
+    <ClCompile Include="d912pxy_draw_up.cpp" />
     <ClCompile Include="d912pxy_fwdecl.cpp" />
     <ClCompile Include="d912pxy_linked_list.cpp" />
     <ClCompile Include="d912pxy_basetexture.cpp" />
@@ -652,6 +655,7 @@
     <ClCompile Include="d912pxy_shader_replacer.cpp" />
     <ClCompile Include="d912pxy_stackwalker.cpp" />
     <ClCompile Include="d912pxy_surface.cpp" />
+    <ClCompile Include="d912pxy_surface_clear.cpp" />
     <ClCompile Include="d912pxy_surface_layer.cpp" />
     <ClCompile Include="d912pxy_surface_pool.cpp" />
     <ClCompile Include="d912pxy_swapchain.cpp" />
@@ -690,8 +694,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\WinPixEventRuntime.1.0.190604001\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.190604001\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Данный проект ссылается на пакеты NuGet, отсутствующие на этом компьютере. Используйте восстановление пакетов NuGet, чтобы скачать их.  Дополнительную информацию см. по адресу: http://go.microsoft.com/fwlink/?LinkID=322105. Отсутствует следующий файл: {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.190604001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.190604001\build\WinPixEventRuntime.targets'))" />
+  </Target>
 </Project>

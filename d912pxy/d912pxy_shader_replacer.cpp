@@ -285,13 +285,14 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 
 	if (!ret.code)
 	{
-		if (oCode == NULL)
-		{
+		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_custom_dir, 1);
+
+		if ((oCode == NULL) && (ret.code == NULL))
+		{			
 			ret.code = NULL;
 			return ret;
-		}
+		} 
 
-		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_custom_dir, 1);
 		if (!ret.code)
 		{
 			d912pxy_hlsl_generator_memout* genRet = GenerateHLSL(d912pxy_shader_db_hlsl_dir);

@@ -204,6 +204,10 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	switch (State)
 	{
+	case D3DRS_STENCILREF:
+		d912pxy_s(CMDReplay)->OMStencilRef(Value);
+		DX9RSvalues[State] = Value;
+		break; //57,   /* Reference value used in stencil test */
 	case D3DRS_SCISSORTESTENABLE:
 		if (Value)
 			d912pxy_s(iframe)->RestoreScissor();

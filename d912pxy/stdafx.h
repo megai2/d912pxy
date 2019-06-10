@@ -43,6 +43,7 @@ SOFTWARE.
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <wrl.h>
+#include <pix3.h>
 
 #include "targetver.h"
 #include <chrono>
@@ -116,6 +117,8 @@ SOFTWARE.
 #include "d912pxy_replay_thread.h"
 #include "d912pxy_replay.h"
 #include "d912pxy_replay_passthru.h"
+#include "d912pxy_draw_up.h"
+#include "d912pxy_surface_clear.h"
 #include "d912pxy_device.h"
 
 #include "frame_analyzer.h"

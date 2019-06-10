@@ -70,6 +70,7 @@ HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 
 	swapOpLock.Hold();
 
+	m_dupEmul->OnFrameEnd();
 	d912pxy_s(iframe)->End();
 	d912pxy_s(GPUque)->Flush(0);
 
@@ -92,7 +93,9 @@ HRESULT d912pxy_device::InnerPresentExecute()
 
 	swapOpLock.Hold();
 
+	m_dupEmul->OnFrameEnd();
 	d912pxy_s(iframe)->End();
+
 	API_OVERHEAD_TRACK_END(0)
 	FRAME_METRIC_PRESENT(0)
 
@@ -107,10 +110,6 @@ void d912pxy_device::InnerPresentFinish()
 	FRAME_METRIC_PRESENT(1)
 	API_OVERHEAD_TRACK_START(0)
 
-	mDrawUPStreamPtr = 0;
-	mDrawUPIIStreamPtr[0] = 0;
-	mDrawUPIIStreamPtr[1] = 0;
-	mDrawUPIVStreamPtr = 0;
 	d912pxy_s(iframe)->Start();
 
 	swapOpLock.Release();

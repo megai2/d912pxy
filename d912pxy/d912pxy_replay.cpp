@@ -283,6 +283,7 @@ void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT*
 	it->clrRt.clr[2] = clr[1];
 	it->clrRt.clr[3] = clr[0];
 	it->clrRt.tgt = tgt;
+
 	it->clrRt.clearRect.left = (LONG)currentVWP->TopLeftX;
 	it->clrRt.clearRect.top = (LONG)currentVWP->TopLeftY;
 	it->clrRt.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
@@ -304,6 +305,7 @@ void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, 
 	it->clrDs.flag = flag;
 	it->clrDs.stencil = stencil;
 	it->clrDs.tgt = tgt;
+
 	it->clrDs.clearRect.left = (LONG)currentVWP->TopLeftX;
 	it->clrDs.clearRect.top = (LONG)currentVWP->TopLeftY;
 	it->clrDs.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
@@ -332,12 +334,19 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	if (!maxRI)
 		return;
 
+	PIXBeginEvent(cl, 0x88888888, "RP%u", thrd->GetId());
+
 	ID3D12PipelineState* context = NULL;
 
 	if (start > 0)
 	{		
+		PIXBeginEvent(cl, 0x88888888, "RPT%u", thrd->GetId());
 		TransitCLState(cl, start, thrd->GetId(), (void**)&context);
+		PIXEndEvent(cl);
 	}
+
+	PIXBeginEvent(cl, 0x88888888, "OMRT");
+	PIXBeginEvent(cl, 0x88888888, "B");
 	
 	//execute operations
 	while (i != end)
@@ -347,19 +356,38 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 			LOG_DBG_DTDM("RP TY %u %s", i, d912pxy_replay_item_type_dsc[stack[i].type]);
 
 			PlayId(&stack[i], cl, (void**)&context);
+
+#ifdef _DEBUG
+			if (stack[i].type == DRPL_DIIP)
+			{
+				PIXEndEvent(cl);
+				PIXBeginEvent(cl, 0x88888888, "B%u", stack[i].dip.batchId);
+			}
+			else if (stack[i].type == DRPL_OMRT)
+			{
+				PIXEndEvent(cl);
+				PIXEndEvent(cl);
+				PIXBeginEvent(cl, 0x88888888, "OMRT");
+				PIXBeginEvent(cl, 0x88888888, "B");
+			}
+#endif
 			++i;
 		}
 		
 		maxRI = WaitForData(i, maxRI, end, thrd);			
 
 		if (!maxRI)
+		{
+			PIXEndEvent(cl);
 			return;
+		}
 	}
 
 	//megai2: unlock thread only when stopMarker is set
 	while (!InterlockedAdd(&stopMarker, 0))	
 		thrd->WaitForJob();	
 
+	PIXEndEvent(cl);
 }
 
 UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_thread * thrd)
@@ -376,7 +404,9 @@ UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_
 			else
 				break;
 		}		
+		PIXBeginEvent(0xAA0000, "rp thread wait");
 		thrd->WaitForJob();
+		PIXEndEvent();
 	}
 
 	if (maxRI > end)
@@ -664,7 +694,7 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 		it->StartIndexLocation,
 		it->BaseVertexLocation,
 		it->StartInstanceLocation
-	);
+	);	
 }
 
 void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl, void** unused)
@@ -686,9 +716,12 @@ void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12Graphic
 	}
 
 	if (it->rtv)
+	{		
 		cl->OMSetRenderTargets(1, bindedRTV, 0, bindedDSV);
-	else
-		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);
+	}
+	else {		
+		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);		
+	}
 }
 
 void d912pxy_replay::RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl, void** unused)

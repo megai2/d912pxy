@@ -98,6 +98,8 @@ void d912pxy_batch::FrameEnd()
 
 void d912pxy_batch::GPUCSCpy()
 {	
+	PIXBeginEvent(topCl, 0xAA00AA, "CSCpy");
+
 	for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
 	{		
 		streamControl[mDataDltRef[i]].endBatch = batchNum;
@@ -132,6 +134,8 @@ void d912pxy_batch::GPUCSCpy()
 	topCl->Dispatch(streamIdx >> PXY_BATCH_GPU_THREAD_BLOCK_SHIFT, 1, 1);
 
 	buffer->BTransit(0, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, topCl);
+
+	PIXEndEvent(topCl);
 
 	streamIdx = 0;
 }

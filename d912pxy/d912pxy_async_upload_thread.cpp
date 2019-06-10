@@ -61,9 +61,7 @@ void d912pxy_async_upload_thread<QueItemType, ProcImpl>::QueueItem(QueItemType i
 
 template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::ThreadJob()
-{
-	static_cast<ProcImpl>(this)->ThreadWake();
-
+{	
 	while (buffer->HaveElements())
 	{
 		QueItemType it = buffer->PopElementMTG();
@@ -78,6 +76,7 @@ template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::ThreadInitProc()
 {
 	d912pxy_s(dev)->InitLockThread(threadSyncId);
+	static_cast<ProcImpl>(this)->ThreadWake();
 }
 
 template<class QueItemType, class ProcImpl>
@@ -99,6 +98,7 @@ void d912pxy_async_upload_thread<QueItemType, ProcImpl>::CheckInterrupt()
 	{
 		static_cast<ProcImpl>(this)->OnThreadInterrupt();
 		m_dev->LockThread(threadSyncId);
+		static_cast<ProcImpl>(this)->ThreadWake();
 	}
 }
 

@@ -89,6 +89,8 @@ public:
 
 	void OptimizeZeroWriteRT(UINT value);
 
+	void ProcessSurfaceBinds(UINT psoOnly);
+
 private:	
 
 	void InitRootSignature();

@@ -128,6 +128,15 @@ HRESULT WINAPI d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CO
 
 HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
+	API_OVERHEAD_TRACK_START(0)
+
+	m_clearEmul->Clear(Count, pRects, Flags, Color, Z, Stencil);
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+	/*
+	
 	LOG_DBG_DTDM("Clear Rects: %u", Count);
 
 	API_OVERHEAD_TRACK_START(0)
@@ -146,7 +155,6 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 
 		if (surf)
 			d912pxy_s(CMDReplay)->RTClear(surf, fvColor, d912pxy_s(iframe)->GetViewport());
-		//iframe->GetBindedSurface(1)->d912_rtv_clear(fvColor, Count, (D3D12_RECT*)pRects);//megai2: rect is 4 uint structure, may comply
 	}
 
 	if (Flags & (D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER))
@@ -157,13 +165,11 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 
 		if (surf)
 			d912pxy_s(CMDReplay)->DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf, d912pxy_s(iframe)->GetViewport());
-
-		//	surf->d912_dsv_clear(Z, Stencil & 0xFF, Count, (D3D12_RECT*)pRects, (D3D12_CLEAR_FLAGS)cvtCf);
 	}
 
 	API_OVERHEAD_TRACK_END(0)
 
-	return D3D_OK;
+	return D3D_OK;*/
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

@@ -215,38 +215,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	if (batchDF & 4)
 	{
-		bindedRTV = &bindedSurfacesDH[1];
-		bindedDSV = &bindedSurfacesDH[0];
-
-		if (bindedSurfaces[1])
-		{
-			d912pxy_s(psoCache)->RTVFormat(bindedSurfaces[1]->GetSRVFormat(), 0);
-			d912pxy_s(CMDReplay)->StateTransit(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
-			bindedRTVcount = 1;
-		}
-		else {
-			d912pxy_s(psoCache)->RTVFormat(DXGI_FORMAT_UNKNOWN, 0);
-			bindedRTVcount = 0;
-			bindedRTV = 0;
-		}
-
-		if (bindedSurfaces[0])
-		{
-			d912pxy_s(psoCache)->DSVFormat(bindedSurfaces[0]->GetDSVFormat());
-			d912pxy_s(CMDReplay)->StateTransit(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
-		}
-		else {
-			bindedDSV = 0;
-		}
-
-		d912pxy_s(psoCache)->OMReflect(bindedRTVcount, bindedDSV);
-
-		if (bindedRTV && bindedDSV)
-			d912pxy_s(CMDReplay)->RT(bindedSurfaces[1], bindedSurfaces[0]);
-		else if (bindedRTV)
-			d912pxy_s(CMDReplay)->RT(bindedSurfaces[1], 0);
-		else if (bindedDSV)
-			d912pxy_s(CMDReplay)->RT(0, bindedSurfaces[0]);
+		ProcessSurfaceBinds(0);
 	}
 
 	d912pxy_s(psoCache)->Use();
@@ -663,7 +632,7 @@ UINT d912pxy_iframe::GetIndexCount(UINT PrimitiveCount, D3DPRIMITIVETYPE Primiti
 		1,//linestrip
 		0,//trilist
 		2,//tristrip		
-		0//trifan
+		1//trifan
 	};
 
 	return PrimitiveCount * pperprim[PrimitiveType] + primsubs[PrimitiveType];
@@ -687,6 +656,45 @@ void d912pxy_iframe::OptimizeZeroWriteRT(UINT writeFlag)
 	}
 
 
+}
+
+void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
+{
+	bindedRTV = &bindedSurfacesDH[1];
+	bindedDSV = &bindedSurfacesDH[0];
+
+	if (bindedSurfaces[1])
+	{
+		d912pxy_s(psoCache)->RTVFormat(bindedSurfaces[1]->GetSRVFormat(), 0);
+		d912pxy_s(CMDReplay)->StateTransit(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
+		bindedRTVcount = 1;
+	}
+	else {
+		d912pxy_s(psoCache)->RTVFormat(DXGI_FORMAT_UNKNOWN, 0);
+		bindedRTVcount = 0;
+		bindedRTV = 0;
+	}
+
+	if (bindedSurfaces[0])
+	{
+		d912pxy_s(psoCache)->DSVFormat(bindedSurfaces[0]->GetDSVFormat());
+		d912pxy_s(CMDReplay)->StateTransit(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	}
+	else {
+		bindedDSV = 0;
+	}
+
+	d912pxy_s(psoCache)->OMReflect(bindedRTVcount, bindedDSV);
+
+	if (!psoOnly)
+	{
+		if (bindedRTV && bindedDSV)
+			d912pxy_s(CMDReplay)->RT(bindedSurfaces[1], bindedSurfaces[0]);
+		else if (bindedRTV)
+			d912pxy_s(CMDReplay)->RT(bindedSurfaces[1], 0);
+		else if (bindedDSV)
+			d912pxy_s(CMDReplay)->RT(0, bindedSurfaces[0]);
+	}
 }
 
 void d912pxy_iframe::InitRootSignature()

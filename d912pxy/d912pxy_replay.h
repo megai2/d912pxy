@@ -28,22 +28,22 @@ SOFTWARE.
 typedef enum d912pxy_replay_item_type {
 	DRPL_TRAN = 0,
 	DRPL_OMSR = 1,
-	DRPL_OMBF,
-	DRPL_RSVP,
-	DRPL_RSSR,
-	DRPL_DIIP,
-	DRPL_OMRT,
-	DRPL_IFVB,
-	DRPL_IFIB,
-	DRPL_RCLR,
-	DRPL_DCLR,
-	DRPL_RPSO,
-	DRPL_RPSF,
-	DRPL_CPSO,
-	DRPL_RECT,
-	DRPL_GPUW,
-	DRPL_PRMT,
-	DRPL_COUNT
+	DRPL_OMBF,//2
+	DRPL_RSVP,//3
+	DRPL_RSSR,//4
+	DRPL_DIIP,//5
+	DRPL_OMRT,//6
+	DRPL_IFVB,//7
+	DRPL_IFIB,//8
+	DRPL_RCLR,//9
+	DRPL_DCLR,//10
+	DRPL_RPSO,//11
+	DRPL_RPSF,//12
+	DRPL_CPSO,//13
+	DRPL_RECT,//14
+	DRPL_GPUW,//15
+	DRPL_PRMT,//16
+	DRPL_COUNT//17
 } d912pxy_replay_item_type;
 
 static const wchar_t* d912pxy_replay_item_type_dsc[] = {
