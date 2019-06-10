@@ -43,7 +43,6 @@ SOFTWARE.
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <wrl.h>
-#include <pix3.h>
 
 #include "targetver.h"
 #include <chrono>
