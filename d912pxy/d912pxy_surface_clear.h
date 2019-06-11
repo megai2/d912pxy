@@ -18,7 +18,5 @@ private:
 
 	d912pxy_vstream* vBuf;
 	d912pxy_vstream* iBuf;
-	
-	void* pcPSO[7];
 };
 

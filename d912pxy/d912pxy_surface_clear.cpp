@@ -37,60 +37,6 @@ d912pxy_surface_clear::d912pxy_surface_clear(d912pxy_device * dev) : d912pxy_non
 	iBuf->Unlock();
 
 	vdcl = new d912pxy_vdecl(dev, vDclElements);
-
-	dev->SetPixelShader(ps);
-	dev->SetVertexShader(vs);
-	dev->SetVertexDeclaration(vdcl);
-	dev->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-
-	//megai2: generate pso variations
-	
-	for (int i = 0; i != 7; ++i)
-	{
-		if (i & D3DCLEAR_TARGET)		
-			dev->SetRenderState(D3DRS_COLORWRITEENABLE, 0xF);
-		else 
-			dev->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
-
-		if (i & D3DCLEAR_ZBUFFER)
-		{
-			dev->SetRenderState(D3DRS_ZENABLE, 1);
-			dev->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
-			dev->SetRenderState(D3DRS_ZWRITEENABLE, 1);
-		}
-		else {
-			dev->SetRenderState(D3DRS_ZENABLE, 0);
-			dev->SetRenderState(D3DRS_ZFUNC, D3DCMP_NEVER);
-			dev->SetRenderState(D3DRS_ZWRITEENABLE, 0);
-		}
-
-		if (i & D3DCLEAR_STENCIL)
-		{
-			dev->SetRenderState(D3DRS_STENCILENABLE, 1);
-			dev->SetRenderState(D3DRS_STENCILWRITEMASK, 0xF);			
-			dev->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-			dev->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_REPLACE);
-		}
-		else {
-			dev->SetRenderState(D3DRS_STENCILENABLE, 0);
-			dev->SetRenderState(D3DRS_STENCILWRITEMASK, 0);			
-			dev->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-			dev->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
-		}
-
-		dev->GetRenderState(D3DRS_D912PXY_ENQUEUE_PSO_COMPILE, (DWORD*)&pcPSO[i]);
-	}
-	
-	//restore defaults
-
-	dev->SetRenderState(D3DRS_STENCILENABLE, 0);
-	dev->SetRenderState(D3DRS_STENCILWRITEMASK, 0xFF);
-	dev->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-	dev->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
-	dev->SetRenderState(D3DRS_COLORWRITEENABLE, 0xF);
-	dev->SetRenderState(D3DRS_ZWRITEENABLE, 1);
-	dev->SetRenderState(D3DRS_ZENABLE, 1);
-	dev->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
 }
 
 d912pxy_surface_clear::~d912pxy_surface_clear()
@@ -126,20 +72,18 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 
 	float fvZVal[4] = {
 		Z,
-		0,
-		0,
+		1,
+		1,
 		0
 	};
 
-	d912pxy_surface* tgt = d912pxy_s(iframe)->GetBindedSurface(1);
+	if (Count)
+	{
+		D3D12_VIEWPORT* cuVWP = d912pxy_s(iframe)->GetViewport();
 
-	if (!tgt)	
-		tgt = d912pxy_s(iframe)->GetBindedSurface(0);		
-
-	D3DSURFACE_DESC dsc = tgt->GetDX9DescAtLevel(0);
-
-	fvZVal[1] = (float)dsc.Width;
-	fvZVal[2] = (float)dsc.Height;
+		fvZVal[1] = cuVWP->Width;
+		fvZVal[2] = cuVWP->Height;
+	}
 
 	d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLEAR_ZWH, 1, fvZVal);
 
@@ -195,9 +139,6 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 		m_dev->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
 	}
 
-//	m_dev->SetRenderState(D3DRS_D912PXY_DRAW, 0);
-//	m_dev->GetRenderState(D3DRS_D912PXY_SETUP_PSO, (DWORD*)pcPSO[Flags]);
-
 	psoDsc->PS = ps;
 	psoDsc->VS = vs;
 	psoDsc->InputLayout = vdcl;
@@ -212,18 +153,10 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 		}
 	}
 	else {
-		D3D12_VIEWPORT* wp = d912pxy_s(iframe)->GetViewport();
-
-		D3DRECT wpRect;
-		wpRect.x1 = (LONG)wp->TopLeftX;
-		wpRect.y1 = (LONG)wp->TopLeftY;
-		wpRect.x2 = wpRect.x1 + (LONG)wp->Width;
-		wpRect.y2 = wpRect.y1 + (LONG)wp->Height;
-
+		static D3DRECT wpRect = { 0,0,1,1 };
+	
 		ClearIter(&wpRect);
 	}
-
-//	m_dev->SetRenderState(D3DRS_D912PXY_SETUP_PSO, 0);
 
 	d912pxy_s(iframe)->SetIBuf(oi);
 	d912pxy_s(iframe)->SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
