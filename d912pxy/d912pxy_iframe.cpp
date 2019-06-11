@@ -166,9 +166,14 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	batchCommisionDF = 0;
 	
 	d912pxy_s(textureState)->Use();
+	
+	DWORD usedStreams = 0xFF;  
 
-	d912pxy_vdecl* vdecl = d912pxy_s(psoCache)->GetIAFormat();
-	DWORD usedStreams = vdecl->GetUsedStreams();
+	if (!d912pxy_s(psoCache)->GetCurrentCPSO())
+	{
+		d912pxy_vdecl* vdecl = d912pxy_s(psoCache)->GetIAFormat();
+		usedStreams = vdecl->GetUsedStreams();
+	}		
 
 	if (batchDF & 1)
 	{
@@ -439,7 +444,7 @@ void d912pxy_iframe::Start()
 
 	SetStreamFreq(0, 1);
 
-	if (streamsActive > 1)
+	if (cleanupStreams > 1)
 		for (int i = 1; i != cleanupStreams; ++i)
 			SetStreamFreq(i, 0);
 
@@ -477,6 +482,9 @@ void d912pxy_iframe::EndSceneReset()
 
 void d912pxy_iframe::SetViewport(D3D12_VIEWPORT * pViewport)
 {
+	if (memcmp(pViewport, &main_viewport, sizeof(D3D12_VIEWPORT)) == 0)
+		return;	
+
 	if ((pViewport->Width != main_viewport.Width) || (pViewport->Height != main_viewport.Height))
 	{
 		float fixupfv[4] = {
@@ -506,6 +514,9 @@ void d912pxy_iframe::SetViewport(D3D12_VIEWPORT * pViewport)
 
 void d912pxy_iframe::SetScissors(D3D12_RECT * pRect)
 {
+	if (memcmp(pRect, &main_scissor, sizeof(D3D12_RECT)) == 0)
+		return;
+
 	main_scissor = *pRect;
 	d912pxy_s(CMDReplay)->RSViewScissor(main_viewport, main_scissor);
 }
