@@ -71,7 +71,9 @@ D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFla
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	if (dwSize == 4)
+	if (m_type == D3DQUERYTYPE_EVENT)
+		((DWORD*)pData)[0] = 1;
+	else if (dwSize == 4)
 		((DWORD*)pData)[0] = 1;
 
 	return S_OK;
@@ -81,7 +83,9 @@ D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFla
 
 D912PXY_METHOD(d912pxy_query::GetDataZeroOverride)(IDirect3DQuery9 * self, void * pData, DWORD dwSize, DWORD dwGetDataFlags)
 {
-	if (dwSize == 4)
+	if (((d912pxy_query*)self)->m_type == D3DQUERYTYPE_EVENT)
+		((DWORD*)pData)[0] = 1;
+	else if (dwSize == 4)
 		((DWORD*)pData)[0] = 0;
 
 	return S_OK;
