@@ -80,6 +80,7 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 	replay_handlers[DRPL_CPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_CPSO;
 	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;	
 	replay_handlers[DRPL_PRMT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_PRMT;
+	replay_handlers[DRPL_QUMA] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_QUMA;
 
 	if (numThreads > 1)
 	{
@@ -258,6 +259,16 @@ void d912pxy_replay::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 	{
 		gpuw_que->WriteElementFast(&it->gpuw_ctl);
 	}
+
+	REPLAY_STACK_INCREMENT;
+}
+
+void d912pxy_replay::QueryMark(d912pxy_query * va, UINT start)
+{
+	REPLAY_STACK_GET(DRPL_QUMA);
+
+	it->queryMark.obj = va;
+	it->queryMark.start = start;
 
 	REPLAY_STACK_INCREMENT;
 }
@@ -809,6 +820,11 @@ void d912pxy_replay::RHA_GPUW_MT(d912pxy_replay_gpu_write_control * it, ID3D12Gr
 void d912pxy_replay::RHA_PRMT(d912pxy_replay_primitive_topology * it, ID3D12GraphicsCommandList * cl, void ** unused)
 {
 	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)it->newTopo);
+}
+
+void d912pxy_replay::RHA_QUMA(d912pxy_replay_query_mark * it, ID3D12GraphicsCommandList * cl, void ** unused)
+{
+	it->obj->QueryMark(it->start, cl);
 }
 
 d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")

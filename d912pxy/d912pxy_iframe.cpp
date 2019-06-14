@@ -106,33 +106,51 @@ void d912pxy_iframe::SetStreamFreq(UINT StreamNumber, UINT Divider)
 
 void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride)
 {
-	if (vb && !streamBinds[StreamNumber].buffer)
-		++streamsActive;
-	else if (!vb && streamsActive)
-	{		
-		if (streamBinds[StreamNumber].buffer)
-			--streamsActive;
-	}
+	UpdateActiveStreams(vb, StreamNumber);
 
-	batchCommisionDF |= 1;
-
+	batchCommisionDF |= 1;	
 	streamBinds[StreamNumber].buffer = vb;
 	streamBinds[StreamNumber].offset = OffsetInBytes;
 	streamBinds[StreamNumber].stride = Stride;
 
-	//if (vb)
-		//d912pxy_s(CMDReplay)->VBbind(vb, Stride, StreamNumber, OffsetInBytes);
+	if (vb)
+		d912pxy_s(CMDReplay)->VBbind(vb, Stride, StreamNumber, OffsetInBytes);
 }
 
 void d912pxy_iframe::SetIBuf(d912pxy_vstream* ib)
 {
-	if (indexBind != ib)
-		batchCommisionDF |= 2;
-
 	indexBind = ib;	
 
-	//if (ib)
-		//d912pxy_s(CMDReplay)->IBbind(ib);
+	if (ib)
+		d912pxy_s(CMDReplay)->IBbind(ib);
+}
+
+void d912pxy_iframe::SetIBufIfChanged(d912pxy_vstream * ib)
+{
+	if (indexBind != ib)	
+		SetIBuf(ib);	
+}
+
+void d912pxy_iframe::SetVBufIfChanged(d912pxy_vstream * vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride)
+{
+	if (
+		(streamBinds[StreamNumber].buffer != vb) ||
+		(streamBinds[StreamNumber].offset != OffsetInBytes) ||
+		(streamBinds[StreamNumber].stride != Stride)
+		)
+		SetVBuf(vb, StreamNumber, OffsetInBytes, Stride);
+
+}
+
+void d912pxy_iframe::UpdateActiveStreams(d912pxy_vstream * vb, UINT StreamNumber)
+{
+	if (vb && !streamBinds[StreamNumber].buffer)
+		++streamsActive;
+	else if (!vb && streamsActive)
+	{
+		if (streamBinds[StreamNumber].buffer)
+			--streamsActive;
+	}
 }
 
 d912pxy_vstream* d912pxy_iframe::GetIBuf()
@@ -145,9 +163,75 @@ d912pxy_device_streamsrc d912pxy_iframe::GetStreamSource(UINT StreamNumber)
 	return streamBinds[StreamNumber];
 }
 
+
+//megai2: this CommitBatch is made in assumption that app API stream is clean from dx9 intrisic resets / runtime checks / well hid kittens
 void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
+	if (PrimitiveType == D3DPT_TRIANGLEFAN)
+	{
+		LOG_DBG_DTDM3("DP TRIFAN skipping");
+		return;
+	}
 
+	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 1))
+	{
+		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
+
+		StateSafeFlush(0);
+	}
+
+	UINT32 batchDF = batchCommisionDF;
+	batchCommisionDF = 0;
+	
+	d912pxy_s(textureState)->Use();
+
+	//bind vb/ib
+	
+	if (batchDF & 1)
+	{
+		for (int i = 0; i != streamsActive; ++i)
+		{
+			if (streamBinds[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
+			{
+				instanceCount = 0x3FFFFFFF & streamBinds[i].divider;
+			}
+
+			if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
+			{
+				d912pxy_vdecl* useInstanced = d912pxy_s(psoCache)->GetIAFormat()->GetInstancedModification();
+				//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
+				useInstanced->ModifyStreamElementType(i, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
+				d912pxy_s(psoCache)->IAFormatInstanced(useInstanced);
+				batchDF |= 8;
+			}						
+		}
+	}
+
+	if (batchDF & 4)
+	{
+		ProcessSurfaceBinds(0);
+	}
+
+	d912pxy_s(psoCache)->Use();
+
+	d912pxy_s(CMDReplay)->DIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch());
+
+	instanceCount = 1;
+
+	++batchesIssued;
+
+	d912pxy_s(CMDReplay)->IssueWork(batchesIssued);
+
+	if (batchDF & 8)
+	{
+		d912pxy_s(psoCache)->IAFormat(d912pxy_s(psoCache)->GetIAFormat());
+	}
+}
+
+
+//megai2: this CommitBatch is made in assumption that app API stream is garbadge
+void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
+{
 	if (PrimitiveType == D3DPT_TRIANGLEFAN)
 	{
 		LOG_DBG_DTDM3("DP TRIFAN skipping");
@@ -159,21 +243,21 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	{
 		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
-		StateSafeFlush();
+		StateSafeFlush(0);
 	}
 
 	UINT32 batchDF = batchCommisionDF;
 	batchCommisionDF = 0;
-	
+
 	d912pxy_s(textureState)->Use();
-	
-	DWORD usedStreams = 0xFF;  
+
+	DWORD usedStreams = 0xFF;
 
 	if (!d912pxy_s(psoCache)->GetCurrentCPSO())
 	{
 		d912pxy_vdecl* vdecl = d912pxy_s(psoCache)->GetIAFormat();
 		usedStreams = vdecl->GetUsedStreams();
-	}		
+	}
 
 	if (batchDF & 1)
 	{
@@ -182,31 +266,23 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 			if (!(usedStreams & (1 << i)))
 				continue;
 
-			d912pxy_vstream* sb = streamBinds[i].buffer;
-			if (sb)
+			if (!streamBinds[i].buffer)
+				continue;
+
+			if (streamBinds[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
 			{
-				if (streamBinds[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
-				{
-					instanceCount = 0x3FFFFFFF & streamBinds[i].divider;
-				}
+				instanceCount = 0x3FFFFFFF & streamBinds[i].divider;
+			}
 
-				if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
-				{
-					d912pxy_vdecl* useInstanced = d912pxy_s(psoCache)->GetIAFormat()->GetInstancedModification();
-					//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
-					useInstanced->ModifyStreamElementType(i, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-					d912pxy_s(psoCache)->IAFormatInstanced(useInstanced);
-					batchDF |= 8;
-				}
-
-				d912pxy_s(CMDReplay)->VBbind(sb, streamBinds[i].stride, i, streamBinds[i].offset);
+			if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
+			{
+				d912pxy_vdecl* useInstanced = d912pxy_s(psoCache)->GetIAFormat()->GetInstancedModification();
+				//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
+				useInstanced->ModifyStreamElementType(i, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
+				d912pxy_s(psoCache)->IAFormatInstanced(useInstanced);
+				batchDF |= 8;
 			}
 		}
-	}
-
-	if (batchDF & 2)
-	{
-		d912pxy_s(CMDReplay)->IBbind(indexBind);
 	}
 
 	if (instanceCount > 1)
@@ -231,7 +307,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 		d912pxy_s(CMDReplay)->PrimTopo(cuPrimType);
 	}
 
-	d912pxy_s(CMDReplay)->DIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch());
+	d912pxy_s(CMDReplay)->DIIP(GetIndexCount(primCount, PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s(batch)->NextBatch());
 
 	instanceCount = 1;
 
@@ -260,17 +336,6 @@ void d912pxy_iframe::BindSurface(UINT index, d912pxy_surface* obj)
 
 		if (rtDsc.Format == D3DFMT_NULL)
 			obj = NULL;
-	/*	else 
-		{
-			D3D12_VIEWPORT newVP;
-			newVP = main_viewport;
-			newVP.TopLeftX = 0;
-			newVP.TopLeftY = 0;
-			newVP.Height = rtDsc.Height;
-			newVP.Width = rtDsc.Width;
-
-			SetViewport(&newVP);
-		}*/
 	}
 
 	if (obj)
@@ -278,113 +343,6 @@ void d912pxy_iframe::BindSurface(UINT index, d912pxy_surface* obj)
 	
 	bindedSurfaces[index] = obj;
 	batchCommisionDF |= 4;
-
-/*	bindedRTV = &bindedSurfacesDH[1];
-	bindedDSV = &bindedSurfacesDH[0];
-
-	if (obj)
-	{
-		if (index > 0)
-		{
-			obj = obj->CheckRTV();
-			D3DSURFACE_DESC rtDs = obj->GetDX9DescAtLevel(0);
-
-			//dx9 fourcc NULL fmt to trick API on allowing setting no RT
-			if (rtDs.Format == 0x4C4C554E)
-			{
-				bindedRTV = 0;
-				bindedRTVcount = 0;
-				d912pxy_s(psoCache)->RTVFormat(DXGI_FORMAT_UNKNOWN, 0);
-				LOG_ERR_THROW2(-1 * (index > 1), "FOURCC NULL fmt for RT with idx > 0");
-				obj = NULL;
-				goto dx9null_trick;
-			} else if (bindedSurfaces[0])
-			{
-				//we are setting RTV so DSV must comply it or go away				
-				D3DSURFACE_DESC dsDs = bindedSurfaces[0]->GetDX9DescAtLevel(0);
-				if ((rtDs.Width > dsDs.Width) || (rtDs.Height > dsDs.Height))
-					bindedDSV = 0;//GOAWAY =(
-				//but we do it in a way that old DSV will pop back in when it comply to setted RT
-				//maybe DX9 don't have such a thing about depth buffers, so maybe we need to create and replace old one? duh			
-			}	
-
-			if (rtDs.Format != 0x4C4C554E)
-			{
-				//mRPL->ViewTransit(obj, D3D12_RESOURCE_STATE_RENDER_TARGET);
-				//obj->PerformViewTypeTransit(D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-				d912pxy_s(psoCache)->RTVFormat(obj->GetSRVFormat(), index - 1);
-
-				bindedRTVcount = index;
-			}
-		} else {
-			//we are setting DSV that must comply with RT
-			//but guess we remove RT if it not comply
-
-			D3DSURFACE_DESC dsDs = obj->GetDX9DescAtLevel(0);
-
-			//check it with zero
-			if (bindedSurfaces[1])
-			{
-				//we are setting DSV so RTV must comply it or go away				
-				D3DSURFACE_DESC rtDs = bindedSurfaces[1]->GetDX9DescAtLevel(0);
-				if ((rtDs.Width > dsDs.Width) || (rtDs.Height > dsDs.Height))
-				{
-					bindedRTV = 0;//GOAWAY =(
-					bindedRTVcount = 0;
-				}
-			}
-
-			//mRPL->ViewTransit(obj, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-			//obj->PerformViewTypeTransit(D3D12_RESOURCE_STATE_DEPTH_WRITE);			
-
-			d912pxy_s(psoCache)->DSVFormat(obj->GetDSVFormat());
-		}
-				
-		bindedSurfacesDH[index] = obj->GetDHeapHandle();		
-	}
-	else {
-dx9null_trick:
-		if (!index)
-			bindedDSV = 0;
-		else {
-			bindedRTVcount = index-1;
-			if (bindedRTVcount == 0)
-				bindedRTV = 0;
-		}
-	}
-
-	bindedSurfaces[index] = obj;
-
-	if (!bindedSurfaces[0])
-	{
-		bindedDSV = 0;
-	}
-	else {		
-		d912pxy_s(CMDReplay)->ViewTransit(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	}
-
-	if (!bindedSurfaces[1])
-	{
-		bindedRTV = 0;
-		bindedRTVcount = 0;
-	}
-	else {
-		d912pxy_s(CMDReplay)->ViewTransit(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
-	}
-	
-	d912pxy_s(psoCache)->OMReflect(bindedRTVcount, bindedDSV);
-
-	if (bindedRTV && bindedDSV)
-		d912pxy_s(CMDReplay)->RT(bindedSurfaces[1], bindedSurfaces[0]);
-	else if (bindedRTV)
-		d912pxy_s(CMDReplay)->RT(bindedSurfaces[1], 0);
-	else if (bindedDSV)
-		d912pxy_s(CMDReplay)->RT(0, bindedSurfaces[0]);
-
-		
-
-	//mGPUcl->GID(CLG_SEQ)->OMSetRenderTargets(bindedRTVcount, bindedRTV, 0, bindedDSV);*/
 }
 
 void d912pxy_iframe::ClearBindedSurfaces()
@@ -482,9 +440,6 @@ void d912pxy_iframe::EndSceneReset()
 
 void d912pxy_iframe::SetViewport(D3D12_VIEWPORT * pViewport)
 {
-	if (memcmp(pViewport, &main_viewport, sizeof(D3D12_VIEWPORT)) == 0)
-		return;	
-
 	if ((pViewport->Width != main_viewport.Width) || (pViewport->Height != main_viewport.Height))
 	{
 		float fixupfv[4] = {
@@ -514,11 +469,24 @@ void d912pxy_iframe::SetViewport(D3D12_VIEWPORT * pViewport)
 
 void d912pxy_iframe::SetScissors(D3D12_RECT * pRect)
 {
+	main_scissor = *pRect;
+	d912pxy_s(CMDReplay)->RSViewScissor(main_viewport, main_scissor);
+}
+
+void d912pxy_iframe::SetViewportIfChanged(D3D12_VIEWPORT * pViewport)
+{
+	if (memcmp(pViewport, &main_viewport, sizeof(D3D12_VIEWPORT)) == 0)
+		return;
+
+	SetViewport(pViewport);
+}
+
+void d912pxy_iframe::SetScissorsIfChanged(D3D12_RECT * pRect)
+{
 	if (memcmp(pRect, &main_scissor, sizeof(D3D12_RECT)) == 0)
 		return;
 
-	main_scissor = *pRect;
-	d912pxy_s(CMDReplay)->RSViewScissor(main_viewport, main_scissor);
+	SetScissors(pRect);
 }
 
 void d912pxy_iframe::RestoreScissor()
@@ -559,7 +527,7 @@ void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
 		batchCommisionDF |= 4;
 }
 
-void d912pxy_iframe::StateSafeFlush()
+void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 {
 	if (indexBind)
 		indexBind->ThreadRef(1);
@@ -578,7 +546,10 @@ void d912pxy_iframe::StateSafeFlush()
 	}
 
 	End();
-	d912pxy_s(GPUque)->Flush(0);
+	if (fullFlush)
+		d912pxy_s(GPUque)->Flush(0);
+	else 
+		d912pxy_s(GPUque)->ExecuteCommands(0);
 	Start();
 
 	//megai2: rebind surfaces as they are resetted to swapchain back buffers by Start()

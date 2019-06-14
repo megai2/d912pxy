@@ -22,63 +22,41 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+#pragma once
 #include "stdafx.h"
 
-d912pxy_query::d912pxy_query(d912pxy_device* dev, D3DQUERYTYPE Type) : d912pxy_comhandler(L"query")
+class d912pxy_query_occlusion : public d912pxy_query
 {
-	m_dev = dev;
-	m_type = Type;
-}
+public:
+	d912pxy_query_occlusion(d912pxy_device* dev, D3DQUERYTYPE Type);
+	~d912pxy_query_occlusion();
 
+	/*** IUnknown methods ***/
+	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
+	D912PXY_METHOD_(ULONG, AddRef)(THIS);
+	D912PXY_METHOD_(ULONG, Release)(THIS);
 
-d912pxy_query::~d912pxy_query()
-{
+	/*** IDirect3DQuery9 methods ***/
+	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
+	D912PXY_METHOD_(D3DQUERYTYPE, GetType)(THIS);
+	D912PXY_METHOD_(DWORD, GetDataSize)(THIS);
+	D912PXY_METHOD(Issue)(THIS_ DWORD dwIssueFlags);
+	D912PXY_METHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);	
 
-}
+	void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
 
-#define D912PXY_METHOD_IMPL_CN d912pxy_query
+	void FlushQueryStack();
 
-D912PXY_IUNK_IMPL
+	static UINT32 forcedRet;
 
-/*** IDirect3DQuery9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice)
-{
-	*ppDevice = (IDirect3DDevice9*)m_dev;
+	static UINT InitOccQueryEmulation();
+	static void DeInitOccQueryEmulation();
 
-	return D3D_OK;
-}
+private:
+	void SetQueryResult(UINT32 v);
 
-D912PXY_METHOD_IMPL_(D3DQUERYTYPE, GetType)(THIS)
-{
-	return m_type;
-}
+	UINT32 queryResult;
+	UINT32 queryFinished;
+	UINT32 frameIdx;
+};
 
-D912PXY_METHOD_IMPL_(DWORD, GetDataSize)(THIS)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	return 4;
-}
-
-D912PXY_METHOD_IMPL(Issue)(THIS_ DWORD dwIssueFlags)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	return D3D_OK;
-}
-
-D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	if (dwSize == 4)
-		((DWORD*)pData)[0] = 1;
-
-	return S_OK;
-}
-
-#undef D912PXY_METHOD_IMPL_CN
-
-void d912pxy_query::QueryMark(UINT start, ID3D12GraphicsCommandList* cl)
-{
-}

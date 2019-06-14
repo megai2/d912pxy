@@ -50,12 +50,67 @@ d912pxy_surface_clear::~d912pxy_surface_clear()
 
 void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
+	//megai2: save current pso & related
+	d912pxy_trimmed_dx12_pso* psoDsc = d912pxy_s(psoCache)->GetCurrentDsc();
+	d912pxy_trimmed_dx12_pso oldDsc = *psoDsc;
+
+	d912pxy_vstream* oi = d912pxy_s(iframe)->GetIBuf();
+	d912pxy_device_streamsrc oss = d912pxy_s(iframe)->GetStreamSource(0);
+	d912pxy_device_streamsrc ossi = d912pxy_s(iframe)->GetStreamSource(1);
+	d912pxy_vdecl* oldVDecl = d912pxy_s(psoCache)->GetIAFormat();
+
 	UINT oldStencilRef;
+	if (Flags & D3DCLEAR_STENCIL)	
+		oldStencilRef = d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_STENCILREF);
+
+	UINT restoreScissor = d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
+
+	//set needed things
+
+	d912pxy_s(iframe)->SetStreamFreq(0, 1);
+	d912pxy_s(iframe)->SetStreamFreq(1, 0);
+
+	d912pxy_s(iframe)->SetIBuf(iBuf);
+	d912pxy_s(iframe)->SetVBuf(vBuf, 0, 0, 4 * 4);
+
+	d912pxy_s(psoCache)->IAFormat(vdcl);
+	psoDsc->PS = ps;
+	psoDsc->VS = vs;
+
+	m_dev->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+	m_dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, false);
+	m_dev->SetRenderState(D3DRS_SCISSORTESTENABLE, 0);
+
+	psoDsc->RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+	if (Flags & D3DCLEAR_TARGET)
+		psoDsc->BlendStateRT0.RenderTargetWriteMask = 0xF;
+	else
+		psoDsc->BlendStateRT0.RenderTargetWriteMask = 0;
+
+	if (Flags & D3DCLEAR_ZBUFFER)
+	{
+		m_dev->SetRenderState(D3DRS_ZENABLE, 1);
+		m_dev->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
+		m_dev->SetRenderState(D3DRS_ZWRITEENABLE, 1);
+	}
+	else {
+		m_dev->SetRenderState(D3DRS_ZENABLE, 0);
+	}
+
 	if (Flags & D3DCLEAR_STENCIL)
 	{
-		oldStencilRef = d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_STENCILREF);
 		m_dev->SetRenderState(D3DRS_STENCILREF, Stencil);
+		m_dev->SetRenderState(D3DRS_STENCILENABLE, 1);
+		m_dev->SetRenderState(D3DRS_STENCILWRITEMASK, 0xFF);
+		m_dev->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
+		m_dev->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_REPLACE);
 	}
+	else {
+		m_dev->SetRenderState(D3DRS_STENCILENABLE, 0);
+	}
+
+	//set shader constants
 
 	if (Flags & D3DCLEAR_TARGET)
 	{
@@ -87,63 +142,7 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 
 	d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLEAR_ZWH, 1, fvZVal);
 
-	d912pxy_vstream* oi = d912pxy_s(iframe)->GetIBuf();
-	d912pxy_device_streamsrc oss = d912pxy_s(iframe)->GetStreamSource(0);
-	d912pxy_device_streamsrc ossi = d912pxy_s(iframe)->GetStreamSource(1);
-
-	d912pxy_s(iframe)->SetStreamFreq(0, 1);
-	d912pxy_s(iframe)->SetStreamFreq(1, 0);
-
-	d912pxy_s(iframe)->SetIBuf(iBuf);
-	d912pxy_s(iframe)->SetVBuf(vBuf, 0, 0, 4*4);
-
-	d912pxy_trimmed_dx12_pso* psoDsc = d912pxy_s(psoCache)->GetCurrentDsc();
-	d912pxy_trimmed_dx12_pso oldDsc = *psoDsc;
-
-	m_dev->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-	m_dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, false);
-
-	UINT restoreScissor = d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
-	m_dev->SetRenderState(D3DRS_SCISSORTESTENABLE, 0);
-
-	psoDsc->RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-
-	if (Flags & D3DCLEAR_TARGET)
-		psoDsc->BlendStateRT0.RenderTargetWriteMask = 0xF;
-	else
-		psoDsc->BlendStateRT0.RenderTargetWriteMask = 0;
-
-	if (Flags & D3DCLEAR_ZBUFFER)
-	{
-		m_dev->SetRenderState(D3DRS_ZENABLE, 1);
-		m_dev->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
-		m_dev->SetRenderState(D3DRS_ZWRITEENABLE, 1);
-	}
-	else {
-		m_dev->SetRenderState(D3DRS_ZENABLE, 1);
-		m_dev->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
-		m_dev->SetRenderState(D3DRS_ZWRITEENABLE, 0);
-	}
-
-	if (Flags & D3DCLEAR_STENCIL)
-	{
-		m_dev->SetRenderState(D3DRS_STENCILENABLE, 1);
-		m_dev->SetRenderState(D3DRS_STENCILWRITEMASK, 0xFF);
-		m_dev->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-		m_dev->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_REPLACE);
-	}
-	else {
-		m_dev->SetRenderState(D3DRS_STENCILENABLE, 0);
-		m_dev->SetRenderState(D3DRS_STENCILWRITEMASK, 0);
-		m_dev->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-		m_dev->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
-	}
-
-	psoDsc->PS = ps;
-	psoDsc->VS = vs;
-	psoDsc->InputLayout = vdcl;
-
-	d912pxy_s(psoCache)->MarkDirty(1);
+	//do iterated clear for each rect specified or use viewport rect
 
 	if (Count)
 	{
@@ -158,12 +157,16 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 		ClearIter(&wpRect);
 	}
 
+	//restore PSO and other things
+
 	d912pxy_s(iframe)->SetIBuf(oi);
 	d912pxy_s(iframe)->SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
 	d912pxy_s(iframe)->SetStreamFreq(0, oss.divider);
 	d912pxy_s(iframe)->SetStreamFreq(1, ossi.divider);
 
 	*psoDsc = oldDsc;
+
+	d912pxy_s(psoCache)->IAFormat(oldVDecl);
 
 	d912pxy_s(iframe)->ProcessSurfaceBinds(1);
 
@@ -188,5 +191,5 @@ void d912pxy_surface_clear::ClearIter(D3DRECT * pRect)
 
 	d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLEAR_RECT, 1, fvRect);
 
-	m_dev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
+	((IDirect3DDevice9*)m_dev)->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
 }

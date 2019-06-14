@@ -477,7 +477,7 @@ void d912pxy_surface::CopySurfaceDataToCPU()
 	cl->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
 	BTransit(0, stateCache, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
 		
-	d912pxy_s(iframe)->StateSafeFlush();
+	d912pxy_s(iframe)->StateSafeFlush(1);
 
 	intptr_t GPUdata = NULL;
 	LOG_ERR_THROW2(readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&GPUdata), "CopySurfaceDataToCPU map error");

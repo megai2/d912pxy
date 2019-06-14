@@ -161,18 +161,44 @@ void d912pxy_device::InitComPatches()
 		psPatch->Release();
 	}
 
-	if (!d912pxy_s(config)->GetValueUI64(PXY_CFG_QUERY_OCCLUSION))
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CLEAR))
 	{
-		d912pxy_query* queryObj = new d912pxy_query(this, D3DQUERYTYPE_OCCLUSION);
-		d912pxy_com_set_method((IDirect3DQuery9*)queryObj, 7, &d912pxy_query::GetDataZeroOverride);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x2b, &d912pxy_device::Clear_Emulated);
+	}
 
-		queryObj->Release();
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x25, &d912pxy_device::SetRenderTarget_Compat);
+	}
+
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CPU_API_REDUCTION))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x2f, &d912pxy_device::SetViewport_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x4b, &d912pxy_device::SetScissorRect_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x64, &d912pxy_device::SetStreamSource_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x68, &d912pxy_device::SetIndices_CAR);
+	}
+
+	{
+		UINT64 occCfgValue = d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OCCLUSION);
+
+		UINT32 occlusionCfgTranslate[3] = { 1, 2, 0 };
+		d912pxy_query_occlusion::forcedRet = occlusionCfgTranslate[occCfgValue];
+
+		if (occCfgValue == 2)
+		{
+			d912pxy_query_occlusion::InitOccQueryEmulation();
+		}
 	}
 
 	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
 	{
 		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x41, &d912pxy_device::SetTexture_PS);
 		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_PS);
+	}
+	else if (d912pxy_s(config)->GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_Compat);
 	}
 
 	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))

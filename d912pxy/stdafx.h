@@ -101,6 +101,7 @@ SOFTWARE.
 #include "d912pxy_shader_db.h"
 #include "d912pxy_shader_pair.h"
 #include "d912pxy_query.h"
+#include "d912pxy_query_occlusion.h"
 #include "d912pxy_dheap.h"
 #include "d912pxy_cbuffer.h"
 #include "d912pxy_gpu_cleanup_thread.h"

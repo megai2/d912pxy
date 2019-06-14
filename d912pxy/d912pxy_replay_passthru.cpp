@@ -249,6 +249,15 @@ void d912pxy_replay_passthru::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 	REPLAY_SYNC_STOP;
 }
 
+void d912pxy_replay_passthru::QueryMark(d912pxy_query* va, UINT start)
+{
+	REPLAY_SYNC_START;
+
+	va->QueryMark(start, cl);
+
+	REPLAY_SYNC_STOP;
+}
+
 void d912pxy_replay_passthru::PrimTopo(D3DPRIMITIVETYPE primType)
 {
 	REPLAY_SYNC_START;

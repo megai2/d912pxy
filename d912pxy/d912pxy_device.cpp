@@ -115,6 +115,8 @@ d912pxy_device::~d912pxy_device(void)
 
 void d912pxy_device::FreeAdditionalDX9Objects()
 {
+	d912pxy_query_occlusion::DeInitOccQueryEmulation();
+
 	delete m_dupEmul;
 	delete m_clearEmul;
 

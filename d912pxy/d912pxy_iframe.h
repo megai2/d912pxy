@@ -40,10 +40,16 @@ public:
 	void SetVBuf(d912pxy_vstream* vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride);
 	void SetIBuf(d912pxy_vstream* ib);
 
+	void SetIBufIfChanged(d912pxy_vstream* ib);
+	void SetVBufIfChanged(d912pxy_vstream* vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride);
+
+	void UpdateActiveStreams(d912pxy_vstream* vb, UINT StreamNumber);
+
 	d912pxy_vstream* GetIBuf();
 	d912pxy_device_streamsrc GetStreamSource(UINT StreamNumber);
 		
 	void CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
+	void CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 
 	void TransitZBufferRW(int write);
 	void BindSurface(UINT index, d912pxy_surface* obj);
@@ -61,6 +67,8 @@ public:
 	void EndSceneReset();
 	void SetViewport(D3D12_VIEWPORT* pViewport);
 	void SetScissors(D3D12_RECT* pRect);
+	void SetViewportIfChanged(D3D12_VIEWPORT* pViewport);
+	void SetScissorsIfChanged(D3D12_RECT* pRect);
 
 	D3D12_VIEWPORT* GetViewport() { return &main_viewport; };
 	D3D12_RECT* GetScissorRect() { return &main_scissor; };
@@ -79,7 +87,7 @@ public:
 
 	void NoteBindedSurfaceTransit(d912pxy_surface* surf, UINT slot);
 
-	void StateSafeFlush();
+	void StateSafeFlush(UINT fullFlush);
 
 	void ForceStateRebind();
 

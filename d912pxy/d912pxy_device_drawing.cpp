@@ -78,6 +78,27 @@ HRESULT WINAPI d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveTy
 	return D3D_OK;
 }
 
+HRESULT __stdcall d912pxy_device::DrawIndexedPrimitive_Compat(IDirect3DDevice9 * self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
+{
+	API_OVERHEAD_TRACK_START(0)
+
+	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+
+#ifdef PER_BATCH_FLUSH_DEBUG
+	replayer->Finish();
+
+	iframe->End();
+	mGPUque->Flush(0);
+
+	iframe->Start();
+#endif
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
+
 HRESULT __stdcall d912pxy_device::DrawIndexedPrimitive_PS(IDirect3DDevice9 * self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
 	d912pxy_device* _self = (d912pxy_device*)self;
@@ -152,7 +173,7 @@ HRESULT __stdcall d912pxy_device::DrawIndexedPrimitive_PS(IDirect3DDevice9 * sel
 		}		
 	}
 
-	d912pxy_s(iframe)->CommitBatch(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
 	API_OVERHEAD_TRACK_END(0)
 

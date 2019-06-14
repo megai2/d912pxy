@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING_UP
 
 d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(dev, L"draw_up")
 {
@@ -50,11 +50,8 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 	d912pxy_s(iframe)->SetIBuf(buf[PXY_DUP_DPI].vstream);
 	d912pxy_s(iframe)->SetVBuf(buf[PXY_DUP_DPV].vstream, 0, vsvOffset, VertexStreamZeroStride);
 
-	API_OVERHEAD_TRACK_END(0)
-
-	m_dev->DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);
-
-	API_OVERHEAD_TRACK_START(0)
+	//megai2: FIXME forced CommitBatch2 here for now, need to properly reflect config file
+	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);	
 
 	PopVSBinds();
 
@@ -77,13 +74,9 @@ void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UIN
 	PushVSBinds();
 
 	d912pxy_s(iframe)->SetIBuf(buf[indBuf].vstream);
-	d912pxy_s(iframe)->SetVBuf(buf[PXY_DUP_DIPV].vstream, 0, vsvOffset, VertexStreamZeroStride);
-
-	API_OVERHEAD_TRACK_END(0)
-
-	m_dev->DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);	
-
-	API_OVERHEAD_TRACK_START(0)
+	d912pxy_s(iframe)->SetVBuf(buf[PXY_DUP_DIPV].vstream, 0, vsvOffset, VertexStreamZeroStride);	
+	//megai2: FIXME forced CommitBatch2 here for now, need to properly reflect config file
+	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);		
 
 	PopVSBinds();
 

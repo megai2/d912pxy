@@ -204,8 +204,18 @@ public:
 
 	//megai2: variants of API calls
 	static HRESULT WINAPI DrawIndexedPrimitive_PS(IDirect3DDevice9* self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
+	static HRESULT WINAPI DrawIndexedPrimitive_Compat(IDirect3DDevice9* self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 	static HRESULT WINAPI SetTexture_PS(IDirect3DDevice9* self, DWORD Stage, IDirect3DBaseTexture9* pTexture);
 	static HRESULT WINAPI Present_PG(IDirect3DDevice9* self, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
+	static HRESULT WINAPI Clear_Emulated(IDirect3DDevice9* self, DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
+		//CAR = cpu api reduction
+	static HRESULT WINAPI SetStreamSource_CAR(IDirect3DDevice9* self, UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride);
+	static HRESULT WINAPI SetIndices_CAR(IDirect3DDevice9* self, IDirect3DIndexBuffer9* pIndexData);
+	static HRESULT WINAPI SetViewport_CAR(IDirect3DDevice9* self, CONST D3DVIEWPORT9* pViewport);
+	static HRESULT WINAPI SetScissorRect_CAR(IDirect3DDevice9* self, CONST RECT* pRect);
+	static HRESULT WINAPI SetRenderTarget_Compat(IDirect3DDevice9* self, DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
+
+	
 
 	HRESULT InnerPresentExecute();
 	void InnerPresentFinish();
