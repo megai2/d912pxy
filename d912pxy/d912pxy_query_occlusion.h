@@ -47,10 +47,9 @@ public:
 
 	void FlushQueryStack();
 
-	static UINT32 forcedRet;
-
 	static UINT InitOccQueryEmulation();
-	static void DeInitOccQueryEmulation();
+	static void DeInitOccQueryEmulation();	
+
 
 private:
 	void SetQueryResult(UINT32 v);

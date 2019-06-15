@@ -529,12 +529,27 @@ void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
 
 void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 {
+	d912pxy_vstream* indTransfer = indexBind;
+
+	D3D12_VIEWPORT transVW = main_viewport;
+	D3D12_RECT transSR = main_scissor;
+
+	DWORD transSRef = d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_STENCILREF);
+
 	if (indexBind)
 		indexBind->ThreadRef(1);
 
-	for (int i = 0; i != streamsActive; ++i)
+	d912pxy_device_streamsrc vstreamTransfer[PXY_INNER_MAX_VBUF_STREAMS];
+	UINT savedActiveStreams = streamsActive;
+
+	for (int i = 0; i != savedActiveStreams; ++i)
+	{
 		if (streamBinds[i].buffer)
+		{
 			streamBinds[i].buffer->ThreadRef(1);
+			vstreamTransfer[i] = streamBinds[i];
+		}
+	}
 
 	d912pxy_surface* refSurf[2];
 
@@ -562,20 +577,27 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 	}
 
 	//megai2: rebind buffers too as commitdraw is optimized out for buffer bindings
-	if (indexBind)
+	if (indTransfer)
 	{
-		SetIBuf(indexBind);
-		indexBind->ThreadRef(-1);
+		SetIBuf(indTransfer);
+		indTransfer->ThreadRef(-1);
 	}
 
-	for (int i = 0; i != streamsActive; ++i)
+	for (int i = 0; i != savedActiveStreams; ++i)
 	{
-		if (streamBinds[i].buffer)
+		if (vstreamTransfer[i].buffer)
 		{
-			SetVBuf(streamBinds[i].buffer, i, streamBinds[i].offset, streamBinds[i].stride);
-			streamBinds[i].buffer->ThreadRef(-1);
+			SetVBuf(vstreamTransfer[i].buffer, i, vstreamTransfer[i].offset, vstreamTransfer[i].stride);
+			vstreamTransfer[i].buffer->ThreadRef(-1);
 		}
 	}
+
+	//megai2: rebind viewport & scissor too
+
+	SetViewport(&transVW);
+	SetScissors(&transSR);
+
+	m_dev->SetRenderState(D3DRS_STENCILREF, transSRef);
 	
 	ForceStateRebind();
 }

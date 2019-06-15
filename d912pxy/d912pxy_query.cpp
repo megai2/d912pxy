@@ -82,3 +82,24 @@ D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFla
 void d912pxy_query::QueryMark(UINT start, ID3D12GraphicsCommandList* cl)
 {
 }
+
+D912PXY_METHOD(d912pxy_query::GetDataZeroOverride)(IDirect3DQuery9 * self, void * pData, DWORD dwSize, DWORD dwGetDataFlags)
+{
+	if (dwSize == 4)
+		((DWORD*)pData)[0] = 0;
+	
+	return S_OK;
+}
+
+D912PXY_METHOD(d912pxy_query::GetDataOneOverride)(IDirect3DQuery9 * self, void * pData, DWORD dwSize, DWORD dwGetDataFlags)
+{
+	if (dwSize == 4)
+		((DWORD*)pData)[0] = 1;
+
+	return S_OK;
+}
+
+D912PXY_METHOD(d912pxy_query::IssueNOP)(IDirect3DQuery9 * self, DWORD dwIssueFlags)
+{
+	return D3D_OK;
+}

@@ -46,6 +46,8 @@ public:
 	virtual void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
 
 	static D912PXY_METHOD(GetDataZeroOverride)(IDirect3DQuery9* self, void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	static D912PXY_METHOD(GetDataOneOverride)(IDirect3DQuery9* self, void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	static D912PXY_METHOD(IssueNOP)(IDirect3DQuery9* self, DWORD dwIssueFlags);
 
 private:	
 	D3DQUERYTYPE m_type;

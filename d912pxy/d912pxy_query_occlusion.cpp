@@ -24,18 +24,22 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-UINT32 d912pxy_query_occlusion::forcedRet = 0;
+typedef struct d912pxy_query_occlusion_gpu_stack {
+	d912pxy_resource* readbackBuffer;
+	d912pxy_query_occlusion* stack[PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME];
+	UINT32 count;
+} d912pxy_query_occlusion_gpu_stack;
+
 ID3D12QueryHeap* g_occQueryHeap = 0;
-UINT32 g_occQueryFrameIdx = 0;
-d912pxy_resource* g_occReadbackBuffer;
-UINT64* g_occReadbackPtr;
-d912pxy_query_occlusion* g_occWriteStack[PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME];
+d912pxy_query_occlusion_gpu_stack g_gpuStack[2];
+UINT32 g_writeStack;
 
 #define PXY_OCCLUSION_TYPE D3D12_QUERY_TYPE_OCCLUSION
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_QUERY_OCCLUSION
 
 d912pxy_query_occlusion::d912pxy_query_occlusion(d912pxy_device* dev, D3DQUERYTYPE Type) : d912pxy_query(dev, Type)
 {
+	queryResult = 1;
 }
 
 
@@ -69,20 +73,18 @@ D912PXY_METHOD_IMPL(Issue)(THIS_ DWORD dwIssueFlags)
 
 	if (dwIssueFlags & D3DISSUE_BEGIN)
 	{
-		if (!g_occQueryFrameIdx)
-			d912pxy_s(iframe)->StateSafeFlush(0);
-
-		if (g_occQueryFrameIdx >= PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME)
+		if (g_gpuStack[g_writeStack].count >= PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME)
 			FlushQueryStack();			
 
 		queryFinished = 0;
-		frameIdx = g_occQueryFrameIdx;
+		frameIdx = g_gpuStack[g_writeStack].count;
 		d912pxy_s(CMDReplay)->QueryMark(this, 1);		
-		g_occWriteStack[g_occQueryFrameIdx] = this;
-		++g_occQueryFrameIdx;
+		g_gpuStack[g_writeStack].stack[frameIdx] = this;
+		ThreadRef(1);
+		++g_gpuStack[g_writeStack].count;
 	}
 	else {
-		d912pxy_s(CMDReplay)->QueryMark(this, 0);		
+		d912pxy_s(CMDReplay)->QueryMark(this, 0);			
 	}
 
 	API_OVERHEAD_TRACK_END(0)
@@ -96,22 +98,14 @@ D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFla
 
 	API_OVERHEAD_TRACK_START(0)
 
-	if (forcedRet)
-	{
-		if (dwSize == 4)		
-			((DWORD*)pData)[0] = forcedRet-1;							
-	}
-	else {
+	if (!queryFinished)		
+		FlushQueryStack();		
 
-		if (g_occQueryFrameIdx && !queryFinished)		
-			FlushQueryStack();		
-
-		((DWORD*)pData)[0] = queryResult;				
-	}
+	((DWORD*)pData)[0] = queryResult;				
 
 	API_OVERHEAD_TRACK_END(0)
 
-	return S_OK;
+	return queryFinished ? S_OK : S_FALSE;
 }
 
 #undef D912PXY_METHOD_IMPL_CN
@@ -128,7 +122,7 @@ void d912pxy_query_occlusion::QueryMark(UINT start, ID3D12GraphicsCommandList * 
 		//cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, frameIdx, 1, g_occReadbackBuffer->GetD12Obj(), frameIdx*8);
 		break;
 	case 2:
-		cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, 0, g_occQueryFrameIdx, g_occReadbackBuffer->GetD12Obj(), 0);
+		//cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, 0, g_occQueryFrameIdx, g_occReadbackBuffer->GetD12Obj(), 0);
 		break;
 	default:
 		LOG_ERR_THROW2(-1, "wrong occ query mark");
@@ -136,23 +130,47 @@ void d912pxy_query_occlusion::QueryMark(UINT start, ID3D12GraphicsCommandList * 
 }
 
 void d912pxy_query_occlusion::FlushQueryStack()
-{
-	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
-	
-	cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, 0, g_occQueryFrameIdx, g_occReadbackBuffer->GetD12Obj(), 0);
-	
-	d912pxy_s(iframe)->StateSafeFlush(1);
+{	
+	d912pxy_query_occlusion_gpu_stack* writeStack = &g_gpuStack[g_writeStack];
 
-	LOG_ERR_THROW2(g_occReadbackBuffer->GetD12Obj()->Map(0, 0, (void**)&g_occReadbackPtr), "occ query flush map failed");
+	if (writeStack->count)
+	{
+		ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
 
-	for (int i = 0; i != g_occQueryFrameIdx; ++i)
-	{		
-		g_occWriteStack[i]->SetQueryResult((UINT32)g_occReadbackPtr[i]);
+		cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, 0, writeStack->count, writeStack->readbackBuffer->GetD12Obj(), 0);
+
+		//megai2: maybe state safe have something that is not transferred, or maybe i miss something on index tracking
+		//but buffered write-read creates flicker
+
+		//megai2: this is for buffered write-read of query results
+
+		//d912pxy_s(iframe)->StateSafeFlush(0); 
+
+		//megai2: this if for not buffered
+
+		d912pxy_s(iframe)->StateSafeFlush(1);
+		g_writeStack = !g_writeStack;
 	}
 
-	g_occReadbackBuffer->GetD12Obj()->Unmap(0, 0);
+	d912pxy_query_occlusion_gpu_stack* readStack = &g_gpuStack[!g_writeStack];
 
-	g_occQueryFrameIdx = 0;	
+	if (readStack->count)
+	{
+		UINT64* readbackPtr;
+
+		LOG_ERR_THROW2(readStack->readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&readbackPtr), "occ query flush map failed");
+
+		for (int i = 0; i != readStack->count; ++i)
+		{
+			readStack->stack[i]->SetQueryResult((UINT32)readbackPtr[i]);
+		}
+
+		readStack->readbackBuffer->GetD12Obj()->Unmap(0, 0);
+
+		readStack->count = 0;
+	}
+
+	g_writeStack = !g_writeStack;
 }
 
 UINT d912pxy_query_occlusion::InitOccQueryEmulation()
@@ -163,18 +181,28 @@ UINT d912pxy_query_occlusion::InitOccQueryEmulation()
 	if (FAILED(d912pxy_s(DXDev)->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&g_occQueryHeap))))
 		return 1;
 
-	g_occReadbackBuffer = new d912pxy_resource(d912pxy_s(dev), RTID_RB_BUF, L"readback buffer");
-	g_occReadbackBuffer->d12res_readback_buffer(8*PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME);
+	for (int i = 0; i != 2; ++i)
+	{
+		g_gpuStack[i].readbackBuffer = new d912pxy_resource(d912pxy_s(dev), RTID_RB_BUF, L"query readback buffer");
+		g_gpuStack[i].readbackBuffer->d12res_readback_buffer(8 * PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME);
+		g_gpuStack[i].count = 0;		
+	}
+
+	g_writeStack = 0;
 
 	return 0;
 }
 
 void d912pxy_query_occlusion::DeInitOccQueryEmulation()
 {
-	if (g_occQueryHeap)
+	if (!g_occQueryHeap)
+		return;
+
+	g_occQueryHeap->Release();
+
+	for (int i = 0; i != 2; ++i)		
 	{
-		g_occQueryHeap->Release();
-		g_occReadbackBuffer->Release();
+		g_gpuStack[i].readbackBuffer->Release();
 	}
 }
 
@@ -182,6 +210,7 @@ void d912pxy_query_occlusion::SetQueryResult(UINT32 v)
 {
 	queryResult = v;
 	queryFinished = 1;
+	ThreadRef(-1);
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE
