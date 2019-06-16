@@ -22,39 +22,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+#pragma once
 #include "stdafx.h"
 
-d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, const DWORD * fun) : d912pxy_shader(dev, L"pshader", fun)
+class d912pxy_query_occlusion : public d912pxy_query
 {
+public:
+	d912pxy_query_occlusion(d912pxy_device* dev, D3DQUERYTYPE Type);
+	~d912pxy_query_occlusion();
 
-}
+	/*** IUnknown methods ***/
+	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
+	D912PXY_METHOD_(ULONG, AddRef)(THIS);
+	D912PXY_METHOD_(ULONG, Release)(THIS);
 
-d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, d912pxy_shader_uid uid) : d912pxy_shader(dev, L"pshader", uid, 0)
-{
-}
+	/*** IDirect3DQuery9 methods ***/
+	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
+	D912PXY_METHOD_(D3DQUERYTYPE, GetType)(THIS);
+	D912PXY_METHOD_(DWORD, GetDataSize)(THIS);
+	D912PXY_METHOD(Issue)(THIS_ DWORD dwIssueFlags);
+	D912PXY_METHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);	
 
-d912pxy_pshader::~d912pxy_pshader()
-{
-}
+	void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
 
-#define D912PXY_METHOD_IMPL_CN d912pxy_pshader
+	void FlushQueryStack();
 
-D912PXY_IUNK_IMPL
+	static UINT InitOccQueryEmulation();
+	static void FreePendingQueryObjects();
+	static void DeInitOccQueryEmulation();	
+	static UINT32 bufferedReadback;
 
-/*** IDirect3DVertexShader9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice)
-{
-	return d912pxy_shader::GetDevice(ppDevice);
-}
 
-D912PXY_METHOD_IMPL(GetFunction)(THIS_ void* arg, UINT* pSizeOfData)
-{
-	return d912pxy_shader::GetFunction(arg, pSizeOfData);
-}
+private:
+	void SetQueryResult(UINT32 v);
 
-D912PXY_METHOD_IMPL_(ULONG, ReleaseWithPairRemoval)(IDirect3DPixelShader9* thisPtr)
-{
-	return ((d912pxy_shader*)((d912pxy_pshader*)thisPtr))->ReleaseWithPairRemoval();
-}
+	UINT32 queryResult;
+	UINT32 queryFinished;
+	UINT32 frameIdx;
+};
 
-#undef D912PXY_METHOD_IMPL_CN

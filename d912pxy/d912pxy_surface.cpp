@@ -214,12 +214,20 @@ void d912pxy_surface::ClearAsRTV(FLOAT * color4f, ID3D12GraphicsCommandList * cl
 	const float* cc4f;
 	cc4f = color4f;
 
+	PIXBeginEvent(cl, 0, "Clear RT");
+
 	cl->ClearRenderTargetView(rtdsHPtr, cc4f, 1, (const D3D12_RECT*)clearRect);
+
+	PIXEndEvent(cl);
 }
 
 void d912pxy_surface::ClearAsDSV(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList * cl, D3D12_RECT* clearRect)
 {
+	PIXBeginEvent(cl, 0, "Clear DS");
+
 	cl->ClearDepthStencilView(rtdsHPtr, flag, Depth, Stencil, 1, (const D3D12_RECT*)clearRect);
+
+	PIXEndEvent(cl);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE d912pxy_surface::GetDHeapHandle()
@@ -469,7 +477,7 @@ void d912pxy_surface::CopySurfaceDataToCPU()
 	cl->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
 	BTransit(0, stateCache, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
 		
-	d912pxy_s(iframe)->StateSafeFlush();
+	d912pxy_s(iframe)->StateSafeFlush(1);
 
 	intptr_t GPUdata = NULL;
 	LOG_ERR_THROW2(readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&GPUdata), "CopySurfaceDataToCPU map error");
@@ -763,7 +771,7 @@ void d912pxy_surface::UploadSurfaceData(d912pxy_upload_item* inUl, UINT lv, ID3D
 	
 	BTransit(lv, D3D12_RESOURCE_STATE_COPY_DEST, stateCache, cl);
 	cl->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
-	BTransit(lv, stateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);	
+	BTransit(lv, stateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);		
 }
 
 D3DSURFACE_DESC d912pxy_surface::GetDX9DescAtLevel(UINT level)

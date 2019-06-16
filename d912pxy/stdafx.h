@@ -101,6 +101,7 @@ SOFTWARE.
 #include "d912pxy_shader_db.h"
 #include "d912pxy_shader_pair.h"
 #include "d912pxy_query.h"
+#include "d912pxy_query_occlusion.h"
 #include "d912pxy_dheap.h"
 #include "d912pxy_cbuffer.h"
 #include "d912pxy_gpu_cleanup_thread.h"
@@ -116,6 +117,8 @@ SOFTWARE.
 #include "d912pxy_replay_thread.h"
 #include "d912pxy_replay.h"
 #include "d912pxy_replay_passthru.h"
+#include "d912pxy_draw_up.h"
+#include "d912pxy_surface_clear.h"
 #include "d912pxy_device.h"
 
 #include "frame_analyzer.h"

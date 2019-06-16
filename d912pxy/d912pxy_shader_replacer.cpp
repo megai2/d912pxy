@@ -229,14 +229,6 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 
 		if (saveSource)
 		{
-#ifdef _DEBUG
-			FILE* tOf = fopen(replFn, "wb+");
-			if (tOf)
-			{
-				fwrite(imem, 1, size, tOf);
-				fclose(tOf);
-			}
-#endif
 			d912pxy_s(vfs)->WriteFileH(mUID, imem, size, PXY_VFS_BID_SHADER_SOURCES);
 		}
 
@@ -293,13 +285,14 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 
 	if (!ret.code)
 	{
-		if (oCode == NULL)
-		{
+		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_custom_dir, 1);
+
+		if ((oCode == NULL) && (ret.code == NULL))
+		{			
 			ret.code = NULL;
 			return ret;
-		}
+		} 
 
-		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_custom_dir, 1);
 		if (!ret.code)
 		{
 			d912pxy_hlsl_generator_memout* genRet = GenerateHLSL(d912pxy_shader_db_hlsl_dir);

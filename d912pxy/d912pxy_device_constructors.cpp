@@ -190,7 +190,14 @@ HRESULT WINAPI d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** 
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppQuery = (IDirect3DQuery9*)new d912pxy_query(this, Type);
+	switch (Type)
+	{
+		case D3DQUERYTYPE_OCCLUSION:
+			*ppQuery = (IDirect3DQuery9*)new d912pxy_query_occlusion(this, Type);
+			break;
+		default:
+			*ppQuery = (IDirect3DQuery9*)new d912pxy_query(this, Type);
+	}
 
 	API_OVERHEAD_TRACK_END(0)
 

@@ -242,9 +242,10 @@ d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * 
 
 	LoadGenProfile();
 
+#ifdef _DEBUG
 	LOG_DBG_DTDM("generating hlsl file %s", ofn);
-
 	of = _wfopen(ofn, L"wb");
+#endif
 
 	procOffsetPredef = d912pxy_hlsl_generator_proc_predef_offset;
 	headerOffsetI = 0;
@@ -252,12 +253,16 @@ d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * 
 	procOffset = d912pxy_hlsl_generator_proc_offset;
 	ZeroMemory(lines, sizeof(char*) * d912pxy_hlsl_generator_max_code_lines);
 	ZeroMemory(regDefined, 8 * ((D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN));
+	ZeroMemory(regDefinedAsC, 8 * ((D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN));
+	relLookupDefined = 0;
 }
 
 d912pxy_hlsl_generator::~d912pxy_hlsl_generator()
 {
+#ifdef _DEBUG
 	fflush(of);
 	fclose(of);
+#endif
 }
 
 d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::Process(UINT toMemory)
@@ -391,54 +396,130 @@ d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatSrcRegister(DWORD* 
 
 		DWORD regAdr = regA[wOfs+1];
 		UINT64 swizzleAdr = GetSwizzleStr(regAdr, 1);
-		
-		switch (GetSrcMod(reg))
-		{
-		case D3DSPSM_NONE:
-			//c23[a0.x].swizzle => getPassedVSFv(23 + a0.x).swizzle
-			sprintf(ret.t, "getPassed%sSFv(%u+%s%u%s)%s",
-				constType,
-				GetRegNumber(reg),
-				GetRegTypeStr(regAdr, 1),
-				GetRegNumber(regAdr),
-				(char*)&swizzleAdr,
-				(char*)&swizzle
-			);
-			break;
-		case D3DSPSM_NEG:
-			sprintf(ret.t, "-getPassed%sSFv(%u+%s%u%s)%s",
-				constType,
-				GetRegNumber(reg),
-				GetRegTypeStr(regAdr, 1),
-				GetRegNumber(regAdr),
-				(char*)&swizzleAdr,
-				(char*)&swizzle
-			);
-			break;
-		case D3DSPSM_ABS:
-			sprintf(ret.t, "abs(getPassed%sSFv(%u+%s%u%s)%s)",
-				constType,
-				GetRegNumber(reg),
-				GetRegTypeStr(regAdr, 1),
-				GetRegNumber(regAdr),
-				(char*)&swizzleAdr,
-				(char*)&swizzle
-			);
-			break;
-		case D3DSPSM_ABSNEG:
-			sprintf(ret.t, "-abs(getPassed%sSFv(%u+%s%u%s)%s)",
-				constType,
-				GetRegNumber(reg),
-				GetRegTypeStr(regAdr, 1),
-				GetRegNumber(regAdr),
-				(char*)&swizzleAdr,
-				(char*)&swizzle
-			);
-			break;
-		default:
-			LOG_ERR_DTDM("hlsl generator not support %08lX src modifier", GetSrcMod(reg));
-			LOG_ERR_THROW2(-1, "hlsl generator not support passed src modifier");
-			break;
+
+		//megai2: base index of relative adressed register is defined in constants
+		//so we need to make copy of constants from zero rel. index to max found in code (at least)
+		if (IsRegDefined(reg, 0) == 2)
+		{	
+			UINT baseRelNum = GetRegNumber(reg);
+			if (!relLookupDefined)
+			{				
+				UINT relArrSz = 0;
+				for (int i = 0; i != 255 - baseRelNum; ++i)
+				{
+					if (IsRegDefined(reg, i))
+						++relArrSz;
+					else
+						break;//megai2: stop on first fail for now
+				}
+
+				HLSL_GEN_WRITE_PROC("float4 reg_consts_rel[%u] = { ", relArrSz);
+
+				for (int i = 0; i != relArrSz; ++i)
+				{
+					if (i + 1 == relArrSz)
+						HLSL_GEN_WRITE_PROC("	%s%u };", GetRegTypeStr(reg, 1), i + baseRelNum);
+					else
+						HLSL_GEN_WRITE_PROC("	%s%u,", GetRegTypeStr(reg, 1), i + baseRelNum);
+				}
+
+				relLookupDefined = baseRelNum;
+			}			
+
+			if (relLookupDefined != baseRelNum)
+				LOG_ERR_THROW2(-1, "reg_consts_rel go wrong 1");
+
+			switch (GetSrcMod(reg))
+			{
+			case D3DSPSM_NONE:
+				//c23[a0.x].swizzle => getPassedVSFv(23 + a0.x).swizzle
+				sprintf(ret.t, "reg_consts_rel[%s%u%s]%s",
+					GetRegTypeStr(regAdr, 1),
+					GetRegNumber(regAdr),
+					(char*)&swizzleAdr,
+					(char*)&swizzle
+				);
+				break;
+			case D3DSPSM_NEG:
+				sprintf(ret.t, "-reg_consts_rel[%s%u%s]%s",
+					GetRegTypeStr(regAdr, 1),
+					GetRegNumber(regAdr),
+					(char*)&swizzleAdr,
+					(char*)&swizzle
+				);
+				break;
+			case D3DSPSM_ABS:
+				sprintf(ret.t, "abs(reg_consts_rel[%s%u%s]%s)",
+					GetRegTypeStr(regAdr, 1),
+					GetRegNumber(regAdr),
+					(char*)&swizzleAdr,
+					(char*)&swizzle
+				);
+				break;
+			case D3DSPSM_ABSNEG:
+				sprintf(ret.t, "-abs(reg_consts_rel[%s%u%s]%s)",
+					GetRegTypeStr(regAdr, 1),
+					GetRegNumber(regAdr),
+					(char*)&swizzleAdr,
+					(char*)&swizzle
+				);
+				break;
+			default:
+				LOG_ERR_DTDM("hlsl generator not support %08lX src modifier", GetSrcMod(reg));
+				LOG_ERR_THROW2(-1, "hlsl generator not support passed src modifier");
+				break;
+			}
+		}
+		else {
+
+			switch (GetSrcMod(reg))
+			{
+			case D3DSPSM_NONE:
+				//c23[a0.x].swizzle => getPassedVSFv(23 + a0.x).swizzle
+				sprintf(ret.t, "getPassed%sSFv(%u+%s%u%s)%s",
+					constType,
+					GetRegNumber(reg),
+					GetRegTypeStr(regAdr, 1),
+					GetRegNumber(regAdr),
+					(char*)&swizzleAdr,
+					(char*)&swizzle
+				);
+				break;
+			case D3DSPSM_NEG:
+				sprintf(ret.t, "-getPassed%sSFv(%u+%s%u%s)%s",
+					constType,
+					GetRegNumber(reg),
+					GetRegTypeStr(regAdr, 1),
+					GetRegNumber(regAdr),
+					(char*)&swizzleAdr,
+					(char*)&swizzle
+				);
+				break;
+			case D3DSPSM_ABS:
+				sprintf(ret.t, "abs(getPassed%sSFv(%u+%s%u%s)%s)",
+					constType,
+					GetRegNumber(reg),
+					GetRegTypeStr(regAdr, 1),
+					GetRegNumber(regAdr),
+					(char*)&swizzleAdr,
+					(char*)&swizzle
+				);
+				break;
+			case D3DSPSM_ABSNEG:
+				sprintf(ret.t, "-abs(getPassed%sSFv(%u+%s%u%s)%s)",
+					constType,
+					GetRegNumber(reg),
+					GetRegTypeStr(regAdr, 1),
+					GetRegNumber(regAdr),
+					(char*)&swizzleAdr,
+					(char*)&swizzle
+				);
+				break;
+			default:
+				LOG_ERR_DTDM("hlsl generator not support %08lX src modifier", GetSrcMod(reg));
+				LOG_ERR_THROW2(-1, "hlsl generator not support passed src modifier");
+				break;
+			}
 		}
 	}
 	else {
@@ -1039,7 +1120,7 @@ void d912pxy_hlsl_generator::CheckRegDefinition(DWORD op, UINT isDst)
 	}
 }
 
-void d912pxy_hlsl_generator::DefineIOReg(DWORD op)
+void d912pxy_hlsl_generator::DefineIOReg(DWORD op, UINT asConstant)
 {
 	UINT type = GetRegType(op);
 	UINT num = GetRegNumber(op);
@@ -1047,6 +1128,17 @@ void d912pxy_hlsl_generator::DefineIOReg(DWORD op)
 	UINT ai = type * (D3DSPR_PREDICATE + 1) + (num >> 6);
 	UINT64 rm = 1ULL << (num & 0x3F);
 	regDefined[ai] |= rm;
+	regDefinedAsC[ai] |= (rm * asConstant);
+}
+
+int d912pxy_hlsl_generator::IsRegDefined(DWORD op, UINT numOffset)
+{
+	UINT type = GetRegType(op);
+	UINT num = GetRegNumber(op) + numOffset;
+
+	UINT ai = type * (D3DSPR_PREDICATE + 1) + (num >> 6);
+	UINT64 rm = 1ULL << (num & 0x3F);
+	return ((regDefined[ai] & rm) != 0) * (1 + ((regDefinedAsC[ai] & rm) != 0));
 }
 
 void d912pxy_hlsl_generator::LoadGenProfile()
@@ -1213,8 +1305,13 @@ d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::WriteOutput(UINT toMemory
 		PXY_FREE(ret);
 		return 0;
 	}
-	else
+	else {
+#ifdef _DEBUG
+		fwrite(&ret->data[0], 1, outputSz, of);
+#endif
+
 		return ret;
+	}
 }
 
 void d912pxy_hlsl_generator::ProcSIO_DEF(DWORD * op)
@@ -1228,7 +1325,7 @@ void d912pxy_hlsl_generator::ProcSIO_DEF(DWORD * op)
 	if (wm != 0xF)
 		LOG_ERR_THROW2(-1, "hlsl gen stuck");
 
-	DefineIOReg(op[1]);
+	DefineIOReg(op[1], 1);
 
 	switch (reg)
 	{
@@ -1284,7 +1381,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 	
 	LOG_DBG_DTDM("DCL of %S%u", d912pxy_hlsl_generator_reg_names[dstReg], regNum);
 
-	DefineIOReg(op[2]);
+	DefineIOReg(op[2], 0);
 	
 	if (isPS)
 	{

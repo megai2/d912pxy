@@ -46,6 +46,32 @@ HRESULT WINAPI d912pxy_device::SetStreamSource(UINT StreamNumber, IDirect3DVerte
 	return D3D_OK; 
 }
 
+HRESULT __stdcall d912pxy_device::SetStreamSource_CAR(IDirect3DDevice9 * self, UINT StreamNumber, IDirect3DVertexBuffer9 * pStreamData, UINT OffsetInBytes, UINT Stride)
+{
+	API_OVERHEAD_TRACK_START(0)
+
+	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
+		return D3DERR_INVALIDCALL;
+
+	d912pxy_s(iframe)->SetVBufIfChanged((d912pxy_vstream*)pStreamData, StreamNumber, OffsetInBytes, Stride);
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
+HRESULT __stdcall d912pxy_device::SetIndices_CAR(IDirect3DDevice9 * self, IDirect3DIndexBuffer9 * pIndexData)
+{
+	API_OVERHEAD_TRACK_START(0)
+
+	if (pIndexData)
+		d912pxy_s(iframe)->SetIBufIfChanged(d912pxy_vstream_from_index(pIndexData));
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
 HRESULT WINAPI d912pxy_device::SetStreamSourceFreq(UINT StreamNumber, UINT Divider)
 { 
 	API_OVERHEAD_TRACK_START(0)

@@ -204,6 +204,10 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	switch (State)
 	{
+	case D3DRS_STENCILREF:
+		d912pxy_s(CMDReplay)->OMStencilRef(Value);
+		DX9RSvalues[State] = Value;
+		break; //57,   /* Reference value used in stencil test */
 	case D3DRS_SCISSORTESTENABLE:
 		if (Value)
 			d912pxy_s(iframe)->RestoreScissor();
@@ -292,36 +296,11 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		//FIXME! must set this to all active RT's somewhere
 		break; //27,   /* TRUE to enable alpha blending */
 
-	case D3DRS_STENCILENABLE:
-		cDsc.DepthStencilState.StencilEnable = (UINT8)Value;
-		break; //52,   /* BOOL enable/disable stenciling */
-
-	case D3DRS_STENCILFAIL:
-		cDsc.DepthStencilState.FrontFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
-		break; //53,   /* D3DSTENCILOP to do if stencil test fails */
-
-	case D3DRS_STENCILZFAIL:
-		cDsc.DepthStencilState.FrontFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
-		break; //54,   /* D3DSTENCILOP to do if stencil test passes and Z test fails */
-
-	case D3DRS_STENCILPASS:
-		cDsc.DepthStencilState.FrontFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
-		break; //55,   /* D3DSTENCILOP to do if both stencil and Z tests pass */
-
-	case D3DRS_STENCILFUNC:
-		cDsc.DepthStencilState.FrontFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
-		break; //56,   /* D3DCMPFUNC fn.  Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true */
-
-	case D3DRS_STENCILMASK:
-		cDsc.DepthStencilState.StencilReadMask = Value & 0xFF;
-		break; //58,   /* Mask value used in stencil test */
-
-	case D3DRS_STENCILWRITEMASK:
-		cDsc.DepthStencilState.StencilWriteMask = Value & 0xFF;
-		break; //59,   /* Write mask applied to values written to stencil buffer */
-
 	case D3DRS_COLORWRITEENABLE:
-		cDsc.BlendStateRT0.RenderTargetWriteMask = Value & 0xF;
+		{
+			d912pxy_s(iframe)->OptimizeZeroWriteRT(Value);
+			cDsc.BlendStateRT0.RenderTargetWriteMask = Value & 0xF;
+		}		
 		break; //168,  // per-channel write enable
 	case D3DRS_COLORWRITEENABLE1: 
 	case D3DRS_COLORWRITEENABLE2: 
@@ -342,25 +321,92 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		cDsc.RasterizerState.AntialiasedLineEnable = (UINT8)Value;
 		break; //176,
 
+	//stencil
+	case D3DRS_STENCILMASK:
+		cDsc.DepthStencilState.StencilReadMask = Value & 0xFF;
+		break; //58,   /* Mask value used in stencil test */
+
+	case D3DRS_STENCILWRITEMASK:
+		cDsc.DepthStencilState.StencilWriteMask = Value & 0xFF;
+		break; //59,   /* Write mask applied to values written to stencil buffer */
+
+	case D3DRS_STENCILENABLE:
+		cDsc.DepthStencilState.StencilEnable = (UINT8)Value;
+		break; //52,   /* BOOL enable/disable stenciling */
+
 	case D3DRS_TWOSIDEDSTENCILMODE:
-		LOG_DBG_DTDM("RS twosided stencil %u / %u", cDsc.DepthStencilState.StencilEnable, Value);//megai2: default stencil uses 2 sides in dx12. tricky!
-		break; //185,   /* BOOL enable/disable 2 sided stenciling */
+	{
+		LOG_DBG_DTDM("RS twosided stencil %u / %u", cDsc.DepthStencilState.StencilEnable, Value);
+		DX9RSvalues[State] = Value;
+		if (!Value)
+		{
+			cDsc.DepthStencilState.BackFace.StencilPassOp = (UINT8)DX9RSvalues[D3DRS_STENCILPASS];
+			cDsc.DepthStencilState.BackFace.StencilFailOp = (UINT8)DX9RSvalues[D3DRS_STENCILFAIL];
+			cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (UINT8)DX9RSvalues[D3DRS_STENCILZFAIL];
+			cDsc.DepthStencilState.BackFace.StencilFunc = (UINT8)DX9RSvalues[D3DRS_STENCILFUNC];
+		}
+		else {
+			cDsc.DepthStencilState.BackFace.StencilFailOp = (UINT8)DX9RSvalues[D3DRS_CCW_STENCILFAIL];
+			cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (UINT8)DX9RSvalues[D3DRS_CCW_STENCILZFAIL];
+			cDsc.DepthStencilState.BackFace.StencilPassOp = (UINT8)DX9RSvalues[D3DRS_CCW_STENCILPASS];
+			cDsc.DepthStencilState.BackFace.StencilFunc = (UINT8)DX9RSvalues[D3DRS_CCW_STENCILFUNC];
+			cDsc.DepthStencilState.StencilEnable = 1;
+		}
+	}
+	break; //185,   /* BOOL enable/disable 2 sided stenciling */
+
+	case D3DRS_STENCILFAIL:
+		cDsc.DepthStencilState.FrontFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
+		if (!DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
+		break; //53,   /* D3DSTENCILOP to do if stencil test fails */
+
+	case D3DRS_STENCILZFAIL:
+		cDsc.DepthStencilState.FrontFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
+		if (!DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
+		break; //54,   /* D3DSTENCILOP to do if stencil test passes and Z test fails */
+
+	case D3DRS_STENCILPASS:
+		cDsc.DepthStencilState.FrontFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
+		if (!DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
+		break; //55,   /* D3DSTENCILOP to do if both stencil and Z tests pass */
+
+	case D3DRS_STENCILFUNC:
+		cDsc.DepthStencilState.FrontFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
+		if (!DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
+		DX9RSvalues[State] = Value;
+		break; //56,   /* D3DCMPFUNC fn.  Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true */
 
 	case D3DRS_CCW_STENCILFAIL:
-		cDsc.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
+		if (DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
 		break; //186,   /* D3DSTENCILOP to do if ccw stencil test fails */
 
 	case D3DRS_CCW_STENCILZFAIL:
-		cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
+		if (DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
 		break; //187,   /* D3DSTENCILOP to do if ccw stencil test passes and Z test fails */
 
 	case D3DRS_CCW_STENCILPASS:
-		cDsc.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
+		if (DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
 		break; //188,   /* D3DSTENCILOP to do if both ccw stencil and Z tests pass */
 
 	case D3DRS_CCW_STENCILFUNC:
-		cDsc.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
+		if (DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
+		DX9RSvalues[State] = Value;
 		break; //189,   /* D3DCMPFUNC fn.  ccw Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true */
+
 	case D3DRS_SRGBWRITEENABLE:
 		DX9RSvalues[State] = Value;
 		//d912pxy_s(iframe)->TST()->SetTexStage(29, Value);
@@ -370,6 +416,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	{
 		int depthMul;
 		depthMul = (1 << 23) - 1;
+	
 		INT fixVal = (INT)(*(float*)&Value * depthMul);
 		cDsc.RasterizerState.DepthBias = fixVal;
 		break; //195,
@@ -1175,8 +1222,8 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	fwrite(shdSrc[1], 1, shdSrcSz[1], tf);
 	fclose(tf);*/
 
-	d912pxy_shader_replacer* replVS = new d912pxy_shader_replacer(0, 0, 0, 1);
-	d912pxy_shader_replacer* replPS = new d912pxy_shader_replacer(0, 0, 0, 0);
+	d912pxy_shader_replacer* replVS = new d912pxy_shader_replacer(0, 0, desc->VS->GetID(), 1);
+	d912pxy_shader_replacer* replPS = new d912pxy_shader_replacer(0, 0, desc->PS->GetID(), 0);
 
 	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, shdSrc[0], shdSrcSz[0], 0);
 	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, shdSrc[1], shdSrcSz[1], 0);

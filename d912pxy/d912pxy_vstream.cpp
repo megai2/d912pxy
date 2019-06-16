@@ -232,8 +232,8 @@ void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12Grap
 	}
 	
 	UploadDataCopy(ulObj->DPtr() + linfo->offset, linfo->offset, linfo->size);
-
-	ulObj->UploadTargetWithOffset(this, linfo->offset, linfo->offset, linfo->size, cl);
+	
+	ulObj->UploadTargetWithOffset(this, linfo->offset, linfo->offset, linfo->size, cl);	
 }
 
 void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)

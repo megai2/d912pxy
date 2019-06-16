@@ -43,10 +43,14 @@ public:
 	D912PXY_METHOD(Issue)(THIS_ DWORD dwIssueFlags);
 	D912PXY_METHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
 
-	static D912PXY_METHOD(GetDataZeroOverride)(IDirect3DQuery9* self, void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	virtual void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
 
-private:
-	
+	static D912PXY_METHOD(GetDataZeroOverride)(IDirect3DQuery9* self, void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	static D912PXY_METHOD(GetDataOneOverride)(IDirect3DQuery9* self, void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	static D912PXY_METHOD(IssueNOP)(IDirect3DQuery9* self, DWORD dwIssueFlags);
+
+private:	
 	D3DQUERYTYPE m_type;
+	DWORD m_state;
 };
 

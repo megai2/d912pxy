@@ -75,4 +75,34 @@ HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
 	return D3D_OK;
 }
 
+HRESULT __stdcall d912pxy_device::SetViewport_CAR(IDirect3DDevice9 * self, const D3DVIEWPORT9 * pViewport)
+{
+	API_OVERHEAD_TRACK_START(0)
+
+	D3D12_VIEWPORT main_viewport;
+	main_viewport.Height = pViewport->Height * 1.0f;
+	main_viewport.Width = pViewport->Width * 1.0f;
+	main_viewport.TopLeftX = pViewport->X * 1.0f;
+	main_viewport.TopLeftY = pViewport->Y * 1.0f;
+	main_viewport.MaxDepth = pViewport->MaxZ;
+	main_viewport.MinDepth = pViewport->MinZ;
+
+	d912pxy_s(iframe)->SetViewportIfChanged(&main_viewport);
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
+HRESULT __stdcall d912pxy_device::SetScissorRect_CAR(IDirect3DDevice9 * self, const RECT * pRect)
+{
+	API_OVERHEAD_TRACK_START(0)
+
+	d912pxy_s(iframe)->SetScissorsIfChanged((D3D12_RECT*)pRect);
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

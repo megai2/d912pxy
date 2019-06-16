@@ -41,9 +41,6 @@
     <ClCompile Include="d912pxy_device_shaders.cpp">
       <Filter>d3d9_impl\device</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_device_surface.cpp">
-      <Filter>d3d9_impl\device</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_device_streams.cpp">
       <Filter>d3d9_impl\device</Filter>
     </ClCompile>
@@ -179,9 +176,6 @@
     <ClCompile Include="d912pxy_swapchain.cpp">
       <Filter>d3d9_impl</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_query.cpp">
-      <Filter>d3d9_impl</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_vdecl.cpp">
       <Filter>d3d9_impl</Filter>
     </ClCompile>
@@ -238,6 +232,21 @@
     </ClCompile>
     <ClCompile Include="d912pxy_resource.cpp">
       <Filter>d3d9_impl\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_draw_up.cpp">
+      <Filter>d3d9_impl\device\emulated</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_surface_clear.cpp">
+      <Filter>d3d9_impl\device\emulated</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_device_surface.cpp">
+      <Filter>d3d9_impl\device</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_query.cpp">
+      <Filter>d3d9_impl\query</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_query_occlusion.cpp">
+      <Filter>d3d9_impl\query</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -390,9 +399,6 @@
     <ClInclude Include="d912pxy_swapchain.h">
       <Filter>d3d9_impl</Filter>
     </ClInclude>
-    <ClInclude Include="d912pxy_query.h">
-      <Filter>d3d9_impl</Filter>
-    </ClInclude>
     <ClInclude Include="d912pxy_vdecl.h">
       <Filter>d3d9_impl</Filter>
     </ClInclude>
@@ -452,6 +458,18 @@
     </ClInclude>
     <ClInclude Include="..\thirdparty\renderdoc_app.h">
       <Filter>utils\3rd_party</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_draw_up.h">
+      <Filter>d3d9_impl\device\emulated</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_surface_clear.h">
+      <Filter>d3d9_impl\device\emulated</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_query.h">
+      <Filter>d3d9_impl\query</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_query_occlusion.h">
+      <Filter>d3d9_impl\query</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -523,6 +541,12 @@
     </Filter>
     <Filter Include="d3d9_impl\resource\upload">
       <UniqueIdentifier>{07d6b711-ec36-4432-a583-4c51da3d9cb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\device\emulated">
+      <UniqueIdentifier>{2d60883d-a18c-4835-8481-1b5555d7ab69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\query">
+      <UniqueIdentifier>{42305daf-7f33-4542-aded-6b0be1c43cb2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

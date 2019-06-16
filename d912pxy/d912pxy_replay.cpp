@@ -79,6 +79,8 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 	replay_handlers[DRPL_RPSF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSF;
 	replay_handlers[DRPL_CPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_CPSO;
 	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;	
+	replay_handlers[DRPL_PRMT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_PRMT;
+	replay_handlers[DRPL_QUMA] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_QUMA;
 
 	if (numThreads > 1)
 	{
@@ -261,6 +263,25 @@ void d912pxy_replay::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 	REPLAY_STACK_INCREMENT;
 }
 
+void d912pxy_replay::QueryMark(d912pxy_query * va, UINT start)
+{
+	REPLAY_STACK_GET(DRPL_QUMA);
+
+	it->queryMark.obj = va;
+	it->queryMark.start = start;
+
+	REPLAY_STACK_INCREMENT;
+}
+
+void d912pxy_replay::PrimTopo(D3DPRIMITIVETYPE primType)
+{
+	REPLAY_STACK_GET(DRPL_PRMT);
+
+	it->topo.newTopo = primType;
+
+	REPLAY_STACK_INCREMENT;
+}
+
 void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT* currentVWP)
 {
 	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
@@ -273,6 +294,7 @@ void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT*
 	it->clrRt.clr[2] = clr[1];
 	it->clrRt.clr[3] = clr[0];
 	it->clrRt.tgt = tgt;
+
 	it->clrRt.clearRect.left = (LONG)currentVWP->TopLeftX;
 	it->clrRt.clearRect.top = (LONG)currentVWP->TopLeftY;
 	it->clrRt.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
@@ -294,6 +316,7 @@ void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, 
 	it->clrDs.flag = flag;
 	it->clrDs.stencil = stencil;
 	it->clrDs.tgt = tgt;
+
 	it->clrDs.clearRect.left = (LONG)currentVWP->TopLeftX;
 	it->clrDs.clearRect.top = (LONG)currentVWP->TopLeftY;
 	it->clrDs.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
@@ -322,12 +345,19 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	if (!maxRI)
 		return;
 
+	PIXBeginEvent(cl, 0x88888888, "RP%u", thrd->GetId());
+
 	ID3D12PipelineState* context = NULL;
 
 	if (start > 0)
 	{		
+		PIXBeginEvent(cl, 0x88888888, "RPT%u", thrd->GetId());
 		TransitCLState(cl, start, thrd->GetId(), (void**)&context);
+		PIXEndEvent(cl);
 	}
+
+	PIXBeginEvent(cl, 0x88888888, "OMRT");
+	PIXBeginEvent(cl, 0x88888888, "B");
 	
 	//execute operations
 	while (i != end)
@@ -337,19 +367,38 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 			LOG_DBG_DTDM("RP TY %u %s", i, d912pxy_replay_item_type_dsc[stack[i].type]);
 
 			PlayId(&stack[i], cl, (void**)&context);
+
+#ifdef _DEBUG
+			if (stack[i].type == DRPL_DIIP)
+			{
+				PIXEndEvent(cl);
+				PIXBeginEvent(cl, 0x88888888, "B%u", stack[i].dip.batchId);
+			}
+			else if (stack[i].type == DRPL_OMRT)
+			{
+				PIXEndEvent(cl);
+				PIXEndEvent(cl);
+				PIXBeginEvent(cl, 0x88888888, "OMRT");
+				PIXBeginEvent(cl, 0x88888888, "B");
+			}
+#endif
 			++i;
 		}
 		
 		maxRI = WaitForData(i, maxRI, end, thrd);			
 
 		if (!maxRI)
+		{
+			PIXEndEvent(cl);
 			return;
+		}
 	}
 
 	//megai2: unlock thread only when stopMarker is set
 	while (!InterlockedAdd(&stopMarker, 0))	
 		thrd->WaitForJob();	
 
+	PIXEndEvent(cl);
 }
 
 UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_thread * thrd)
@@ -366,7 +415,9 @@ UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_
 			else
 				break;
 		}		
+		PIXBeginEvent(0xAA0000, "rp thread wait");
 		thrd->WaitForJob();
+		PIXEndEvent();
 	}
 
 	if (maxRI > end)
@@ -646,16 +697,15 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 	if (!*context)
 		return;
 
-	d912pxy_s(batch)->PreDIP(cl, it->batchId & 0xFFFF);
+	d912pxy_s(batch)->PreDIP(cl, it->batchId);
 
-	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)(it->batchId >> 16));
 	cl->DrawIndexedInstanced(
 		it->IndexCountPerInstance,
 		it->InstanceCount,
 		it->StartIndexLocation,
 		it->BaseVertexLocation,
 		it->StartInstanceLocation
-	);
+	);	
 }
 
 void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl, void** unused)
@@ -677,9 +727,12 @@ void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12Graphic
 	}
 
 	if (it->rtv)
+	{		
 		cl->OMSetRenderTargets(1, bindedRTV, 0, bindedDSV);
-	else
-		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);
+	}
+	else {		
+		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);		
+	}
 }
 
 void d912pxy_replay::RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl, void** unused)
@@ -707,8 +760,8 @@ void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommand
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context)
 {
 	ID3D12PipelineState * pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0);
-	
-	if (pso)			
+		
+	if (pso && (*context != pso))					
 		cl->SetPipelineState(pso);	
 
 	*context = pso;
@@ -762,6 +815,16 @@ void d912pxy_replay::RHA_GPUW_MT(d912pxy_replay_gpu_write_control * it, ID3D12Gr
 	gpuw_sync.Hold();
 	RHA_GPUW(gpuw_que->PopElementFast(), cl, unused);
 	gpuw_sync.Release();
+}
+
+void d912pxy_replay::RHA_PRMT(d912pxy_replay_primitive_topology * it, ID3D12GraphicsCommandList * cl, void ** unused)
+{
+	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)it->newTopo);
+}
+
+void d912pxy_replay::RHA_QUMA(d912pxy_replay_query_mark * it, ID3D12GraphicsCommandList * cl, void ** unused)
+{
+	it->obj->QueryMark(it->start, cl);
 }
 
 d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")

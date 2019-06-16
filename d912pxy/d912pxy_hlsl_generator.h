@@ -182,6 +182,7 @@ private:
 	
 	//extra conditional flags
 	UINT8 PSpositionUsed;
+	UINT8 relLookupDefined;
 	
 	//sm block data
 	UINT8 minVer;
@@ -221,9 +222,11 @@ private:
 
 	//megai2: register definition and tracking
 	UINT64 regDefined[(D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN];
+	UINT64 regDefinedAsC[(D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN];
 
 	void CheckRegDefinition(DWORD op, UINT isDst);
-	void DefineIOReg(DWORD op);
+	void DefineIOReg(DWORD op, UINT asConstant);
+	int IsRegDefined(DWORD op, UINT numOffset);
 	
 	static d912pxy_hlsl_generator_sio_handler SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt];	
 };

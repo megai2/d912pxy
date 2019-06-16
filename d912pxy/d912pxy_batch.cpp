@@ -98,6 +98,8 @@ void d912pxy_batch::FrameEnd()
 
 void d912pxy_batch::GPUCSCpy()
 {	
+	PIXBeginEvent(topCl, 0xAA00AA, "CSCpy");
+
 	for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
 	{		
 		streamControl[mDataDltRef[i]].endBatch = batchNum;
@@ -133,12 +135,20 @@ void d912pxy_batch::GPUCSCpy()
 
 	buffer->BTransit(0, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, topCl);
 
+	PIXEndEvent(topCl);
+
 	streamIdx = 0;
 }
 
 void d912pxy_batch::PreDIP(ID3D12GraphicsCommandList* cl, UINT bid)
 {
 	cl->SetGraphicsRootConstantBufferView(3, buffer->DevPtr() + PXY_BATCH_GPU_DRAW_BUFFER_SIZE * bid);
+}
+
+void d912pxy_batch::ClearShaderVars()
+{
+	SetShaderConstF(0, 0, 256, (float*)stateTransfer);
+	SetShaderConstF(1, 0, 256, (float*)stateTransfer);
 }
 
 void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)

@@ -28,21 +28,23 @@ SOFTWARE.
 typedef enum d912pxy_replay_item_type {
 	DRPL_TRAN = 0,
 	DRPL_OMSR = 1,
-	DRPL_OMBF,
-	DRPL_RSVP,
-	DRPL_RSSR,
-	DRPL_DIIP,
-	DRPL_OMRT,
-	DRPL_IFVB,
-	DRPL_IFIB,
-	DRPL_RCLR,
-	DRPL_DCLR,
-	DRPL_RPSO,
-	DRPL_RPSF,
-	DRPL_CPSO,
-	DRPL_RECT,
-	DRPL_GPUW,
-	DRPL_COUNT
+	DRPL_OMBF,//2
+	DRPL_RSVP,//3
+	DRPL_RSSR,//4
+	DRPL_DIIP,//5
+	DRPL_OMRT,//6
+	DRPL_IFVB,//7
+	DRPL_IFIB,//8
+	DRPL_RCLR,//9
+	DRPL_DCLR,//10
+	DRPL_RPSO,//11
+	DRPL_RPSF,//12
+	DRPL_CPSO,//13
+	DRPL_RECT,//14
+	DRPL_GPUW,//15
+	DRPL_PRMT,//16
+	DRPL_QUMA,//17
+	DRPL_COUNT//18
 } d912pxy_replay_item_type;
 
 static const wchar_t* d912pxy_replay_item_type_dsc[] = {
@@ -61,7 +63,9 @@ static const wchar_t* d912pxy_replay_item_type_dsc[] = {
 	L"DRPL_RPSF",
 	L"DRPL_CPSO",
 	L"DRPL_RECT",
-	L"DRPL_GPUW"
+	L"DRPL_GPUW",
+	L"DRPL_PRMT",
+	L"DRPL_QUMA"
 };
 
 typedef struct d912pxy_replay_state_transit {
@@ -151,6 +155,16 @@ typedef struct d912pxy_replay_gpu_write_control {
 	UINT16 bn;
 } d912pxy_replay_gpu_write_control;
 
+typedef struct d912pxy_replay_primitive_topology {
+	UINT8 newTopo;
+} d912pxy_replay_primitive_topology;
+
+typedef struct d912pxy_replay_query_mark {
+	d912pxy_query* obj;
+	UINT8 start;
+} d912pxy_replay_query_mark;
+
+
 typedef struct d912pxy_replay_item {
 	d912pxy_replay_item_type type;
 	union {
@@ -169,6 +183,8 @@ typedef struct d912pxy_replay_item {
 		d912pxy_replay_pso_raw_feedback rawPsoFeedback;
 		d912pxy_replay_rect srect;				
 		d912pxy_replay_gpu_write_control gpuw_ctl;
+		d912pxy_replay_primitive_topology topo;
+		d912pxy_replay_query_mark queryMark;
 		UINT64 ptr;
 	};
 } d912pxy_replay_item;
@@ -222,6 +238,10 @@ public:
 	virtual void StretchRect(d912pxy_surface* src, d912pxy_surface* dst) = 0;
 	virtual void GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn) = 0;
 
+	virtual void QueryMark(d912pxy_query* va, UINT start) = 0;
+
+	virtual void PrimTopo(D3DPRIMITIVETYPE primType) = 0;
+
 	//actual execute code and thread managment
 
 	virtual void Finish() = 0;
@@ -258,8 +278,11 @@ public:
 	void RTClear(d912pxy_surface* tgt, float* clr, D3D12_VIEWPORT* currentVWP);
 	void DSClear(d912pxy_surface* tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP);
 	void StretchRect(d912pxy_surface* src, d912pxy_surface* dst);
-
 	void GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn);
+
+	void QueryMark(d912pxy_query* va, UINT start);
+
+	void PrimTopo(D3DPRIMITIVETYPE primType);
 
 	//actual execute code and thread managment
 
@@ -312,6 +335,8 @@ private:
 	void RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void** unused);
 	void RHA_GPUW(d912pxy_replay_gpu_write_control* it, ID3D12GraphicsCommandList * cl, void** unused);
 	void RHA_GPUW_MT(d912pxy_replay_gpu_write_control* it, ID3D12GraphicsCommandList * cl, void** unused);
+	void RHA_PRMT(d912pxy_replay_primitive_topology* it, ID3D12GraphicsCommandList * cl, void** unused);
+	void RHA_QUMA(d912pxy_replay_query_mark* it, ID3D12GraphicsCommandList * cl, void** unused);
 	
 	d912pxy_replay_item stack[PXY_INNER_MAX_IFRAME_BATCH_REPLAY];
 

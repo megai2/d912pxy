@@ -82,20 +82,22 @@ void d912pxy_device::InitVFS()
 		LOG_INFO_DTDM("VFS is locked by another process, no data will be saved on disk");
 	}
 
-	d912pxy_s(vfs)->SetRoot("./d912pxy/pck");
+	d912pxy_s(vfs)->SetRoot(d912pxy_s(config)->GetValueRaw(PXY_CFG_VFS_ROOT));
 
-	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			1);
-	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		1);
-	InitVFSitem(PXY_VFS_BID_PSO_CACHE_KEYS,				"pso_cache",			1);
-	InitVFSitem(PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile",		1);
-	InitVFSitem(PXY_VFS_BID_SHADER_SOURCES,				"shader_sources",		0);
-	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_VS,				"derived_cso_vs",	    1);
-	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_PS,				"derived_cso_ps",       1);
+	UINT64 memcacheMask = d912pxy_s(config)->GetValueXI64(PXY_CFG_VFS_MEMCACHE_MASK);
+
+	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			memcacheMask);
+	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_PSO_CACHE_KEYS,				"pso_cache",			memcacheMask);
+	InitVFSitem(PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_SHADER_SOURCES,				"shader_sources",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_VS,				"derived_cso_vs",	    memcacheMask);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_PS,				"derived_cso_ps",       memcacheMask);
 }
 
-void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT memCache)
+void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT64 memCache)
 {
-	if (!d912pxy_s(vfs)->LoadVFS(id, name, memCache))
+	if (!d912pxy_s(vfs)->LoadVFS(id, name, ((1ULL << id) & memCache)) != 0ULL)
 	{
 		LOG_ERR_DTDM("%S VFS not loaded", name);
 		LOG_ERR_THROW2(-1, "VFS error");
@@ -161,18 +163,58 @@ void d912pxy_device::InitComPatches()
 		psPatch->Release();
 	}
 
-	if (!d912pxy_s(config)->GetValueUI64(PXY_CFG_QUERY_OCCLUSION))
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CLEAR))
 	{
-		d912pxy_query* queryObj = new d912pxy_query(this, D3DQUERYTYPE_OCCLUSION);
-		d912pxy_com_set_method((IDirect3DQuery9*)queryObj, 7, &d912pxy_query::GetDataZeroOverride);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x2b, &d912pxy_device::Clear_Emulated);
+	}
 
-		queryObj->Release();
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x25, &d912pxy_device::SetRenderTarget_Compat);
+	}
+
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CPU_API_REDUCTION))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x2f, &d912pxy_device::SetViewport_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x4b, &d912pxy_device::SetScissorRect_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x64, &d912pxy_device::SetStreamSource_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x68, &d912pxy_device::SetIndices_CAR);
+	}
+
+	{
+		d912pxy_query_occlusion* query = new d912pxy_query_occlusion(this, D3DQUERYTYPE_OCCLUSION);
+
+		UINT64 occCfgValue = d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OCCLUSION);
+
+		switch (occCfgValue)
+		{
+			case 2:
+			case 3:
+				d912pxy_query_occlusion::InitOccQueryEmulation();
+				d912pxy_query_occlusion::bufferedReadback = occCfgValue & 1;
+				break;
+			case 1:
+				d912pxy_com_set_method((IDirect3DQuery9*)query, 7, &d912pxy_query::GetDataOneOverride);
+				d912pxy_com_set_method((IDirect3DQuery9*)query, 6, &d912pxy_query::IssueNOP);
+				break;
+			case 0:
+				d912pxy_com_set_method((IDirect3DQuery9*)query, 7, &d912pxy_query::GetDataZeroOverride);
+				d912pxy_com_set_method((IDirect3DQuery9*)query, 6, &d912pxy_query::IssueNOP);
+				break;
+			default:
+				LOG_ERR_THROW2(-1, "PXY_CFG_COMPAT_OCCLUSION config entry is bad");
+				break;
+		}				
 	}
 
 	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
 	{
 		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x41, &d912pxy_device::SetTexture_PS);
 		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_PS);
+	}
+	else if (d912pxy_s(config)->GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_Compat);
 	}
 
 	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
@@ -202,29 +244,8 @@ void d912pxy_device::InitNullSRV()
 
 void d912pxy_device::InitDrawUPBuffers()
 {
-	UINT32 tmpUPbufSpace = d912pxy_s(config)->GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
-
-	mDrawUPVbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace, 0, 0)->AsDX9VB();
-	mDrawUPIbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace * 4, D3DFMT_INDEX32, 1)->AsDX9IB();
-
-	UINT32* ibufDt;
-	mDrawUPIbuf->Lock(0, 0, (void**)&ibufDt, 0);
-
-	for (int i = 0; i != tmpUPbufSpace; ++i)
-	{
-		ibufDt[i] = i;
-	}
-
-	mDrawUPIbuf->Unlock();
-	mDrawUPStreamPtr = 0;
-
-	mDrawUPIVbuf = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, 0, 0);
-	mDrawUPIIbuf[0] = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, D3DFMT_INDEX16, 1);
-	mDrawUPIIbuf[1] = d912pxy_s(pool_vstream)->GetVStreamObject(0xFFFF, D3DFMT_INDEX32, 1);
-
-	mDrawUPIIStreamPtr[0] = 0;
-	mDrawUPIIStreamPtr[1] = 0;
-	mDrawUPIVStreamPtr = 0;
+	m_dupEmul = new d912pxy_draw_up(this);
+	m_clearEmul = new d912pxy_surface_clear(this);
 }
 
 void d912pxy_device::InitDescriptorHeaps()

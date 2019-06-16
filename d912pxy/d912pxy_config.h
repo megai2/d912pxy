@@ -56,7 +56,13 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_DX_DBG_RUNTIME,
 	PXY_CFG_MISC_USE_DX9,
 	PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH,
-	PXY_CFG_QUERY_OCCLUSION,
+	PXY_CFG_COMPAT_OCCLUSION,
+	PXY_CFG_COMPAT_CLEAR,
+	PXY_CFG_COMPAT_CPU_API_REDUCTION,
+	PXY_CFG_COMPAT_BATCH_COMMIT,
+	PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET,
+	PXY_CFG_VFS_ROOT,
+	PXY_CFG_VFS_MEMCACHE_MASK,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -113,7 +119,13 @@ private:
 		{L"misc",L"dx_debug",L"0"},//PXY_CFG_DX_DBG_RUNTIME
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
 		{L"misc",L"draw_up_buffer_length", L"FFFF"},//PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH
-		{L"query",L"occlusion",L"0"}//PXY_CFG_QUERY_OCCLUSION
+		{L"compat",L"occlusion",L"0"},//PXY_CFG_COMPAT_OCCLUSION
+		{L"compat",L"clear",L"0"},//PXY_CFG_COMPAT_CLEAR
+		{L"compat",L"cpu_api_reduction",L"0"},//PXY_CFG_COMPAT_CPU_API_REDUCTION
+		{L"compat",L"batch_commit",L"0"},//PXY_CFG_COMPAT_BATCH_COMMIT
+		{L"compat",L"omrt_viewport_reset",L"0"},//PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET
+		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
+		{L"vfs", L"memcache_mask", L"6F"}//PXY_CFG_VFS_MEMCACHE_MASK
 	};
 
 };
