@@ -70,9 +70,9 @@ d912pxy_vfs::~d912pxy_vfs()
 	}
 }
 
-void d912pxy_vfs::SetRoot(const char * rootPath)
+void d912pxy_vfs::SetRoot(wchar_t * rootPath)
 {
-	sprintf(m_rootPath, "%s", rootPath);
+	sprintf(m_rootPath, "%ws", rootPath);
 }
 
 void* d912pxy_vfs::LoadVFS(UINT id, const char * name, UINT memCache)

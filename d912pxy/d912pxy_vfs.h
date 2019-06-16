@@ -55,7 +55,7 @@ public:
 	d912pxy_vfs(const char* lockPath);
 	~d912pxy_vfs();
 
-	void SetRoot(const char* rootPath);
+	void SetRoot(wchar_t* rootPath);
 	void* LoadVFS(UINT id, const char* name, UINT memCache);
 
 	UINT64 IsPresentN(const char* fnpath, UINT32 vfsId);

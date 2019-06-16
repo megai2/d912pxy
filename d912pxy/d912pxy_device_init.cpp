@@ -82,20 +82,22 @@ void d912pxy_device::InitVFS()
 		LOG_INFO_DTDM("VFS is locked by another process, no data will be saved on disk");
 	}
 
-	d912pxy_s(vfs)->SetRoot("./d912pxy/pck");
+	d912pxy_s(vfs)->SetRoot(d912pxy_s(config)->GetValueRaw(PXY_CFG_VFS_ROOT));
 
-	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			1);
-	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		1);
-	InitVFSitem(PXY_VFS_BID_PSO_CACHE_KEYS,				"pso_cache",			1);
-	InitVFSitem(PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile",		1);
-	InitVFSitem(PXY_VFS_BID_SHADER_SOURCES,				"shader_sources",		0);
-	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_VS,				"derived_cso_vs",	    1);
-	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_PS,				"derived_cso_ps",       1);
+	UINT64 memcacheMask = d912pxy_s(config)->GetValueXI64(PXY_CFG_VFS_MEMCACHE_MASK);
+
+	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			memcacheMask);
+	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_PSO_CACHE_KEYS,				"pso_cache",			memcacheMask);
+	InitVFSitem(PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_SHADER_SOURCES,				"shader_sources",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_VS,				"derived_cso_vs",	    memcacheMask);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_PS,				"derived_cso_ps",       memcacheMask);
 }
 
-void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT memCache)
+void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT64 memCache)
 {
-	if (!d912pxy_s(vfs)->LoadVFS(id, name, memCache))
+	if (!d912pxy_s(vfs)->LoadVFS(id, name, ((1ULL << id) & memCache)) != 0ULL)
 	{
 		LOG_ERR_DTDM("%S VFS not loaded", name);
 		LOG_ERR_THROW2(-1, "VFS error");

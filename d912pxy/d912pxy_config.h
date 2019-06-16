@@ -61,6 +61,8 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_COMPAT_CPU_API_REDUCTION,
 	PXY_CFG_COMPAT_BATCH_COMMIT,
 	PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET,
+	PXY_CFG_VFS_ROOT,
+	PXY_CFG_VFS_MEMCACHE_MASK,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -121,7 +123,9 @@ private:
 		{L"compat",L"clear",L"0"},//PXY_CFG_COMPAT_CLEAR
 		{L"compat",L"cpu_api_reduction",L"0"},//PXY_CFG_COMPAT_CPU_API_REDUCTION
 		{L"compat",L"batch_commit",L"0"},//PXY_CFG_COMPAT_BATCH_COMMIT
-		{L"compat",L"omrt_viewport_reset",L"0"}//PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET
+		{L"compat",L"omrt_viewport_reset",L"0"},//PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET
+		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
+		{L"vfs", L"mamcache_mask", L"6F"}//PXY_CFG_VFS_MEMCACHE_MASK
 	};
 
 };
