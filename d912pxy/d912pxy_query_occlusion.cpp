@@ -193,10 +193,27 @@ UINT d912pxy_query_occlusion::InitOccQueryEmulation()
 	return 0;
 }
 
+void d912pxy_query_occlusion::FreePendingQueryObjects()
+{
+	for (int i = 0; i != 2; ++i)
+	{
+		UINT32 objCount = g_gpuStack[i].count;
+
+		if (!objCount)
+			continue;
+
+		UINT32 unused;
+		for (int j = 0; j != objCount; ++j)
+			g_gpuStack[i].stack[j]->GetData(&unused, 4, 0);
+	}
+}
+
 void d912pxy_query_occlusion::DeInitOccQueryEmulation()
 {
 	if (!g_occQueryHeap)
 		return;
+
+	FreePendingQueryObjects();
 
 	g_occQueryHeap->Release();
 

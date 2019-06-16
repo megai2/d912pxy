@@ -48,6 +48,7 @@ public:
 	void FlushQueryStack();
 
 	static UINT InitOccQueryEmulation();
+	static void FreePendingQueryObjects();
 	static void DeInitOccQueryEmulation();	
 
 
