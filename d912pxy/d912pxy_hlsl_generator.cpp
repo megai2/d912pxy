@@ -242,9 +242,10 @@ d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * 
 
 	LoadGenProfile();
 
+#ifdef _DEBUG
 	LOG_DBG_DTDM("generating hlsl file %s", ofn);
-
 	of = _wfopen(ofn, L"wb");
+#endif
 
 	procOffsetPredef = d912pxy_hlsl_generator_proc_predef_offset;
 	headerOffsetI = 0;
@@ -258,8 +259,10 @@ d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * 
 
 d912pxy_hlsl_generator::~d912pxy_hlsl_generator()
 {
+#ifdef _DEBUG
 	fflush(of);
 	fclose(of);
+#endif
 }
 
 d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::Process(UINT toMemory)
