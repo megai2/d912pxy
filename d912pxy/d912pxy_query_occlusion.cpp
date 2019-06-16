@@ -34,6 +34,8 @@ ID3D12QueryHeap* g_occQueryHeap = 0;
 d912pxy_query_occlusion_gpu_stack g_gpuStack[2];
 UINT32 g_writeStack;
 
+UINT32 d912pxy_query_occlusion::bufferedReadback = 0;
+
 #define PXY_OCCLUSION_TYPE D3D12_QUERY_TYPE_OCCLUSION
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_QUERY_OCCLUSION
 
@@ -142,14 +144,17 @@ void d912pxy_query_occlusion::FlushQueryStack()
 		//megai2: maybe state safe have something that is not transferred, or maybe i miss something on index tracking
 		//but buffered write-read creates flicker
 
-		//megai2: this is for buffered write-read of query results
+		if (bufferedReadback)
+		{
+			//megai2: this is for buffered write-read of query results
+			d912pxy_s(iframe)->StateSafeFlush(0);
+		}
+		else {
+			//megai2: this if for not buffered
 
-		//d912pxy_s(iframe)->StateSafeFlush(0); 
-
-		//megai2: this if for not buffered
-
-		d912pxy_s(iframe)->StateSafeFlush(1);
-		g_writeStack = !g_writeStack;
+			d912pxy_s(iframe)->StateSafeFlush(1);
+			g_writeStack = !g_writeStack;
+		}
 	}
 
 	d912pxy_query_occlusion_gpu_stack* readStack = &g_gpuStack[!g_writeStack];

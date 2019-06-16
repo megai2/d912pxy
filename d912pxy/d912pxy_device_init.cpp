@@ -187,7 +187,9 @@ void d912pxy_device::InitComPatches()
 		switch (occCfgValue)
 		{
 			case 2:
+			case 3:
 				d912pxy_query_occlusion::InitOccQueryEmulation();
+				d912pxy_query_occlusion::bufferedReadback = occCfgValue & 1;
 				break;
 			case 1:
 				d912pxy_com_set_method((IDirect3DQuery9*)query, 7, &d912pxy_query::GetDataOneOverride);
@@ -196,6 +198,9 @@ void d912pxy_device::InitComPatches()
 			case 0:
 				d912pxy_com_set_method((IDirect3DQuery9*)query, 7, &d912pxy_query::GetDataZeroOverride);
 				d912pxy_com_set_method((IDirect3DQuery9*)query, 6, &d912pxy_query::IssueNOP);
+				break;
+			default:
+				LOG_ERR_THROW2(-1, "PXY_CFG_COMPAT_OCCLUSION config entry is bad");
 				break;
 		}				
 	}

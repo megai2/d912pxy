@@ -50,6 +50,7 @@ public:
 	static UINT InitOccQueryEmulation();
 	static void FreePendingQueryObjects();
 	static void DeInitOccQueryEmulation();	
+	static UINT32 bufferedReadback;
 
 
 private:
