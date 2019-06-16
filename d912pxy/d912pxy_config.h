@@ -125,7 +125,7 @@ private:
 		{L"compat",L"batch_commit",L"0"},//PXY_CFG_COMPAT_BATCH_COMMIT
 		{L"compat",L"omrt_viewport_reset",L"0"},//PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET
 		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
-		{L"vfs", L"mamcache_mask", L"6F"}//PXY_CFG_VFS_MEMCACHE_MASK
+		{L"vfs", L"memcache_mask", L"6F"}//PXY_CFG_VFS_MEMCACHE_MASK
 	};
 
 };
