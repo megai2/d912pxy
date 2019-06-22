@@ -46,11 +46,15 @@ public:
 	void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
 
 	void FlushQueryStack();
+	void OnIFrameEnd();
+	void OnIFrameStart();
+
 
 	static UINT InitOccQueryEmulation();
 	static void FreePendingQueryObjects();
 	static void DeInitOccQueryEmulation();	
 	static UINT32 bufferedReadback;
+
 
 
 private:

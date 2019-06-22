@@ -409,6 +409,9 @@ void d912pxy_iframe::Start()
 	streamsActive = 0;
 
 	batchesIssued = 0;
+
+	d912pxy_s(queryOcc)->OnIFrameStart();
+
 }
 
 void d912pxy_iframe::End()
@@ -424,12 +427,18 @@ void d912pxy_iframe::End()
 
 	indexBind = NULL;*/
 
-	if (mSwapChain)
+
+	d912pxy_s(queryOcc)->OnIFrameEnd();
+
+
+	if (mSwapChain) 
 		mSwapChain->EndFrame();
 
 	LOG_DBG_DTDM2("End Frame %u", mCurrentFrameIndex);
 	++mCurrentFrameIndex;
-	
+
+
+
 }
 
 void d912pxy_iframe::EndSceneReset()

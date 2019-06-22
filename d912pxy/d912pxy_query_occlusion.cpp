@@ -100,14 +100,15 @@ D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFla
 
 	API_OVERHEAD_TRACK_START(0)
 
-	if (!queryFinished)		
-		FlushQueryStack();		
+	if(!queryFinished)		
+		FlushQueryStack();
 
 	((DWORD*)pData)[0] = queryResult;				
 
 	API_OVERHEAD_TRACK_END(0)
 
 	return queryFinished ? S_OK : S_FALSE;
+
 }
 
 #undef D912PXY_METHOD_IMPL_CN
@@ -133,6 +134,12 @@ void d912pxy_query_occlusion::QueryMark(UINT start, ID3D12GraphicsCommandList * 
 
 void d912pxy_query_occlusion::FlushQueryStack()
 {	
+
+	d912pxy_s(iframe)->StateSafeFlush(!bufferedReadback);
+
+
+
+	/*
 	d912pxy_query_occlusion_gpu_stack* writeStack = &g_gpuStack[g_writeStack];
 
 	if (writeStack->count)
@@ -157,6 +164,44 @@ void d912pxy_query_occlusion::FlushQueryStack()
 		}
 	}
 
+	d912pxy_query_occlusion_gpu_stack* readStack = &g_gpuStack[!g_writeStack];
+
+	if (readStack->count)
+	{
+		UINT64* readbackPtr;
+
+		LOG_ERR_THROW2(readStack->readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&readbackPtr), "occ query flush map failed");
+
+		for (int i = 0; i != readStack->count; ++i)
+		{
+			readStack->stack[i]->SetQueryResult((UINT32)readbackPtr[i]);
+		}
+
+		readStack->readbackBuffer->GetD12Obj()->Unmap(0, 0);
+
+		readStack->count = 0;
+	}
+
+	g_writeStack = !g_writeStack;
+
+	*/
+}
+
+
+void d912pxy_query_occlusion::OnIFrameEnd()
+{
+	d912pxy_query_occlusion_gpu_stack* writeStack = &g_gpuStack[g_writeStack];
+
+	if (writeStack->count)
+	{
+		ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
+
+		cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, 0, writeStack->count, writeStack->readbackBuffer->GetD12Obj(), 0);
+	}
+}
+
+void d912pxy_query_occlusion::OnIFrameStart()
+{
 	d912pxy_query_occlusion_gpu_stack* readStack = &g_gpuStack[!g_writeStack];
 
 	if (readStack->count)
@@ -208,8 +253,10 @@ void d912pxy_query_occlusion::FreePendingQueryObjects()
 			continue;
 
 		UINT32 unused;
+
 		for (int j = 0; j != objCount; ++j)
 			g_gpuStack[i].stack[j]->GetData(&unused, 4, 0);
+
 	}
 }
 

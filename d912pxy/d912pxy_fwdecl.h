@@ -268,6 +268,7 @@ class d912pxy_log;
 class d912pxy_mem_mgr;
 class d912pxy_StackWalker;
 struct d912pxy_trimmed_dx12_pso;
+class d912pxy_query_occlusion;
 
 
 typedef struct d912pxy_device_streamsrc {
@@ -329,6 +330,7 @@ public:
 	static d912pxy_config* config;
 	static d912pxy_log* log;
 	static d912pxy_mem_mgr* memMgr;
+	static d912pxy_query_occlusion* queryOcc;
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a

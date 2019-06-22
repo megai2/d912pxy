@@ -182,7 +182,7 @@ void d912pxy_device::InitComPatches()
 	}
 
 	{
-		d912pxy_query_occlusion* query = new d912pxy_query_occlusion(this, D3DQUERYTYPE_OCCLUSION);
+		d912pxy_s(queryOcc) = new d912pxy_query_occlusion(this, D3DQUERYTYPE_OCCLUSION);
 
 		UINT64 occCfgValue = d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OCCLUSION);
 
@@ -194,12 +194,12 @@ void d912pxy_device::InitComPatches()
 				d912pxy_query_occlusion::bufferedReadback = occCfgValue & 1;
 				break;
 			case 1:
-				d912pxy_com_set_method((IDirect3DQuery9*)query, 7, &d912pxy_query::GetDataOneOverride);
-				d912pxy_com_set_method((IDirect3DQuery9*)query, 6, &d912pxy_query::IssueNOP);
+				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 7, &d912pxy_query::GetDataOneOverride);
+				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 6, &d912pxy_query::IssueNOP);
 				break;
 			case 0:
-				d912pxy_com_set_method((IDirect3DQuery9*)query, 7, &d912pxy_query::GetDataZeroOverride);
-				d912pxy_com_set_method((IDirect3DQuery9*)query, 6, &d912pxy_query::IssueNOP);
+				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 7, &d912pxy_query::GetDataZeroOverride);
+				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 6, &d912pxy_query::IssueNOP);
 				break;
 			default:
 				LOG_ERR_THROW2(-1, "PXY_CFG_COMPAT_OCCLUSION config entry is bad");
