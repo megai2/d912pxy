@@ -137,54 +137,6 @@ void d912pxy_query_occlusion::FlushQueryStack()
 
 	d912pxy_s(iframe)->StateSafeFlush(!bufferedReadback);
 
-
-
-	/*
-	d912pxy_query_occlusion_gpu_stack* writeStack = &g_gpuStack[g_writeStack];
-
-	if (writeStack->count)
-	{
-		ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
-
-		cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, 0, writeStack->count, writeStack->readbackBuffer->GetD12Obj(), 0);
-
-		//megai2: maybe state safe have something that is not transferred, or maybe i miss something on index tracking
-		//but buffered write-read creates flicker
-
-		if (bufferedReadback)
-		{
-			//megai2: this is for buffered write-read of query results
-			d912pxy_s(iframe)->StateSafeFlush(0);
-		}
-		else {
-			//megai2: this if for not buffered
-
-			d912pxy_s(iframe)->StateSafeFlush(1);
-			g_writeStack = !g_writeStack;
-		}
-	}
-
-	d912pxy_query_occlusion_gpu_stack* readStack = &g_gpuStack[!g_writeStack];
-
-	if (readStack->count)
-	{
-		UINT64* readbackPtr;
-
-		LOG_ERR_THROW2(readStack->readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&readbackPtr), "occ query flush map failed");
-
-		for (int i = 0; i != readStack->count; ++i)
-		{
-			readStack->stack[i]->SetQueryResult((UINT32)readbackPtr[i]);
-		}
-
-		readStack->readbackBuffer->GetD12Obj()->Unmap(0, 0);
-
-		readStack->count = 0;
-	}
-
-	g_writeStack = !g_writeStack;
-
-	*/
 }
 
 
