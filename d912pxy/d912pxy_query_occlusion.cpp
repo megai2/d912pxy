@@ -41,7 +41,7 @@ UINT32 d912pxy_query_occlusion::bufferedReadback = 0;
 
 d912pxy_query_occlusion::d912pxy_query_occlusion(d912pxy_device* dev, D3DQUERYTYPE Type) : d912pxy_query(dev, Type)
 {
-	queryResult = 1;
+	queryResult = 0;
 }
 
 
@@ -78,7 +78,7 @@ D912PXY_METHOD_IMPL(Issue)(THIS_ DWORD dwIssueFlags)
 		if (g_gpuStack[g_writeStack].count >= PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME)
 			FlushQueryStack();			
 
-		queryFinished = 0;
+		queryFinished++;
 		frameIdx = g_gpuStack[g_writeStack].count;
 		d912pxy_s(CMDReplay)->QueryMark(this, 1);		
 		g_gpuStack[g_writeStack].stack[frameIdx] = this;
@@ -100,14 +100,14 @@ D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFla
 
 	API_OVERHEAD_TRACK_START(0)
 
-	if(!queryFinished)		
+	if(queryFinished)		
 		FlushQueryStack();
 
 	((DWORD*)pData)[0] = queryResult;				
 
 	API_OVERHEAD_TRACK_END(0)
 
-	return queryFinished ? S_OK : S_FALSE;
+	return !queryFinished ? S_OK : S_FALSE;
 
 }
 
@@ -230,7 +230,7 @@ void d912pxy_query_occlusion::DeInitOccQueryEmulation()
 void d912pxy_query_occlusion::SetQueryResult(UINT32 v)
 {
 	queryResult = v;
-	queryFinished = 1;
+	queryFinished--;
 	ThreadRef(-1);
 }
 
