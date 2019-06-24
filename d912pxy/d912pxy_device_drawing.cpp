@@ -51,7 +51,7 @@ HRESULT WINAPI d912pxy_device::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UIN
 
 	if (1)
 	{
-		LOG_DBG_DTDM("DP NON INDEXED SKIPPING");
+		LOG_DBG_DTDM3("DP NON INDEXED SKIPPING");
 		return D3D_OK;
 	}
 }
@@ -61,14 +61,6 @@ HRESULT WINAPI d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveTy
 	LOG_DBG_DTDM("DrawIndexed PT %u BV %u MV %u NV %u SI %u PC %u", PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
 	API_OVERHEAD_TRACK_START(0)
-
-#ifdef _DEBUG
-	if (PrimitiveType == D3DPT_TRIANGLEFAN)
-	{
-		LOG_DBG_DTDM("DP TRIFAN skipping");
-		return D3D_OK;
-	}
-#endif
 
 	d912pxy_s(iframe)->CommitBatch(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
@@ -86,21 +78,32 @@ HRESULT WINAPI d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveTy
 	return D3D_OK;
 }
 
+HRESULT __stdcall d912pxy_device::DrawIndexedPrimitive_Compat(IDirect3DDevice9 * self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
+{
+	API_OVERHEAD_TRACK_START(0)
+
+	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+
+#ifdef PER_BATCH_FLUSH_DEBUG
+	replayer->Finish();
+
+	iframe->End();
+	mGPUque->Flush(0);
+
+	iframe->Start();
+#endif
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
+
 HRESULT __stdcall d912pxy_device::DrawIndexedPrimitive_PS(IDirect3DDevice9 * self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
 	d912pxy_device* _self = (d912pxy_device*)self;
 
 	API_OVERHEAD_TRACK_START(0)
-
-#ifdef _DEBUG
-	if (PrimitiveType == D3DPT_TRIANGLEFAN)
-	{
-		LOG_DBG_DTDM("DP TRIFAN skipping");
-		return D3D_OK;
-	}
-#endif
-
-	d912pxy_s(iframe)->CommitBatch(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
 #ifdef PER_BATCH_FLUSH_DEBUG
 	replayer->Finish();
@@ -152,6 +155,26 @@ HRESULT __stdcall d912pxy_device::DrawIndexedPrimitive_PS(IDirect3DDevice9 * sel
 		}
 	}
 
+	d912pxy_vdecl* vdcl = d912pxy_s(psoCache)->GetIAFormat();
+
+	if (vdcl)
+	{
+		UINT numElms = 0;
+		D3DVERTEXELEMENT9* vdArr = vdcl->GetDeclarationPtr(&numElms);
+
+		for (int i = 0; i != numElms; ++i)
+		{
+			if ((vdArr[i].Usage == D3DDECLUSAGE_NORMAL) && (vdArr[i].Type == D3DDECLTYPE_UBYTE4))
+				if (d912pxy_s(psoCache)->GetVShader())
+					_self->TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_UINT_NORMALS, 1, d912pxy_s(psoCache)->GetVShader()->GetID());
+			if ((vdArr[i].Usage == D3DDECLUSAGE_TANGENT) && (vdArr[i].Type == D3DDECLTYPE_UBYTE4))
+				if (d912pxy_s(psoCache)->GetVShader())
+					_self->TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_UINT_TANGENTS, 1, d912pxy_s(psoCache)->GetVShader()->GetID());
+		}		
+	}
+
+	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+
 	API_OVERHEAD_TRACK_END(0)
 
 	return D3D_OK;
@@ -160,36 +183,18 @@ HRESULT __stdcall d912pxy_device::DrawIndexedPrimitive_PS(IDirect3DDevice9 * sel
 //megai2: you should know, that there is no apps, that can't storage their data in vertex buffers 
 HRESULT WINAPI d912pxy_device::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	API_OVERHEAD_TRACK_START(0)
-
-	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
-
-	void* dstPtr;
-	mDrawUPVbuf->Lock(mDrawUPStreamPtr, 0, &dstPtr, 0);
-	memcpy(dstPtr, pVertexStreamZeroData, VertexStreamZeroStride * 3 * PrimitiveCount);
-	mDrawUPVbuf->Unlock();
-
-	d912pxy_vstream* oi = d912pxy_s(iframe)->GetIBuf();
-	d912pxy_device_streamsrc oss = d912pxy_s(iframe)->GetStreamSource(0);
-	d912pxy_device_streamsrc ossi = d912pxy_s(iframe)->GetStreamSource(1);
-	
-	d912pxy_s(iframe)->SetIBuf(d912pxy_vstream_from_index(mDrawUPIbuf));
-	d912pxy_s(iframe)->SetVBuf((d912pxy_vstream*)mDrawUPVbuf, 0, mDrawUPStreamPtr, VertexStreamZeroStride);
-	d912pxy_s(iframe)->SetStreamFreq(0, 1);
-	d912pxy_s(iframe)->SetStreamFreq(1, 0);
-
-	mDrawUPStreamPtr += PrimitiveCount * 3 * VertexStreamZeroStride;
-
-	DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);
-
-	d912pxy_s(iframe)->SetIBuf(oi);
-	d912pxy_s(iframe)->SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
-	d912pxy_s(iframe)->SetStreamFreq(0, oss.divider);
-	d912pxy_s(iframe)->SetStreamFreq(1, ossi.divider);
-
-	API_OVERHEAD_TRACK_END(0)
+	m_dupEmul->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
 	return D3D_OK;
 }
+
+
+HRESULT WINAPI d912pxy_device::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
+{
+	m_dupEmul->DrawIndexedPrimitiveUP(PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
+
+	return D3D_OK;
+}
+
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

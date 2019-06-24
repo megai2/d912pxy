@@ -45,3 +45,4 @@ d912pxy_s_dcl(metrics, d912pxy_metrics);
 d912pxy_s_dcl(config, d912pxy_config);
 d912pxy_s_dcl(log, d912pxy_log);
 d912pxy_s_dcl(memMgr, d912pxy_mem_mgr);
+d912pxy_s_dcl(queryOcc, d912pxy_query_occlusion);

@@ -36,6 +36,8 @@ public:
 
 	d912pxy_shader_uid GetUID(DWORD* code, UINT32* len);		
 
+	d912pxy_shader_pair_hash_type GetPairUID(d912pxy_vshader* vs, d912pxy_pshader* ps);
+
 	d912pxy_shader_pair* GetPair(d912pxy_vshader* vs, d912pxy_pshader* ps);
 	void DeletePair(d912pxy_shader_pair_hash_type ha);
 

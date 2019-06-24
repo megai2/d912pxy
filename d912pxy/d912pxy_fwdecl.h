@@ -49,6 +49,7 @@ SOFTWARE.
 #define UPLOAD_POOL_USE_AND_DISCARD 
 //#define ENABLE_METRICS
 //#define PER_BATCH_FLUSH_DEBUG 1
+//#define USE_PIX_EVENT_ANNOTATIONS
 
 #ifdef _DEBUG
 	#define ENABLE_METRICS
@@ -70,6 +71,11 @@ SOFTWARE.
 #define PXY_INNER_MAX_SHADER_CONSTS 256*4
 #define PXY_INNER_EXTRA_SHADER_CONST_CLIP_P0 256
 #define PXY_INNER_EXTRA_SHADER_CONST_HALFPIXEL_FIX 257
+#define PXY_INNER_EXTRA_SHADER_CONST_BASE_IDX 260
+#define PXY_INNER_EXTRA_SHADER_CONST_CLEAR_COLOR 260
+#define PXY_INNER_EXTRA_SHADER_CONST_CLEAR_RECT 261
+#define PXY_INNER_EXTRA_SHADER_CONST_CLEAR_ZWH 262
+#define PXY_INNER_EXTRA_SHADER_CONST_UNUSED 263
 #define PXY_INNER_MAX_VBUF_STREAMS 10
 #define PXY_INNER_MAX_IFRAME_CLEANUPS 1024*1024
 #define PXY_INNER_MAX_CLEANUPS_PER_SYNC 128
@@ -82,6 +88,7 @@ SOFTWARE.
 #define PXY_INNER_MAX_DHEAP_CLEANUP_PER_SYNC 16
 #define PXY_INNER_MAX_ASYNC_TEXLOADS 5120
 #define PXY_INNER_MAX_ASYNC_BUFFERLOADS 5120
+#define PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME 512
 
 #define PXY_INNER_CLG_PRIO_FIRST 0 
 #define PXY_INNER_CLG_PRIO_ASYNC_LOAD 1
@@ -132,8 +139,8 @@ SOFTWARE.
 #define PXY_INNER_SHDR_BUG_SRGB_READ 2
 #define PXY_INNER_SHDR_BUG_SRGB_WRITE 3
 #define PXY_INNER_SHDR_BUG_CLIPPLANE0 4
-#define PXY_INNER_SHDR_BUG_RESERVED0 5
-#define PXY_INNER_SHDR_BUG_RESERVED1 6
+#define PXY_INNER_SHDR_BUG_UINT_NORMALS 5
+#define PXY_INNER_SHDR_BUG_UINT_TANGENTS 6
 #define PXY_INNER_SHDR_BUG_RESERVED2 7
 #define PXY_INNER_SHDR_BUG_RESERVED3 8
 #define PXY_INNER_SHDR_BUG_COUNT 9
@@ -149,8 +156,9 @@ SOFTWARE.
 	#define FRAME_METRIC_SYNC_WAKE(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC_WAKE);
 	#define FRAME_METRIC_THREAD(a,b) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_THREAD_TEX+b);
 	#define FRAME_METRIC_PRESENT(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_PREP);
+	#define FRAME_METRIC_RESIDENCY(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_RESIDENCY);
 	#define API_OVERHEAD_TRACK_START(a) d912pxy_s(metrics)->TrackAPIOverheadStart(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);
-	#define API_OVERHEAD_TRACK_END(a) d912pxy_s(metrics)->TrackAPIOverheadEnd(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);	
+	#define API_OVERHEAD_TRACK_END(a) d912pxy_s(metrics)->TrackAPIOverheadEnd(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);		
 #else 
 	#define FRAME_METRIC_CLEANUPS(a)
 	#define FRAME_METRIC_DHEAP(a,b)
@@ -159,6 +167,7 @@ SOFTWARE.
 	#define FRAME_METRIC_SYNC_WAKE(a)
 	#define FRAME_METRIC_THREAD(a,b)
 	#define FRAME_METRIC_PRESENT(a) 
+	#define FRAME_METRIC_RESIDENCY(a)
 	#define API_OVERHEAD_TRACK_START(a)
 	#define API_OVERHEAD_TRACK_END(a)
 #endif
@@ -199,6 +208,14 @@ SOFTWARE.
 #define LOG_ERR_THROW(hr) LOG_ERR_THROW2(hr, hr)
 #define LOG_ERR_THROW2(hr, hr2) ThrowErrorDbg(hr, #hr2 )
 
+//pix event wrappers	   
+#ifdef USE_PIX_EVENT_ANNOTATIONS
+	#include <pix3.h>
+#else 
+	#define PIXBeginEvent(a, ...) //
+	#define PIXEndEvent(...) //
+#endif
+
 //paths to files =======================
 
 #define d912pxy_cs_hlsl_dir L"./d912pxy/shaders/cs"
@@ -210,6 +227,8 @@ SOFTWARE.
 #define d912pxy_shader_db_bugs_dir "shaders/bugs"
 #define PXY_CRASH_LOG_FILE_PATH "d912pxy/crash"
 #define PXY_LOG_FILE_NAME "d912pxy/log.txt"
+#define d912pxy_perf_graph_outfile "./d912pxy/dx12_perf_graph.html"
+#define d912pxy_perf_graph_dx9_outfile "./d912pxy/dx9_perf_graph.html"
 
 //forward class defenitions =======================
 
@@ -249,6 +268,7 @@ class d912pxy_log;
 class d912pxy_mem_mgr;
 class d912pxy_StackWalker;
 struct d912pxy_trimmed_dx12_pso;
+class d912pxy_query_occlusion;
 
 
 typedef struct d912pxy_device_streamsrc {
@@ -310,6 +330,7 @@ public:
 	static d912pxy_config* config;
 	static d912pxy_log* log;
 	static d912pxy_mem_mgr* memMgr;
+	static d912pxy_query_occlusion* queryOcc;
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a

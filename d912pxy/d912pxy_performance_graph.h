@@ -25,11 +25,11 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-#define PXY_PERFGRPH_FRAMETIME_PTS 1024
-#define PXY_PERFGRPH_FRAMETIME_MAX 112400
-#define PXY_PERFGRPH_FRAMETIME_MIN  10000
-#define PXY_PERFGRPH_BATCH_PTS 1024
-#define PXY_PERFGRPH_BATCH_DIV 8
+#define PXY_PERFGRPH_FRAMETIME_PTS 2048
+#define PXY_PERFGRPH_FRAMETIME_MAX 1000000
+#define PXY_PERFGRPH_FRAMETIME_MIN    1000
+#define PXY_PERFGRPH_BATCH_PTS 2048
+#define PXY_PERFGRPH_BATCH_DIV 4
 
 class d912pxy_performance_graph
 {
@@ -38,19 +38,12 @@ public:
 	~d912pxy_performance_graph();
 	void RecordPresent(int batchCount);
 
-	void DrawOverlay();
 private:
-	void DrawLineH(UINT y);
-	void DrawLineV(UINT x);
-	void DrawCharacter(UINT lx, UINT ty, UINT scale, CHAR v);
-	void DrawText(UINT rx, UINT ty, UINT scale, char* txt);
 
 	Stopwatch frameTime;
 
 	UINT dx9;
 
 	UINT32 dataAcm[PXY_PERFGRPH_BATCH_PTS* PXY_PERFGRPH_FRAMETIME_PTS];
-
-	UINT8* imgData;
 };
 

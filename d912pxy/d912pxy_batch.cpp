@@ -98,6 +98,8 @@ void d912pxy_batch::FrameEnd()
 
 void d912pxy_batch::GPUCSCpy()
 {	
+	PIXBeginEvent(topCl, 0xAA00AA, "CSCpy");
+
 	for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
 	{		
 		streamControl[mDataDltRef[i]].endBatch = batchNum;
@@ -133,6 +135,8 @@ void d912pxy_batch::GPUCSCpy()
 
 	buffer->BTransit(0, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, topCl);
 
+	PIXEndEvent(topCl);
+
 	streamIdx = 0;
 }
 
@@ -141,31 +145,41 @@ void d912pxy_batch::PreDIP(ID3D12GraphicsCommandList* cl, UINT bid)
 	cl->SetGraphicsRootConstantBufferView(3, buffer->DevPtr() + PXY_BATCH_GPU_DRAW_BUFFER_SIZE * bid);
 }
 
+void d912pxy_batch::ClearShaderVars()
+{
+	SetShaderConstF(0, 0, 256, (float*)stateTransfer);
+	SetShaderConstF(1, 0, 256, (float*)stateTransfer);
+}
+
 void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 {
-	UINT32* mDataDltRefL = mDataDltRef;
-		
-	UINT32 bn = batchNum;
-
 	memcpy(&streamData[streamIdx], src, size << 4);
+	
+	//43-59 ss
+	//125 mt
+	//306 ps
+	d912pxy_s(CMDReplay)->GPUW(streamIdx, offset, size, batchNum);
+	//GPUWriteControl(streamIdx, offset, size, batchNum);	
 
-	/* hot 77% */
-	UINT32 i = offset;
-	while (i != (offset + size))
+	streamIdx += size;
+}
+
+void d912pxy_batch::GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)
+{
+	UINT64 i = of;
+	while (i != (of + cnt))
 	{
-		d912pxy_batch_stream_control_entry* ctl = &streamControl[streamIdx];
+		d912pxy_batch_stream_control_entry* ctl = &streamControl[si];
 
-		ctl->dstOffset = i;
-		ctl->startBatch = bn;
+		ctl->dstOffset = (UINT32)i;
+		ctl->startBatch = (UINT32)bn;
+		
+		streamControl[mDataDltRef[i]].endBatch = (UINT32)bn;
+		mDataDltRef[i] = (UINT32)si;
 
-		streamControl[mDataDltRefL[i]].endBatch = bn;				
-		mDataDltRefL[i] = streamIdx;
-
-		++streamIdx;
+		++si;
 		++i;
 	}
-	/* hot */
-	
 }
 
 void d912pxy_batch::InitCopyCS()
@@ -185,7 +199,7 @@ void d912pxy_batch::InitCopyCS()
 	copyRS = m_dev->ConstructRootSignature(&rootSignatureDesc);
 	
 	//copy cs hlsl code
-	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 3);
+	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 3, 0);
 	d912pxy_shader_code CScode = CScodec->GetCodeCS();
 	delete CScodec;
 

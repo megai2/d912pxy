@@ -25,8 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_pso_cache::cDscBase;
-UINT d912pxy_pso_cache::vsMaxVars;
-UINT d912pxy_pso_cache::psMaxVars;
+UINT d912pxy_pso_cache::allowRealtimeChecks = 0;
 
 d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev, L"PSO cache"), d912pxy_thread("d912pxy pso compile", 0)
 {
@@ -39,8 +38,7 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 
 	cCPSO = NULL;
 
-	d912pxy_pso_cache::vsMaxVars = 0;
-	d912pxy_pso_cache::psMaxVars = 0;
+	d912pxy_pso_cache::allowRealtimeChecks = d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ALLOW_REALTIME_CHECKS);
 
 	ZeroMemory(&d912pxy_pso_cache::cDscBase, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
@@ -50,8 +48,8 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev,
 	d912pxy_pso_cache::cDscBase.SampleDesc.Count = 1;
 	d912pxy_pso_cache::cDscBase.SampleDesc.Quality = 0;
 	d912pxy_pso_cache::cDscBase.SampleMask = 0xFFFFFFFF;
-	cDsc.RasterizerState.DepthBiasClamp = 0;
-	cDsc.RasterizerState.DepthClipEnable = 1;
+	d912pxy_pso_cache::cDscBase.RasterizerState.DepthBiasClamp = 0;
+	d912pxy_pso_cache::cDscBase.RasterizerState.DepthClipEnable = 1;
 	d912pxy_pso_cache::cDscBase.GS.pShaderBytecode = NULL;
 	d912pxy_pso_cache::cDscBase.DS.pShaderBytecode = NULL;
 	d912pxy_pso_cache::cDscBase.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -206,6 +204,10 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	switch (State)
 	{
+	case D3DRS_STENCILREF:
+		d912pxy_s(CMDReplay)->OMStencilRef(Value);
+		DX9RSvalues[State] = Value;
+		break; //57,   /* Reference value used in stencil test */
 	case D3DRS_SCISSORTESTENABLE:
 		if (Value)
 			d912pxy_s(iframe)->RestoreScissor();
@@ -290,40 +292,15 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		break; //23,   /* D3DCMPFUNC */
 
 	case D3DRS_ALPHABLENDENABLE:
-		cDsc.BlendStateRT0.BlendEnable = Value;
+		cDsc.BlendStateRT0.BlendEnable = (UINT8)Value;
 		//FIXME! must set this to all active RT's somewhere
 		break; //27,   /* TRUE to enable alpha blending */
 
-	case D3DRS_STENCILENABLE:
-		cDsc.DepthStencilState.StencilEnable = Value;
-		break; //52,   /* BOOL enable/disable stenciling */
-
-	case D3DRS_STENCILFAIL:
-		cDsc.DepthStencilState.FrontFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
-		break; //53,   /* D3DSTENCILOP to do if stencil test fails */
-
-	case D3DRS_STENCILZFAIL:
-		cDsc.DepthStencilState.FrontFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
-		break; //54,   /* D3DSTENCILOP to do if stencil test passes and Z test fails */
-
-	case D3DRS_STENCILPASS:
-		cDsc.DepthStencilState.FrontFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
-		break; //55,   /* D3DSTENCILOP to do if both stencil and Z tests pass */
-
-	case D3DRS_STENCILFUNC:
-		cDsc.DepthStencilState.FrontFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
-		break; //56,   /* D3DCMPFUNC fn.  Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true */
-
-	case D3DRS_STENCILMASK:
-		cDsc.DepthStencilState.StencilReadMask = Value & 0xFF;
-		break; //58,   /* Mask value used in stencil test */
-
-	case D3DRS_STENCILWRITEMASK:
-		cDsc.DepthStencilState.StencilWriteMask = Value & 0xFF;
-		break; //59,   /* Write mask applied to values written to stencil buffer */
-
 	case D3DRS_COLORWRITEENABLE:
-		cDsc.BlendStateRT0.RenderTargetWriteMask = Value & 0xF;
+		{
+			d912pxy_s(iframe)->OptimizeZeroWriteRT(Value);
+			cDsc.BlendStateRT0.RenderTargetWriteMask = Value & 0xF;
+		}		
 		break; //168,  // per-channel write enable
 	case D3DRS_COLORWRITEENABLE1: 
 	case D3DRS_COLORWRITEENABLE2: 
@@ -341,28 +318,95 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		break; //175,
 
 	case D3DRS_ANTIALIASEDLINEENABLE:
-		cDsc.RasterizerState.AntialiasedLineEnable = Value;
+		cDsc.RasterizerState.AntialiasedLineEnable = (UINT8)Value;
 		break; //176,
 
+	//stencil
+	case D3DRS_STENCILMASK:
+		cDsc.DepthStencilState.StencilReadMask = Value & 0xFF;
+		break; //58,   /* Mask value used in stencil test */
+
+	case D3DRS_STENCILWRITEMASK:
+		cDsc.DepthStencilState.StencilWriteMask = Value & 0xFF;
+		break; //59,   /* Write mask applied to values written to stencil buffer */
+
+	case D3DRS_STENCILENABLE:
+		cDsc.DepthStencilState.StencilEnable = (UINT8)Value;
+		break; //52,   /* BOOL enable/disable stenciling */
+
 	case D3DRS_TWOSIDEDSTENCILMODE:
-		LOG_DBG_DTDM("RS twosided stencil %u / %u", cDsc.DepthStencilState.StencilEnable, Value);//megai2: default stencil uses 2 sides in dx12. tricky!
-		break; //185,   /* BOOL enable/disable 2 sided stenciling */
+	{
+		LOG_DBG_DTDM("RS twosided stencil %u / %u", cDsc.DepthStencilState.StencilEnable, Value);
+		DX9RSvalues[State] = Value;
+		if (!Value)
+		{
+			cDsc.DepthStencilState.BackFace.StencilPassOp = (UINT8)DX9RSvalues[D3DRS_STENCILPASS];
+			cDsc.DepthStencilState.BackFace.StencilFailOp = (UINT8)DX9RSvalues[D3DRS_STENCILFAIL];
+			cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (UINT8)DX9RSvalues[D3DRS_STENCILZFAIL];
+			cDsc.DepthStencilState.BackFace.StencilFunc = (UINT8)DX9RSvalues[D3DRS_STENCILFUNC];
+		}
+		else {
+			cDsc.DepthStencilState.BackFace.StencilFailOp = (UINT8)DX9RSvalues[D3DRS_CCW_STENCILFAIL];
+			cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (UINT8)DX9RSvalues[D3DRS_CCW_STENCILZFAIL];
+			cDsc.DepthStencilState.BackFace.StencilPassOp = (UINT8)DX9RSvalues[D3DRS_CCW_STENCILPASS];
+			cDsc.DepthStencilState.BackFace.StencilFunc = (UINT8)DX9RSvalues[D3DRS_CCW_STENCILFUNC];
+			cDsc.DepthStencilState.StencilEnable = 1;
+		}
+	}
+	break; //185,   /* BOOL enable/disable 2 sided stenciling */
+
+	case D3DRS_STENCILFAIL:
+		cDsc.DepthStencilState.FrontFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
+		if (!DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
+		break; //53,   /* D3DSTENCILOP to do if stencil test fails */
+
+	case D3DRS_STENCILZFAIL:
+		cDsc.DepthStencilState.FrontFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
+		if (!DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
+		break; //54,   /* D3DSTENCILOP to do if stencil test passes and Z test fails */
+
+	case D3DRS_STENCILPASS:
+		cDsc.DepthStencilState.FrontFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
+		if (!DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
+		break; //55,   /* D3DSTENCILOP to do if both stencil and Z tests pass */
+
+	case D3DRS_STENCILFUNC:
+		cDsc.DepthStencilState.FrontFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
+		if (!DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
+		DX9RSvalues[State] = Value;
+		break; //56,   /* D3DCMPFUNC fn.  Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true */
 
 	case D3DRS_CCW_STENCILFAIL:
-		cDsc.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
+		if (DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
 		break; //186,   /* D3DSTENCILOP to do if ccw stencil test fails */
 
 	case D3DRS_CCW_STENCILZFAIL:
-		cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
+		if (DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
 		break; //187,   /* D3DSTENCILOP to do if ccw stencil test passes and Z test fails */
 
 	case D3DRS_CCW_STENCILPASS:
-		cDsc.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
+		if (DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)Value;
+		DX9RSvalues[State] = Value;
 		break; //188,   /* D3DSTENCILOP to do if both ccw stencil and Z tests pass */
 
 	case D3DRS_CCW_STENCILFUNC:
-		cDsc.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
+		if (DX9RSvalues[D3DRS_TWOSIDEDSTENCILMODE])
+			cDsc.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)Value;
+		DX9RSvalues[State] = Value;
 		break; //189,   /* D3DCMPFUNC fn.  ccw Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true */
+
 	case D3DRS_SRGBWRITEENABLE:
 		DX9RSvalues[State] = Value;
 		//d912pxy_s(iframe)->TST()->SetTexStage(29, Value);
@@ -372,6 +416,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	{
 		int depthMul;
 		depthMul = (1 << 23) - 1;
+	
 		INT fixVal = (INT)(*(float*)&Value * depthMul);
 		cDsc.RasterizerState.DepthBias = fixVal;
 		break; //195,
@@ -602,7 +647,10 @@ ID3D12PipelineState* d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso * d
 	}
 
 	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
+	{
+		LOG_DBG_DTDM3("fixed pipe draw issued, skipping");
 		return NULL;
+	}
 	
 	return d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc)->GetPtr();
 }
@@ -811,6 +859,11 @@ void d912pxy_pso_cache::SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc
 	}
 }
 
+UINT32 d912pxy_pso_cache::GetHashedKey(d912pxy_trimmed_dx12_pso * dsc)
+{
+	return cacheIndexes->memHash32((void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset));
+}
+
 void d912pxy_pso_cache::CheckExternalLock()
 {
 	if (externalLock.GetValue() == 1)
@@ -865,71 +918,50 @@ void d912pxy_pso_cache_item::Compile()
 	d912pxy_pso_cache::cDscBase.InputLayout = vdclObj->GetD12IA_InputElementFmt();
 
 	d912pxy_pso_cache::cDscBase.NumRenderTargets = desc->NumRenderTargets;
-	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0] = desc->BlendStateRT0;
-	d912pxy_pso_cache::cDscBase.RasterizerState = desc->RasterizerState;
-	d912pxy_pso_cache::cDscBase.DepthStencilState = desc->DepthStencilState;
-	d912pxy_pso_cache::cDscBase.RTVFormats[0] = desc->RTVFormat0;
-	d912pxy_pso_cache::cDscBase.DSVFormat = desc->DSVFormat;
+	//d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].  = desc->BlendStateRT0;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].SrcBlend = (D3D12_BLEND)desc->BlendStateRT0.SrcBlend;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].SrcBlendAlpha = (D3D12_BLEND)desc->BlendStateRT0.SrcBlendAlpha;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].DestBlend = (D3D12_BLEND)desc->BlendStateRT0.DestBlend;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].DestBlendAlpha = (D3D12_BLEND)desc->BlendStateRT0.DestBlendAlpha;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].BlendEnable = desc->BlendStateRT0.BlendEnable;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].RenderTargetWriteMask = desc->BlendStateRT0.RenderTargetWriteMask;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].BlendOp = (D3D12_BLEND_OP)desc->BlendStateRT0.BlendOp;
+	d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].BlendOpAlpha = (D3D12_BLEND_OP)desc->BlendStateRT0.BlendOpAlpha;
 
-	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", vsObj->GetID(), psObj->GetID());
 
-	/*d912pxy_shader_uid shaderBlacklist[] = {
-		0xF080FCE66894DD82,
-		0xE4749555EA1CA6AD,
-		0x985FE509D86757E1,
-		0x7814708E60D7D98A,
-		0xDC863F8647D6B899,
-		0x6C9683BF7AA4A47B,
-		0
-	};
+//	d912pxy_pso_cache::cDscBase.RasterizerState. = desc->RasterizerState.;
 
-	int sblId = 0;
-	int ignoreShader = 0;
-	while (shaderBlacklist[sblId] != 0)
-	{
-		if ((vsObj->GetID() == shaderBlacklist[sblId]) || (psObj->GetID() == shaderBlacklist[sblId]))
-		{
-			ignoreShader = 1;
-			break;
-		}
-		++sblId;
-	}
+	d912pxy_pso_cache::cDscBase.RasterizerState.FillMode = (D3D12_FILL_MODE)desc->RasterizerState.FillMode;
+	d912pxy_pso_cache::cDscBase.RasterizerState.CullMode = (D3D12_CULL_MODE)desc->RasterizerState.CullMode;
+	d912pxy_pso_cache::cDscBase.RasterizerState.SlopeScaledDepthBias = desc->RasterizerState.SlopeScaledDepthBias;
+	d912pxy_pso_cache::cDscBase.RasterizerState.AntialiasedLineEnable = desc->RasterizerState.AntialiasedLineEnable;
+	d912pxy_pso_cache::cDscBase.RasterizerState.DepthBias = desc->RasterizerState.DepthBias;
 
-	if (!ignoreShader)*/
-	{
-		try { 
-			LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj)), "PSO item are not created");
-		}
-		catch (...)
-		{
-			LOG_ERR_DTDM("CreateGraphicsPipelineState error for VS %016llX PS %016llX", vsObj->GetID(), psObj->GetID());
+	//d912pxy_pso_cache::cDscBase.DepthStencilState = desc->DepthStencilState;
 
-			char dumpString[sizeof(d912pxy_trimmed_dx12_pso)*2 + 1];
-			dumpString[0] = 0;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.DepthEnable = desc->DepthStencilState.DepthEnable;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.DepthWriteMask = (D3D12_DEPTH_WRITE_MASK)desc->DepthStencilState.DepthWriteMask;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.DepthFunc = (D3D12_COMPARISON_FUNC)desc->DepthStencilState.DepthFunc;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.StencilEnable = desc->DepthStencilState.StencilEnable;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.FrontFace.StencilFailOp = (D3D12_STENCIL_OP)desc->DepthStencilState.FrontFace.StencilFailOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.FrontFace.StencilPassOp = (D3D12_STENCIL_OP)desc->DepthStencilState.FrontFace.StencilPassOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.FrontFace.StencilDepthFailOp = (D3D12_STENCIL_OP)desc->DepthStencilState.FrontFace.StencilDepthFailOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.FrontFace.StencilFunc = (D3D12_COMPARISON_FUNC)desc->DepthStencilState.FrontFace.StencilFunc;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)desc->DepthStencilState.BackFace.StencilFailOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)desc->DepthStencilState.BackFace.StencilPassOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)desc->DepthStencilState.BackFace.StencilDepthFailOp;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)desc->DepthStencilState.BackFace.StencilFunc;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.StencilReadMask = desc->DepthStencilState.StencilReadMask;
+	d912pxy_pso_cache::cDscBase.DepthStencilState.StencilWriteMask = desc->DepthStencilState.StencilWriteMask;
+	
 
-			for (int i = 0; i != sizeof(d912pxy_trimmed_dx12_pso); ++i)
-			{
-				char tmp[3];
-				sprintf(tmp, "%02X", ((UINT8*)desc)[i]);
-				dumpString[i * 2] = tmp[0];
-				dumpString[i * 2+1] = tmp[1];
-			}
+	d912pxy_pso_cache::cDscBase.RTVFormats[0] = (DXGI_FORMAT)desc->RTVFormat0;
+	d912pxy_pso_cache::cDscBase.DSVFormat = (DXGI_FORMAT)desc->DSVFormat;
 
-			dumpString[sizeof(d912pxy_trimmed_dx12_pso) * 2] = 0;
-
-			LOG_ERR_DTDM("trimmed pso dump %S", dumpString);
-
-			vsObj->ThreadRef(-1);
-			psObj->ThreadRef(-1);
-			vdclObj->ThreadRef(-1);
-
-			PXY_FREE(desc);
-
-			//m_status = 2;
-
-			return;
-		}
-		InterlockedExchange((unsigned long long *)&retPtr, (unsigned long long)obj.Get());
+	if (d912pxy_pso_cache::allowRealtimeChecks)
+		RealtimeIntegrityCheck();
+	else {
+		CreatePSO();
 	}
 
 	//m_status = 1;
@@ -939,4 +971,274 @@ void d912pxy_pso_cache_item::Compile()
 	vdclObj->ThreadRef(-1);
 
 	PXY_FREE(desc);
+}
+
+void d912pxy_pso_cache_item::CreatePSO()
+{
+	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", desc->VS->GetID(), desc->PS->GetID());
+
+	try {
+		LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj)), "PSO item are not created");
+	}
+	catch (...)
+	{
+		LOG_ERR_DTDM("CreateGraphicsPipelineState error for VS %016llX PS %016llX", desc->VS->GetID(), desc->PS->GetID());
+
+		char dumpString[sizeof(d912pxy_trimmed_dx12_pso) * 2 + 1];
+		dumpString[0] = 0;
+
+		for (int i = 0; i != sizeof(d912pxy_trimmed_dx12_pso); ++i)
+		{
+			char tmp[3];
+			sprintf(tmp, "%02X", ((UINT8*)desc)[i]);
+			dumpString[i * 2] = tmp[0];
+			dumpString[i * 2 + 1] = tmp[1];
+		}
+
+		dumpString[sizeof(d912pxy_trimmed_dx12_pso) * 2] = 0;
+
+		LOG_ERR_DTDM("trimmed pso dump %S", dumpString);
+	}
+	InterlockedExchange((unsigned long long *)&retPtr, (unsigned long long)obj.Get());
+}
+
+void d912pxy_pso_cache_item::CreatePSODerived(UINT64 derivedAlias)
+{
+	void* shdDerCSO[2];
+	UINT shdDerCSOSz[2];
+
+	shdDerCSO[0] = d912pxy_s(vfs)->LoadFileH(derivedAlias, &shdDerCSOSz[0], PXY_VFS_BID_DERIVED_CSO_VS);
+	shdDerCSO[1] = d912pxy_s(vfs)->LoadFileH(derivedAlias, &shdDerCSOSz[1], PXY_VFS_BID_DERIVED_CSO_PS);
+
+	d912pxy_pso_cache::cDscBase.VS.BytecodeLength = shdDerCSOSz[0];
+	d912pxy_pso_cache::cDscBase.PS.BytecodeLength = shdDerCSOSz[1];
+	d912pxy_pso_cache::cDscBase.VS.pShaderBytecode = shdDerCSO[0];
+	d912pxy_pso_cache::cDscBase.PS.pShaderBytecode = shdDerCSO[1];
+
+	CreatePSO();
+
+	PXY_FREE(shdDerCSO[0]);
+	PXY_FREE(shdDerCSO[1]);
+}
+
+void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
+{
+	d912pxy_shader_pair_hash_type pairUID = d912pxy_s(sdb)->GetPairUID(desc->VS, desc->PS);
+	UINT32 psoKey = d912pxy_s(psoCache)->GetHashedKey(desc);
+	UINT64 derivedAlias = pairUID ^ (UINT64)psoKey;
+
+	LOG_DBG_DTDM3("DX9 PSO realtime check emulation for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
+
+	//megai2: both derived cso files are present, just load them to pso and compile on dx12 side
+	if (d912pxy_s(vfs)->IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_PS) && d912pxy_s(vfs)->IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_VS))
+	{
+		CreatePSODerived(derivedAlias);
+		return;
+	}
+
+	char* shdSrc[2];
+	UINT shdSrcSz[2];
+
+	shdSrc[0] = (char*)d912pxy_s(vfs)->LoadFileH(desc->VS->GetID(), &shdSrcSz[0], PXY_VFS_BID_SHADER_SOURCES);
+	shdSrc[1] = (char*)d912pxy_s(vfs)->LoadFileH(desc->PS->GetID(), &shdSrcSz[1], PXY_VFS_BID_SHADER_SOURCES);
+
+	if (!shdSrc[0] || !shdSrc[1])
+	{
+		LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
+		CreatePSO();
+		return;
+	}
+
+	/*FILE* tf = fopen("d912pxy/tmp.hlsl", "wb+");
+	fwrite(shdSrc[0], 1, shdSrcSz[0], tf);
+	fwrite(shdSrc[1], 1, shdSrcSz[1], tf);
+	fclose(tf);*/
+
+	//megai2: pass 0 - vdecl to vs input signature typecheck
+	LOG_DBG_DTDM3("PSO RCE P0");	
+
+	for (int i = 0; i != d912pxy_pso_cache::cDscBase.InputLayout.NumElements; ++i)
+	{
+		char* semDefPlace = strstr(shdSrc[0], d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].SemanticName);
+
+		if (!semDefPlace)
+		{
+			LOG_DBG_DTDM("semantic %S not used in vs", d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].SemanticName);
+			continue;
+		}
+
+		char* defLine = d912pxy_helper::StrGetCurrentLineStart(semDefPlace);
+		char* replPos = strstr(defLine, "4") - 5;
+
+		const char* newType = "float4";
+
+		switch (d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].Format)
+		{
+			case DXGI_FORMAT_R32_FLOAT:
+			case DXGI_FORMAT_R32G32_FLOAT:
+			case DXGI_FORMAT_R32G32B32_FLOAT:
+			case DXGI_FORMAT_R32G32B32A32_FLOAT:
+			case DXGI_FORMAT_B8G8R8A8_UNORM:	
+			case DXGI_FORMAT_R16G16_SNORM:
+			case DXGI_FORMAT_R16G16B16A16_SNORM:
+			case DXGI_FORMAT_R16G16_UNORM:
+			case DXGI_FORMAT_R16G16B16A16_UNORM:
+			case DXGI_FORMAT_R16G16_FLOAT:
+			case DXGI_FORMAT_R16G16B16A16_FLOAT:
+				break;
+			case DXGI_FORMAT_R16G16_SINT:				
+			case DXGI_FORMAT_R16G16B16A16_SINT:				
+				newType = "  int4";
+				break;
+			case DXGI_FORMAT_R8G8B8A8_UINT:
+				newType = " uint4";
+				break;
+		}
+
+		memcpy(replPos, newType, 6);
+
+	}
+
+	//megai2: pass 1 - vs output to ps input signature ordering check
+	LOG_DBG_DTDM3("PSO RCE P1");
+
+	char* vsOut[256] = { NULL };
+	char* psIn[256] = { NULL };
+
+	UINT vsOutCnt = 0;
+	UINT psInCnt = 0;
+
+	//load vs output
+	{
+		char* sdeclLine = strstr(shdSrc[0], "VS_OUTPUT");
+		char* structDclEmt = d912pxy_helper::StrNextLine(sdeclLine);
+
+		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+		while (structDclEmt[0] != '}')
+		{
+			char* lnStart = structDclEmt;
+			structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+			UINT64 lSz = (intptr_t)structDclEmt - (intptr_t)lnStart;
+
+			PXY_MALLOC(vsOut[vsOutCnt], lSz+1, char*);
+
+			memcpy(vsOut[vsOutCnt], lnStart, lSz);
+			vsOut[vsOutCnt][lSz] = 0;
+			++vsOutCnt;
+		}
+	}
+
+	//load ps input
+	{
+		char* sdeclLine = strstr(shdSrc[1], "PS_INPUT");
+		char* structDclEmt = d912pxy_helper::StrNextLine(sdeclLine);
+
+		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+		while (structDclEmt[0] != '}')
+		{
+			char* lnStart = structDclEmt;
+			structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+			UINT64 lSz = (intptr_t)structDclEmt - (intptr_t)lnStart;
+
+			PXY_MALLOC(psIn[psInCnt], lSz+1, char*);
+
+			memcpy(psIn[psInCnt], lnStart, lSz);
+			psIn[psInCnt][lSz] = 0;
+			++psInCnt;
+		}
+	}
+
+	//filter ps unused regs
+	int filterTgt = psInCnt - 1;
+
+	for (int i = 0; i != psInCnt; ++i)
+	{	
+		while (strstr(psIn[i], "unused_ireg_"))
+		{
+			if (filterTgt >= i)
+				break;
+
+			char* tSwp = psIn[i];
+			psIn[i] = psIn[filterTgt];
+			psIn[filterTgt] = tSwp;
+			--filterTgt;			
+		}
+	}
+
+	//find inputs in outputs and reorder last one to input sequence
+	for (int i = 0; i != psInCnt; ++i)
+	{
+		char* inputSemantic = strstr(psIn[i], ": ") + 2;
+
+		for (int j = 0; j != vsOutCnt; ++j)
+		{
+			if (strstr(vsOut[j], inputSemantic))
+			{
+				char* strSwp = vsOut[i];			
+				vsOut[i] = vsOut[j];
+				vsOut[j] = strSwp;
+			}
+		}
+	}
+
+	//write declaration back to VS
+
+	{
+		char* sdeclLine = strstr(shdSrc[0], "VS_OUTPUT");
+		char* structDclEmt = d912pxy_helper::StrNextLine(sdeclLine);
+		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+		for (int j = 0; j != vsOutCnt; ++j)
+		{
+			size_t tStrLen = strlen(vsOut[j]);
+			memcpy(structDclEmt, vsOut[j], tStrLen);
+			structDclEmt += tStrLen;
+			PXY_FREE(vsOut[j]);
+		}
+	}	
+
+	//write declaration back to PS due to unused reg filtering
+
+	{
+		char* sdeclLine = strstr(shdSrc[1], "PS_INPUT");
+		char* structDclEmt = d912pxy_helper::StrNextLine(sdeclLine);
+		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
+
+		for (int j = 0; j != psInCnt; ++j)
+		{
+			size_t tStrLen = strlen(psIn[j]);
+			memcpy(structDclEmt, psIn[j], tStrLen);
+			structDclEmt += tStrLen;
+			PXY_FREE(psIn[j]);
+		}
+	}
+
+	/*FILE* tf2 = fopen("d912pxy/tmp2.hlsl", "wb+");
+	fwrite(shdSrc[0], 1, shdSrcSz[0], tf);
+	fwrite(shdSrc[1], 1, shdSrcSz[1], tf);
+	fclose(tf);*/
+
+	d912pxy_shader_replacer* replVS = new d912pxy_shader_replacer(0, 0, desc->VS->GetID(), 1);
+	d912pxy_shader_replacer* replPS = new d912pxy_shader_replacer(0, 0, desc->PS->GetID(), 0);
+
+	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, shdSrc[0], shdSrcSz[0], 0);
+	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, shdSrc[1], shdSrcSz[1], 0);
+
+	PXY_FREE(shdSrc[0]);
+	PXY_FREE(shdSrc[1]);
+
+	if ((!bcVS.blob) || (!bcPS.blob))
+		LOG_ERR_DTDM("PSO RCE fail for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
+
+	d912pxy_s(vfs)->WriteFileH(derivedAlias, bcVS.code, (UINT)bcVS.sz, PXY_VFS_BID_DERIVED_CSO_VS);
+	d912pxy_s(vfs)->WriteFileH(derivedAlias, bcPS.code, (UINT)bcPS.sz, PXY_VFS_BID_DERIVED_CSO_PS);
+
+	delete replVS;
+	delete replPS;
+
+	CreatePSODerived(derivedAlias);
 }

@@ -70,12 +70,12 @@ d912pxy_vfs::~d912pxy_vfs()
 	}
 }
 
-void d912pxy_vfs::SetRoot(const char * rootPath)
+void d912pxy_vfs::SetRoot(wchar_t * rootPath)
 {
-	sprintf(m_rootPath, "%s", rootPath);
+	sprintf(m_rootPath, "%ws", rootPath);
 }
 
-void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
+void* d912pxy_vfs::LoadVFS(UINT id, const char * name, UINT memCache)
 {
 	char fn[4096];
 
@@ -164,7 +164,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 		
 		m_vfsCacheSize[id] = (UINT32)m_vfsLastFileOffset[id] - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START;
 
-		if (m_vfsCacheSize[id])
+		if (m_vfsCacheSize[id] && memCache)
 		{
 			PXY_MALLOC(m_vfsCache[id], m_vfsCacheSize[id], void*);
 
@@ -175,6 +175,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name)
 		}
 		else {
 			m_vfsCache[id] = 0;
+			m_vfsCacheSize[id] = 0;
 		}
 	}	
 

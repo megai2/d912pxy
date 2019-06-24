@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2019 AlraiLux
+Copyright(c) 2019 AlraiLux, megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -63,8 +63,11 @@ public:
 	void PostInit();
 #ifdef _DEBUG
 	void StartTrackingBlocks() { allowTrackBlocks = 1; };
+	UINT32 GetMemoryUsedMB() { return (UINT32)(memUsed >> 20); };
 #else 
 	void StartTrackingBlocks() { };
+
+	UINT32 GetMemoryUsedMB() { return 0; };
 #endif
 
 private:
@@ -81,5 +84,7 @@ private:
 	UINT8 allowTrackBlocks = 0;
 
 	d912pxy_StackWalker* stkWlk;
+
+	LONG64 memUsed;
 #endif
 };

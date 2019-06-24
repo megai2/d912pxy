@@ -177,6 +177,8 @@ public:
 
 	void CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATION_PARAMETERS* origPars, D3DPRESENT_PARAMETERS* origPP);
 	void InitVFS();
+	void InitVFSitem(UINT id, const char* name, UINT64 memCache);
+
 	void InitClassFields();
 	void InitThreadSyncObjects();
 	void InitSingletons();
@@ -202,8 +204,18 @@ public:
 
 	//megai2: variants of API calls
 	static HRESULT WINAPI DrawIndexedPrimitive_PS(IDirect3DDevice9* self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
+	static HRESULT WINAPI DrawIndexedPrimitive_Compat(IDirect3DDevice9* self, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 	static HRESULT WINAPI SetTexture_PS(IDirect3DDevice9* self, DWORD Stage, IDirect3DBaseTexture9* pTexture);
 	static HRESULT WINAPI Present_PG(IDirect3DDevice9* self, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
+	static HRESULT WINAPI Clear_Emulated(IDirect3DDevice9* self, DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
+		//CAR = cpu api reduction
+	static HRESULT WINAPI SetStreamSource_CAR(IDirect3DDevice9* self, UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride);
+	static HRESULT WINAPI SetIndices_CAR(IDirect3DDevice9* self, IDirect3DIndexBuffer9* pIndexData);
+	static HRESULT WINAPI SetViewport_CAR(IDirect3DDevice9* self, CONST D3DVIEWPORT9* pViewport);
+	static HRESULT WINAPI SetScissorRect_CAR(IDirect3DDevice9* self, CONST RECT* pRect);
+	static HRESULT WINAPI SetRenderTarget_Compat(IDirect3DDevice9* self, DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
+
+	
 
 	HRESULT InnerPresentExecute();
 	void InnerPresentFinish();
@@ -220,9 +232,8 @@ private:
 	ComPtr<ID3D12Device> m_d12evice;
 	ID3D12Device* m_d12evice_ptr;
 	
-	IDirect3DVertexBuffer9* mDrawUPVbuf;
-	IDirect3DIndexBuffer9* mDrawUPIbuf;
-	UINT mDrawUPStreamPtr;
+	d912pxy_draw_up* m_dupEmul;
+	d912pxy_surface_clear* m_clearEmul;
 
 	d912pxy_dheap* m_dheaps[PXY_INNER_MAX_DSC_HEAPS];
 	

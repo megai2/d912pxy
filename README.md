@@ -14,26 +14,29 @@ This project is in beta. Expect some bugs, crashes, hangs, stalls and some other
 
 # Showcase
 
-Profiling shows that the API overhead for d912pxy is up to 70% less than that of plain DirectX9.
+Profiling shows that the API overhead for d912pxy is up to 86% (r255,custom config) less than that of plain DirectX9.
 Real performance differs based on the scene and the hardware.
 
 Benchmarking results on i7-7700/GTX960:
 
 ## CPU-bound scenario
-(running Mistlock Sanctuary)
+(running Mistlock Sanctuary
+with [custom config](https://cdn.discordapp.com/attachments/545164738288418816/583364425847799818/config.ini))
 
 ```
-@6.3k batches, all max, 1080p, v0.9.5.8a
+@5.5k batches, all max, 1080p, v0.9.9.3a
 
 dx9
-  min FPS: 5.5
-  max FPS: 21.5
+  min FPS: ~6.2
+  max FPS: ~24.1
 dx12
-  min FPS: 17.6
-  max FPS: 26.6
+  min FPS: ~20.9
+  max FPS: ~31.5
 boost:
-  min FPS: +220%
-  max FPS: +23%
+  min FPS: ~237%
+  max FPS: ~30%
+  
+gathered by performance data accumulation and interpolation
 
 ```
 
@@ -68,6 +71,8 @@ Video by reddit u/moriz0, running WvW in 4k: https://www.youtube.com/watch?v=RQA
 
 [**Tutoriel d'installation** (FR)](https://www.youtube.com/watch?v=hfSSIBICG6E)
 
+[**Using with other addons and overlays**](https://github.com/megai2/d912pxy/wiki/Using-with-other-addons-and-overlays)
+
 # Known bugs
 
 **Bug**: Fullscreen crash can hang system videofeed.
@@ -95,5 +100,7 @@ Case #4: [Unnatural performance drops](https://github.com/megai2/d912pxy/wiki/Re
 WMZ: 442298672293
 
 Bitcoin: 1B46eQtKUcvSLyz1F8QxKcdHACAXbuXGgM
+
+Patreon: https://www.patreon.com/d912pxy
 
 Paypal: megai2@ya.ru

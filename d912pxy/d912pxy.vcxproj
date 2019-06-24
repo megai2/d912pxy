@@ -522,12 +522,13 @@
   <ItemGroup>
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3d9.h" />
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3dx9.h" />
-    <ClInclude Include="..\thirdparty\D3D9Proxy\defines.h" />
+    <ClInclude Include="..\thirdparty\renderdoc_app.h" />
     <ClInclude Include="..\thirdparty\StackWalker\StackWalker.h" />
     <ClInclude Include="d3d9_proxy_dll.h" />
     <ClInclude Include="d912pxy_async_upload_thread.h" />
     <ClInclude Include="d912pxy_com_tools.h" />
     <ClInclude Include="d912pxy_config.h" />
+    <ClInclude Include="d912pxy_draw_up.h" />
     <ClInclude Include="d912pxy_linked_list.h" />
     <ClInclude Include="d912pxy_basetexture.h" />
     <ClInclude Include="d912pxy_batch.h" />
@@ -557,6 +558,7 @@
     <ClInclude Include="d912pxy_pshader.h" />
     <ClInclude Include="d912pxy_pso_cache.h" />
     <ClInclude Include="d912pxy_query.h" />
+    <ClInclude Include="d912pxy_query_occlusion.h" />
     <ClInclude Include="d912pxy_replay.h" />
     <ClInclude Include="d912pxy_replay_passthru.h" />
     <ClInclude Include="d912pxy_replay_thread.h" />
@@ -569,6 +571,7 @@
     <ClInclude Include="d912pxy_shader_replacer.h" />
     <ClInclude Include="d912pxy_stackwalker.h" />
     <ClInclude Include="d912pxy_surface.h" />
+    <ClInclude Include="d912pxy_surface_clear.h" />
     <ClInclude Include="d912pxy_surface_layer.h" />
     <ClInclude Include="d912pxy_surface_pool.h" />
     <ClInclude Include="d912pxy_swapchain.h" />
@@ -611,6 +614,7 @@
     <ClCompile Include="d912pxy_device_swapchain.cpp" />
     <ClCompile Include="d912pxy_device_texstate.cpp" />
     <ClCompile Include="d912pxy_device_unimpl.cpp" />
+    <ClCompile Include="d912pxy_draw_up.cpp" />
     <ClCompile Include="d912pxy_fwdecl.cpp" />
     <ClCompile Include="d912pxy_linked_list.cpp" />
     <ClCompile Include="d912pxy_basetexture.cpp" />
@@ -640,6 +644,7 @@
     <ClCompile Include="d912pxy_pshader.cpp" />
     <ClCompile Include="d912pxy_pso_cache.cpp" />
     <ClCompile Include="d912pxy_query.cpp" />
+    <ClCompile Include="d912pxy_query_occlusion.cpp" />
     <ClCompile Include="d912pxy_replay.cpp" />
     <ClCompile Include="d912pxy_replay_passthru.cpp" />
     <ClCompile Include="d912pxy_replay_thread.cpp" />
@@ -652,6 +657,7 @@
     <ClCompile Include="d912pxy_shader_replacer.cpp" />
     <ClCompile Include="d912pxy_stackwalker.cpp" />
     <ClCompile Include="d912pxy_surface.cpp" />
+    <ClCompile Include="d912pxy_surface_clear.cpp" />
     <ClCompile Include="d912pxy_surface_layer.cpp" />
     <ClCompile Include="d912pxy_surface_pool.cpp" />
     <ClCompile Include="d912pxy_swapchain.cpp" />
@@ -692,6 +698,5 @@
     <None Include="deffile" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

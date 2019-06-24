@@ -26,7 +26,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 //start with 2^16 end with 2^28
-//this will allow creating buffers with size up to 256mB
+//this will allow creating buffers with size up to 256MB
 //megai2: 16 is for future placed resource heap aligment, if it work that whay
 #define PXY_INNDER_VSTREAM_POOL_BITIGNORE 16 
 #define PXY_INNDER_VSTREAM_POOL_BITLIMIT 28

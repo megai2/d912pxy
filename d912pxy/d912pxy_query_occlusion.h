@@ -23,43 +23,45 @@ SOFTWARE.
 
 */
 #pragma once
-#include "d912pxy_noncom.h"
+#include "stdafx.h"
 
-template <class ElementType>
-class d912pxy_ringbuffer:
-	public d912pxy_noncom
+class d912pxy_query_occlusion : public d912pxy_query
 {
 public:
-	d912pxy_ringbuffer(UINT iMaxElements, UINT iGrow);
-	~d912pxy_ringbuffer();
+	d912pxy_query_occlusion(d912pxy_device* dev, D3DQUERYTYPE Type);
+	~d912pxy_query_occlusion();
 
-	void WriteElement(ElementType ele);
-	void WriteElementFast(ElementType ele);
-	void WriteElementMT(ElementType ele);
-	ElementType GetElement();
-	ElementType PopElement();
-	ElementType PopElementFast();
-	
-	UINT HaveElements();
-	UINT HaveFreeSpace();
-	void Next();
-	
-	UINT TotalElements() { return writed; };
+	/*** IUnknown methods ***/
+	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
+	D912PXY_METHOD_(ULONG, AddRef)(THIS);
+	D912PXY_METHOD_(ULONG, Release)(THIS);
 
-	ElementType PopElementMTG();
-		
+	/*** IDirect3DQuery9 methods ***/
+	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
+	D912PXY_METHOD_(D3DQUERYTYPE, GetType)(THIS);
+	D912PXY_METHOD_(DWORD, GetDataSize)(THIS);
+	D912PXY_METHOD(Issue)(THIS_ DWORD dwIssueFlags);
+	D912PXY_METHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);	
+
+	void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
+
+	void FlushQueryStack();
+	void OnIFrameEnd();
+	void OnIFrameStart();
+
+
+	static UINT InitOccQueryEmulation();
+	static void FreePendingQueryObjects();
+	static void DeInitOccQueryEmulation();	
+	static UINT32 bufferedReadback;
+
+
+
 private:
-	intptr_t bufferData;
-	intptr_t writePoint;
-	intptr_t readPoint;
-	intptr_t bufferEnd;
+	void SetQueryResult(UINT32 v);
 
-	LONG maxElements;
-	UINT grow;
-	LONG writed;
-
-	d912pxy_thread_lock growthLock;
-	d912pxy_thread_lock writeLock;
-
+	UINT32 queryResult;
+	UINT32 queryFinished;
+	UINT32 frameIdx;
 };
 

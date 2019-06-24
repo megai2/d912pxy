@@ -92,11 +92,6 @@ ULONG IDirect3DDevice9Proxy::Release(void){
 	ULONG count = origIDirect3DDevice9->Release();
 	// destructor will be called automatically
 	if (count == 0){
-
-		d3d9ProxyCB_OnDevDestroy cb = D3D9ProxyCb_get_OnDevDestroy();
-		if (cb)
-			cb((IDirect3DDevice9*)this);
-
 		delete(this);
 	}
 	return (count);

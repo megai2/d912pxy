@@ -50,12 +50,12 @@ static const UINT HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[] = {
 	3,//D3DDECLUSAGE_BLENDINDICES,  // 2
 	4,//D3DDECLUSAGE_NORMAL,        // 3
 	5,//D3DDECLUSAGE_PSIZE,         // 4
-	14,//D3DDECLUSAGE_TEXCOORD,      // 5
+	10,//D3DDECLUSAGE_TEXCOORD,      // 5
 	6,//D3DDECLUSAGE_TANGENT,       // 6
 	7,//D3DDECLUSAGE_BINORMAL,      // 7
 	8,//D3DDECLUSAGE_TESSFACTOR,    // 8
 	9,//D3DDECLUSAGE_POSITIONT,     // 9
-	10,//D3DDECLUSAGE_COLOR,         // 10
+	14,//D3DDECLUSAGE_COLOR,         // 10
 	15,//D3DDECLUSAGE_FOG,           // 11
 	12,//D3DDECLUSAGE_DEPTH,         // 12
 	13//D3DDECLUSAGE_SAMPLE// 13
@@ -66,6 +66,8 @@ static const UINT HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[] = {
 #define HLSL_GEN_WRITE_HEADI(prio, fmt, ...) WriteHeadILine(prio, fmt, __VA_ARGS__)
 #define HLSL_GEN_WRITE_HEADO(prio, fmt, ...) WriteHeadOLine(prio, fmt, __VA_ARGS__)
 #define HLSL_GEN_VTEXTURE_OFFSET 17
+
+#define HLSL_MAX_REG_FILE_LEN 32
 
 typedef struct d912pxy_hlsl_generator_regtext {
 	char t[512];
@@ -83,18 +85,37 @@ class d912pxy_hlsl_generator;
 
 typedef void (d912pxy_hlsl_generator::*d912pxy_hlsl_generator_sio_handler)(DWORD* op);
 
+#pragma pack(push, 1)
+typedef struct d912pxy_hlsl_generator_memout {
+	UINT32 size;
+	char data[1024];
+} d912pxy_hlsl_generator_memout;
+#pragma pack(pop)
+
 class d912pxy_hlsl_generator : public d912pxy_noncom
 {
 public:
 	d912pxy_hlsl_generator(DWORD* src, UINT len, wchar_t* ofn, d912pxy_shader_uid uid);
 	~d912pxy_hlsl_generator();
 	
-	void Process();
+	d912pxy_hlsl_generator_memout* Process(UINT toMemory);
+
+	//dxbc lookups
 
 	UINT GetRegType(DWORD dst);
 	UINT GetRegNumber(DWORD op);
 	UINT GetWriteMask(DWORD op);
 	D3DSHADER_PARAM_SRCMOD_TYPE GetSrcMod(DWORD op);
+	UINT GetDstLenByWriteMask(DWORD op);
+	UINT GetDstLenByWriteMask2(DWORD wmask);
+	const char* GetRegTypeStr(DWORD op, UINT8 proc);
+	const char* GetUsageString(UINT usage, UINT type);
+	UINT64 GetWriteMaskStr(DWORD op);
+	UINT64 GetSwizzleStr(DWORD op, DWORD opDst);
+	UINT64 FormatCmpString(DWORD op);
+	UINT GetDstModifier(DWORD op);
+
+	//dxbc reg access formatters
 
 	d912pxy_hlsl_generator_regtext FormatDstRegister(DWORD* reg);
 	d912pxy_hlsl_generator_regtext FormatSrcRegister(DWORD* reg, UINT8 wm, UINT id, UINT haveDst, UINT allowFmtConvert);
@@ -103,34 +124,12 @@ public:
 	d912pxy_hlsl_generator_regtext FormatRightSide1(DWORD dstOp, const char* pre, const char* post, d912pxy_hlsl_generator_regtext op1, UINT8 dstLen);
 	d912pxy_hlsl_generator_regtext FormatRightSide2(DWORD dstOp, const char* pre, const char* post, const char* mid, d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, UINT8 dstLen);
 	d912pxy_hlsl_generator_regtext FormatRightSide3(DWORD dstOp, const char* pre, const char* post, const char* mid[2], d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, d912pxy_hlsl_generator_regtext op3, UINT8 dstLen);
-
-	UINT64 FormatCmpString(DWORD op);
-	UINT GetDstModifier(DWORD op);
-
-	void WriteProcLinePredef(const char* fmt, ...);
-	void WriteProcLine(const char* fmt, ...);
-	void WriteHeadILine(UINT prio, const char* fmt, ...);
-	void WriteHeadOLine(UINT prio, const char* fmt, ...);
-
-	UINT GetDstLenByWriteMask(DWORD op);
-	UINT GetDstLenByWriteMask2(DWORD wmask);
-
-	const char* GetRegTypeStr(DWORD op, UINT8 proc);
-	const char* GetUsageString(UINT usage, UINT type);
-	UINT64 GetWriteMaskStr(DWORD op);
-	UINT64 GetSwizzleStr(DWORD op, DWORD opDst);
-
-	void CheckRegDefinition(DWORD op, UINT isDst);
-	void DefineIOReg(DWORD op);
-
-	void LoadBugDefs();
-
-	UINT GetMaxShaderPassedVars();
-
+		
 	static void FillHandlers();
 	static UINT allowPP_suffix;
 
 private:
+	//sio handlers
 	void ProcSIO_DEF(DWORD* op);
 	void ProcSIO_DCL(DWORD* op);	
 	void ProcSIO_DP2(DWORD* op);
@@ -166,41 +165,68 @@ private:
 	void ProcSIO_SGE(DWORD* op);
 	void ProcSIO_SGN(DWORD* op);
 	void ProcSIO_SINCOS(DWORD* op);
+	void ProcSIO_ADD(DWORD* op);
 
+	//generic sio handlers
 	void ProcSIO_DOTX(DWORD* op, UINT sz);
 	void ProcSIO_3OP(DWORD * op, const char * pre, const char * mid[2], const char * post);
 	void ProcSIO_2OP(DWORD * op, const char * pre, const char * mid, const char * post);
 	void ProcSIO_1OP(DWORD* op, const char* pre, const char* post);
-
-	void ProcSIO_ADD(DWORD* op);
-	void ProcSIO_UNK(DWORD* op);
 	
-	d912pxy_shader_uid mUID;
+	void ProcSIO_UNK(DWORD* op);
+
+	//process sub funcs
+	void WriteShaderHeadData();
+	void WriteShaderTailData();
+	void WriteExtraUnusedRegs();
+	
+	//extra conditional flags
+	UINT8 PSpositionUsed;
+	UINT8 relLookupDefined;
+	
+	//sm block data
 	UINT8 minVer;
 	UINT8 majVer;
 	UINT8 isPS;
-	UINT8 PSpositionUsed;
 
-	FILE * of;
+	UINT LoadSMBlock();
+	void DumpDisassembly();
+
+	//source dxbc data
 	DWORD * oCode;
 	UINT oLen;
+	d912pxy_shader_uid mUID;
 
+	//output file
+	FILE * of;
+	d912pxy_hlsl_generator_memout* WriteOutput(UINT toMemory);
+
+	//output buffering and sorting
 	UINT procIdent;
 	char* lines[d912pxy_hlsl_generator_max_code_lines];
 	UINT headerOffsetO;
 	UINT headerOffsetI;
 	UINT procOffsetPredef;
 	UINT procOffset;
+	UINT mainFunctionDeclStrIdx;
 
-	UINT8 forcePCFsampler[32];
-	UINT genAlphatest;
-	UINT genSRGBRead;
-	UINT genSRGBWrite;
-	UINT genVSClipplane0;
+	int WriteProcLinePredef(const char* fmt, ...);
+	void WriteProcLine(const char* fmt, ...);
+	void WriteHeadILine(UINT prio, const char* fmt, ...);
+	void WriteHeadOLine(UINT prio, const char* fmt, ...);
 
-	UINT maxShaderPassedVars;
+	//megai2: shader profile managing 
+	UINT genProfile[PXY_INNER_SHDR_BUG_COUNT];
 
-	UINT64 regDefined[(D3DSPR_PREDICATE + 1) * 32];
+	void LoadGenProfile();
+
+	//megai2: register definition and tracking
+	UINT64 regDefined[(D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN];
+	UINT64 regDefinedAsC[(D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN];
+
+	void CheckRegDefinition(DWORD op, UINT isDst);
+	void DefineIOReg(DWORD op, UINT asConstant);
+	int IsRegDefined(DWORD op, UINT numOffset);
 	
 	static d912pxy_hlsl_generator_sio_handler SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt];	
 };
