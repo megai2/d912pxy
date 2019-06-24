@@ -42,6 +42,7 @@ UINT32 d912pxy_query_occlusion::bufferedReadback = 0;
 d912pxy_query_occlusion::d912pxy_query_occlusion(d912pxy_device* dev, D3DQUERYTYPE Type) : d912pxy_query(dev, Type)
 {
 	queryResult = 0;
+	queryOpened = 0;
 }
 
 
@@ -83,9 +84,15 @@ D912PXY_METHOD_IMPL(Issue)(THIS_ DWORD dwIssueFlags)
 		d912pxy_s(CMDReplay)->QueryMark(this, 1);		
 		g_gpuStack[g_writeStack].stack[frameIdx] = this;
 		ThreadRef(1);
+		queryOpened = 1;
 		++g_gpuStack[g_writeStack].count;
 	}
 	else {
+		//megai2: should not need this but it can be, so i keep it here for now
+		if (!queryOpened)
+			Issue(D3DISSUE_BEGIN);
+
+		queryOpened = 0;
 		d912pxy_s(CMDReplay)->QueryMark(this, 0);			
 	}
 
@@ -148,6 +155,9 @@ void d912pxy_query_occlusion::OnIFrameEnd()
 	{
 		ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
 
+		for (int i = 0; i != writeStack->count; ++i)
+			writeStack->stack[i]->ForceClose(cl);
+
 		cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, 0, writeStack->count, writeStack->readbackBuffer->GetD12Obj(), 0);
 	}
 }
@@ -173,6 +183,15 @@ void d912pxy_query_occlusion::OnIFrameStart()
 	}
 
 	g_writeStack = !g_writeStack;
+}
+
+void d912pxy_query_occlusion::ForceClose(ID3D12GraphicsCommandList * cl)
+{
+	if (queryOpened)
+	{
+		QueryMark(0, cl);
+		queryOpened = 0;
+	}
 }
 
 UINT d912pxy_query_occlusion::InitOccQueryEmulation()

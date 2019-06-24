@@ -49,6 +49,8 @@ public:
 	void OnIFrameEnd();
 	void OnIFrameStart();
 
+	void ForceClose(ID3D12GraphicsCommandList* cl);
+
 
 	static UINT InitOccQueryEmulation();
 	static void FreePendingQueryObjects();
@@ -63,5 +65,6 @@ private:
 	UINT32 queryResult;
 	UINT32 queryFinished;
 	UINT32 frameIdx;
+	UINT32 queryOpened;
 };
 
