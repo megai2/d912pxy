@@ -64,6 +64,7 @@ private:
 	d912pxy_vdecl_elesn semantics[PXY_INNER_MAX_VDECL_LEN];
 
 	DWORD declLen;
+	DWORD usedStreamSlots;
 	UINT32 mHash;
 
 	d912pxy_vdecl* instancedDecl;

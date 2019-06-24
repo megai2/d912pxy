@@ -283,5 +283,5 @@ UINT32 d912pxy_upload_item::PooledAction(UINT32 use)
 
 	PooledActionExit();
 
-	return 0;
+	return 1;
 }

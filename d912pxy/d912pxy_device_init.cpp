@@ -82,28 +82,24 @@ void d912pxy_device::InitVFS()
 		LOG_INFO_DTDM("VFS is locked by another process, no data will be saved on disk");
 	}
 
-	d912pxy_s(vfs)->SetRoot("./d912pxy/pck");
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_CSO, "shader_cso"))
-	{
-		LOG_ERR_DTDM("shader_cso VFS not loaded");
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
+	d912pxy_s(vfs)->SetRoot(d912pxy_s(config)->GetValueRaw(PXY_CFG_VFS_ROOT));
 
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_SHADER_PROFILE, "shader_profiles"))
-	{
-		LOG_ERR_DTDM("shader_profiles VFS not loaded");		
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
+	UINT64 memcacheMask = d912pxy_s(config)->GetValueXI64(PXY_CFG_VFS_MEMCACHE_MASK);
 
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_CACHE_KEYS, "pso_cache"))
-	{
-		LOG_ERR_DTDM("pso_cache VFS not loaded");		
-		LOG_ERR_THROW2(-1, "VFS error");
-	}
+	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			memcacheMask);
+	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_PSO_CACHE_KEYS,				"pso_cache",			memcacheMask);
+	InitVFSitem(PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_SHADER_SOURCES,				"shader_sources",		memcacheMask);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_VS,				"derived_cso_vs",	    memcacheMask);
+	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_PS,				"derived_cso_ps",       memcacheMask);
+}
 
-	if (!d912pxy_s(vfs)->LoadVFS(PXY_VFS_BID_PSO_PRECOMPILE_LIST, "pso_precompile"))
+void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT64 memCache)
+{
+	if (!d912pxy_s(vfs)->LoadVFS(id, name, ((1ULL << id) & memCache)) != 0ULL)
 	{
-		LOG_ERR_DTDM("pso_precompile VFS not loaded");		
+		LOG_ERR_DTDM("%S VFS not loaded", name);
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
 }
@@ -125,7 +121,7 @@ void d912pxy_device::InitThreadSyncObjects()
 }
 
 void d912pxy_device::InitSingletons()
-{
+{	
 	new d912pxy_gpu_que(this, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
 
 	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_MT_REPLAY_BEHAIVOUR))
@@ -166,12 +162,71 @@ void d912pxy_device::InitComPatches()
 		d912pxy_com_set_method((IDirect3DPixelShader9*)psPatch, 2, &d912pxy_pshader::ReleaseWithPairRemoval);
 		psPatch->Release();
 	}
+
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CLEAR))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x2b, &d912pxy_device::Clear_Emulated);
+	}
+
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x25, &d912pxy_device::SetRenderTarget_Compat);
+	}
+
+	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CPU_API_REDUCTION))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x2f, &d912pxy_device::SetViewport_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x4b, &d912pxy_device::SetScissorRect_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x64, &d912pxy_device::SetStreamSource_CAR);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x68, &d912pxy_device::SetIndices_CAR);
+	}
+
+	{
+		d912pxy_s(queryOcc) = new d912pxy_query_occlusion(this, D3DQUERYTYPE_OCCLUSION);
+
+		UINT64 occCfgValue = d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OCCLUSION);
+
+		switch (occCfgValue)
+		{
+			case 2:
+			case 3:
+				d912pxy_query_occlusion::InitOccQueryEmulation();
+				d912pxy_query_occlusion::bufferedReadback = occCfgValue & 1;
+				break;
+			case 1:
+				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 7, &d912pxy_query::GetDataOneOverride);
+				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 6, &d912pxy_query::IssueNOP);
+				break;
+			case 0:
+				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 7, &d912pxy_query::GetDataZeroOverride);
+				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 6, &d912pxy_query::IssueNOP);
+				break;
+			default:
+				LOG_ERR_THROW2(-1, "PXY_CFG_COMPAT_OCCLUSION config entry is bad");
+				break;
+		}				
+	}
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x41, &d912pxy_device::SetTexture_PS);
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_PS);
+	}
+	else if (d912pxy_s(config)->GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_Compat);
+	}
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+	{
+		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x11, &d912pxy_device::Present_PG);
+	}
 }
 
 void d912pxy_device::InitNullSRV()
 {
 	UINT uuLc = 1;
-	mNullTexture = new d912pxy_surface(this, 1, 1, D3DFMT_A8B8G8R8, 0, &uuLc, 6, NULL);
+	mNullTexture = new d912pxy_surface(this, 1, 1, D3DFMT_A8B8G8R8, 0, D3DMULTISAMPLE_NONE, 0, 0, &uuLc, 6, NULL);
 	D3DLOCKED_RECT lr;
 
 	for (int i = 0; i != 6; ++i)
@@ -189,21 +244,8 @@ void d912pxy_device::InitNullSRV()
 
 void d912pxy_device::InitDrawUPBuffers()
 {
-	UINT32 tmpUPbufSpace = 0xFFFF;
-
-	mDrawUPVbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace, 0, 0)->AsDX9VB();
-	mDrawUPIbuf = d912pxy_s(pool_vstream)->GetVStreamObject(tmpUPbufSpace * 2, D3DFMT_INDEX16, 1)->AsDX9IB();
-
-	UINT16* ibufDt;
-	mDrawUPIbuf->Lock(0, 0, (void**)&ibufDt, 0);
-
-	for (int i = 0; i != tmpUPbufSpace; ++i)
-	{
-		ibufDt[i] = i;
-	}
-
-	mDrawUPIbuf->Unlock();
-	mDrawUPStreamPtr = 0;
+	m_dupEmul = new d912pxy_draw_up(this);
+	m_clearEmul = new d912pxy_surface_clear(this);
 }
 
 void d912pxy_device::InitDescriptorHeaps()
@@ -232,9 +274,8 @@ void d912pxy_device::PrintInfoBanner()
 	d912pxy_helper::InstallVehHandler();
 
 
-#ifdef TRACK_SHADER_BUGS_PROFILE
-	LOG_INFO_DTDM("Running ps build, expect performance drops");
-#endif
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+		LOG_INFO_DTDM("Running ps build, expect performance drops");
 
 	UINT64 memKb = 0;
 
@@ -275,13 +316,14 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 
 ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 {
-	d912pxy_helper::d3d12_EnableDebugLayer();
-
 	ComPtr<IDXGIFactory4> dxgiFactory;
 	UINT createFactoryFlags = 0;
-#ifdef _DEBUG
-	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#endif
+
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_DX_DBG_RUNTIME))
+	{
+		d912pxy_helper::d3d12_EnableDebugLayer();
+		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+	}
 
 	LOG_ERR_THROW2(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)), "DXGI factory @ GetAdapter");
 

@@ -414,10 +414,13 @@ void d912pxy_swapchain::ResetFrameTargets()
 		currentPP.BackBufferWidth,
 		currentPP.BackBufferHeight,
 		currentPP.BackBufferFormat, 
+		D3DUSAGE_RENDERTARGET,
 		D3DMULTISAMPLE_NONE, 
 		0, 
-		0, 
-		0
+		0,
+		NULL, 
+		0,
+		NULL
 	);
 
 	d912pxy_s(iframe)->BindSurface(1, backBufferSurface);
@@ -429,10 +432,13 @@ void d912pxy_swapchain::ResetFrameTargets()
 			currentPP.BackBufferWidth,
 			currentPP.BackBufferHeight,
 			currentPP.AutoDepthStencilFormat,
+			D3DUSAGE_DEPTHSTENCIL,
 			D3DMULTISAMPLE_NONE,
 			0,
 			0,
-			1
+			NULL,
+			0,
+			NULL
 		);
 
 		d912pxy_s(iframe)->BindSurface(0, depthStencilSurface);

@@ -54,4 +54,6 @@ namespace d912pxy_helper {
 
 	char* GetCPUBrandString();
 
+	char* StrGetCurrentLineStart(char* buffer);
+	char* StrNextLine(char* buffer);
 }

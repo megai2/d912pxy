@@ -32,8 +32,10 @@ HRESULT WINAPI d912pxy_device::CreateTexture(UINT Width, UINT Height, UINT Level
 
 	API_OVERHEAD_TRACK_START(0)
 
-	void* extendedPlace = (void*)((intptr_t)malloc(sizeof(d912pxy_texture) + 8) + 8);
-
+	void* extendedPlace = NULL;
+	PXY_MALLOC(extendedPlace, sizeof(d912pxy_texture) + 8, void*);
+	extendedPlace = (void*)((intptr_t)extendedPlace + 8);
+		
 	*ppTexture = new (extendedPlace) d912pxy_texture(this, Width, Height, Levels, Usage, Format);
 
 	API_OVERHEAD_TRACK_END(0)
@@ -60,7 +62,9 @@ HRESULT WINAPI d912pxy_device::CreateCubeTexture(UINT EdgeLength, UINT Levels, D
 
 	API_OVERHEAD_TRACK_START(0)
 
-	void* extendedPlace = (void*)((intptr_t)malloc(sizeof(d912pxy_ctexture) + 8) + 8);
+	void* extendedPlace = NULL;
+	PXY_MALLOC(extendedPlace, sizeof(d912pxy_ctexture) + 8, void*);
+	extendedPlace = (void*)((intptr_t)extendedPlace + 8);
 
 	*ppCubeTexture = new (extendedPlace) d912pxy_ctexture(this, EdgeLength, Levels, Usage, Format);
 
@@ -104,8 +108,8 @@ HRESULT WINAPI d912pxy_device::CreateRenderTarget(UINT Width, UINT Height, D3DFO
 	LOG_DBG_DTDM("new RT FMT: %u", Format);
 
 	API_OVERHEAD_TRACK_START(0)
-
-	*ppSurface = new d912pxy_surface(this, Width, Height, Format, MultiSample, MultisampleQuality, Lockable, 0);
+	
+	*ppSurface = d912pxy_s(pool_surface)->GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_RENDERTARGET, NULL);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -118,7 +122,7 @@ HRESULT WINAPI d912pxy_device::CreateDepthStencilSurface(UINT Width, UINT Height
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppSurface = new d912pxy_surface(this, Width, Height, Format, MultiSample, MultisampleQuality, Discard, 1);
+	*ppSurface = d912pxy_s(pool_surface)->GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_DEPTHSTENCIL, NULL);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -131,7 +135,7 @@ HRESULT WINAPI d912pxy_device::CreateStateBlock(D3DSTATEBLOCKTYPE Type, IDirect3
 
 	API_OVERHEAD_TRACK_START(0)
 
-		d912pxy_sblock* ret = new d912pxy_sblock(this, Type);
+	d912pxy_sblock* ret = new d912pxy_sblock(this, Type);
 	*ppSB = ret;
 
 	API_OVERHEAD_TRACK_END(0)
@@ -186,7 +190,14 @@ HRESULT WINAPI d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** 
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppQuery = (IDirect3DQuery9*)new d912pxy_query(this, Type);
+	switch (Type)
+	{
+		case D3DQUERYTYPE_OCCLUSION:
+			*ppQuery = (IDirect3DQuery9*)new d912pxy_query_occlusion(this, Type);
+			break;
+		default:
+			*ppQuery = (IDirect3DQuery9*)new d912pxy_query(this, Type);
+	}
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -209,7 +220,7 @@ HRESULT WINAPI d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Heig
 	}
 
 	UINT levels = 1;
-	d912pxy_surface* ret = new d912pxy_surface(this, Width, Height, Format, D3DUSAGE_D912PXY_FORCE_RT, &levels, 1, NULL);
+	d912pxy_surface* ret = new d912pxy_surface(this, Width, Height, Format, D3DUSAGE_D912PXY_FORCE_RT, D3DMULTISAMPLE_NONE, 0, 0, &levels, 1, NULL);
 
 	*ppSurface = (IDirect3DSurface9*)ret;
 

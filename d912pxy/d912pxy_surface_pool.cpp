@@ -31,7 +31,8 @@ d912pxy_surface_pool::d912pxy_surface_pool(d912pxy_device* dev) : d912pxy_pool<d
 
 	table = new d912pxy_memtree2(4, 4096, 2);
 
-	this->rwMutex = (d912pxy_thread_lock*)malloc(sizeof(d912pxy_thread_lock)*1);
+	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1, d912pxy_thread_lock*);
+
 	this->rwMutex[0].Init();
 }
 
@@ -61,20 +62,19 @@ d912pxy_surface_pool::~d912pxy_surface_pool()
 
 	delete table;
 
-	free(this->rwMutex);
+	PXY_FREE(this->rwMutex);
 }
 
-d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT32* srvFeedback)
+d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback)
 {
 	UINT uidPrecursor[] = {
-		width,
-		height,
+		width + (height << 16),		
+		levels + (arrSz << 8),
 		(UINT)fmt,
-		levels,
-		arrSz
+		Usage
 	};
 
-	UINT uid = table->memHash32s(uidPrecursor, 5 * 4);
+	UINT uid = table->memHash32s(uidPrecursor, 4 * 4);
 
 	d912pxy_surface* ret = NULL;
 	
@@ -82,9 +82,9 @@ d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DF
 
 	if (!ret)
 	{
-		LOG_DBG_DTDM2("surface pool miss: %u %u %u %u %u", width, height, fmt, arrSz, levels);
+		LOG_DBG_DTDM2("surface pool miss: %u %u %u %u %u %u", width, height, fmt, arrSz, levels, Usage);
 
-		ret = new d912pxy_surface(m_dev, width, height, fmt, 0, &levels, arrSz, srvFeedback);
+		ret = new d912pxy_surface(m_dev, width, height, fmt, Usage, D3DMULTISAMPLE_NONE, 0, 0, &levels, arrSz, srvFeedback);
 		ret->MarkPooled(uid);
 	}
 	else {

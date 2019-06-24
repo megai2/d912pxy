@@ -62,7 +62,7 @@ d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UI
 	d912pxy_vstream* ret = NULL;
 	UINT mc = MemCatFromSize(size);
 
-	LOG_DBG_DTDM2("mc %02X sz %08lX szc %08lX mcs %08lX", mc, size, MemCatFromSize(MemCatToSize(mc)), MemCatToSize(mc));
+	LOG_DBG_DTDM("mc %02X sz %08lX szc %08lX mcs %08lX", mc, size, MemCatFromSize(MemCatToSize(mc)), MemCatToSize(mc));
 
 	PoolRW(mc, &ret, 0);
 

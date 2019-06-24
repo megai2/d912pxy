@@ -123,8 +123,6 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 	return rsObj;
 }
 
-#ifdef TRACK_SHADER_BUGS_PROFILE
-
 void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId)
 {
 	UINT32 size;
@@ -132,7 +130,7 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 
 	if (data == NULL)
 	{
-		data = (UINT32*)malloc(PXY_INNER_SHDR_BUG_FILE_SIZE);
+		PXY_MALLOC(data, PXY_INNER_SHDR_BUG_FILE_SIZE, UINT32*);
 		ZeroMemory(data, PXY_INNER_SHDR_BUG_FILE_SIZE);
 		data[type] = val;
 
@@ -153,9 +151,7 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 		}
 	}
 
-	free(data);
+	PXY_FREE(data);
 }
-
-#endif
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

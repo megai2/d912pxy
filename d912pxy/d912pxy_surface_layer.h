@@ -74,5 +74,6 @@ private:
 	UINT memPerPix;
 
 	UINT intRefc;
+
 };
 

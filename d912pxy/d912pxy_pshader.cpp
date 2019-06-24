@@ -29,7 +29,7 @@ d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, const DWORD * fun) : d912
 
 }
 
-d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, d912pxy_shader_uid uid) : d912pxy_shader(dev, L"pshader", uid)
+d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, d912pxy_shader_uid uid) : d912pxy_shader(dev, L"pshader", uid, 0)
 {
 }
 

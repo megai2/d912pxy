@@ -32,35 +32,18 @@ d912pxy_texture::d912pxy_texture(d912pxy_device* dev, UINT Width, UINT Height, U
 	srvIDc = (UINT32*)((intptr_t)this - 8);
 
 	m_levels = Levels;
-
-	UINT32 rtTrans;
-
+	
 	LOG_DBG_DTDM("tex usage is %u", Usage);
 
-	if (Usage & D3DUSAGE_RENDERTARGET)
-	{		
-		LOG_DBG_DTDM("texture as rendertarget %u", Format);
-		baseSurface = new d912pxy_surface(dev, Width, Height, Format, D3DMULTISAMPLE_NONE, 0, 0, 0);		
-		rtTrans = 1;
-	}
-	else if (Usage & D3DUSAGE_DEPTHSTENCIL)
-	{
-		LOG_DBG_DTDM("texture as depthstencil");
-		baseSurface = new d912pxy_surface(dev, Width, Height, Format, D3DMULTISAMPLE_NONE, 0, 0, 1);
-		rtTrans = 1;
-	}
-	else {
-		LOG_DBG_DTDM("texture as SRV");
-		if (m_levels != 0)
-		{
-			baseSurface = d912pxy_s(pool_surface)->GetSurface(Width, Height, Format, m_levels, 1, &srvIDc[0]);
-		} else 
-			baseSurface = new d912pxy_surface(dev, Width, Height, Format, Usage, &m_levels, 1, &srvIDc[0]);
-		rtTrans = 0;
-	}
+	if (m_levels != 0)
+		baseSurface = d912pxy_s(pool_surface)->GetSurface(Width, Height, Format, m_levels, 1, Usage, &srvIDc[0]);
+	else 
+		baseSurface = new d912pxy_surface(dev, Width, Height, Format, Usage, D3DMULTISAMPLE_NONE,0,	0, &m_levels, 1, &srvIDc[0]);
 
-	srvIDc[1] = rtTrans;
-	srvIDc[0] = baseSurface->GetSRVHeapId();
+	srvIDc[1] = (Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL);
+
+	if (!srvIDc[1])
+		srvIDc[0] = baseSurface->GetSRVHeapId();
 }
 
 

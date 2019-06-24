@@ -102,7 +102,7 @@ UINT d912pxy_basetexture::FinalRelease()
 	if (d912pxy_comhandler::FinalReleaseTest() == 3)
 	{
 		this->~d912pxy_basetexture();
-		free(bptr);
+		PXY_FREE(bptr);
 		return 1;
 	}
 	else

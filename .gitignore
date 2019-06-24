@@ -391,5 +391,7 @@ bin/d912pxy/shaders/hlsl/*.hlsl
 
 bin/d912pxy/config.ini
 bin/d912pxy/log.txt
-bin/d912pxy/crash.txt
 *.diagsession
+bin/d912pxy/crash*.txt
+bin/renderdoc.lnk
+bin/d912pxy/dx12_perf_graph.html

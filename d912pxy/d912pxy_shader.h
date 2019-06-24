@@ -31,7 +31,7 @@ class d912pxy_shader : public d912pxy_comhandler
 {
 public:
 	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, const DWORD* fun);
-	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, d912pxy_shader_uid uid);
+	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, d912pxy_shader_uid uid, UINT isVS);
 	~d912pxy_shader();
 
 	/*** IDirect3DVertexShader9 methods ***/
@@ -58,5 +58,6 @@ private:
 
 	UINT oLen;	
 	DWORD* oCode;
+
 };
 

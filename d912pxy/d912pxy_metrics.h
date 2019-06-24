@@ -39,7 +39,9 @@ SOFTWARE.
 #define PXY_METRICS_API_OVERHEAD_TEXTURE 11
 #define PXY_METRICS_API_OVERHEAD_SURFACE 12
 #define PXY_METRICS_API_OVERHEAD_COM 13
-#define PXY_METRICS_API_OVERHEAD_COUNT 14
+#define PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING_UP 14
+#define PXY_METRICS_API_OVERHEAD_QUERY_OCCLUSION 15
+#define PXY_METRICS_API_OVERHEAD_COUNT 16
 
 #define PXY_METRICS_IFRAME_PREP 0
 #define PXY_METRICS_IFRAME_EXEC 1
@@ -51,7 +53,8 @@ SOFTWARE.
 #define PXY_METRICS_IFRAME_THREAD_RP2 7
 #define PXY_METRICS_IFRAME_THREAD_RP3 8
 #define PXY_METRICS_IFRAME_SYNC_WAKE 9
-#define PXY_METRICS_IFRAME_COUNT 10
+#define PXY_METRICS_IFRAME_RESIDENCY 10
+#define PXY_METRICS_IFRAME_COUNT 11
 
 static const wchar_t* PXY_METRICS_API_OVERHEAD_NAMES[] = {
 	L"overhead / dev",
@@ -68,6 +71,8 @@ static const wchar_t* PXY_METRICS_API_OVERHEAD_NAMES[] = {
 	L"overhead / texture",
 	L"overhead / surface",
 	L"overhead / com",
+	L"overhead / dev / dup",
+	L"overhead / query / occlusion",
 	L"overhead / total"
 };
 
@@ -81,7 +86,8 @@ static const wchar_t* PXY_METRICS_IFRAME_TIME_NAMES [] = {
 	L"time / thread / rp1",
 	L"time / thread / rp2",
 	L"time / thread / rp3",
-	L"time / sync wake"
+	L"time / sync wake",
+	L"time / residency"
 };
 
 static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {
@@ -119,6 +125,7 @@ private:
 	tUINT8 metricIFrameDraws;
 	tUINT8 metricIFrameCleans;
 	tUINT8 metricIFrameUploadOffset;
+	tUINT8 metricTotalMemUsed;
 	tUINT8 metricIFramePerBatchPrep;
 	tUINT8 metricIFramePerBatchOverhead;
 	tUINT8 metricIFrameAppPrep;	

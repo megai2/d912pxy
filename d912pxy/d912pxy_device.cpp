@@ -30,7 +30,8 @@ using namespace Microsoft::WRL;
 
 d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(L"device")
 {
-	d912pxy_s(dev) = this;	
+	d912pxy_s(dev) = this;
+
 	PrintInfoBanner();
 
 	initPtr = par;
@@ -41,10 +42,11 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comha
 	FRAME_METRIC_PRESENT(1)
 #endif
 
-#ifdef PERFORMANCE_GRAPH_WRITE
-	perfGraph = new d912pxy_performance_graph(0);
-#endif
-
+	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+		perfGraph = new d912pxy_performance_graph(0);
+	else
+		perfGraph = NULL;
+		 
 	LOG_INFO_DTDM2(InitClassFields(),									"Startup step  1/10");
 	LOG_INFO_DTDM2(InitVFS(),											"Startup step  2/10");
 	LOG_INFO_DTDM2(InitThreadSyncObjects(),								"Startup step  3/10");
@@ -73,15 +75,15 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(swapchains[0]->Release(),		 "Swapchain stopped");
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
-		
-	LOG_INFO_DTDM2(delete d912pxy_s(bufloadThread),		"Final cleanups  1/11");
-	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups  2/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(iframe),			"Final cleanups  3/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(sdb),				"Final cleanups  4/12");
 
-	LOG_INFO_DTDM2(delete d912pxy_s(thread_cleanup),	"Final cleanups  5/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(thread_cleanup),	"Final cleanups  1/12");
 	swapOpLock.Release();
-
+		
+	LOG_INFO_DTDM2(delete d912pxy_s(bufloadThread),		"Final cleanups  2/11");
+	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups  3/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(iframe),			"Final cleanups  4/12");
+	LOG_INFO_DTDM2(delete d912pxy_s(sdb),				"Final cleanups  5/12");
+	
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_vstream),		"Final cleanups  6/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_upload),		"Final cleanups  7/12");
 	LOG_INFO_DTDM2(delete d912pxy_s(pool_surface),		"Final cleanups  8/12");
@@ -98,9 +100,8 @@ d912pxy_device::~d912pxy_device(void)
 	delete d912pxy_s(metrics);
 #endif
 
-#ifdef PERFORMANCE_GRAPH_WRITE
-	delete perfGraph;
-#endif
+	if (perfGraph)
+		delete perfGraph;
 
 	if (initPtr)
 		((IDirect3D9*)initPtr)->Release();
@@ -114,8 +115,11 @@ d912pxy_device::~d912pxy_device(void)
 
 void d912pxy_device::FreeAdditionalDX9Objects()
 {
-	mDrawUPIbuf->Release();
-	mDrawUPVbuf->Release();
+	d912pxy_query_occlusion::DeInitOccQueryEmulation();
+
+	delete m_dupEmul;
+	delete m_clearEmul;
+
 	mNullTexture->Release();
 }
 
@@ -147,8 +151,16 @@ ULONG WINAPI d912pxy_device::Release(void)
 	{
 		LOG_INFO_DTDM("Device last reference removal");
 		lastDev = NULL;
-	}
-	return d912pxy_comhandler::Release();	
+
+		d912pxy_comhandler::Release();
+
+		//d912pxy_s(memMgr)->LogLeaked();
+		d912pxy_final_cleanup();
+
+		return 0;
+
+	} else 
+		return d912pxy_comhandler::Release();	
 }
 
 UINT WINAPI d912pxy_device::GetAvailableTextureMem(void)

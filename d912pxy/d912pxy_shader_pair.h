@@ -56,5 +56,6 @@ private:
 	d912pxy_shader_uid shdUID[2];
 
 	d912pxy_thread_lock lock;
+
 };
 
