@@ -189,8 +189,9 @@ void d912pxy_query_occlusion::ForceClose(ID3D12GraphicsCommandList * cl)
 {
 	if (queryOpened)
 	{
-		QueryMark(0, cl);
 		queryOpened = 0;
+		d912pxy_s(CMDReplay)->QueryMark(this, 0);
+		//QueryMark(0, cl)
 	}
 }
 
