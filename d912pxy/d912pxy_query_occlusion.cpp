@@ -31,8 +31,8 @@ typedef struct d912pxy_query_occlusion_gpu_stack {
 } d912pxy_query_occlusion_gpu_stack;
 
 ID3D12QueryHeap* g_occQueryHeap = 0;
-d912pxy_query_occlusion_gpu_stack g_gpuStack[2];
-UINT32 g_writeStack;
+d912pxy_query_occlusion_gpu_stack g_gpuStack[2] = { 0 };
+UINT32 g_writeStack = 0;
 
 UINT32 d912pxy_query_occlusion::bufferedReadback = 0;
 
