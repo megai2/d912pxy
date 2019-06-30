@@ -21,6 +21,8 @@ d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(dev, L"dr
 			{
 				((UINT32*)buf[i].writePoint)[j] = j;
 			}
+
+			buf[i].offset = tmpUPbufSpace;
 		}
 	}
 }
