@@ -88,7 +88,7 @@ void d912pxy_draw_up::OnFrameEnd()
 	for (int i = 0; i != PXY_DUP_COUNT; ++i)
 	{
 		if (buf[i].writePoint)
-			buf[i].vstream->Unlock();
+			buf[i].vstream->UnlockRanged(0, buf[i].offset);
 
 		buf[i].writePoint = 0;
 	}

@@ -66,6 +66,8 @@ public:
 		
 	//internal methods
 
+	void UnlockRanged(UINT newOffset, UINT newSize);
+
 	void IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12GraphicsCommandList* cl);
 	void IFrameBindIB(ID3D12GraphicsCommandList* cl);
 

@@ -118,6 +118,21 @@ D912PXY_METHOD_IMPL(Unlock)(THIS)
 	return D3D_OK;
 }
 
+void d912pxy_vstream::UnlockRanged(UINT newOffset, UINT newSize)
+{
+	API_OVERHEAD_TRACK_START(2)
+
+	--lockDepth;
+
+	lockInfo[lockDepth].offset = newOffset;
+	lockInfo[lockDepth].size = newSize;
+
+	d912pxy_s(bufloadThread)->IssueUpload(lockInfo[lockDepth]);
+
+	API_OVERHEAD_TRACK_END(2)
+	
+}
+
 void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12GraphicsCommandList * cl)
 {	
 	if (!m_res)	
