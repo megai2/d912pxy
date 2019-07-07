@@ -41,5 +41,8 @@ d912pxy_basetexture::~d912pxy_basetexture()
 
 UINT d912pxy_basetexture::GetSRVHeapId()
 {
-	return baseSurface->GetSRVHeapId();
+	if (srvIDc[1])
+		return baseSurface->GetSRVHeapId();
+	else
+		return srvIDc[0];
 }
