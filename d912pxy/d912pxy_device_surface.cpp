@@ -123,8 +123,8 @@ HRESULT d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTarget, ID
 
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_surface* src = (d912pxy_surface*)pRenderTarget;
-	d912pxy_surface* dst = (d912pxy_surface*)pDestSurface;
+	d912pxy_surface* src = PXY_COM_LOOKUP(pRenderTarget, surface);
+	d912pxy_surface* dst = PXY_COM_LOOKUP(pDestSurface, surface);
 	src->BCopyTo(dst, 3, d912pxy_s(GPUcl)->GID(CLG_SEQ));
 
 	dst->CopySurfaceDataToCPU();
@@ -138,7 +138,7 @@ HRESULT d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CONST REC
 {
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_s(CMDReplay)->StretchRect((d912pxy_surface*)pSourceSurface, (d912pxy_surface*)pDestSurface);
+	d912pxy_s(CMDReplay)->StretchRect(PXY_COM_LOOKUP(pSourceSurface, surface), PXY_COM_LOOKUP(pDestSurface, surface));
 
 	API_OVERHEAD_TRACK_END(0)
 

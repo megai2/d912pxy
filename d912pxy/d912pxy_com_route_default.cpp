@@ -2007,9 +2007,9 @@ void d912pxy_com_route_init_default()
 
 	//surface layer
 
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_QUERY_INTERFACE, &d912pxy_comhandler::com_QueryInterface);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_ADDREF, &d912pxy_comhandler::com_AddRef);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_comhandler::com_Release);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_QUERY_INTERFACE, &d912pxy_surface_layer::com_QueryInterface);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_ADDREF, &d912pxy_surface_layer::com_AddRef);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_surface_layer::com_Release);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETDEVICE, &d912pxy_surface_layer::com_GetDevice);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_SETPRIVATEDATA,&d912pxy_surface_layer::com_SetPrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA,&d912pxy_surface_layer::com_GetPrivateData);

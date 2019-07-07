@@ -56,7 +56,10 @@ HRESULT d912pxy_device::SetStreamSource_CAR(UINT StreamNumber, IDirect3DVertexBu
 	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
 		return D3DERR_INVALIDCALL;
 
-	d912pxy_s(iframe)->SetVBufIfChanged(PXY_COM_LOOKUP(pStreamData, vstream), StreamNumber, OffsetInBytes, Stride);
+	if (pStreamData)
+		d912pxy_s(iframe)->SetVBufIfChanged(PXY_COM_LOOKUP(pStreamData, vstream), StreamNumber, OffsetInBytes, Stride);
+	else
+		d912pxy_s(iframe)->SetVBufIfChanged(0, StreamNumber, OffsetInBytes, Stride);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -69,6 +72,8 @@ HRESULT d912pxy_device::SetIndices_CAR(IDirect3DIndexBuffer9 * pIndexData)
 
 	if (pIndexData)
 		d912pxy_s(iframe)->SetIBufIfChanged(PXY_COM_LOOKUP(pIndexData, vstream));
+	else
+		d912pxy_s(iframe)->SetIBufIfChanged(0);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -99,6 +104,8 @@ HRESULT d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 
 	if (pIndexData)
 		d912pxy_s(iframe)->SetIBuf(PXY_COM_LOOKUP(pIndexData, vstream));
+	else 
+		d912pxy_s(iframe)->SetIBuf(0);
 
 	API_OVERHEAD_TRACK_END(0)
 

@@ -63,7 +63,7 @@ HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTextu
 
 	if (pTexture)
 	{
-		d912pxy_basetexture* btex = dynamic_cast<d912pxy_basetexture*>(pTexture);
+		d912pxy_basetexture* btex = PXY_COM_LOOKUP(pTexture, basetex);
 
 		stageFormatsTrack[Stage] = btex->GetBaseSurface()->GetDX9DescAtLevel(0).Format;
 	}
