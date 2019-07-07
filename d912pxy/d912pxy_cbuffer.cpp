@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOnly) : d912pxy_resource(dev, RTID_CBUFFER, L"const buffer")
+d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOnly) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"const buffer")
 {
 	if ((length & 0xFF) != 0)
 	{
@@ -47,14 +47,14 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOn
 	else
 		dHeap = 0;
 
-	uploadRes = new d912pxy_resource(dev, RTID_UL_BUF, L"constant upload buffer");
+	uploadRes = new d912pxy_resource(RTID_UL_BUF, PXY_COM_OBJ_NOVTABLE, L"constant upload buffer");
 	uploadRes->d12res_buffer(length, D3D12_HEAP_TYPE_UPLOAD);
 
 //	pointers.host = NULL;
 	LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, (void**)&pointers.host));
 }
 
-d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, UINT length, UINT uploadOnly, void* n2) : d912pxy_resource(dev, RTID_CBUFFER, L"uav const buffer")
+d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, UINT length, UINT uploadOnly, void* n2) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"uav const buffer")
 {
 	if ((length & 0xFF) != 0)
 	{
@@ -68,14 +68,14 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, UINT length, UINT uploadO
 	else
 		dHeap = 0;
 
-	uploadRes = new d912pxy_resource(dev, RTID_UL_BUF, L"constant upload buffer");
+	uploadRes = new d912pxy_resource(RTID_UL_BUF, PXY_COM_OBJ_NOVTABLE, L"constant upload buffer");
 	uploadRes->d12res_buffer(length, D3D12_HEAP_TYPE_UPLOAD);
 
 	LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, (void**)&pointers.host));
 	pointers.dev = GetVA_GPU();
 }
 
-d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, d912pxy_cbuffer * oBuf, UINT offset, UINT iSz) : d912pxy_resource(dev, RTID_CBUFFER, L"const buffer offset")
+d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, d912pxy_cbuffer * oBuf, UINT offset, UINT iSz) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"const buffer offset")
 {
 	D3D12_CONSTANT_BUFFER_VIEW_DESC viDsc;
 

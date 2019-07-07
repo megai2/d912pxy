@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_db::d912pxy_shader_db(d912pxy_device* dev) : d912pxy_noncom(dev, L"shader database")
+d912pxy_shader_db::d912pxy_shader_db(d912pxy_device* dev) : d912pxy_noncom( L"shader database")
 {
 	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_pair_hash_type), 0xFF, 2);
 
@@ -72,7 +72,7 @@ d912pxy_shader_uid d912pxy_shader_db::GetUID(DWORD * code, UINT32* len)
 	return hash;
 }
 
-d912pxy_shader_pair_hash_type d912pxy_shader_db::GetPairUID(d912pxy_vshader * vs, d912pxy_pshader * ps)
+d912pxy_shader_pair_hash_type d912pxy_shader_db::GetPairUID(d912pxy_shader * vs, d912pxy_shader * ps)
 {
 	d912pxy_shader_uid pdc[2] = { vs->GetID(), ps->GetID() };
 
@@ -83,7 +83,7 @@ d912pxy_shader_pair_hash_type d912pxy_shader_db::GetPairUID(d912pxy_vshader * vs
 	return ha;
 }
 
-d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_pshader* ps)
+d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_shader* vs, d912pxy_shader* ps)
 {	
 	d912pxy_shader_pair_hash_type ha = GetPairUID(vs, ps);
 		
@@ -100,7 +100,7 @@ d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_ps
 		{
 			d912pxy_shader_uid pdc[2] = { vs->GetID(), ps->GetID() };
 
-			it = new d912pxy_shader_pair(ha, pdc, m_dev);
+			it = new d912pxy_shader_pair(ha, pdc, d912pxy_s(dev));
 
 			vs->NotePairUsage(ha);
 			ps->NotePairUsage(ha);

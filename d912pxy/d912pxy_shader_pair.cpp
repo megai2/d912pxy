@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_shader_uid* shd, d912pxy_device* dev) : d912pxy_noncom(dev, L"shader pair")
+d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_shader_uid* shd, d912pxy_device* dev) : d912pxy_noncom( L"shader pair")
 {	
 	maxPsoId = 512;
 
@@ -75,7 +75,7 @@ void d912pxy_shader_pair::PrecompilePSO(UINT32 idx, d912pxy_trimmed_dx12_pso * d
 {
 	CheckArrayAllocation(idx);
 
-	d912pxy_pso_cache_item* ret = new d912pxy_pso_cache_item(m_dev, dsc);
+	d912pxy_pso_cache_item* ret = d912pxy_pso_cache_item::d912pxy_pso_cache_item_com(dsc);
 
 	ret->Compile();
 
@@ -109,7 +109,7 @@ d912pxy_pso_cache_item* d912pxy_shader_pair::GetPSOCacheData(UINT32 idx, d912pxy
 
 	if (!ret)
 	{		
-		ret = new d912pxy_pso_cache_item(m_dev, dsc);
+		ret = d912pxy_pso_cache_item::d912pxy_pso_cache_item_com(dsc);
 
 		d912pxy_s(psoCache)->CompileItem(ret);
 

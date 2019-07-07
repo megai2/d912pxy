@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_cleanup_thread::d912pxy_cleanup_thread(d912pxy_device* dev) : d912pxy_noncom(dev, L"delayed cleanup thread"), d912pxy_thread("d912pxy pool gc", 0)
+d912pxy_cleanup_thread::d912pxy_cleanup_thread(d912pxy_device* dev) : d912pxy_noncom( L"delayed cleanup thread"), d912pxy_thread("d912pxy pool gc", 0)
 {
 	d912pxy_s(thread_cleanup) = this;
 
@@ -73,7 +73,7 @@ void d912pxy_cleanup_thread::ThreadJob()
 	}
 
 	//megai2: do external flush on device every wake cycle
-	m_dev->ExternalFlush();
+	d912pxy_s(dev)->ExternalFlush();
 
 	UINT32 etime = GetTickCount();
 

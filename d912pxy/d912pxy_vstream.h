@@ -27,44 +27,28 @@ SOFTWARE.
 
 #define PXY_INNER_BUFFER_FLAG_DIRTY 1
 
-//megai2: probably better way exists
-#define d912pxy_vstream_from_index(val) ((d912pxy_vstream*)((IDirect3DVertexBuffer9*)val))
-#define d912pxy_vstream_to_index(val) ((IDirect3DIndexBuffer9*)((IDirect3DVertexBuffer9*)val))
-
 typedef struct d912pxy_vstream_lock_data {
 	d912pxy_vstream* dst;
 	UINT32 size;
 	UINT32 offset;
 } d912pxy_vstream_lock_data;
 
-class d912pxy_vstream : public d912pxy_resource, public IDirect3DVertexBuffer9
+class d912pxy_vstream : public d912pxy_resource
 {
-public:
-	d912pxy_vstream(d912pxy_device* dev, UINT Length, DWORD Usage, DWORD fmt, DWORD isIB);
+public:	
+	static d912pxy_vstream* d912pxy_vstream_com(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB);
 	~d912pxy_vstream();
 
 	//DX9 com methods
 
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
-
-	/*** IDirect3DResource9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags);
-	D912PXY_METHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData);
-	D912PXY_METHOD(FreePrivateData)(THIS_ REFGUID refguid);
-	D912PXY_METHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew);
-	D912PXY_METHOD_(DWORD, GetPriority)(THIS);
-	D912PXY_METHOD_(void, PreLoad)(THIS);
-	D912PXY_METHOD_(D3DRESOURCETYPE, GetType)(THIS);
-
-	D912PXY_METHOD(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags);
-	D912PXY_METHOD(Unlock)(THIS);
-	D912PXY_METHOD(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC *pDesc);
-		
+	D912PXY_METHOD(Lock)(PXY_THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags);
+	D912PXY_METHOD(Unlock)(PXY_THIS);	
+	D912PXY_METHOD(GetDesc)(PXY_THIS_ D3DVERTEXBUFFER_DESC *pDesc);
+			
 	//internal methods
+
+	D912PXY_METHOD_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags);
+	D912PXY_METHOD_NC(Unlock)(THIS);
 
 	void UnlockRanged(UINT newOffset, UINT newSize);
 
@@ -74,9 +58,6 @@ public:
 	void NoteFormatChange(DWORD fmt, DWORD isIB);
 
 	UINT FinalReleaseCB();
-
-	IDirect3DVertexBuffer9* AsDX9VB();
-	IDirect3DIndexBuffer9* AsDX9IB();
 
 	UINT32 PooledAction(UINT32 use);
 	void UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size);
@@ -92,6 +73,8 @@ public:
 	static UINT32 threadedCtor;
 
 private:	
+	d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB);
+
 	union bindData {
 		D3D12_VERTEX_BUFFER_VIEW v;
 		D3D12_INDEX_BUFFER_VIEW i;

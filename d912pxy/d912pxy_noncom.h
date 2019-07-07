@@ -28,21 +28,20 @@ SOFTWARE.
 class d912pxy_noncom
 {
 public:
-	d912pxy_noncom(d912pxy_device* dev, const wchar_t* logModule);
+	d912pxy_noncom(const wchar_t* logModule);
 	d912pxy_noncom();
 	~d912pxy_noncom();
 
 	void ThrowErrorDbg(HRESULT hr, const char* msg);
 
-	HRESULT WINAPI GetDevice(IDirect3DDevice9** ppDevice);
+	static HRESULT WINAPI com_GetDevice(d912pxy_com_object* obj, IDirect3DDevice9** ppDevice);
 
-	void NonCom_Init(d912pxy_device* dev, const wchar_t* logModule);
+	void NonCom_Init(const wchar_t* logModule);
+
+	void ImplStubCall(const char* function, UINT line);
 
 protected:
-
 	d912pxy_log_module LGC_DEFAULT;
-
-	d912pxy_device* m_dev;	
 
 #ifdef _DEBUG
 	UINT lkObjTrace;

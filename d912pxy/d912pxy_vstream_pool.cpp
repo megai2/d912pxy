@@ -82,7 +82,7 @@ d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UI
 
 d912pxy_vstream * d912pxy_vstream_pool::AllocProc(UINT32 cat)
 {
-	return new d912pxy_vstream(m_dev, MemCatToSize(cat) , 0, 0, 0);
+	return d912pxy_vstream::d912pxy_vstream_com(MemCatToSize(cat) , 0, 0, 0);
 }
 
 void d912pxy_vstream_pool::EarlyInitProc()

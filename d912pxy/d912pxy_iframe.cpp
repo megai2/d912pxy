@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d912pxy_noncom(dev, L"iframe")
+d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d912pxy_noncom( L"iframe")
 {
 	d912pxy_s(iframe) = this;
 
@@ -36,7 +36,7 @@ d912pxy_iframe::d912pxy_iframe(d912pxy_device * dev, d912pxy_dheap** heaps) : d9
 
 	new d912pxy_pso_cache(dev);
 		
-	//mBatches->WriteElement(new d912pxy_batch(m_dev, mGPUque));
+	//mBatches->WriteElement(new d912pxy_batch(d912pxy_s(dev), mGPUque));
 
 	mRBarrierStkPointer = 0;
 	batchesIssued = 0;
@@ -410,7 +410,7 @@ void d912pxy_iframe::Start()
 
 	batchesIssued = 0;
 
-	d912pxy_s(queryOcc)->OnIFrameStart();
+	d912pxy_query_occlusion::OnIFrameStart();
 
 }
 
@@ -428,7 +428,7 @@ void d912pxy_iframe::End()
 	indexBind = NULL;*/
 
 
-	d912pxy_s(queryOcc)->OnIFrameEnd();
+	d912pxy_query_occlusion::OnIFrameEnd();
 
 
 	if (mSwapChain) 
@@ -606,7 +606,7 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 	SetViewport(&transVW);
 	SetScissors(&transSR);
 
-	m_dev->SetRenderState(D3DRS_STENCILREF, transSRef);
+	d912pxy_s(dev)->SetRenderState(D3DRS_STENCILREF, transSRef);
 	
 	ForceStateRebind();
 }

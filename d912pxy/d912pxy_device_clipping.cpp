@@ -26,7 +26,7 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_CLIPPING
 
-HRESULT WINAPI d912pxy_device::SetClipPlane(DWORD Index, CONST float* pPlane)
+HRESULT d912pxy_device::SetClipPlane(DWORD Index, CONST float* pPlane)
 {
 	API_OVERHEAD_TRACK_START(0)
 
@@ -41,7 +41,7 @@ HRESULT WINAPI d912pxy_device::SetClipPlane(DWORD Index, CONST float* pPlane)
 
 //scissors
 
-HRESULT WINAPI d912pxy_device::SetScissorRect(CONST RECT* pRect)
+HRESULT d912pxy_device::SetScissorRect(CONST RECT* pRect)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
@@ -54,7 +54,7 @@ HRESULT WINAPI d912pxy_device::SetScissorRect(CONST RECT* pRect)
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
+HRESULT d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
@@ -75,7 +75,7 @@ HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
 	return D3D_OK;
 }
 
-HRESULT __stdcall d912pxy_device::SetViewport_CAR(IDirect3DDevice9 * self, const D3DVIEWPORT9 * pViewport)
+HRESULT d912pxy_device::SetViewport_CAR(const D3DVIEWPORT9 * pViewport)
 {
 	API_OVERHEAD_TRACK_START(0)
 
@@ -94,7 +94,7 @@ HRESULT __stdcall d912pxy_device::SetViewport_CAR(IDirect3DDevice9 * self, const
 	return D3D_OK;
 }
 
-HRESULT __stdcall d912pxy_device::SetScissorRect_CAR(IDirect3DDevice9 * self, const RECT * pRect)
+HRESULT d912pxy_device::SetScissorRect_CAR(const RECT * pRect)
 {
 	API_OVERHEAD_TRACK_START(0)
 

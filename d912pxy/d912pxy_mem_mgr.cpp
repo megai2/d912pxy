@@ -85,6 +85,70 @@ d912pxy_mem_mgr::~d912pxy_mem_mgr() {
 	d912pxy_s(memMgr) = NULL;*/
 }
 
+UINT64 d912pxy_mem_mgr::GetPageSize()
+{
+	return sysinf.dwPageSize;
+}
+
+void d912pxy_mem_mgr::ReleaseReservedVARange(intptr_t base)
+{
+	VirtualFree((void*)base, 0, MEM_RELEASE);
+}
+
+void d912pxy_mem_mgr::CommitVARange(intptr_t base, UINT64 size)
+{
+	if (VirtualAlloc((void*)base, size, MEM_COMMIT, PAGE_READWRITE) != (void*)base)
+	{				
+		LOG_ERR_THROW2(HRESULT_FROM_WIN32(GetLastError()), "CommitVARange fail");
+	}
+}
+
+void d912pxy_mem_mgr::DeCommitVARange(intptr_t base, UINT64 size)
+{
+	if (!VirtualFree((void*)base, size, MEM_DECOMMIT))
+	{
+		LOG_ERR_THROW2(HRESULT_FROM_WIN32(GetLastError()), "DeCommitVARange fail");
+	}
+}
+
+intptr_t d912pxy_mem_mgr::ReserveVARangeAligned(UINT64 pow2shift, UINT64 addedSize)
+{
+	intptr_t incBase = 1ULL << pow2shift;
+
+	MEMORY_BASIC_INFORMATION memInfo;
+
+	intptr_t ret = incBase;
+
+	while (VirtualQuery((void*)ret, &memInfo, sizeof(MEMORY_BASIC_INFORMATION)))
+	{
+		if (memInfo.BaseAddress != (void*)ret)
+			goto nextBlock;
+
+		if (memInfo.AllocationBase)
+			goto nextBlock;
+
+		if (memInfo.State != MEM_FREE)
+			goto nextBlock;
+
+		if (memInfo.RegionSize < (size_t)(incBase + addedSize))
+			goto nextBlock;
+
+		if (VirtualAlloc((void*)ret, incBase + addedSize, MEM_RESERVE, PAGE_READWRITE) != (void*)ret)
+		{
+			LOG_ERR_THROW2(HRESULT_FROM_WIN32(GetLastError()), "ReserveVARangeAligned fail");
+		}
+
+		return ret;
+
+		nextBlock:
+			ret += incBase;
+	}
+
+	LOG_ERR_THROW2(-1, "ReserveVARangeAligned no space");
+
+	return 0;
+}
+
 void* d912pxy_mem_mgr::inRealloc(void* block, size_t sz) { // Returns pointer or nullptr if failed.
 	
 	//return HeapReAlloc(g_procHeap, 0, block, sz);
@@ -382,6 +446,8 @@ void d912pxy_mem_mgr::LogLeaked()
 
 void d912pxy_mem_mgr::PostInit()
 {
-	NonCom_Init(NULL, L"memmgr");
+	NonCom_Init(L"memmgr");
 	recordOprtNewCaller = d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER);
+
+	GetSystemInfo(&sysinf);
 }

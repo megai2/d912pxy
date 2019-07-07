@@ -25,23 +25,17 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_sblock : public IDirect3DStateBlock9, public d912pxy_comhandler
+class d912pxy_sblock : public d912pxy_comhandler
 {
-public:
-	d912pxy_sblock(d912pxy_device* dev, D3DSTATEBLOCKTYPE Type);
+public:	
+	static d912pxy_sblock* d912pxy_sblock_com(D3DSTATEBLOCKTYPE Type);
 	~d912pxy_sblock();
 
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
-
-	/*** IDirect3DStateBlock9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(Capture)(THIS);
-	D912PXY_METHOD(Apply)(THIS);
+	D912PXY_METHOD(Capture)(PXY_THIS);
+	D912PXY_METHOD(Apply)(PXY_THIS);
 
 private:
+	d912pxy_sblock(D3DSTATEBLOCKTYPE Type);
 
 	D3DSTATEBLOCKTYPE m_type;
 };

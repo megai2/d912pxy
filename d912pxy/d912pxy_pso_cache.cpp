@@ -27,7 +27,7 @@ SOFTWARE.
 D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_pso_cache::cDscBase;
 UINT d912pxy_pso_cache::allowRealtimeChecks = 0;
 
-d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom(dev, L"PSO cache"), d912pxy_thread("d912pxy pso compile", 0)
+d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom( L"PSO cache"), d912pxy_thread("d912pxy pso compile", 0)
 {
 	d912pxy_s(psoCache) = this;
 
@@ -461,7 +461,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	}
 }
 
-void d912pxy_pso_cache::VShader(d912pxy_vshader * vs)
+void d912pxy_pso_cache::VShader(d912pxy_shader * vs)
 {
 #ifdef _DEBUG
 	if (vs)
@@ -473,7 +473,7 @@ void d912pxy_pso_cache::VShader(d912pxy_vshader * vs)
 	cDsc.VS = vs;	
 }
 
-void d912pxy_pso_cache::PShader(d912pxy_pshader * ps)
+void d912pxy_pso_cache::PShader(d912pxy_shader * ps)
 {
 #ifdef _DEBUG
 	if (ps)
@@ -668,12 +668,12 @@ void d912pxy_pso_cache::MarkDirty(UINT force)
 	dirty |= 1 | (force < 1);
 }
 
-d912pxy_pshader * d912pxy_pso_cache::GetPShader()
+d912pxy_shader * d912pxy_pso_cache::GetPShader()
 {
 	return cDsc.PS;
 }
 
-d912pxy_vshader * d912pxy_pso_cache::GetVShader()
+d912pxy_shader * d912pxy_pso_cache::GetVShader()
 {
 	return cDsc.VS;
 }
@@ -774,20 +774,16 @@ void d912pxy_pso_cache::LoadCachedData()
 					{
 						d912pxy_shader_pair_cache_entry* entry = (d912pxy_shader_pair_cache_entry*)d912pxy_s(vfs)->GetCachePointer(entryOffset, PXY_VFS_BID_PSO_PRECOMPILE_LIST);
 
-						d912pxy_vshader* vs = NULL;
-						d912pxy_pshader* ps = NULL;
+						d912pxy_shader* vs = NULL;
+						d912pxy_shader* ps = NULL;
 
-						try {
-							vs = new d912pxy_vshader(m_dev, entry->vs);
-							ps = new d912pxy_pshader(m_dev, entry->ps);
-						}
-						catch (...) {
-							LOG_ERR_DTDM("Shader pair VS: %llX PS: %llX load fail", entry->vs, entry->ps);
+						
+						vs = d912pxy_shader::d912pxy_shader_com(1, 0, entry->vs);
+						ps = d912pxy_shader::d912pxy_shader_com(0, 0, entry->ps);
 
-							if (vs)
-								vs->Release();
-							if (ps)
-								ps->Release();
+						if (!vs || !ps)
+						{
+							LOG_ERR_DTDM("Shader pair VS: %llX PS: %llX load fail", entry->vs, entry->ps);					
 
 							mt->Next();
 							continue;
@@ -803,7 +799,8 @@ void d912pxy_pso_cache::LoadCachedData()
 
 								memcpy(dscMem, psoKeyCache[i]->staticPsoDesc, d912pxy_trimmed_pso_static_data_size);
 
-								d912pxy_vdecl* vdcl = new d912pxy_vdecl(m_dev, psoKeyCache[i]->declData);
+								d912pxy_vdecl* vdcl;
+								d912pxy_s(dev)->CreateVertexDeclaration(psoKeyCache[i]->declData, (IDirect3DVertexDeclaration9**)&vdcl);
 
 								dsc.PS = ps;
 								dsc.VS = vs;
@@ -877,7 +874,7 @@ void d912pxy_pso_cache::CheckExternalLock()
 	}
 }
 
-d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_trimmed_dx12_pso* sDsc) : d912pxy_comhandler(dev, L"PSO item")
+d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_trimmed_dx12_pso* sDsc) : d912pxy_comhandler(PXY_COM_OBJ_PSO_ITEM, L"PSO item")
 {
 	//m_status = 0;
 	retPtr = NULL;
@@ -892,10 +889,20 @@ d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_device * dev, d912pxy_tri
 	desc->InputLayout->ThreadRef(1);
 }
 
+d912pxy_pso_cache_item * d912pxy_pso_cache_item::d912pxy_pso_cache_item_com(d912pxy_trimmed_dx12_pso * sDsc)
+{
+	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_PSO_ITEM);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY);
+
+	new (&ret->pso_item)d912pxy_pso_cache_item(sDsc);
+
+	return &ret->pso_item;
+}
+
 void d912pxy_pso_cache_item::Compile()
 {	
-	d912pxy_vshader* vsObj = desc->VS;
-	d912pxy_pshader* psObj = desc->PS;
+	d912pxy_shader* vsObj = desc->VS;
+	d912pxy_shader* psObj = desc->PS;
 	d912pxy_vdecl* vdclObj = desc->InputLayout;
 		
 	try {
@@ -915,7 +922,7 @@ void d912pxy_pso_cache_item::Compile()
 
 		return;
 	}
-	d912pxy_pso_cache::cDscBase.InputLayout = vdclObj->GetD12IA_InputElementFmt();
+	d912pxy_pso_cache::cDscBase.InputLayout = *vdclObj->GetD12IA_InputElementFmt();
 
 	d912pxy_pso_cache::cDscBase.NumRenderTargets = desc->NumRenderTargets;
 	//d912pxy_pso_cache::cDscBase.BlendState.RenderTarget[0].  = desc->BlendStateRT0;

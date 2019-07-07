@@ -145,45 +145,28 @@ void d912pxy_device::InitComPatches()
 {
 	if (!d912pxy_s(config)->GetValueUI64(PXY_CFG_SDB_KEEP_PAIRS))
 	{
-		DWORD fakeShaderCode[] = {
-			0xFFFF0300, 0x001FFFFE, 0x42415443, 0x0000001C, 0x0000004F, 0xFFFF0300, 0x00000001, 0x0000001C, 0x00000100, 0x00000048,
-			0x00000030, 0x00000003, 0x00000001, 0x00000038, 0x00000000, 0x44325F73, 0xABABAB00, 0x000C0004, 0x00010001, 0x00000001,
-			0x00000000, 0x335F7370, 0x4D00305F, 0x6F726369, 0x74666F73, 0x29522820, 0x534C4820, 0x6853204C, 0x72656461, 0x6D6F4320,
-			0x656C6970, 0x30312072, 0xAB00312E, 0x0200001F, 0x8000000A, 0x900F0000, 0x0200001F, 0x80000005, 0x90030001, 0x0200001F,
-			0x90000000, 0xA00F0800, 0x03000042, 0x800F0000, 0x90E40001, 0xA0E40800, 0x03000005, 0x800F0800, 0x80E40000, 0x90E40000,
-			0x0000FFFF
-		};
-
-		d912pxy_vshader* vsPatch = new d912pxy_vshader(this, fakeShaderCode);
-		d912pxy_com_set_method((IDirect3DVertexShader9*)vsPatch, 2, &d912pxy_vshader::ReleaseWithPairRemoval);
-		vsPatch->Release();
-
-		d912pxy_pshader* psPatch = new d912pxy_pshader(this, fakeShaderCode);
-		d912pxy_com_set_method((IDirect3DPixelShader9*)psPatch, 2, &d912pxy_pshader::ReleaseWithPairRemoval);
-		psPatch->Release();
+		d912pxy_com_route_set(PXY_COM_ROUTE_SHADER, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_shader::com_ReleaseWithPairRemoval);		
 	}
 
 	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CLEAR))
 	{
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x2b, &d912pxy_device::Clear_Emulated);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_CLEAR, &d912pxy_device::com_Clear_Emulated);
 	}
 
 	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET))
 	{
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x25, &d912pxy_device::SetRenderTarget_Compat);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETRENDERSTATE, &d912pxy_device::com_SetRenderTarget_Compat);		
 	}
 
 	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CPU_API_REDUCTION))
-	{
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x2f, &d912pxy_device::SetViewport_CAR);
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x4b, &d912pxy_device::SetScissorRect_CAR);
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x64, &d912pxy_device::SetStreamSource_CAR);
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x68, &d912pxy_device::SetIndices_CAR);
+	{	
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETVIEWPORT, &d912pxy_device::com_SetViewport_CAR);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETSCISSORRECT, &d912pxy_device::com_SetScissorRect_CAR);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETSTREAMSOURCE, &d912pxy_device::com_SetStreamSource_CAR);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETINDICES, &d912pxy_device::com_SetIndices_CAR);
 	}
 
-	{
-		d912pxy_s(queryOcc) = new d912pxy_query_occlusion(this, D3DQUERYTYPE_OCCLUSION);
-
+	{		
 		UINT64 occCfgValue = d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OCCLUSION);
 
 		switch (occCfgValue)
@@ -194,12 +177,12 @@ void d912pxy_device::InitComPatches()
 				d912pxy_query_occlusion::bufferedReadback = occCfgValue & 1;
 				break;
 			case 1:
-				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 7, &d912pxy_query::GetDataOneOverride);
-				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 6, &d912pxy_query::IssueNOP);
+				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_ISSUE, &d912pxy_query::com_IssueNOP);
+				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETDATA, &d912pxy_query::com_GetDataOneOverride);
 				break;
 			case 0:
-				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 7, &d912pxy_query::GetDataZeroOverride);
-				d912pxy_com_set_method((IDirect3DQuery9*)d912pxy_s(queryOcc), 6, &d912pxy_query::IssueNOP);
+				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_ISSUE, &d912pxy_query::com_IssueNOP);
+				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETDATA, &d912pxy_query::com_GetDataZeroOverride);
 				break;
 			default:
 				LOG_ERR_THROW2(-1, "PXY_CFG_COMPAT_OCCLUSION config entry is bad");
@@ -209,24 +192,24 @@ void d912pxy_device::InitComPatches()
 
 	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
 	{
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x41, &d912pxy_device::SetTexture_PS);
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_PS);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETTEXTURE, &d912pxy_device::com_SetTexture_PS);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_PS);		
 	}
 	else if (d912pxy_s(config)->GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
 	{
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x52, &d912pxy_device::DrawIndexedPrimitive_Compat);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_Compat);
 	}
 
 	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
 	{
-		d912pxy_com_set_method((IDirect3DDevice9*)this, 0x11, &d912pxy_device::Present_PG);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_PRESENT, &d912pxy_device::com_Present_PG);
 	}
 }
 
 void d912pxy_device::InitNullSRV()
 {
 	UINT uuLc = 1;
-	mNullTexture = new d912pxy_surface(this, 1, 1, D3DFMT_A8B8G8R8, 0, D3DMULTISAMPLE_NONE, 0, 0, &uuLc, 6, NULL);
+	mNullTexture = d912pxy_surface::d912pxy_surface_com(1, 1, D3DFMT_A8B8G8R8, 0, D3DMULTISAMPLE_NONE, 0, 0, &uuLc, 6, NULL);
 	D3DLOCKED_RECT lr;
 
 	for (int i = 0; i != 6; ++i)
@@ -305,11 +288,7 @@ void d912pxy_device::PrintInfoBanner()
 
 void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
-	swapchains[0] = new d912pxy_swapchain(
-		this,
-		0,
-		pPresentationParameters
-	);
+	swapchains[0] = &d912pxy_swapchain::d912pxy_swapchain_com(0, pPresentationParameters)->swapchain;
 
 	d912pxy_s(iframe)->SetSwapper(swapchains[0]);
 }

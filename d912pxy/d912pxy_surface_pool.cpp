@@ -84,7 +84,7 @@ d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DF
 	{
 		LOG_DBG_DTDM2("surface pool miss: %u %u %u %u %u %u", width, height, fmt, arrSz, levels, Usage);
 
-		ret = new d912pxy_surface(m_dev, width, height, fmt, Usage, D3DMULTISAMPLE_NONE, 0, 0, &levels, arrSz, srvFeedback);
+		ret = d912pxy_surface::d912pxy_surface_com(width, height, fmt, Usage, D3DMULTISAMPLE_NONE, 0, 0, &levels, arrSz, srvFeedback);
 		ret->MarkPooled(uid);
 	}
 	else {

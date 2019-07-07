@@ -45,6 +45,13 @@ public:
 	d912pxy_mem_mgr();
 	~d912pxy_mem_mgr();
 
+	UINT64 GetPageSize();
+
+	void ReleaseReservedVARange(intptr_t base);
+	void CommitVARange(intptr_t base, UINT64 size);
+	void DeCommitVARange(intptr_t base, UINT64 size);
+	intptr_t ReserveVARangeAligned(UINT64 pow2shift, UINT64 addedSize);
+
 	bool pxy_malloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function); 
 	bool pxy_realloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function); 
 	void pxy_free_dbg(void** cp, const char* file, const int line, const char* function); // Frees and NULLs the given pointer.	
@@ -75,6 +82,8 @@ private:
 	void* inMalloc(size_t sz);
 	void* inRealloc(void* block, size_t sz);
 	void inFree(void* cp);
+
+	SYSTEM_INFO sysinf;	
 
 #ifdef _DEBUG
 	d912pxy_thread_lock blocksAllocated;

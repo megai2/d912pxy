@@ -14,9 +14,6 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="frame_analyzer.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_device.cpp">
       <Filter>d3d9_impl\device</Filter>
     </ClCompile>
@@ -54,40 +51,28 @@
       <Filter>d3d9_impl\device</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_buffer_loader.cpp">
-      <Filter>d3d9_impl\vstream</Filter>
+      <Filter>d3d9_impl\resource\vstream</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_vstream.cpp">
-      <Filter>d3d9_impl\vstream</Filter>
+      <Filter>d3d9_impl\resource\vstream</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_vstream_pool.cpp">
-      <Filter>d3d9_impl\vstream</Filter>
+      <Filter>d3d9_impl\resource\vstream</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_basetexture.cpp">
-      <Filter>d3d9_impl\textures</Filter>
-    </ClCompile>
-    <ClCompile Include="d912pxy_surface.cpp">
-      <Filter>d3d9_impl\textures</Filter>
-    </ClCompile>
-    <ClCompile Include="d912pxy_surface_layer.cpp">
-      <Filter>d3d9_impl\textures</Filter>
-    </ClCompile>
-    <ClCompile Include="d912pxy_surface_pool.cpp">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_texture.cpp">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_texture_loader.cpp">
-      <Filter>d3d9_impl\textures</Filter>
-    </ClCompile>
-    <ClCompile Include="d912pxy_texture_state.cpp">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_vtexture.cpp">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_ctexture.cpp">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_replay.cpp">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
@@ -152,9 +137,6 @@
     <ClCompile Include="d912pxy_hlsl_generator.cpp">
       <Filter>d3d9_impl\shaders</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_pshader.cpp">
-      <Filter>d3d9_impl\shaders</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_shader.cpp">
       <Filter>d3d9_impl\shaders</Filter>
     </ClCompile>
@@ -165,9 +147,6 @@
       <Filter>d3d9_impl\shaders</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_shader_replacer.cpp">
-      <Filter>d3d9_impl\shaders</Filter>
-    </ClCompile>
-    <ClCompile Include="d912pxy_vshader.cpp">
       <Filter>d3d9_impl\shaders</Filter>
     </ClCompile>
     <ClCompile Include="d912pxy_sblock.cpp">
@@ -209,9 +188,6 @@
     <ClCompile Include="d912pxy_dheap.cpp">
       <Filter>d3d9_impl\device\dx12</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_com_tools.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_cleanup_thread.cpp">
       <Filter>memory\pooling</Filter>
     </ClCompile>
@@ -248,6 +224,33 @@
     <ClCompile Include="d912pxy_query_occlusion.cpp">
       <Filter>d3d9_impl\query</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_instance.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_com_routing.cpp">
+      <Filter>d3d9_proxy\com\routing</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_com_route_default.cpp">
+      <Filter>d3d9_proxy\com\routing\default</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_surface.cpp">
+      <Filter>d3d9_impl\resource\textures\surface</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_surface_layer.cpp">
+      <Filter>d3d9_impl\resource\textures\surface</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_surface_pool.cpp">
+      <Filter>d3d9_impl\resource\textures\surface</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_texture_state.cpp">
+      <Filter>d3d9_impl\device\iframe</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_com_mgr.cpp">
+      <Filter>d3d9_proxy\com</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_mem_va_table.cpp">
+      <Filter>memory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -261,9 +264,6 @@
     <ClInclude Include="IDirect3DDevice9Proxy.h">
       <Filter>d3d9_proxy</Filter>
     </ClInclude>
-    <ClInclude Include="frame_analyzer.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="d912pxy_device.h">
       <Filter>d3d9_impl\device</Filter>
     </ClInclude>
@@ -274,40 +274,28 @@
       <Filter>d3d9_proxy\d3d9</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_buffer_loader.h">
-      <Filter>d3d9_impl\vstream</Filter>
+      <Filter>d3d9_impl\resource\vstream</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_vstream.h">
-      <Filter>d3d9_impl\vstream</Filter>
+      <Filter>d3d9_impl\resource\vstream</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_vstream_pool.h">
-      <Filter>d3d9_impl\vstream</Filter>
+      <Filter>d3d9_impl\resource\vstream</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_basetexture.h">
-      <Filter>d3d9_impl\textures</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_surface.h">
-      <Filter>d3d9_impl\textures</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_surface_layer.h">
-      <Filter>d3d9_impl\textures</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_surface_pool.h">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_texture.h">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_texture_loader.h">
-      <Filter>d3d9_impl\textures</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_texture_state.h">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_vtexture.h">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_ctexture.h">
-      <Filter>d3d9_impl\textures</Filter>
+      <Filter>d3d9_impl\resource\textures</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_replay.h">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
@@ -375,9 +363,6 @@
     <ClInclude Include="d912pxy_hlsl_generator.h">
       <Filter>d3d9_impl\shaders</Filter>
     </ClInclude>
-    <ClInclude Include="d912pxy_pshader.h">
-      <Filter>d3d9_impl\shaders</Filter>
-    </ClInclude>
     <ClInclude Include="d912pxy_shader.h">
       <Filter>d3d9_impl\shaders</Filter>
     </ClInclude>
@@ -388,9 +373,6 @@
       <Filter>d3d9_impl\shaders</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_shader_replacer.h">
-      <Filter>d3d9_impl\shaders</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_vshader.h">
       <Filter>d3d9_impl\shaders</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_sblock.h">
@@ -432,9 +414,6 @@
     <ClInclude Include="d912pxy_dheap.h">
       <Filter>d3d9_impl\device\dx12</Filter>
     </ClInclude>
-    <ClInclude Include="d912pxy_com_tools.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="d912pxy_cleanup_thread.h">
       <Filter>memory\pooling</Filter>
     </ClInclude>
@@ -471,6 +450,33 @@
     <ClInclude Include="d912pxy_query_occlusion.h">
       <Filter>d3d9_impl\query</Filter>
     </ClInclude>
+    <ClInclude Include="d912pxy_instance.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_com_routing.h">
+      <Filter>d3d9_proxy\com\routing</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_surface.h">
+      <Filter>d3d9_impl\resource\textures\surface</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_surface_layer.h">
+      <Filter>d3d9_impl\resource\textures\surface</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_surface_pool.h">
+      <Filter>d3d9_impl\resource\textures\surface</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_texture_state.h">
+      <Filter>d3d9_impl\device\iframe</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_com_mgr.h">
+      <Filter>d3d9_proxy\com</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_com_object.h">
+      <Filter>d3d9_proxy\com</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_mem_va_table.h">
+      <Filter>memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />
@@ -493,12 +499,6 @@
     </Filter>
     <Filter Include="d3d9_impl\device">
       <UniqueIdentifier>{c192510c-1a16-4665-9f12-d1f73a52c400}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="d3d9_impl\textures">
-      <UniqueIdentifier>{7723b396-c807-42fe-bd56-15aa168c2260}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="d3d9_impl\vstream">
-      <UniqueIdentifier>{e3eac2a0-ea79-41b0-bc0c-9667e0ec72d5}</UniqueIdentifier>
     </Filter>
     <Filter Include="d3d9_impl\shaders">
       <UniqueIdentifier>{91db2b2c-de4d-48ac-bae6-2b25ce5a8ce1}</UniqueIdentifier>
@@ -547,6 +547,24 @@
     </Filter>
     <Filter Include="d3d9_impl\query">
       <UniqueIdentifier>{42305daf-7f33-4542-aded-6b0be1c43cb2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\resource\textures">
+      <UniqueIdentifier>{7723b396-c807-42fe-bd56-15aa168c2260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\resource\vstream">
+      <UniqueIdentifier>{e3eac2a0-ea79-41b0-bc0c-9667e0ec72d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\resource\textures\surface">
+      <UniqueIdentifier>{60b22674-833c-464c-a385-422a74078b3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_proxy\com">
+      <UniqueIdentifier>{1392a3e2-46c8-48cc-8a4c-224c466ef4e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_proxy\com\routing">
+      <UniqueIdentifier>{081b5650-7082-4302-80cb-f4a00ca6243e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_proxy\com\routing\default">
+      <UniqueIdentifier>{14fe973d-a09f-4061-bf42-4f2e4e673d28}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

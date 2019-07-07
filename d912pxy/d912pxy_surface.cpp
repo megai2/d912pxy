@@ -27,14 +27,14 @@ SOFTWARE.
 UINT32 d912pxy_surface::threadedCtor = 0;
 
 
-d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(dev, RTID_SURFACE, L"surface texture")
+d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface texture")
 {
 	isPooled = 0;	
 	ul = NULL;
 	layers = NULL;
 	dheapId = -1;
 	dheapIdFeedback = srvFeedback;
-	dHeap = dev->GetDHeap(PXY_INNER_HEAP_SRV);	
+	dHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_SRV);	
 
 	surf_dx9dsc.Format = Format;
 	surf_dx9dsc.Width = Width;
@@ -91,7 +91,7 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 
 	if (Usage == D3DUSAGE_DEPTHSTENCIL)
 	{
-		d912pxy_dheap* dsvHeap = dev->GetDHeap(PXY_INNER_HEAP_DSV);
+		d912pxy_dheap* dsvHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_DSV);
 
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsc2;
 		dsc2.Format = GetDSVFormat();
@@ -102,7 +102,7 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 		rtdsHPtr = dsvHeap->GetDHeapHandle(dsvHeap->CreateDSV(m_res, &dsc2));
 	} else if (Usage == D3DUSAGE_RENDERTARGET)
 	{
-		d912pxy_dheap* rtvHeap = dev->GetDHeap(PXY_INNER_HEAP_RTV);
+		d912pxy_dheap* rtvHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_RTV);
 
 		rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));		
 	}
@@ -119,6 +119,16 @@ d912pxy_surface::d912pxy_surface(d912pxy_device* dev, UINT Width, UINT Height, D
 	}
 	
 	LOG_DBG_DTDM("w %u h %u u %u", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
+}
+
+d912pxy_surface * d912pxy_surface::d912pxy_surface_com(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT * levels, UINT arrSz, UINT32 * srvFeedback)
+{
+	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_SURFACE);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE);
+
+	new (&ret->surface)d912pxy_surface(Width, Height, Format, Usage, MultiSample, MultisampleQuality, Lockable, levels, arrSz, srvFeedback);
+
+	return &ret->surface;
 }
 
 d912pxy_surface::~d912pxy_surface()
@@ -149,35 +159,16 @@ d912pxy_surface::~d912pxy_surface()
 			FreeObjAndSlot();
 
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-				m_dev->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
+				d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
 			else
-				m_dev->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
+				d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
 		}
 	}
 }
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_surface
 
-D912PXY_IUNK_IMPL
-
-/*** IDirect3DResource9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) { return d912pxy_resource::GetDevice(ppDevice); }
-D912PXY_METHOD_IMPL(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags){ return d912pxy_resource::SetPrivateData(refguid, pData, SizeOfData, Flags); }
-D912PXY_METHOD_IMPL(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData){ return d912pxy_resource::GetPrivateData(refguid, pData, pSizeOfData); }
-D912PXY_METHOD_IMPL(FreePrivateData)(THIS_ REFGUID refguid){ return d912pxy_resource::FreePrivateData(refguid); }
-D912PXY_METHOD_IMPL_(DWORD, SetPriority)(THIS_ DWORD PriorityNew){ return d912pxy_resource::SetPriority(PriorityNew); }
-D912PXY_METHOD_IMPL_(DWORD, GetPriority)(THIS){ return d912pxy_resource::GetPriority(); }
-D912PXY_METHOD_IMPL_(void, PreLoad)(THIS){ d912pxy_resource::PreLoad(); }
-D912PXY_METHOD_IMPL_(D3DRESOURCETYPE, GetType)(THIS) { return d912pxy_resource::GetType(); }
-
-//surface methods
-D912PXY_METHOD_IMPL(GetContainer)(THIS_ REFIID riid, void** ppContainer)
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
-	return D3DERR_INVALIDCALL; 
-}
-
-D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
+D912PXY_METHOD_IMPL_NC(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
@@ -185,26 +176,14 @@ D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
 	return D3D_OK; 
 }
 
-D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
+D912PXY_METHOD_IMPL_NC(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
 { 
 	return GetLayer(0, 0)->LockRect(pLockedRect, pRect, Flags);
 }
 
-D912PXY_METHOD_IMPL(UnlockRect)(THIS)
+D912PXY_METHOD_IMPL_NC(UnlockRect)(THIS)
 { 
-	return GetLayer(0, 0)->UnlockRect();	
-}
-
-D912PXY_METHOD_IMPL(GetDC)(THIS_ HDC *phdc)
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
-	return D3DERR_INVALIDCALL; 
-}
-
-D912PXY_METHOD_IMPL(ReleaseDC)(THIS_ HDC hdc)
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
-	return D3D_OK; 
+	return GetLayer(0, 0)->UnlockRect();
 }
 
 #undef D912PXY_METHOD_IMPL_CN
@@ -419,7 +398,7 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 			{
 				d12res_zbuf(ConvertInnerDSVFormat(), 1.0f, surf_dx9dsc.Width, surf_dx9dsc.Height, GetDSVFormat());
 
-				d912pxy_dheap* dsvHeap = m_dev->GetDHeap(PXY_INNER_HEAP_DSV);
+				d912pxy_dheap* dsvHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_DSV);
 
 				D3D12_DEPTH_STENCIL_VIEW_DESC dsc2;
 				dsc2.Format = GetDSVFormat();
@@ -434,7 +413,7 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 				float white[4] = { 1.0f,1.0f,1.0f,1.0f };
 				d12res_rtgt(m_fmt, white, surf_dx9dsc.Width, surf_dx9dsc.Height);
 
-				d912pxy_dheap* rtvHeap = m_dev->GetDHeap(PXY_INNER_HEAP_RTV);
+				d912pxy_dheap* rtvHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_RTV);
 
 				rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));
 			}
@@ -444,9 +423,9 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 			FreeObjAndSlot();
 
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-				m_dev->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
+				d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
 			else
-				m_dev->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
+				d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
 		}
 	}
 
@@ -462,7 +441,7 @@ d912pxy_surface_layer * d912pxy_surface::GetLayer(UINT32 mip, UINT32 ar)
 
 void d912pxy_surface::CopySurfaceDataToCPU()
 {
-	d912pxy_resource* readbackBuffer = new d912pxy_resource(m_dev, RTID_RB_BUF, L"readback buffer");
+	d912pxy_resource* readbackBuffer = new d912pxy_resource(RTID_RB_BUF, PXY_COM_OBJ_NOVTABLE, L"readback buffer");
 	readbackBuffer->d12res_readback_buffer(subresFootprints[0].Footprint.RowPitch*subresFootprints[0].Footprint.Height);
 		
 	D3D12_TEXTURE_COPY_LOCATION dstR = { readbackBuffer->GetD12Obj(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, 0 };
@@ -605,8 +584,8 @@ void d912pxy_surface::AllocateLayers()
 		for (int j = 0; j != descCache.MipLevels; ++j)
 		{
 			UINT subresId = i * descCache.MipLevels + j;
-			layers[subresId] = new d912pxy_surface_layer(
-				this,
+			layers[subresId] = d912pxy_surface_layer::d912pxy_surface_layer_com(
+				comBase,
 				subresId,
 				subresFootprints[subresId].Footprint.RowPitch*subresFootprints[subresId].Footprint.Height,
 				GetWPitchDX9(subresId),
@@ -624,7 +603,7 @@ void d912pxy_surface::FreeLayers()
 		for (int j = 0; j != descCache.MipLevels; ++j)
 		{
 			UINT subresId = i * descCache.MipLevels + j;
-			delete layers[subresId];
+			d912pxy_surface_layer::DeAllocate(layers[subresId]);
 			layers[subresId] = NULL;//megai2: set this NULL to crash out if we hit something bad, like -1 dereferencing
 		}
 	}

@@ -2,7 +2,7 @@
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING_UP
 
-d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(dev, L"draw_up")
+d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(L"draw_up")
 {
 	for (int i = 0; i != PXY_DUP_COUNT; ++i)
 	{

@@ -39,12 +39,22 @@ UINT32 d912pxy_query_occlusion::bufferedReadback = 0;
 #define PXY_OCCLUSION_TYPE D3D12_QUERY_TYPE_OCCLUSION
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_QUERY_OCCLUSION
 
-d912pxy_query_occlusion::d912pxy_query_occlusion(d912pxy_device* dev, D3DQUERYTYPE Type) : d912pxy_query(dev, Type)
+d912pxy_query_occlusion::d912pxy_query_occlusion(D3DQUERYTYPE Type) : d912pxy_query(Type)
 {
 	queryResult = 0;
 	queryOpened = 0;
 }
 
+
+d912pxy_query_occlusion * d912pxy_query_occlusion::d912pxy_query_occlusion_com(D3DQUERYTYPE Type)
+{
+	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_QUERY_OCC);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY_OCC);
+
+	new (&ret->query_occ)d912pxy_query_occlusion(Type);
+
+	return &ret->query_occ;
+}
 
 d912pxy_query_occlusion::~d912pxy_query_occlusion()
 {
@@ -52,25 +62,7 @@ d912pxy_query_occlusion::~d912pxy_query_occlusion()
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_query_occlusion
 
-D912PXY_IUNK_IMPL
-
-/*** IDirect3DQuery9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice)
-{
-	return d912pxy_query::GetDevice(ppDevice);
-}
-
-D912PXY_METHOD_IMPL_(D3DQUERYTYPE, GetType)(THIS)
-{
-	return d912pxy_query::GetType();
-}
-
-D912PXY_METHOD_IMPL_(DWORD, GetDataSize)(THIS)
-{
-	return d912pxy_query::GetDataSize();
-}
-
-D912PXY_METHOD_IMPL(Issue)(THIS_ DWORD dwIssueFlags)
+D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 {
 	API_OVERHEAD_TRACK_START(0)
 
@@ -90,7 +82,7 @@ D912PXY_METHOD_IMPL(Issue)(THIS_ DWORD dwIssueFlags)
 	else {
 		//megai2: should not need this but it can be, so i keep it here for now
 		if (!queryOpened)
-			Issue(D3DISSUE_BEGIN);
+			occ_Issue(D3DISSUE_BEGIN);
 
 		queryOpened = 0;
 		d912pxy_s(CMDReplay)->QueryMark(this, 0);			
@@ -98,10 +90,10 @@ D912PXY_METHOD_IMPL(Issue)(THIS_ DWORD dwIssueFlags)
 
 	API_OVERHEAD_TRACK_END(0)
 
-	return d912pxy_query::Issue(dwIssueFlags);
+	return D3D_OK;
 }
 
-D912PXY_METHOD_IMPL(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags)
+D912PXY_METHOD_IMPL_NC(occ_GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
@@ -141,9 +133,7 @@ void d912pxy_query_occlusion::QueryMark(UINT start, ID3D12GraphicsCommandList * 
 
 void d912pxy_query_occlusion::FlushQueryStack()
 {	
-
 	d912pxy_s(iframe)->StateSafeFlush(!bufferedReadback);
-
 }
 
 
@@ -170,14 +160,15 @@ void d912pxy_query_occlusion::OnIFrameStart()
 	{
 		UINT64* readbackPtr;
 
-		LOG_ERR_THROW2(readStack->readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&readbackPtr), "occ query flush map failed");
-
-		for (int i = 0; i != readStack->count; ++i)
+		if (!FAILED(readStack->readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&readbackPtr)))
 		{
-			readStack->stack[i]->SetQueryResult((UINT32)readbackPtr[i]);
-		}
+			for (int i = 0; i != readStack->count; ++i)
+			{
+				readStack->stack[i]->SetQueryResult((UINT32)readbackPtr[i]);
+			}
 
-		readStack->readbackBuffer->GetD12Obj()->Unmap(0, 0);
+			readStack->readbackBuffer->GetD12Obj()->Unmap(0, 0);
+		}
 
 		readStack->count = 0;
 	}
@@ -205,7 +196,7 @@ UINT d912pxy_query_occlusion::InitOccQueryEmulation()
 
 	for (int i = 0; i != 2; ++i)
 	{
-		g_gpuStack[i].readbackBuffer = new d912pxy_resource(d912pxy_s(dev), RTID_RB_BUF, L"query readback buffer");
+		g_gpuStack[i].readbackBuffer = new d912pxy_resource(RTID_RB_BUF, PXY_COM_OBJ_NOVTABLE, L"query readback buffer");
 		g_gpuStack[i].readbackBuffer->d12res_readback_buffer(8 * PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME);
 		g_gpuStack[i].count = 0;		
 	}
@@ -227,7 +218,7 @@ void d912pxy_query_occlusion::FreePendingQueryObjects()
 		UINT32 unused;
 
 		for (int j = 0; j != objCount; ++j)
-			g_gpuStack[i].stack[j]->GetData(&unused, 4, 0);
+			g_gpuStack[i].stack[j]->occ_GetData(&unused, 4, 0);
 
 	}
 }

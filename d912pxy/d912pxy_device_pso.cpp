@@ -26,7 +26,7 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_PSO
 
-HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
+HRESULT d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
 { 
 	LOG_DBG_DTDM("RS %u = %u", State, Value);
 
@@ -147,7 +147,7 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
+HRESULT d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
@@ -177,21 +177,19 @@ HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* p
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::BeginStateBlock(void) 
+HRESULT d912pxy_device::BeginStateBlock(void) 
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::EndStateBlock(IDirect3DStateBlock9** ppSB) 
+HRESULT d912pxy_device::EndStateBlock(IDirect3DStateBlock9** ppSB) 
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
 	API_OVERHEAD_TRACK_START(0)
-
-	d912pxy_sblock* ret = new d912pxy_sblock(this, D3DSBT_ALL);
-
-	*ppSB = ret;
+			
+	*ppSB = PXY_COM_CAST_(IDirect3DStateBlock9, d912pxy_sblock::d912pxy_sblock_com(D3DSBT_ALL));
 
 	API_OVERHEAD_TRACK_END(0)
 

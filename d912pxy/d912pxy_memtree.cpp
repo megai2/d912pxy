@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_memtree::d912pxy_memtree(UINT nMemSz, UINT iMaxNodes, UINT iGrow, const UINT16* iJmpMap) : d912pxy_noncom(NULL, L"memtree")
+d912pxy_memtree::d912pxy_memtree(UINT nMemSz, UINT iMaxNodes, UINT iGrow, const UINT16* iJmpMap) : d912pxy_noncom( L"memtree")
 {
 	dataMemSz = nMemSz;
 

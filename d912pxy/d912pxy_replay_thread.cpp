@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom(dev, L"replay thread"), d912pxy_thread(threadName, 1)
+d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom( L"replay thread"), d912pxy_thread(threadName, 1)
 {
 	exchRI = new d912pxy_ringbuffer<UINT32>(5, 0);
 	listGrp = iListGrp;	
@@ -49,8 +49,8 @@ void d912pxy_replay_thread::ThreadJob()
 		LOG_ERR_THROW2(-1, "RI exchange buffer is empty on replay thread wake");
 	}
 	
-	if (m_dev->InterruptThreads())
-		m_dev->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
+	if (d912pxy_s(dev)->InterruptThreads())
+		d912pxy_s(dev)->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
 	else 
 		LOG_ERR_THROW2(-1, "Device is not interrupting threads while replaying thread exits from proc");
 

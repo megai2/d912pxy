@@ -40,7 +40,8 @@ IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* 
 			return dev;		
 		
 	d912pxy_s(memMgr)->StartTrackingBlocks();
-	d912translator = new d912pxy_device(dev, obj);
+
+	d912pxy_com_object* d912translator = d912pxy_device::d912pxy_device_com(dev, obj);
 	return (IDirect3DDevice9*)d912translator;
 }
 
@@ -66,7 +67,6 @@ void d912pxy_first_init()
 	{
 		HMODULE mod = LoadLibraryA("renderdoc.dll");
 	}
-
 }
 
 void d912pxy_final_cleanup()

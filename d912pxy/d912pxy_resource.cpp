@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_resource::d912pxy_resource(d912pxy_device * dev, d912pxy_resource_typeid type, const wchar_t * cat) : d912pxy_comhandler(dev, cat)
+d912pxy_resource::d912pxy_resource(d912pxy_resource_typeid type, d912pxy_com_obj_typeid tid, const wchar_t * cat) : d912pxy_comhandler(tid, cat)
 {
 	m_tid = type;	
 	evicted = 0;
@@ -37,72 +37,20 @@ d912pxy_resource::~d912pxy_resource()
 		m_res->Release();
 }
 
-HRESULT d912pxy_resource::QueryInterface(REFIID riid, void ** ppvObj)
-{
-	return d912pxy_comhandler::QueryInterface(riid, ppvObj);
+#define D912PXY_METHOD_IMPL_CN d912pxy_resource
+
+D912PXY_METHOD_IMPL_NC_(D3DRESOURCETYPE, GetType)(THIS)
+{	
+	return (D3DRESOURCETYPE)m_tid;
 }
 
-ULONG d912pxy_resource::AddRef(void)
-{
-	return d912pxy_comhandler::AddRef();
-}
-
-ULONG d912pxy_resource::Release(void)
-{
-	return d912pxy_comhandler::Release();
-}
-
-HRESULT d912pxy_resource::GetDevice(IDirect3DDevice9 ** ppDevice)
-{
-	return d912pxy_noncom::GetDevice(ppDevice);
-}
-
-HRESULT d912pxy_resource::SetPrivateData(REFGUID refguid, CONST void * pData, DWORD SizeOfData, DWORD Flags)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return E_NOTIMPL;
-}
-
-HRESULT d912pxy_resource::GetPrivateData(REFGUID refguid, void * pData, DWORD * pSizeOfData)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return E_NOTIMPL;
-}
-
-HRESULT d912pxy_resource::FreePrivateData(REFGUID refguid)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return E_NOTIMPL;
-}
-
-DWORD d912pxy_resource::SetPriority(DWORD PriorityNew)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return D3D_OK;
-}
-
-DWORD d912pxy_resource::GetPriority()
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return 0;
-}
-
-void d912pxy_resource::PreLoad()
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-}
-
-D3DRESOURCETYPE d912pxy_resource::GetType()
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return D3DRTYPE_SURFACE;
-}
+#undef D912PXY_METHOD_IMPL_CN
 
 HRESULT d912pxy_resource::d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width, UINT height, DXGI_FORMAT clearVFmt)
 {
 	D3D12_CLEAR_VALUE optimizedClearValue = { clearVFmt, { clearV, 0 } };
 
-	D3D12_HEAP_PROPERTIES rhCfg = m_dev->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
 
 	D3D12_RESOURCE_DESC rsDesc = { 
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0, 
@@ -129,7 +77,7 @@ HRESULT d912pxy_resource::d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width,
 
 HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt, UINT16* levels, UINT arrSz)
 {
-	D3D12_HEAP_PROPERTIES rhCfg = m_dev->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
 	
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0,
@@ -243,7 +191,7 @@ HRESULT d912pxy_resource::d12res_rtgt(DXGI_FORMAT fmt, float * clearV, UINT widt
 {
 	D3D12_CLEAR_VALUE optimizedClearValue = { fmt, {clearV[0], clearV[1], clearV[2], clearV[3]} };
 
-	D3D12_HEAP_PROPERTIES rhCfg = m_dev->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
 
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0,
@@ -270,7 +218,7 @@ HRESULT d912pxy_resource::d12res_rtgt(DXGI_FORMAT fmt, float * clearV, UINT widt
 
 ID3D12Resource * d912pxy_resource::d12res_buffer_target(size_t size, D3D12_HEAP_TYPE heap)
 {
-	D3D12_HEAP_PROPERTIES rhCfg = m_dev->GetResourceHeap(heap);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(heap);
 
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_BUFFER, 0,
@@ -308,7 +256,7 @@ HRESULT d912pxy_resource::d12res_buffer(size_t size, D3D12_HEAP_TYPE heap)
 
 HRESULT d912pxy_resource::d12res_readback_buffer(size_t size)
 {
-	D3D12_HEAP_PROPERTIES rhCfg = m_dev->GetResourceHeap(D3D12_HEAP_TYPE_READBACK);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_READBACK);
 	
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_BUFFER, 0,
@@ -335,7 +283,7 @@ HRESULT d912pxy_resource::d12res_readback_buffer(size_t size)
 
 HRESULT d912pxy_resource::d12res_uav_buffer(size_t size, D3D12_HEAP_TYPE heap)
 {
-	D3D12_HEAP_PROPERTIES rhCfg = m_dev->GetResourceHeap(heap);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(heap);
 	
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_BUFFER, 0,

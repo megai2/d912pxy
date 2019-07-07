@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2019 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -22,39 +22,43 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+#pragma once
 #include "stdafx.h"
 
-d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, const DWORD * fun) : d912pxy_shader(dev, L"pshader", fun)
+typedef enum d912pxy_com_obj_typeid {	
+	PXY_COM_OBJ_VSTREAM = 0,	
+	PXY_COM_OBJ_SURFACE = 1,
+	PXY_COM_OBJ_QUERY = 2,
+	PXY_COM_OBJ_QUERY_OCC = 3,
+	PXY_COM_OBJ_TEXTURE = 4,		
+	PXY_COM_OBJ_TEXTURE_RTDS = 5,	
+	PXY_COM_OBJ_VDECL = 6,
+	PXY_COM_OBJ_SHADER = 7,
+	PXY_COM_OBJ_SWAPCHAIN = 8,
+	PXY_COM_OBJ_SURFACE_LAYER = 9,
+	PXY_COM_OBJ_SBLOCK = 10,
+	PXY_COM_OBJ_PSO_ITEM = 11,
+	PXY_COM_OBJ_COUNT = 12,
+	PXY_COM_OBJ_NOVTABLE = 13
+} d912pxy_com_obj_typeid;
+
+#define PXY_COM_OBJ_UNMANAGED PXY_COM_OBJ_COUNT
+
+#define PXY_INNER_COM_MGR_VA_MASK_BITS 32
+
+class d912pxy_com_mgr : public d912pxy_noncom
 {
+public:
+	d912pxy_com_mgr();
+	~d912pxy_com_mgr();
 
-}
+	void Init();
+	void DeInit();
 
-d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, d912pxy_shader_uid uid) : d912pxy_shader(dev, L"pshader", uid, 0)
-{
-}
+	d912pxy_com_object* AllocateComObj(d912pxy_com_obj_typeid type);
+	void DeAllocateComObj(d912pxy_com_object* obj);
 
-d912pxy_pshader::~d912pxy_pshader()
-{
-}
+private:
+	d912pxy_mem_va_table table;
+};
 
-#define D912PXY_METHOD_IMPL_CN d912pxy_pshader
-
-D912PXY_IUNK_IMPL
-
-/*** IDirect3DVertexShader9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice)
-{
-	return d912pxy_shader::GetDevice(ppDevice);
-}
-
-D912PXY_METHOD_IMPL(GetFunction)(THIS_ void* arg, UINT* pSizeOfData)
-{
-	return d912pxy_shader::GetFunction(arg, pSizeOfData);
-}
-
-D912PXY_METHOD_IMPL_(ULONG, ReleaseWithPairRemoval)(IDirect3DPixelShader9* thisPtr)
-{
-	return ((d912pxy_shader*)((d912pxy_pshader*)thisPtr))->ReleaseWithPairRemoval();
-}
-
-#undef D912PXY_METHOD_IMPL_CN

@@ -26,7 +26,7 @@ SOFTWARE.
 #include "d912pxy_pool.h"
 
 template<class ElementType, class ProcImpl>
-d912pxy_pool<ElementType, ProcImpl>::d912pxy_pool(d912pxy_device* dev, ProcImpl* singleton) : d912pxy_noncom(dev, L"object pool")
+d912pxy_pool<ElementType, ProcImpl>::d912pxy_pool(d912pxy_device* dev, ProcImpl* singleton) : d912pxy_noncom( L"object pool")
 {
 	if (singleton)
 		*singleton = static_cast<ProcImpl>(this);
@@ -97,7 +97,7 @@ void d912pxy_pool<ElementType, ProcImpl>::WarmUp(UINT cat)
 {
 	ElementType v = static_cast<ProcImpl>(this)->AllocProc(cat);
 	PoolRW(cat, &v, 1);	
-	v->Release();	
+	v->Release();
 }
 
 template class d912pxy_pool<d912pxy_vstream*, d912pxy_vstream_pool*>;

@@ -477,3 +477,23 @@ char * d912pxy_helper::StrNextLine(char * buffer)
 
 	return itr + 1;
 }
+
+UINT64 d912pxy_helper::GetClosestPow2(UINT64 size)
+{
+	UINT64 pow2 = 1;
+
+	for (int i = 0; i != 64; ++i)
+	{
+		pow2 = 1ULL << (63ULL - i);
+		if (pow2 & size)
+		{
+			if ((pow2 - 1) & size)
+				return 63 - i + 1;
+			else
+				return 63 - i;
+
+		}
+	}
+
+	return 63;
+}

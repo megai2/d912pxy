@@ -28,11 +28,41 @@ SOFTWARE.
 
 using namespace Microsoft::WRL;
 
-d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(L"device")
+static d912pxy_device* lastDev = NULL;
+
+d912pxy_com_object * d912pxy_device::d912pxy_device_com(IDirect3DDevice9 * dev, void * par)
 {
+	size_t objSz = sizeof(d912pxy_device) + 8;
+
+	d912pxy_com_object* ret = 0;
+	PXY_MALLOC(ret, objSz, d912pxy_com_object*);
+	ZeroMemory(ret, objSz);
+
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_DEVICE);
+
+	new (&ret->device)d912pxy_device(dev, par);
+	
+	return ret;
+}
+
+d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(PXY_COM_OBJ_UNMANAGED, L"device")
+{
+	if (lastDev)
+	{
+		if (lastDev != this)
+		{
+			LOG_ERR_DTDM("Last device exited without cleanup");
+		}
+	}
+	else
+		lastDev = this;
+
 	d912pxy_s(dev) = this;
 
 	PrintInfoBanner();
+
+	d912pxy_s(comMgr) = new d912pxy_com_mgr();
+	d912pxy_s(comMgr)->Init();
 
 	initPtr = par;
 	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);	
@@ -64,6 +94,9 @@ d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comha
 
 d912pxy_device::~d912pxy_device(void)
 {	
+	LOG_INFO_DTDM("Device last reference removal");
+	lastDev = NULL;
+
 	LOG_INFO_DTDM("d912pxy exiting");
 	isRunning.SetValue(0);
 
@@ -72,7 +105,7 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(d912pxy_s(iframe)->End(),		 "Last iframe ended");
 	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(),		 "Additional DX9 objects freed");
 	LOG_INFO_DTDM2(d912pxy_s(GPUque)->Flush(0),      "Last gpu cmd lists flushed");
-	LOG_INFO_DTDM2(swapchains[0]->Release(),		 "Swapchain stopped");
+	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(),		 "Swapchain stopped");
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
 
@@ -105,12 +138,36 @@ d912pxy_device::~d912pxy_device(void)
 
 	if (initPtr)
 		((IDirect3D9*)initPtr)->Release();
+
+	d912pxy_s(comMgr)->DeInit();
+	delete d912pxy_s(comMgr);
 	
 	LOG_INFO_DTDM("d912pxy exited");
 
 #ifdef _DEBUG
 	d912pxy_helper::d3d12_ReportLeaks();
 #endif	
+}
+
+ULONG d912pxy_device::ReleaseDevice()
+{
+	if (GetCOMRefCount() == 1)
+	{
+		d912pxy_com_object* comObj = comBase;
+
+		this->~d912pxy_device();
+		
+		d912pxy_s(dev) = NULL;
+
+		PXY_FREE(comObj);
+
+		d912pxy_final_cleanup();
+
+		return 0;
+
+	}
+	else 
+		return Release();
 }
 
 void d912pxy_device::FreeAdditionalDX9Objects()
@@ -123,53 +180,13 @@ void d912pxy_device::FreeAdditionalDX9Objects()
 	mNullTexture->Release();
 }
 
-HRESULT WINAPI d912pxy_device::QueryInterface(REFIID riid, void** ppvObj)
-{ 
-	return d912pxy_comhandler::QueryInterface(riid, ppvObj);
-}
-
-static d912pxy_device* lastDev = NULL;
-
-ULONG WINAPI d912pxy_device::AddRef(void)
-{ 
-	if (lastDev)
-	{
-		if (lastDev != this)
-		{
-			LOG_ERR_DTDM("Last device exited without cleanup");
-		}		
-	}
-	else
-		lastDev = this;
-
-	return d912pxy_comhandler::AddRef();
-}
-
-ULONG WINAPI d912pxy_device::Release(void)
-{ 	
-	if (GetCOMRefCount() == 1)
-	{
-		LOG_INFO_DTDM("Device last reference removal");
-		lastDev = NULL;
-
-		d912pxy_comhandler::Release();
-
-		//d912pxy_s(memMgr)->LogLeaked();
-		d912pxy_final_cleanup();
-
-		return 0;
-
-	} else 
-		return d912pxy_comhandler::Release();	
-}
-
-UINT WINAPI d912pxy_device::GetAvailableTextureMem(void)
+UINT d912pxy_device::GetAvailableTextureMem(void)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	return gpu_totalVidmemMB; 
 }
 
-HRESULT WINAPI d912pxy_device::GetDeviceCaps(D3DCAPS9* pCaps)
+HRESULT d912pxy_device::GetDeviceCaps(D3DCAPS9* pCaps)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 	if (!pCaps)
@@ -178,7 +195,7 @@ HRESULT WINAPI d912pxy_device::GetDeviceCaps(D3DCAPS9* pCaps)
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::GetDisplayMode(UINT iSwapChain, D3DDISPLAYMODE* pMode)
+HRESULT d912pxy_device::GetDisplayMode(UINT iSwapChain, D3DDISPLAYMODE* pMode)
 { 
 	LOG_DBG_DTDM("GetDisplayMode swCh %u ", iSwapChain);
 
@@ -200,7 +217,7 @@ HRESULT WINAPI d912pxy_device::GetDisplayMode(UINT iSwapChain, D3DDISPLAYMODE* p
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::GetCreationParameters(D3DDEVICE_CREATION_PARAMETERS *pParameters)
+HRESULT d912pxy_device::GetCreationParameters(D3DDEVICE_CREATION_PARAMETERS *pParameters)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
@@ -212,13 +229,13 @@ HRESULT WINAPI d912pxy_device::GetCreationParameters(D3DDEVICE_CREATION_PARAMETE
 	return D3D_OK;
 }
 
-void WINAPI d912pxy_device::SetCursorPosition(int X, int Y, DWORD Flags)
+void d912pxy_device::SetCursorPosition(int X, int Y, DWORD Flags)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	SetCursorPos(X, Y);	 
 }
 
-HRESULT WINAPI d912pxy_device::ValidateDevice(DWORD* pNumPasses)
+HRESULT d912pxy_device::ValidateDevice(DWORD* pNumPasses)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	//megai2: pretend we can do anything! YES!
@@ -226,7 +243,7 @@ HRESULT WINAPI d912pxy_device::ValidateDevice(DWORD* pNumPasses)
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::GetDirect3D(IDirect3D9 ** ppv)
+HRESULT d912pxy_device::GetDirect3D(IDirect3D9 ** ppv)
 {
 	*ppv = (IDirect3D9*)initPtr;
 	(*ppv)->AddRef();

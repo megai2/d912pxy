@@ -25,41 +25,29 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_ctexture : public IDirect3DCubeTexture9, public d912pxy_basetexture
+class d912pxy_ctexture : public d912pxy_basetexture
 {
-public:
-	d912pxy_ctexture(d912pxy_device* dev, UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format);
+public:	
+	static d912pxy_ctexture* d912pxy_ctexture_com(UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format);
 	~d912pxy_ctexture();
 
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
+	D912PXY_METHOD(GetLevelDesc)(PXY_THIS_ UINT Level, D3DSURFACE_DESC *pDesc);
+	D912PXY_METHOD(GetCubeMapSurface)(PXY_THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface);
+	D912PXY_METHOD(LockRect)(PXY_THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags);
+	D912PXY_METHOD(UnlockRect)(PXY_THIS_ D3DCUBEMAP_FACES FaceType, UINT Level);
+	D912PXY_METHOD(AddDirtyRect)(PXY_THIS_ D3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect);
 
-	/*** IDirect3DBaseTexture9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags);
-	D912PXY_METHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData);
-	D912PXY_METHOD(FreePrivateData)(THIS_ REFGUID refguid);
-	D912PXY_METHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew);
-	D912PXY_METHOD_(DWORD, GetPriority)(THIS);
-	D912PXY_METHOD_(void, PreLoad)(THIS);
-	D912PXY_METHOD_(D3DRESOURCETYPE, GetType)(THIS);
-	D912PXY_METHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew);
-	D912PXY_METHOD_(DWORD, GetLOD)(THIS);
-	D912PXY_METHOD_(DWORD, GetLevelCount)(THIS);
-	D912PXY_METHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType);
-	D912PXY_METHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS);
-	D912PXY_METHOD_(void, GenerateMipSubLevels)(THIS);
-	D912PXY_METHOD(GetLevelDesc)(THIS_ UINT Level, D3DSURFACE_DESC *pDesc);
-	D912PXY_METHOD(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface);
-	D912PXY_METHOD(LockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags);
-	D912PXY_METHOD(UnlockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level);
-	D912PXY_METHOD(AddDirtyRect)(THIS_ D3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect);
+	D912PXY_METHOD_NC(GetLevelDesc)(THIS_ UINT Level, D3DSURFACE_DESC *pDesc);
+	D912PXY_METHOD_NC(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface);
+	D912PXY_METHOD_NC(LockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags);
+	D912PXY_METHOD_NC(UnlockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level);
+	D912PXY_METHOD_NC(AddDirtyRect)(THIS_ D3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect);
 
 	UINT GetSRVHeapId();
 
 private:
+	d912pxy_ctexture(UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format);
+
 	d912pxy_surface * faceSurfaces[6];
 };
 

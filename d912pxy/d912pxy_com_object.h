@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2019 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -22,9 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+#pragma once
 #include "stdafx.h"
 
-IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* obj);
-
-void d912pxy_first_init();
-void d912pxy_final_cleanup();
+typedef struct d912pxy_com_object {
+	void* vtable;
+	union {
+		d912pxy_comhandler com;
+		d912pxy_vdecl vdecl;
+		d912pxy_resource res;
+		d912pxy_shader shader;
+		d912pxy_surface surface;
+		d912pxy_surface_layer layer;
+		d912pxy_device device;
+		d912pxy_vtexture tex_3d;
+		d912pxy_ctexture tex_cube;
+		d912pxy_texture tex_2d;
+		d912pxy_basetexture basetex;
+		d912pxy_vstream vstream;
+		d912pxy_query query;
+		d912pxy_query_occlusion query_occ;
+		d912pxy_swapchain swapchain;
+		d912pxy_sblock sblock;
+		d912pxy_pso_cache_item pso_item;
+	};
+} d912pxy_com_object;

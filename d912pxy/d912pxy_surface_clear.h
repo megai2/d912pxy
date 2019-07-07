@@ -12,8 +12,8 @@ public:
 	void ClearIter(D3DRECT* pRect);
 
 private:
-	d912pxy_vshader* vs;
-	d912pxy_pshader* ps;
+	d912pxy_shader* vs;
+	d912pxy_shader* ps;
 	d912pxy_vdecl* vdcl;
 
 	d912pxy_vstream* vBuf;

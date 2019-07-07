@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_batch::d912pxy_batch(d912pxy_device* dev): d912pxy_noncom(dev, L"draw batch")
+d912pxy_batch::d912pxy_batch(d912pxy_device* dev): d912pxy_noncom(L"draw batch")
 {
 	d912pxy_s(batch) = this;
 
@@ -196,7 +196,7 @@ void d912pxy_batch::InitCopyCS()
 
 	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = { 2, rootParameters, 0, 0, D3D12_ROOT_SIGNATURE_FLAG_NONE };
 
-	copyRS = m_dev->ConstructRootSignature(&rootSignatureDesc);
+	copyRS = d912pxy_s(dev)->ConstructRootSignature(&rootSignatureDesc);
 	
 	//copy cs hlsl code
 	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 3, 0);

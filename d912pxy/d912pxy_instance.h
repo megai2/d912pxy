@@ -22,25 +22,56 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#pragma once
 #include "stdafx.h"
 
-class d912pxy_vshader : public IDirect3DVertexShader9, public d912pxy_shader
-{
-public:
-	d912pxy_vshader(d912pxy_device* dev, const DWORD* fun);
-	d912pxy_vshader(d912pxy_device* dev, d912pxy_shader_uid uid);
-	~d912pxy_vshader();
+IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* obj);
 
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
+typedef struct d912pxy_instance {	
+	struct pool {
+		d912pxy_vstream_pool vstream;
+		d912pxy_surface_pool surface;
+		d912pxy_upload_pool upload;	
+	};
 
-	/*** IDirect3DPixelShader9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(GetFunction)(THIS_ void*, UINT* pSizeOfData);
+	struct thread {
+		d912pxy_cleanup_thread cleanup;
+		d912pxy_texture_loader texld;
+		d912pxy_buffer_loader bufld;
+	};
 
-	static D912PXY_METHOD_(ULONG, ReleaseWithPairRemoval)(IDirect3DVertexShader9* thisPtr);
-};
+	struct log {
+		d912pxy_metrics metrics;
+		d912pxy_log text;
+	};
 
+	struct render {
+		d912pxy_iframe iframe;
+		d912pxy_texture_state textureState;		
+		d912pxy_batch batch;
+		d912pxy_replay_base* CMDReplay;
+
+		struct db {
+			d912pxy_pso_cache pso;
+			d912pxy_shader_db shader;
+		};
+	};
+		
+	struct dx12 {
+		d912pxy_gpu_que que;
+		d912pxy_gpu_cmd_list cl;
+		ID3D12Device* dev;
+	};
+	
+	d912pxy_device dev;	
+
+	d912pxy_com_mgr com;
+
+	d912pxy_vfs vfs;		
+	d912pxy_config config;	
+	d912pxy_mem_mgr memMgr;	
+} d912pxy_instance;
+
+static d912pxy_instance* global_d912pxy_instance;
+
+void d912pxy_first_init();
+void d912pxy_final_cleanup();

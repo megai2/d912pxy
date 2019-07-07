@@ -22,7 +22,55 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#pragma once
 #include "stdafx.h"
 
-void d912pxy_com_set_method(void* objPtr, UINT32 methodIdx, void* newMethod);
+d912pxy_com_mgr::d912pxy_com_mgr()
+{
+}
+
+
+d912pxy_com_mgr::~d912pxy_com_mgr()
+{
+
+}
+
+void d912pxy_com_mgr::Init()
+{
+	NonCom_Init(L"com mgr");
+
+	d912pxy_com_route_init_default();
+
+	UINT64 addedSize = 8;
+
+	UINT64 va_objSizes[] = {
+		sizeof(d912pxy_vstream) + addedSize,
+		sizeof(d912pxy_surface) + addedSize,
+		sizeof(d912pxy_query) + addedSize,
+		sizeof(d912pxy_query_occlusion) + addedSize,
+		sizeof(d912pxy_ctexture) + addedSize,
+		sizeof(d912pxy_ctexture) + addedSize,
+		sizeof(d912pxy_vdecl) + addedSize,
+		sizeof(d912pxy_shader) + addedSize,
+		sizeof(d912pxy_swapchain) + addedSize,
+		sizeof(d912pxy_surface_layer) + addedSize,
+		sizeof(d912pxy_sblock) + addedSize,
+		sizeof(d912pxy_pso_cache_item) + addedSize
+	};
+
+	table.Init(va_objSizes, PXY_INNER_COM_MGR_VA_MASK_BITS, PXY_COM_OBJ_COUNT);
+}
+
+void d912pxy_com_mgr::DeInit()
+{
+	table.DeInit();
+}
+
+d912pxy_com_object * d912pxy_com_mgr::AllocateComObj(d912pxy_com_obj_typeid type)
+{	
+	return (d912pxy_com_object*)table.AllocateObj(type);
+}
+
+void d912pxy_com_mgr::DeAllocateComObj(d912pxy_com_object * obj)
+{
+	table.DeAllocateObj(obj);
+}

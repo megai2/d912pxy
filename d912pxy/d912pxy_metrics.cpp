@@ -25,7 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_metrics.h"
 
-d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom(dev, L"metrics")
+d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom( L"metrics")
 {
 	d912pxy_s(metrics) = this;
 

@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom(dev, L"GPU queue"), d912pxy_thread("d912pxy gpu exec", 0)
+d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom( L"GPU queue"), d912pxy_thread("d912pxy gpu exec", 0)
 {
 	d912pxy_s(GPUque) = this;
 
@@ -206,7 +206,7 @@ void d912pxy_gpu_que::EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio)
 void d912pxy_gpu_que::SwitchCurrentCL()
 {
 	//we are commiting our commands list, so we must wait while new one is setup
-	m_dev->LockAsyncThreads();
+	d912pxy_s(dev)->LockAsyncThreads();
 
 	//execute current command List
 	//iterate to next
@@ -222,7 +222,7 @@ void d912pxy_gpu_que::SwitchCurrentCL()
 	mGPUCleanupThread->SignalWork();
 
 	//we have a new list setted up, so we can continue to commit data
-	m_dev->UnLockAsyncThreads();
+	d912pxy_s(dev)->UnLockAsyncThreads();
 }
 
 UINT d912pxy_gpu_que::WaitForExecuteCompletion()

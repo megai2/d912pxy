@@ -24,35 +24,21 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_sblock::d912pxy_sblock(d912pxy_device * dev, D3DSTATEBLOCKTYPE Type) : d912pxy_comhandler(dev, L"state block")
+d912pxy_sblock::d912pxy_sblock(D3DSTATEBLOCKTYPE Type) : d912pxy_comhandler(PXY_COM_OBJ_SBLOCK, L"state block")
 {
+}
+
+d912pxy_sblock * d912pxy_sblock::d912pxy_sblock_com(D3DSTATEBLOCKTYPE Type)
+{
+	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_SBLOCK);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SBLOCK);
+
+	new (&ret->sblock)d912pxy_sblock(Type);
+
+	return &ret->sblock;
 }
 
 d912pxy_sblock::~d912pxy_sblock()
 {
 
 }
-
-#define D912PXY_METHOD_IMPL_CN d912pxy_sblock
-
-D912PXY_IUNK_IMPL
-
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) { *ppDevice = m_dev; return D3D_OK; }
-
-D912PXY_METHOD_IMPL(Capture)(THIS)
-{
-	//megai2: must save write in all states tagged to this block
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	return D3D_OK;
-}
-
-D912PXY_METHOD_IMPL(Apply)(THIS)
-{
-	//megai2: must apply all tagged states from this block
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	return D3D_OK;
-}
-
-#undef D912PXY_METHOD_IMPL_CN

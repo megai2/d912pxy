@@ -24,23 +24,18 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-typedef struct comObjVTable {
-	void* functions[1024];
-} comObjVTable;
+typedef struct d912pxy_com_route_vtable {
+	void* funcs[PXY_INNER_MAX_COM_ROUTE_TABLE_LENGTH];
+} d912pxy_com_route_vtable;
 
-typedef struct comObj {
-	comObjVTable* vtbl;
-	UINT64 other;
-} comObj;
+d912pxy_com_route_vtable g_tables[PXY_COM_ROUTE_COUNT];
 
-void d912pxy_com_set_method(void * objPtr, UINT32 methodIdx, void* newMethod)
+void d912pxy_com_route_set(d912pxy_com_route_table table, UINT32 index, void * func)
 {
-	comObj* obj = (comObj*)objPtr;
+	g_tables[table].funcs[index] = func;
+}
 
-	DWORD oldVP;
-	VirtualProtect(&obj->vtbl->functions[methodIdx], 0x8, PAGE_EXECUTE_READWRITE, &oldVP);
-
-	obj->vtbl->functions[methodIdx] = newMethod;
-
-	VirtualProtect(&obj->vtbl->functions[methodIdx], 0x8, oldVP, &oldVP);
+void * d912pxy_com_route_get_vtable(d912pxy_com_route_table table)
+{
+	return (void*)&g_tables[table];
 }

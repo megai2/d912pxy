@@ -28,26 +28,9 @@ SOFTWARE.
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_VSTREAM
 #define D912PXY_METHOD_IMPL_CN d912pxy_vstream
 
-D912PXY_IUNK_IMPL
-
-/*** IDirect3DResource9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) { return GetDevice(ppDevice); }
-D912PXY_METHOD_IMPL(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) { return SetPrivateData(refguid, pData, SizeOfData, Flags); }
-D912PXY_METHOD_IMPL(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) { return GetPrivateData(refguid, pData, pSizeOfData); }
-D912PXY_METHOD_IMPL(FreePrivateData)(THIS_ REFGUID refguid) { return FreePrivateData(refguid); }
-D912PXY_METHOD_IMPL_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) { return SetPriority(PriorityNew); }
-D912PXY_METHOD_IMPL_(DWORD, GetPriority)(THIS) { return GetPriority(); }
-D912PXY_METHOD_IMPL_(void, PreLoad)(THIS) { return PreLoad(); }
-D912PXY_METHOD_IMPL_(D3DRESOURCETYPE, GetType)(THIS) { return GetType(); }
-
-D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC *pDesc)
-{
-	return D3DERR_INVALIDCALL;
-}
-
 UINT32 d912pxy_vstream::threadedCtor = 0;
 
-d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(dev, isIB ? RTID_IBUF : RTID_VBUF, isIB ? L"vstream i" : L"vstream v")
+d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(isIB ? RTID_IBUF : RTID_VBUF, PXY_COM_OBJ_VSTREAM, isIB ? L"vstream i" : L"vstream v")
 {		
 	lockDepth = 0;
 
@@ -71,6 +54,16 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 		ConstructResource();		
 }
 
+d912pxy_vstream * d912pxy_vstream::d912pxy_vstream_com(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB)
+{
+	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_VSTREAM);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VBUF);
+
+	new (&ret->vstream)d912pxy_vstream(Length, Usage, fmt, isIB);
+
+	return &ret->vstream;
+}
+
 d912pxy_vstream::~d912pxy_vstream()
 {
 	if (GetCurrentPoolSyncValue()) {
@@ -78,7 +71,7 @@ d912pxy_vstream::~d912pxy_vstream()
 	}
 }
 
-D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
+D912PXY_METHOD_IMPL_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 {
 	API_OVERHEAD_TRACK_START(2)
 
@@ -106,7 +99,7 @@ D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbDa
 	return D3D_OK;
 }
 
-D912PXY_METHOD_IMPL(Unlock)(THIS)
+D912PXY_METHOD_IMPL_NC(Unlock)(THIS)
 {
 	API_OVERHEAD_TRACK_START(2)
 			
@@ -190,16 +183,6 @@ UINT d912pxy_vstream::FinalReleaseCB()
 	else {
 		return 1;
 	}
-}
-
-IDirect3DVertexBuffer9 * d912pxy_vstream::AsDX9VB()
-{
-	return this;
-}
-
-IDirect3DIndexBuffer9 * d912pxy_vstream::AsDX9IB()
-{
-	return d912pxy_vstream_to_index(this);
 }
 
 UINT32 d912pxy_vstream::PooledAction(UINT32 use)

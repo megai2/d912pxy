@@ -38,7 +38,7 @@ LRESULT APIENTRY d912pxy_dxgi_wndproc_patch(
 	return baseSwapChain->DXGIWndProc(hwnd, uMsg, wParam, lParam);
 }
 
-d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT_PARAMETERS * in_pp) : d912pxy_comhandler(dev, L"swap chain")
+d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) : d912pxy_comhandler(PXY_COM_OBJ_SWAPCHAIN, L"swap chain")
 {
 	state = SWCS_SETUP;
 	depthStencilSurface = NULL;
@@ -72,6 +72,16 @@ d912pxy_swapchain::d912pxy_swapchain(d912pxy_device * dev, int index, D3DPRESENT
 	ResetFrameTargets();
 }
 
+d912pxy_com_object * d912pxy_swapchain::d912pxy_swapchain_com(int index, D3DPRESENT_PARAMETERS * in_pp)
+{
+	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_SWAPCHAIN);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SWAPCHAIN);
+
+	new (&ret->swapchain)d912pxy_swapchain(index, in_pp);
+
+	return ret;
+}
+
 d912pxy_swapchain::~d912pxy_swapchain()
 {
 	if (dxgiOWndProc)
@@ -83,16 +93,7 @@ d912pxy_swapchain::~d912pxy_swapchain()
 	LOG_INFO_DTDM("Stopping swapchain");
 }
 
-HRESULT d912pxy_swapchain::QueryInterface(REFIID riid, void ** ppvObj)
-{
-	return d912pxy_comhandler::QueryInterface(riid, ppvObj);
-}
-ULONG d912pxy_swapchain::AddRef(void)
-{
-	return d912pxy_comhandler::AddRef();
-}
-
-ULONG d912pxy_swapchain::Release(void)
+ULONG d912pxy_swapchain::ReleaseSwapChain(void)
 {
 	ULONG ret = d912pxy_comhandler::Release();
 
@@ -110,9 +111,6 @@ ULONG d912pxy_swapchain::Release(void)
 
 HRESULT d912pxy_swapchain::Present(CONST RECT * pSourceRect, CONST RECT * pDestRect, HWND hDestWindowOverride, CONST RGNDATA * pDirtyRegion, DWORD dwFlags)
 {
-	//ignore parameters for now, just cause...	
-	//TODO
-
 	return D3D_OK;
 }
 
@@ -120,7 +118,7 @@ HRESULT d912pxy_swapchain::GetFrontBufferData(IDirect3DSurface9 * pDestSurface)
 {	
 	//megai2: not actual front buffer data, but should work 
 
-	d912pxy_surface * dst = (d912pxy_surface*)pDestSurface;
+	d912pxy_surface * dst = PXY_COM_LOOKUP(pDestSurface, surface);
 	backBufferSurface->BCopyTo(dst, 3, d912pxy_s(GPUcl)->GID(CLG_SEQ));
 
 	dst->CopySurfaceDataToCPU();
@@ -132,30 +130,9 @@ HRESULT d912pxy_swapchain::GetBackBuffer(UINT iBackBuffer, D3DBACKBUFFER_TYPE Ty
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 	
-	*ppBackBuffer = (IDirect3DSurface9 *)backBufferSurface;
+	*ppBackBuffer = PXY_COM_CAST_(IDirect3DSurface9, backBufferSurface);
 
 	backBufferSurface->AddRef();
-
-	return D3D_OK;
-}
-
-HRESULT d912pxy_swapchain::GetRasterStatus(D3DRASTER_STATUS * pRasterStatus)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	return E_NOTIMPL;
-}
-
-HRESULT d912pxy_swapchain::GetDisplayMode(D3DDISPLAYMODE * pMode)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	return E_NOTIMPL;
-}
-
-HRESULT d912pxy_swapchain::GetDevice(IDirect3DDevice9 ** ppDevice)
-{
-	*ppDevice = (IDirect3DDevice9 *)m_dev;
 
 	return D3D_OK;
 }
@@ -207,8 +184,8 @@ void d912pxy_swapchain::StartFrame()
 {
 	backBufferSurface->BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, CLG_TOP);
 
-	m_dev->SetRenderTarget(0, backBufferSurface);
-	m_dev->SetDepthStencilSurface(depthStencilSurface);	
+	d912pxy_s(dev)->SetRenderTarget(0, PXY_COM_CAST_(IDirect3DSurface9, backBufferSurface));
+	d912pxy_s(dev)->SetDepthStencilSurface(PXY_COM_CAST_(IDirect3DSurface9, depthStencilSurface));
 }
 
 void d912pxy_swapchain::EndFrame()
@@ -409,8 +386,7 @@ void d912pxy_swapchain::ResetFrameTargets()
 
 	FreeFrameTargets();	
 
-	backBufferSurface = new d912pxy_surface(
-		m_dev, 
+	backBufferSurface = d912pxy_surface::d912pxy_surface_com(
 		currentPP.BackBufferWidth,
 		currentPP.BackBufferHeight,
 		currentPP.BackBufferFormat, 
@@ -427,8 +403,7 @@ void d912pxy_swapchain::ResetFrameTargets()
 
 	if (currentPP.EnableAutoDepthStencil)
 	{
-		depthStencilSurface = new d912pxy_surface(
-			m_dev,
+		depthStencilSurface = d912pxy_surface::d912pxy_surface_com(
 			currentPP.BackBufferWidth,
 			currentPP.BackBufferHeight,
 			currentPP.AutoDepthStencilFormat,

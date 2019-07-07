@@ -86,7 +86,7 @@ d912pxy_upload_item * d912pxy_upload_pool::AllocProc(UINT32 cat)
 {
 	d912pxy_upload_item * ret;
 
-	ret = new d912pxy_upload_item(m_dev, cat);
+	ret = new d912pxy_upload_item(d912pxy_s(dev), cat);
 
 	return ret;
 }
@@ -111,7 +111,7 @@ ID3D12Resource * d912pxy_upload_pool::MakeUploadBuffer(UINT maxSize)
 	if (!memPool || (maxSize >= memPoolSize))
 	{
 fallback:
-		d912pxy_resource* dxBuffer = new d912pxy_resource(m_dev, RTID_UL_BUF, L"upload pool data");
+		d912pxy_resource* dxBuffer = new d912pxy_resource(RTID_UL_BUF, PXY_COM_OBJ_NOVTABLE, L"upload pool data");
 		dxBuffer->d12res_buffer(maxSize, D3D12_HEAP_TYPE_UPLOAD);
 		dxBuffer->Release();
 
@@ -184,7 +184,7 @@ void d912pxy_upload_pool::CreateMemPool()
 
 	const D3D12_HEAP_DESC heapDsc = {
 		memPoolSize,
-		m_dev->GetResourceHeap(D3D12_HEAP_TYPE_UPLOAD),
+		d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_UPLOAD),
 		1 << PXY_INNDER_UPLOAD_POOL_BITIGNORE,
 		D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS
 	};
@@ -195,7 +195,7 @@ void d912pxy_upload_pool::CreateMemPool()
 	);
 }
 
-d912pxy_upload_item::d912pxy_upload_item(d912pxy_device * dev, UINT8 icat) : d912pxy_comhandler(dev, L"upload item")
+d912pxy_upload_item::d912pxy_upload_item(d912pxy_device * dev, UINT8 icat) : d912pxy_comhandler(PXY_COM_OBJ_NOVTABLE, L"upload item")
 {
 	cat = icat;	
 	mRes = d912pxy_s(pool_upload)->MakeUploadBuffer(cat);

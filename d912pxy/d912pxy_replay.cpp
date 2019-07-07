@@ -827,7 +827,7 @@ void d912pxy_replay::RHA_QUMA(d912pxy_replay_query_mark * it, ID3D12GraphicsComm
 	it->obj->QueryMark(it->start, cl);
 }
 
-d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom(dev, L"replay")
+d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom( L"replay")
 {
 
 }

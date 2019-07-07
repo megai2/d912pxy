@@ -1,10 +1,10 @@
 #include "stdafx.h"
 
-d912pxy_texture_state::d912pxy_texture_state(d912pxy_device * dev) : d912pxy_noncom(dev, L"texture state")
+d912pxy_texture_state::d912pxy_texture_state(d912pxy_device * dev) : d912pxy_noncom( L"texture state")
 {
 	d912pxy_s(textureState) = this;
 
-	samplerHeap = m_dev->GetDHeap(PXY_INNER_HEAP_SPL);
+	samplerHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_SPL);
 
 	splLookup = new d912pxy_memtree2(sizeof(d912pxy_trimmed_sampler_dsc), 20, 2);
 

@@ -25,39 +25,25 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_basetexture : public IDirect3DBaseTexture9, public d912pxy_resource
+class d912pxy_basetexture : public d912pxy_resource
 {
 public:
-	d912pxy_basetexture(d912pxy_device * dev);
+	d912pxy_basetexture();
 	~d912pxy_basetexture();
-
-	D912PXY_METHOD(QueryInterface)( REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)();
-	D912PXY_METHOD_(ULONG, Release)();
-
-	D912PXY_METHOD(GetDevice)( IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(SetPrivateData)( REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags);
-	D912PXY_METHOD(GetPrivateData)( REFGUID refguid, void* pData, DWORD* pSizeOfData);
-	D912PXY_METHOD(FreePrivateData)( REFGUID refguid);
-	D912PXY_METHOD_(DWORD, SetPriority)( DWORD PriorityNew);
-	D912PXY_METHOD_(DWORD, GetPriority)();
-	D912PXY_METHOD_(void, PreLoad)();
-	D912PXY_METHOD_(D3DRESOURCETYPE, GetType)();
-	D912PXY_METHOD_(DWORD, SetLOD)( DWORD LODNew);
-	D912PXY_METHOD_(DWORD, GetLOD)();
-	D912PXY_METHOD_(DWORD, GetLevelCount)();
-	D912PXY_METHOD(SetAutoGenFilterType)( D3DTEXTUREFILTERTYPE FilterType);
-	D912PXY_METHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)();
-	D912PXY_METHOD_(void, GenerateMipSubLevels)();
 
 	UINT GetSRVHeapId();
 
+	D912PXY_METHOD_(DWORD, SetLOD)(PXY_THIS_ DWORD LODNew);
+	D912PXY_METHOD_(DWORD, GetLOD)(PXY_THIS);
+	D912PXY_METHOD_(DWORD, GetLevelCount)(PXY_THIS);
+	D912PXY_METHOD(SetAutoGenFilterType)(PXY_THIS_ D3DTEXTUREFILTERTYPE FilterType);
+	D912PXY_METHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(PXY_THIS);
+	D912PXY_METHOD_(void, GenerateMipSubLevels)(PXY_THIS);
+
 	d912pxy_surface* GetBaseSurface() { return baseSurface; };
 
-	UINT FinalRelease();
-
 protected:
-	UINT32 * srvIDc;
+	UINT32 srvIDc[2];
 
 	d912pxy_surface * baseSurface;
 

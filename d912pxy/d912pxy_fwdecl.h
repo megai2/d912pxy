@@ -269,6 +269,14 @@ class d912pxy_mem_mgr;
 class d912pxy_StackWalker;
 struct d912pxy_trimmed_dx12_pso;
 class d912pxy_query_occlusion;
+class d912pxy_com_mgr;
+class d912pxy_comhandler;
+class d912pxy_vdecl;
+class d912pxy_ctexture;
+class d912pxy_vtexture;
+class d912pxy_base_texture;
+class d912pxy_texture;
+struct d912pxy_com_object;
 
 
 typedef struct d912pxy_device_streamsrc {
@@ -304,6 +312,9 @@ static const wchar_t* d912pxy_gpu_cmd_list_group_name [] = {
 
 //global singletons =======================
 
+#define PXY_INSTANCE_PAR
+#define PXY_INSTANCE_PASS 
+
 class d912pxy_global_objects {
 public:
 	d912pxy_global_objects() {  };
@@ -330,7 +341,7 @@ public:
 	static d912pxy_config* config;
 	static d912pxy_log* log;
 	static d912pxy_mem_mgr* memMgr;
-	static d912pxy_query_occlusion* queryOcc;
+	static d912pxy_com_mgr* comMgr;
 };
 
 #define d912pxy_s(a) d912pxy_global_objects::a
