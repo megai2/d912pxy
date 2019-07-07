@@ -79,7 +79,7 @@ ULONG d912pxy_comhandler::Release()
 
 	if (decR == 0)
 	{
-		LOG_DBG_DTDM("::CRE 0 %016llX", &obj->com);
+		LOG_DBG_DTDM("::CRE 0 %016llX", this);
 
 		if (d912pxy_s(dev))
 			d912pxy_s(dev)->IFrameCleanupEnqeue(this);
