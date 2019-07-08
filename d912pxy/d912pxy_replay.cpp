@@ -50,7 +50,8 @@ void d912pxy_replay::Init()
 {
 	NonCom_Init(L"replay mt");
 	
-	stack = (d912pxy_replay_item*)malloc(sizeof(d912pxy_replay_item)*PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
+	stack = 0;
+	PXY_MALLOC(stack, (sizeof(d912pxy_replay_item)*PXY_INNER_MAX_IFRAME_BATCH_REPLAY), d912pxy_replay_item*);
 
 	stackTop = 0;
 	stopMarker = 0;
@@ -503,6 +504,9 @@ void d912pxy_replay::Free()
 			threads[i]->Stop();
 		delete threads[i];
 	}
+
+	PXY_FREE(stack);
+
 	this->~d912pxy_replay();
 }
 
