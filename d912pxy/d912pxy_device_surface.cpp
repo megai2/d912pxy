@@ -37,7 +37,7 @@ HRESULT d912pxy_device::SetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurfac
 
 	d912pxy_surface* rtSurf = PXY_COM_LOOKUP(pRenderTarget, surface);
 
-	d912pxy_s(iframe)->BindSurface(1 + RenderTargetIndex, rtSurf);
+	d912pxy_s.render.iframe.BindSurface(1 + RenderTargetIndex, rtSurf);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -53,7 +53,7 @@ HRESULT d912pxy_device::SetRenderTarget_Compat(DWORD RenderTargetIndex, IDirect3
 
 	d912pxy_surface* rtSurf = PXY_COM_LOOKUP(pRenderTarget, surface);
 
-	d912pxy_s(iframe)->BindSurface(1 + RenderTargetIndex, rtSurf);
+	d912pxy_s.render.iframe.BindSurface(1 + RenderTargetIndex, rtSurf);
 
 	D3DVIEWPORT9 wp;
 	wp.X = 0;
@@ -79,7 +79,7 @@ HRESULT d912pxy_device::GetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurfac
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppRenderTarget = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s(iframe)->GetBindedSurface(RenderTargetIndex + 1));
+	*ppRenderTarget = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s.render.iframe.GetBindedSurface(RenderTargetIndex + 1));
 	(*ppRenderTarget)->AddRef();
 
 	API_OVERHEAD_TRACK_END(0)
@@ -94,9 +94,9 @@ HRESULT d912pxy_device::SetDepthStencilSurface(IDirect3DSurface9* pNewZStencil)
 	API_OVERHEAD_TRACK_START(0)
 
 	if (pNewZStencil)
-		d912pxy_s(iframe)->BindSurface(0, PXY_COM_LOOKUP(pNewZStencil, surface));
+		d912pxy_s.render.iframe.BindSurface(0, PXY_COM_LOOKUP(pNewZStencil, surface));
 	else 
-		d912pxy_s(iframe)->BindSurface(0, 0);
+		d912pxy_s.render.iframe.BindSurface(0, 0);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -109,7 +109,7 @@ HRESULT d912pxy_device::GetDepthStencilSurface(IDirect3DSurface9** ppZStencilSur
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppZStencilSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s(iframe)->GetBindedSurface(0));
+	*ppZStencilSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s.render.iframe.GetBindedSurface(0));
 	(*ppZStencilSurface)->AddRef();	
 
 	API_OVERHEAD_TRACK_END(0)
@@ -125,7 +125,7 @@ HRESULT d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTarget, ID
 
 	d912pxy_surface* src = PXY_COM_LOOKUP(pRenderTarget, surface);
 	d912pxy_surface* dst = PXY_COM_LOOKUP(pDestSurface, surface);
-	src->BCopyTo(dst, 3, d912pxy_s(GPUcl)->GID(CLG_SEQ));
+	src->BCopyTo(dst, 3, d912pxy_s.dx12.cl->GID(CLG_SEQ));
 
 	dst->CopySurfaceDataToCPU();
 
@@ -138,7 +138,7 @@ HRESULT d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CONST REC
 {
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_s(CMDReplay)->StretchRect(PXY_COM_LOOKUP(pSourceSurface, surface), PXY_COM_LOOKUP(pDestSurface, surface));
+	d912pxy_s.render.replay.StretchRect(PXY_COM_LOOKUP(pSourceSurface, surface), PXY_COM_LOOKUP(pDestSurface, surface));
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -172,20 +172,20 @@ HRESULT d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D
 			((Color >> 16) & 0xFF) / 255.0f
 		};
 
-		d912pxy_surface* surf = d912pxy_s(iframe)->GetBindedSurface(1);
+		d912pxy_surface* surf = d912pxy_s.render.iframe.GetBindedSurface(1);
 
 		if (surf)
-			d912pxy_s(CMDReplay)->RTClear(surf, fvColor, d912pxy_s(iframe)->GetViewport());
+			d912pxy_s.render.replay.RTClear(surf, fvColor, d912pxy_s.render.iframe.GetViewport());
 	}
 
 	if (Flags & (D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER))
 	{
 		DWORD cvtCf = ((D3D12_CLEAR_FLAG_DEPTH * ((Flags & D3DCLEAR_ZBUFFER) != 0)) | (D3D12_CLEAR_FLAG_STENCIL * ((Flags & D3DCLEAR_STENCIL) != 0)));
 
-		d912pxy_surface* surf = d912pxy_s(iframe)->GetBindedSurface(0);
+		d912pxy_surface* surf = d912pxy_s.render.iframe.GetBindedSurface(0);
 
 		if (surf)
-			d912pxy_s(CMDReplay)->DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf, d912pxy_s(iframe)->GetViewport());
+			d912pxy_s.render.replay.DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf, d912pxy_s.render.iframe.GetViewport());
 	}
 
 	API_OVERHEAD_TRACK_END(0)

@@ -99,13 +99,13 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 				LOG_ERR_DTDM("%s", pwz);
 
 				//megai2: relay dbg print messages to crashlog too
-				d912pxy_s(log)->WriteCrashLogLine((wchar_t*)pwz);
+				d912pxy_s.log.text.WriteCrashLogLine((wchar_t*)pwz);
 
 				//megai2: check for D3D12 device removal message
 				if (wcsstr(pwz, L"D3D12: Removing Device"))
 				{
-					if (d912pxy_s(DXDev))
-						LOG_ERR_DTDM("Recived D3D12 device removal message due to %lX", d912pxy_s(DXDev)->GetDeviceRemovedReason());
+					if (d912pxy_s.dx12.dev)
+						LOG_ERR_DTDM("Recived D3D12 device removal message due to %lX", d912pxy_s.dx12.dev->GetDeviceRemovedReason());
 					else
 						LOG_ERR_DTDM("Recived D3D12 device removal message due to unknown error");
 
@@ -126,10 +126,10 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 
 void d912pxy_helper::InstallVehHandler()
 {
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_ENABLE_VEH))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_ENABLE_VEH))
 		AddVectoredExceptionHandler(TRUE, VexDbgHandler);
 
-	d912pxy_s(log)->RegisterModule(L"helper", &LGC_DEFAULT);
+	d912pxy_s.log.text.RegisterModule(L"helper", &LGC_DEFAULT);
 }
 
 int d912pxy_helper::IsFileExist(const char *name)
@@ -146,21 +146,21 @@ void d912pxy_helper::ThrowIfFailed(HRESULT hr, const char* reason)
 		wchar_t buf[1024];
 		wsprintf(buf, L"%S | hr = %08lX", reason, hr);
 
-		d912pxy_s(log)->SyncCrashWrite(1);
+		d912pxy_s.log.text.SyncCrashWrite(1);
 
-		d912pxy_s(log)->WriteCrashLogLine(buf);
+		d912pxy_s.log.text.WriteCrashLogLine(buf);
 
 		if (hr == DXGI_ERROR_DEVICE_REMOVED)
 		{
-			if (d912pxy_s(DXDev))
-				wsprintf(buf, L"D3D12 device removal due to %lX", d912pxy_s(DXDev)->GetDeviceRemovedReason());
+			if (d912pxy_s.dx12.dev)
+				wsprintf(buf, L"D3D12 device removal due to %lX", d912pxy_s.dx12.dev->GetDeviceRemovedReason());
 			else
 				wsprintf(buf, L"D3D12 device removal due to unknown error");
 
-			d912pxy_s(log)->WriteCrashLogLine(buf);
+			d912pxy_s.log.text.WriteCrashLogLine(buf);
 		}
 		
-		d912pxy_s(log)->SyncCrashWrite(0);
+		d912pxy_s.log.text.SyncCrashWrite(0);
 			
 		throw std::exception();
 	}

@@ -46,8 +46,10 @@ typedef struct d912pxy_trimmed_sampler_dsc {
 class d912pxy_texture_state : public d912pxy_noncom
 {
 public:
-	d912pxy_texture_state(d912pxy_device* dev);
+	d912pxy_texture_state();
 	~d912pxy_texture_state();
+
+	void Init();
 
 	void SetTexture(UINT stage, UINT srv);
 	void ModStageBit(UINT stage, UINT bit, UINT set);

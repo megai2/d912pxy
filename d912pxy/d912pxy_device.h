@@ -37,10 +37,12 @@ static const D3D12_DESCRIPTOR_HEAP_DESC d912pxy_dx12_heap_config[PXY_INNER_MAX_D
 class d912pxy_device: public d912pxy_comhandler
 {
 public:
-	static d912pxy_com_object* d912pxy_device_com(IDirect3DDevice9* dev, void* par);
+	static d912pxy_com_object* d912pxy_device_com(void* baseMem, IDirect3DDevice9* dev, void* par);
 
-	d912pxy_device(IDirect3DDevice9* dev, void* par);
+	d912pxy_device();
 	virtual ~d912pxy_device(void);
+
+	void Init(IDirect3DDevice9* dev, void* par);
 
 //com methods
 	D912PXY_METHOD_(ULONG, ReleaseDevice)(PXY_THIS);

@@ -251,6 +251,9 @@
     <ClCompile Include="d912pxy_mem_va_table.cpp">
       <Filter>memory</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_replay_base.cpp">
+      <Filter>d3d9_impl\device\iframe\replay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -476,6 +479,9 @@
     </ClInclude>
     <ClInclude Include="d912pxy_mem_va_table.h">
       <Filter>memory</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_replay_base.h">
+      <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

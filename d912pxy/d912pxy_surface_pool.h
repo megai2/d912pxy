@@ -28,8 +28,10 @@ SOFTWARE.
 class d912pxy_surface_pool : public d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>
 {
 public:
-	d912pxy_surface_pool(d912pxy_device* dev);
+	d912pxy_surface_pool();
 	~d912pxy_surface_pool();
+
+	void Init();
 
 	d912pxy_surface* GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback);
 

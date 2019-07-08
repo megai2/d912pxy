@@ -164,7 +164,6 @@ typedef struct d912pxy_replay_query_mark {
 	UINT8 start;
 } d912pxy_replay_query_mark;
 
-
 typedef struct d912pxy_replay_item {
 	d912pxy_replay_item_type type;
 	union {
@@ -211,54 +210,13 @@ class d912pxy_replay;
 
 typedef void (d912pxy_replay::*d912pxy_replay_handler_func)(void*, ID3D12GraphicsCommandList* cl, void**);
 
-class d912pxy_replay_base :
-	public d912pxy_noncom
-{
-public:
-	d912pxy_replay_base(d912pxy_device* dev);
-	~d912pxy_replay_base();
-
-	//actions
-
-	virtual UINT StateTransit(d912pxy_resource* res, D3D12_RESOURCE_STATES to) = 0;
-	virtual void OMStencilRef(DWORD ref) = 0;
-	virtual void OMBlendFac(float* color) = 0;
-	virtual void RSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor) = 0;
-
-	virtual void PSOCompiled(d912pxy_pso_cache_item* dsc) = 0;
-	virtual void PSORaw(d912pxy_trimmed_dx12_pso* dsc) = 0;
-	virtual void PSORawFeedback(d912pxy_trimmed_dx12_pso* dsc, void** ptr) = 0;
-	virtual void VBbind(d912pxy_vstream* buf, UINT stride, UINT slot, UINT offset) = 0;
-	virtual void IBbind(d912pxy_vstream* buf) = 0;
-	virtual void DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation, UINT batchId) = 0;
-
-	virtual void RT(d912pxy_surface* rtv, d912pxy_surface* dsv) = 0;
-	virtual void RTClear(d912pxy_surface* tgt, float* clr, D3D12_VIEWPORT* currentVWP) = 0;
-	virtual void DSClear(d912pxy_surface* tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP) = 0;
-	virtual void StretchRect(d912pxy_surface* src, d912pxy_surface* dst) = 0;
-	virtual void GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn) = 0;
-
-	virtual void QueryMark(d912pxy_query* va, UINT start) = 0;
-
-	virtual void PrimTopo(D3DPRIMITIVETYPE primType) = 0;
-
-	//actual execute code and thread managment
-
-	virtual void Finish() = 0;
-	virtual void Start() = 0;
-	virtual void IFrameStart() = 0;
-	virtual void IssueWork(UINT batch) = 0;
-
-	virtual void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd) = 0;
-
-	virtual void Free() = 0;
-};
-
 class d912pxy_replay : public d912pxy_replay_base	
 {
 public:
-	d912pxy_replay(d912pxy_device* dev);
+	d912pxy_replay();
 	~d912pxy_replay();
+
+	void Init();
 
 	//actions
 
@@ -338,7 +296,7 @@ private:
 	void RHA_PRMT(d912pxy_replay_primitive_topology* it, ID3D12GraphicsCommandList * cl, void** unused);
 	void RHA_QUMA(d912pxy_replay_query_mark* it, ID3D12GraphicsCommandList * cl, void** unused);
 	
-	d912pxy_replay_item stack[PXY_INNER_MAX_IFRAME_BATCH_REPLAY];
+	d912pxy_replay_item* stack;
 
 	UINT stackTop;
 	LONG stackTopMT;

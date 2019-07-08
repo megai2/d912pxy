@@ -30,8 +30,10 @@ SOFTWARE.
 class d912pxy_iframe : public d912pxy_noncom
 {
 public:
-	d912pxy_iframe(d912pxy_device* dev, d912pxy_dheap** heaps);
+	d912pxy_iframe();
 	~d912pxy_iframe();
+
+	void Init(d912pxy_dheap** heaps);
 
 	void RBarrierImm(D3D12_RESOURCE_BARRIER* bar);
 	void RBarrierStk(UINT cnt, D3D12_RESOURCE_BARRIER* bar);
@@ -78,10 +80,7 @@ public:
 
 	UINT GetBatchCount() { return batchesIssued; };
 
-	void SetSwapper(d912pxy_swapchain* iSwp) {
-		mSwapChain = iSwp;
-		d912pxy_s(GPUque)->SetPresenter(iSwp);
-	}
+	void SetSwapper(d912pxy_swapchain* iSwp);
 
 	void SetRSigOnList(d912pxy_gpu_cmd_list_group lstID);
 

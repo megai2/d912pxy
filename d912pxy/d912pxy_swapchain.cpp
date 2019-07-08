@@ -74,7 +74,7 @@ d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) :
 
 d912pxy_com_object * d912pxy_swapchain::d912pxy_swapchain_com(int index, D3DPRESENT_PARAMETERS * in_pp)
 {
-	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_SWAPCHAIN);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SWAPCHAIN);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SWAPCHAIN);
 
 	new (&ret->swapchain)d912pxy_swapchain(index, in_pp);
@@ -119,7 +119,7 @@ HRESULT d912pxy_swapchain::GetFrontBufferData(IDirect3DSurface9 * pDestSurface)
 	//megai2: not actual front buffer data, but should work 
 
 	d912pxy_surface * dst = PXY_COM_LOOKUP(pDestSurface, surface);
-	backBufferSurface->BCopyTo(dst, 3, d912pxy_s(GPUcl)->GID(CLG_SEQ));
+	backBufferSurface->BCopyTo(dst, 3, d912pxy_s.dx12.cl->GID(CLG_SEQ));
 
 	dst->CopySurfaceDataToCPU();
 
@@ -184,8 +184,8 @@ void d912pxy_swapchain::StartFrame()
 {
 	backBufferSurface->BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, CLG_TOP);
 
-	d912pxy_s(dev)->SetRenderTarget(0, PXY_COM_CAST_(IDirect3DSurface9, backBufferSurface));
-	d912pxy_s(dev)->SetDepthStencilSurface(PXY_COM_CAST_(IDirect3DSurface9, depthStencilSurface));
+	d912pxy_s.dev.SetRenderTarget(0, PXY_COM_CAST_(IDirect3DSurface9, backBufferSurface));
+	d912pxy_s.dev.SetDepthStencilSurface(PXY_COM_CAST_(IDirect3DSurface9, depthStencilSurface));
 }
 
 void d912pxy_swapchain::EndFrame()
@@ -399,7 +399,7 @@ void d912pxy_swapchain::ResetFrameTargets()
 		NULL
 	);
 
-	d912pxy_s(iframe)->BindSurface(1, backBufferSurface);
+	d912pxy_s.render.iframe.BindSurface(1, backBufferSurface);
 
 	if (currentPP.EnableAutoDepthStencil)
 	{
@@ -416,7 +416,7 @@ void d912pxy_swapchain::ResetFrameTargets()
 			NULL
 		);
 
-		d912pxy_s(iframe)->BindSurface(0, depthStencilSurface);
+		d912pxy_s.render.iframe.BindSurface(0, depthStencilSurface);
 	}	
 }
 
@@ -706,7 +706,7 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 	}
 	
 	HRESULT swapRet = dxgiFactory4->CreateSwapChainForHwnd(
-		d912pxy_s(GPUque)->GetDXQue().Get(),
+		d912pxy_s.dx12.que.GetDXQue().Get(),
 		currentPP.hDeviceWindow,
 		&swapChainDesc,
 		nullptr,//currentPP.Windowed ? nullptr : &swapChainFullscreenDsc,
@@ -830,12 +830,12 @@ UINT d912pxy_swapchain::DXGIFullscreenInterrupt(UINT inactive)
 	if (inactive)
 	{
 		fullscreenIterrupt.SetValue(1);
-		d912pxy_s(psoCache)->LockCompileQue(1);							
+		d912pxy_s.render.db.pso.LockCompileQue(1);							
 	}
 	else
 	{
 		fullscreenIterrupt.SetValue(0);
-		d912pxy_s(psoCache)->LockCompileQue(0);		
+		d912pxy_s.render.db.pso.LockCompileQue(0);		
 	}
 
 	return 0;

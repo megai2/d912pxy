@@ -25,8 +25,9 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_gpu_cleanup_thread.h"
 
-d912pxy_gpu_cleanup_thread::d912pxy_gpu_cleanup_thread() : d912pxy_thread("d912pxy gpu cleanup", 0)
+d912pxy_gpu_cleanup_thread::d912pxy_gpu_cleanup_thread() : d912pxy_thread()
 {
+	InitThread("d912pxy gpu cleanup", 0);
 	finishedEvent = CreateEvent(0, 0, 1, 0);
 }
 
@@ -42,7 +43,7 @@ void d912pxy_gpu_cleanup_thread::ThreadJob()
 	if (items)
 		cl->CleanupReferenced(items);
 	
-//	d912pxy_s(GPUque)->ExecuteCommandsThreaded(1);
+//	d912pxy_s.dx12.que.ExecuteCommandsThreaded(1);
 
 	SetEvent(finishedEvent);
 }

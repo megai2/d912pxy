@@ -102,8 +102,10 @@ static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {
 class d912pxy_metrics : public d912pxy_noncom
 {
 public:
-	d912pxy_metrics(d912pxy_device* dev);
+	d912pxy_metrics();
 	~d912pxy_metrics();
+
+	void Init();
 	   
 #ifndef DISABLE_P7LIB
 	void TrackAPIOverheadStart(UINT group);

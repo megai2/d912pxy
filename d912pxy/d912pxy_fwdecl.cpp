@@ -23,26 +23,3 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
-
-d912pxy_s_dcl(sdb, d912pxy_shader_db);
-d912pxy_s_dcl(pool_vstream, d912pxy_vstream_pool);
-d912pxy_s_dcl(pool_surface, d912pxy_surface_pool);
-d912pxy_s_dcl(thread_cleanup, d912pxy_cleanup_thread);
-d912pxy_s_dcl(iframe, d912pxy_iframe);
-d912pxy_s_dcl(GPUque, d912pxy_gpu_que);
-d912pxy_s_dcl(GPUcl, d912pxy_gpu_cmd_list);
-d912pxy_s_dcl(DXDev, ID3D12Device);
-d912pxy_s_dcl(CMDReplay, d912pxy_replay_base);
-d912pxy_s_dcl(textureState, d912pxy_texture_state);
-d912pxy_s_dcl(texloadThread, d912pxy_texture_loader);
-d912pxy_s_dcl(bufloadThread, d912pxy_buffer_loader);
-d912pxy_s_dcl(pool_upload, d912pxy_upload_pool);
-d912pxy_s_dcl(batch, d912pxy_batch);
-d912pxy_s_dcl(psoCache, d912pxy_pso_cache);
-d912pxy_s_dcl(vfs, d912pxy_vfs);
-d912pxy_s_dcl(dev, d912pxy_device);
-d912pxy_s_dcl(metrics, d912pxy_metrics);
-d912pxy_s_dcl(config, d912pxy_config);
-d912pxy_s_dcl(log, d912pxy_log);
-d912pxy_s_dcl(memMgr, d912pxy_mem_mgr);
-d912pxy_s_dcl(comMgr, d912pxy_com_mgr);

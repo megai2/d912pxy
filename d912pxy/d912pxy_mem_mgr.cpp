@@ -38,14 +38,14 @@ void * operator new(std::size_t n)
 #ifdef _DEBUG
 	void* ret = NULL;
 
-	if (!d912pxy_s(memMgr)) {			   
+	if (!global_d912pxy_mem_mgr_live) {
 		return d912pxy_mem_mgr::pxy_malloc_dbg_uninit(n, __FILE__, __LINE__, __FUNCTION__);
 	}
 	else {
 		if (recordOprtNewCaller)
-			d912pxy_s(memMgr)->pxy_malloc_dbg(&ret, n, 0, 0, "operator new");
+			d912pxy_s.mem.pxy_malloc_dbg(&ret, n, 0, 0, "operator new");
 		else 
-			d912pxy_s(memMgr)->pxy_malloc_dbg(&ret, n, "<no data on new caller>", __LINE__, "operator new");
+			d912pxy_s.mem.pxy_malloc_dbg(&ret, n, "<no data on new caller>", __LINE__, "operator new");
 	}
 
 #else
@@ -62,20 +62,10 @@ void operator delete(void * p)
 
 
 d912pxy_mem_mgr::d912pxy_mem_mgr() : d912pxy_noncom() {	
-#ifdef _DEBUG
-	blocksAllocated.SetValue(0);
-	blockList.clear();
-
-	stkWlk = new d912pxy_StackWalker(3, 4);
-
-	recursionCheck = 0;
-	memUsed = 0;
-#endif
-
-	d912pxy_s(memMgr) = this;
 }
 
 d912pxy_mem_mgr::~d912pxy_mem_mgr() {
+	
 #ifdef _DEBUG
 	delete stkWlk;	
 	LogLeaked();
@@ -407,7 +397,7 @@ void * d912pxy_mem_mgr::pxy_malloc_dbg_uninit(size_t sz, const char * file, cons
 {
 	sz += sizeof(d912pxy_dbg_mem_block);
 
-	void* tempPointer = HeapAlloc(g_procHeap, 0, sz);
+	void* tempPointer = HeapAlloc(GetProcessHeap(), 0, sz);
 
 	if (!tempPointer)
 	{
@@ -444,10 +434,25 @@ void d912pxy_mem_mgr::LogLeaked()
 #endif
 }
 
+void d912pxy_mem_mgr::Init()
+{
+	global_d912pxy_mem_mgr_live = 1;
+
+#ifdef _DEBUG
+	blocksAllocated.SetValue(0);
+	blockList.clear();
+
+	stkWlk = new d912pxy_StackWalker(3, 4);
+
+	recursionCheck = 0;
+	memUsed = 0;
+#endif
+}
+
 void d912pxy_mem_mgr::PostInit()
 {
 	NonCom_Init(L"memmgr");
-	recordOprtNewCaller = d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER);
+	recordOprtNewCaller = d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER);
 
 	GetSystemInfo(&sysinf);
 }

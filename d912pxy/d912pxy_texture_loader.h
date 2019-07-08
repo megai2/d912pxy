@@ -34,8 +34,10 @@ typedef struct d912pxy_texture_load_item {
 class d912pxy_texture_loader : public d912pxy_async_upload_thread<d912pxy_texture_load_item, d912pxy_texture_loader*>
 {
 public:
-	d912pxy_texture_loader(d912pxy_device* dev);
+	d912pxy_texture_loader();
 	~d912pxy_texture_loader();
+
+	void Init();
 
 	void UploadItem(d912pxy_texture_load_item* it);
 	void IssueUpload(d912pxy_surface * surf, void* mem, UINT subRes);

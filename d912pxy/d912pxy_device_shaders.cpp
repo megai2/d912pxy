@@ -32,7 +32,7 @@ HRESULT d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
 
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_s(psoCache)->VShader(PXY_COM_LOOKUP(pShader, shader));
+	d912pxy_s.render.db.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -45,7 +45,7 @@ HRESULT d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader)
 
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_s(psoCache)->PShader(PXY_COM_LOOKUP(pShader, shader));
+	d912pxy_s.render.db.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -66,7 +66,7 @@ HRESULT d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONST float
 	}
 #endif
 
-	d912pxy_s(batch)->SetShaderConstF(0, StartRegister, Vector4fCount, (float*)pConstantData);
+	d912pxy_s.render.batch.SetShaderConstF(0, StartRegister, Vector4fCount, (float*)pConstantData);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -87,7 +87,7 @@ HRESULT d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST float*
 	}
 #endif
 
-	d912pxy_s(batch)->SetShaderConstF(1, StartRegister, Vector4fCount, (float*)pConstantData);
+	d912pxy_s.render.batch.SetShaderConstF(1, StartRegister, Vector4fCount, (float*)pConstantData);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -114,7 +114,7 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 		LOG_ERR_THROW2(ret, "SerializeRootSignature failed");
 	}
 
-	LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rsObj)), "CreateRootSignature failed");
+	LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rsObj)), "CreateRootSignature failed");
 
 	return rsObj;
 }
@@ -122,7 +122,7 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId)
 {
 	UINT32 size;
-	UINT32* data = (UINT32*)d912pxy_s(vfs)->LoadFileH(faultyId, &size, PXY_VFS_BID_SHADER_PROFILE);
+	UINT32* data = (UINT32*)d912pxy_s.vfs.LoadFileH(faultyId, &size, PXY_VFS_BID_SHADER_PROFILE);
 
 	if (data == NULL)
 	{
@@ -130,7 +130,7 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 		ZeroMemory(data, PXY_INNER_SHDR_BUG_FILE_SIZE);
 		data[type] = val;
 
-		d912pxy_s(vfs)->WriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
+		d912pxy_s.vfs.WriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
 	}
 	else {
 
@@ -143,7 +143,7 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 		{
 			data[type] = val;
 
-			d912pxy_s(vfs)->ReWriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
+			d912pxy_s.vfs.ReWriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
 		}
 	}
 

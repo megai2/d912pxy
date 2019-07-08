@@ -24,34 +24,9 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_gpu_que::d912pxy_gpu_que(d912pxy_device * dev, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences) : d912pxy_noncom( L"GPU queue"), d912pxy_thread("d912pxy gpu exec", 0)
+d912pxy_gpu_que::d912pxy_gpu_que() 
 {
-	d912pxy_s(GPUque) = this;
 
-	gpuExecuteTimeout = d912pxy_s(config)->GetValueUI32(PXY_CFG_MISC_GPU_TIMEOUT);
-	mLists = new d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>(PXY_INNER_GPU_QUEUE_BUFFER_COUNT, 0);
-		
-	D3D12_COMMAND_QUEUE_DESC desc = {};
-	desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	desc.NodeMask = 0;
-
-	LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateCommandQueue(&desc, IID_PPV_ARGS(&mDXQue)), "can't create command queue on dx12 device");
-
-	mGPUCleanupThread = new d912pxy_gpu_cleanup_thread();
-
-	for (int i = 0; i != PXY_INNER_GPU_QUEUE_BUFFER_COUNT; ++i)
-	{
-		mListsArr[i] = new d912pxy_gpu_cmd_list(dev, mDXQue.Get(), iMaxRefernecedObjs, iGrowReferences, iMaxCleanupPerSync, mGPUCleanupThread);
-		mLists->WriteElement(mListsArr[i]);
-	}
-	mCurrentGPUWork = NULL;
-
-	EnableGID(CLG_TOP, PXY_INNER_CLG_PRIO_FIRST);
-	EnableGID(CLG_SEQ, PXY_INNER_CLG_PRIO_LAST);
-
-	d912pxy_s(GPUcl) = mLists->GetElement();
 }
 
 d912pxy_gpu_que::~d912pxy_gpu_que()
@@ -70,6 +45,38 @@ d912pxy_gpu_que::~d912pxy_gpu_que()
 	delete mLists;
 
 	delete mGPUCleanupThread;
+}
+
+void d912pxy_gpu_que::Init(UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences)
+{
+	NonCom_Init(L"GPU queue");
+
+	InitThread("d912pxy gpu exec", 0);
+	
+	gpuExecuteTimeout = d912pxy_s.config.GetValueUI32(PXY_CFG_MISC_GPU_TIMEOUT);
+	mLists = new d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>(PXY_INNER_GPU_QUEUE_BUFFER_COUNT, 0);
+
+	D3D12_COMMAND_QUEUE_DESC desc = {};
+	desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+	desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	desc.NodeMask = 0;
+
+	LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateCommandQueue(&desc, IID_PPV_ARGS(&mDXQue)), "can't create command queue on dx12 device");
+
+	mGPUCleanupThread = new d912pxy_gpu_cleanup_thread();
+
+	for (int i = 0; i != PXY_INNER_GPU_QUEUE_BUFFER_COUNT; ++i)
+	{
+		mListsArr[i] = new d912pxy_gpu_cmd_list(mDXQue.Get(), iMaxRefernecedObjs, iGrowReferences, iMaxCleanupPerSync, mGPUCleanupThread);
+		mLists->WriteElement(mListsArr[i]);
+	}
+	mCurrentGPUWork = NULL;
+
+	EnableGID(CLG_TOP, PXY_INNER_CLG_PRIO_FIRST);
+	EnableGID(CLG_SEQ, PXY_INNER_CLG_PRIO_LAST);
+
+	d912pxy_s.dx12.cl = mLists->GetElement();
 }
 
 HRESULT d912pxy_gpu_que::ExecuteCurrentGPUWork(UINT doSwap)
@@ -150,7 +157,7 @@ void d912pxy_gpu_que::Flush(UINT doSwap)
 	WaitForGPU(); //and wait
 
 	//megai2: as DXGI cleanup is not using default com-based cleanup, we kinda safe to skip extra cleanup code
-	//but if this needed again for some reason, it must be done with proper d912pxy_s(GPUcl) swapping
+	//but if this needed again for some reason, it must be done with proper d912pxy_s.dx12.cl swapping
 	/*
 	mGPUCleanupThread->SignalWork();
 
@@ -178,7 +185,7 @@ void d912pxy_gpu_que::SetPresenter(d912pxy_swapchain * iSwapper)
 
 void d912pxy_gpu_que::EnqueueCleanup(d912pxy_comhandler * obj)
 {
-	d912pxy_s(GPUcl)->EnqueueCleanup(obj);
+	d912pxy_s.dx12.cl->EnqueueCleanup(obj);
 }
 
 d912pxy_gpu_cmd_list * d912pxy_gpu_que::GetCommandList()
@@ -206,7 +213,7 @@ void d912pxy_gpu_que::EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio)
 void d912pxy_gpu_que::SwitchCurrentCL()
 {
 	//we are commiting our commands list, so we must wait while new one is setup
-	d912pxy_s(dev)->LockAsyncThreads();
+	d912pxy_s.dev.LockAsyncThreads();
 
 	//execute current command List
 	//iterate to next
@@ -217,12 +224,12 @@ void d912pxy_gpu_que::SwitchCurrentCL()
 	mLists->Next();
 	mLists->WriteElement(mCurrentGPUWork);
 
-	d912pxy_s(GPUcl) = mLists->GetElement();
+	d912pxy_s.dx12.cl = mLists->GetElement();
 
 	mGPUCleanupThread->SignalWork();
 
 	//we have a new list setted up, so we can continue to commit data
-	d912pxy_s(dev)->UnLockAsyncThreads();
+	d912pxy_s.dev.UnLockAsyncThreads();
 }
 
 UINT d912pxy_gpu_que::WaitForExecuteCompletion()

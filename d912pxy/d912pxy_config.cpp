@@ -26,8 +26,15 @@ SOFTWARE.
 
 d912pxy_config::d912pxy_config()
 {
-	d912pxy_s(config) = this;
+}
 
+
+d912pxy_config::~d912pxy_config()
+{
+}
+
+void d912pxy_config::Init()
+{
 	FILE* f = fopen(PXY_CFG_FILE_NAME, "rb");
 
 	if (!f) {
@@ -44,14 +51,14 @@ d912pxy_config::d912pxy_config()
 				lstrcpyW(csection, data[i].section);
 			}
 
-			fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].value);		
+			fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].value);
 		}
 
 		fwprintf(f, L"\r\n[end] \r\n");
 
 		fflush(f);
 		fclose(f);
-		
+
 		return;
 	}
 
@@ -69,7 +76,7 @@ d912pxy_config::d912pxy_config()
 	int fptr = 0;
 
 	wchar_t* fileContent = NULL;
-	
+
 	//megai2: config loaded when nothing initialized
 	fileContent = (wchar_t*)malloc(fsz);
 
@@ -78,13 +85,13 @@ d912pxy_config::d912pxy_config()
 	fsz = fsz / sizeof(wchar_t);
 
 	while (fptr != fsz)
-	{			
+	{
 		UINT dlmt = 0;
 		UINT valf = 0;
 
 		wchar_t* buf = &fileContent[fptr];
 
-		for (int i = 0; i!=256;++i)
+		for (int i = 0; i != 256; ++i)
 		{
 			if (buf[i] == L'[')
 			{
@@ -108,7 +115,7 @@ d912pxy_config::d912pxy_config()
 			if (((buf[i] == L'\r') || (buf[i] == L'\n')))
 			{
 				if (!valf)
-				{					
+				{
 					++fptr;
 					if ((fptr < fsz) && (buf[i + 1] == L'\n'))
 						++fptr;
@@ -117,26 +124,26 @@ d912pxy_config::d912pxy_config()
 
 				memcpy(val, &buf[dlmt], sizeof(wchar_t)*(i - dlmt));
 				val[i - dlmt] = 0;
-				
+
 				++fptr;
 				if ((fptr < fsz) && (buf[i + 1] == L'\n'))
 					++fptr;
 
 				break;
 			}
-					   
+
 			if (buf[i] == 0)
 			{
 				++fptr;
 				break;
 			}
-			
+
 			++fptr;
 
 			if (fptr == fsz)
 				break;
-			
-		}	
+
+		}
 
 		if (valf)
 		{
@@ -158,11 +165,6 @@ d912pxy_config::d912pxy_config()
 	free(fileContent);
 
 	fclose(f);
-}
-
-
-d912pxy_config::~d912pxy_config()
-{
 }
 
 UINT64 d912pxy_config::GetValueXI64(d912pxy_config_value val)

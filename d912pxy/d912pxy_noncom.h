@@ -32,6 +32,8 @@ public:
 	d912pxy_noncom();
 	~d912pxy_noncom();
 
+	//virtual void Init();
+
 	void ThrowErrorDbg(HRESULT hr, const char* msg);
 
 	static HRESULT WINAPI com_GetDevice(d912pxy_com_object* obj, IDirect3DDevice9** ppDevice);

@@ -34,7 +34,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	layers = NULL;
 	dheapId = -1;
 	dheapIdFeedback = srvFeedback;
-	dHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_SRV);	
+	dHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_SRV);	
 
 	surf_dx9dsc.Format = Format;
 	surf_dx9dsc.Width = Width;
@@ -91,7 +91,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 
 	if (Usage == D3DUSAGE_DEPTHSTENCIL)
 	{
-		d912pxy_dheap* dsvHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_DSV);
+		d912pxy_dheap* dsvHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_DSV);
 
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsc2;
 		dsc2.Format = GetDSVFormat();
@@ -102,7 +102,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 		rtdsHPtr = dsvHeap->GetDHeapHandle(dsvHeap->CreateDSV(m_res, &dsc2));
 	} else if (Usage == D3DUSAGE_RENDERTARGET)
 	{
-		d912pxy_dheap* rtvHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_RTV);
+		d912pxy_dheap* rtvHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_RTV);
 
 		rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));		
 	}
@@ -123,7 +123,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 
 d912pxy_surface * d912pxy_surface::d912pxy_surface_com(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT * levels, UINT arrSz, UINT32 * srvFeedback)
 {
-	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_SURFACE);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SURFACE);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE);
 
 	new (&ret->surface)d912pxy_surface(Width, Height, Format, Usage, MultiSample, MultisampleQuality, Lockable, levels, arrSz, srvFeedback);
@@ -159,9 +159,9 @@ d912pxy_surface::~d912pxy_surface()
 			FreeObjAndSlot();
 
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-				d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
+				d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
 			else
-				d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
+				d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
 		}
 	}
 }
@@ -296,12 +296,12 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 	}
 
 	if (!ul[lv])
-	{
-		ul[lv] = d912pxy_s(pool_upload)->GetUploadObject(subresFootprints[lv].Footprint.RowPitch*subresFootprints[lv].Footprint.Height);		
+	{		
+		ul[lv] = d912pxy_s.pool.upload.GetUploadObject(subresFootprints[lv].Footprint.RowPitch*subresFootprints[lv].Footprint.Height);		
 		if (!ulMarked)
 		{
 			ThreadRef(1);
-			d912pxy_s(texloadThread)->AddToFinishList(this);
+			d912pxy_s.thread.texld.AddToFinishList(this);
 		}
 		ulMarked = 1;		
 	}
@@ -330,7 +330,7 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 		0
 	);	
 
-	UploadSurfaceData(ul[lv], lv, d912pxy_s(GPUcl)->GID(CLG_TEX));
+	UploadSurfaceData(ul[lv], lv, d912pxy_s.dx12.cl->GID(CLG_TEX));
 	
 	ThreadRef(-1);
 }
@@ -339,12 +339,12 @@ UINT d912pxy_surface::FinalReleaseCB()
 {
 	if (isPooled)
 	{
-		if (d912pxy_s(pool_surface))
+		if (d912pxy_s.pool.surface.IsRunning())
 		{
 			EvictFromGPU();
 
 			d912pxy_surface* tv = this;
-			d912pxy_s(pool_surface)->PoolRW(isPooled, &tv, 1);
+			d912pxy_s.pool.surface.PoolRW(isPooled, &tv, 1);
 			return 0;
 		}
 		else {
@@ -398,7 +398,7 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 			{
 				d12res_zbuf(ConvertInnerDSVFormat(), 1.0f, surf_dx9dsc.Width, surf_dx9dsc.Height, GetDSVFormat());
 
-				d912pxy_dheap* dsvHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_DSV);
+				d912pxy_dheap* dsvHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_DSV);
 
 				D3D12_DEPTH_STENCIL_VIEW_DESC dsc2;
 				dsc2.Format = GetDSVFormat();
@@ -413,7 +413,7 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 				float white[4] = { 1.0f,1.0f,1.0f,1.0f };
 				d12res_rtgt(m_fmt, white, surf_dx9dsc.Width, surf_dx9dsc.Height);
 
-				d912pxy_dheap* rtvHeap = d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_RTV);
+				d912pxy_dheap* rtvHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_RTV);
 
 				rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));
 			}
@@ -423,9 +423,9 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 			FreeObjAndSlot();
 
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-				d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
+				d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
 			else
-				d912pxy_s(dev)->GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
+				d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
 		}
 	}
 
@@ -447,16 +447,16 @@ void d912pxy_surface::CopySurfaceDataToCPU()
 	D3D12_TEXTURE_COPY_LOCATION dstR = { readbackBuffer->GetD12Obj(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, 0 };
 
 	UINT64 activeSize;
-	d912pxy_s(DXDev)->GetCopyableFootprints(&m_res->GetDesc(), 0, 1, 0, &dstR.PlacedFootprint, 0, 0, &activeSize);
+	d912pxy_s.dx12.dev->GetCopyableFootprints(&m_res->GetDesc(), 0, 1, 0, &dstR.PlacedFootprint, 0, 0, &activeSize);
 
 	D3D12_TEXTURE_COPY_LOCATION srcR = { m_res, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, 0 };
 
-	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
+	ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(CLG_SEQ);
 	BTransit(0, D3D12_RESOURCE_STATE_COPY_SOURCE, stateCache, cl);
 	cl->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
 	BTransit(0, stateCache, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
 		
-	d912pxy_s(iframe)->StateSafeFlush(1);
+	d912pxy_s.render.iframe.StateSafeFlush(1);
 
 	intptr_t GPUdata = NULL;
 	LOG_ERR_THROW2(readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&GPUdata), "CopySurfaceDataToCPU map error");
@@ -491,7 +491,7 @@ void d912pxy_surface::UpdateDescCache()
 	PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
 	PXY_MALLOC(subresSizes, sizeof(size_t)*subresCountCache, size_t*);
 	
-	d912pxy_s(DXDev)->GetCopyableFootprints(
+	d912pxy_s.dx12.dev->GetCopyableFootprints(
 		&descCache,
 		0,
 		subresCountCache,
@@ -654,16 +654,16 @@ UINT d912pxy_surface::GetSRVHeapId()
 			   
 		if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 		{
-			if (d912pxy_s(CMDReplay)->StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+			if (d912pxy_s.render.replay.StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
 			{
-				d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 0);
+				d912pxy_s.render.iframe.NoteBindedSurfaceTransit(this, 0);
 			}		
 		}
 		else {
 			//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but some drivers handle this bad
-			if (d912pxy_s(CMDReplay)->StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+			if (d912pxy_s.render.replay.StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
 			{
-				d912pxy_s(iframe)->NoteBindedSurfaceTransit(this, 1);
+				d912pxy_s.render.iframe.NoteBindedSurfaceTransit(this, 1);
 			}
 		}				
 	}

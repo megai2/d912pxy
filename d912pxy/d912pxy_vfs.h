@@ -52,8 +52,10 @@ typedef struct d912pxy_vfs_file_header {
 class d912pxy_vfs
 {
 public:
-	d912pxy_vfs(const char* lockPath);
+	d912pxy_vfs();
 	~d912pxy_vfs();
+
+	void Init(const char* lockPath);
 
 	void SetRoot(wchar_t* rootPath);
 	void* LoadVFS(UINT id, const char* name, UINT memCache);

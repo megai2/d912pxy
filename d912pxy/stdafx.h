@@ -114,6 +114,7 @@ SOFTWARE.
 #include "d912pxy_async_upload_thread.h"
 #include "d912pxy_texture_loader.h"
 #include "d912pxy_buffer_loader.h"
+#include "d912pxy_replay_base.h"
 #include "d912pxy_replay_thread.h"
 #include "d912pxy_replay.h"
 #include "d912pxy_replay_passthru.h"

@@ -40,9 +40,9 @@ HRESULT d912pxy_device::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer
 		return D3DERR_INVALIDCALL;
 	
 	if (pStreamData)
-		d912pxy_s(iframe)->SetVBuf(PXY_COM_LOOKUP(pStreamData, vstream), StreamNumber, OffsetInBytes, Stride);
+		d912pxy_s.render.iframe.SetVBuf(PXY_COM_LOOKUP(pStreamData, vstream), StreamNumber, OffsetInBytes, Stride);
 	else
-		d912pxy_s(iframe)->SetVBuf(0, StreamNumber, OffsetInBytes, Stride);
+		d912pxy_s.render.iframe.SetVBuf(0, StreamNumber, OffsetInBytes, Stride);
 
 	API_OVERHEAD_TRACK_END(0)
 	
@@ -57,9 +57,9 @@ HRESULT d912pxy_device::SetStreamSource_CAR(UINT StreamNumber, IDirect3DVertexBu
 		return D3DERR_INVALIDCALL;
 
 	if (pStreamData)
-		d912pxy_s(iframe)->SetVBufIfChanged(PXY_COM_LOOKUP(pStreamData, vstream), StreamNumber, OffsetInBytes, Stride);
+		d912pxy_s.render.iframe.SetVBufIfChanged(PXY_COM_LOOKUP(pStreamData, vstream), StreamNumber, OffsetInBytes, Stride);
 	else
-		d912pxy_s(iframe)->SetVBufIfChanged(0, StreamNumber, OffsetInBytes, Stride);
+		d912pxy_s.render.iframe.SetVBufIfChanged(0, StreamNumber, OffsetInBytes, Stride);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -71,9 +71,9 @@ HRESULT d912pxy_device::SetIndices_CAR(IDirect3DIndexBuffer9 * pIndexData)
 	API_OVERHEAD_TRACK_START(0)
 
 	if (pIndexData)
-		d912pxy_s(iframe)->SetIBufIfChanged(PXY_COM_LOOKUP(pIndexData, vstream));
+		d912pxy_s.render.iframe.SetIBufIfChanged(PXY_COM_LOOKUP(pIndexData, vstream));
 	else
-		d912pxy_s(iframe)->SetIBufIfChanged(0);
+		d912pxy_s.render.iframe.SetIBufIfChanged(0);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -89,7 +89,7 @@ HRESULT d912pxy_device::SetStreamSourceFreq(UINT StreamNumber, UINT Divider)
 	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
 		return D3DERR_INVALIDCALL;
 
-	d912pxy_s(iframe)->SetStreamFreq(StreamNumber, Divider);
+	d912pxy_s.render.iframe.SetStreamFreq(StreamNumber, Divider);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -103,9 +103,9 @@ HRESULT d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 	API_OVERHEAD_TRACK_START(0)
 
 	if (pIndexData)
-		d912pxy_s(iframe)->SetIBuf(PXY_COM_LOOKUP(pIndexData, vstream));
+		d912pxy_s.render.iframe.SetIBuf(PXY_COM_LOOKUP(pIndexData, vstream));
 	else 
-		d912pxy_s(iframe)->SetIBuf(0);
+		d912pxy_s.render.iframe.SetIBuf(0);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -122,7 +122,7 @@ HRESULT d912pxy_device::SetVertexDeclaration(IDirect3DVertexDeclaration9* pDecl)
 
 	if (pDecl)
 	{
-		d912pxy_s(psoCache)->IAFormat(PXY_COM_LOOKUP(pDecl, vdecl));
+		d912pxy_s.render.db.pso.IAFormat(PXY_COM_LOOKUP(pDecl, vdecl));
 	}
 
 	API_OVERHEAD_TRACK_END(0)

@@ -29,8 +29,10 @@ template <class ElementType, class ProcImpl>
 class d912pxy_pool_memcat : public d912pxy_pool<ElementType, ProcImpl>
 {
 public:
-	d912pxy_pool_memcat(d912pxy_device* dev, UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg, ProcImpl* singleton);
+  	d912pxy_pool_memcat();
 	~d912pxy_pool_memcat();
+
+	void Init(UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg);
 
 	d912pxy_ringbuffer<ElementType>* GetCatBuffer(UINT32 cat);
 

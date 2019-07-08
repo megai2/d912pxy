@@ -38,7 +38,7 @@ d912pxy_ctexture::d912pxy_ctexture(UINT edgeLength, UINT Levels, DWORD Usage, D3
 		LOG_ERR_THROW2(-1, "cubemap ds");// baseSurface = new d912pxy_surface(dev, edgeLength, edgeLength, Format, D3DMULTISAMPLE_NONE, 0, 0, 1);
 	else if (m_levels != 0)
 	{
-		baseSurface = d912pxy_s(pool_surface)->GetSurface(edgeLength, edgeLength, Format, m_levels, 6, 0, &srvIDc[0]);
+		baseSurface = d912pxy_s.pool.surface.GetSurface(edgeLength, edgeLength, Format, m_levels, 6, 0, &srvIDc[0]);
 	} else 
 		baseSurface = d912pxy_surface::d912pxy_surface_com(edgeLength, edgeLength, Format, Usage, D3DMULTISAMPLE_NONE, 0, 0, &m_levels, 6, &srvIDc[0]);
 
@@ -47,7 +47,8 @@ d912pxy_ctexture::d912pxy_ctexture(UINT edgeLength, UINT Levels, DWORD Usage, D3
 		faceSurfaces[i] = baseSurface;
 	}
 
-	srvIDc[1] = 0;
+	srvIDc[1] = (Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL);
+	srvIDc[0] = 0;	
 	
 	if (!srvIDc[1])
 		srvIDc[0] = baseSurface->GetSRVHeapId();
@@ -56,7 +57,7 @@ d912pxy_ctexture::d912pxy_ctexture(UINT edgeLength, UINT Levels, DWORD Usage, D3
 
 d912pxy_ctexture * d912pxy_ctexture::d912pxy_ctexture_com(UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format)
 {
-	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_TEXTURE);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_TEXTURE);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_TEXTURE_CUBE);
 
 	new (&ret->tex_cube)d912pxy_ctexture(edgeLength, Levels, Usage, Format);

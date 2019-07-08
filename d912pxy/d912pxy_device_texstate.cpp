@@ -39,7 +39,7 @@ HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId();
 	}
 
-	d912pxy_s(textureState)->SetTexture(Stage, (UINT32)srvId);
+	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -59,7 +59,7 @@ HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTextu
 		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId();
 	}
 
-	d912pxy_s(textureState)->SetTexture(Stage, (UINT32)srvId);
+	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
 
 	if (pTexture)
 	{
@@ -83,7 +83,7 @@ HRESULT d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type,
 
 	Sampler = (Sampler & 0xF) + 16 * (Sampler >= D3DDMAPSAMPLER);
 
-	d912pxy_s(textureState)->ModSampler(Sampler, Type, Value);
+	d912pxy_s.render.tex.ModSampler(Sampler, Type, Value);
 
 	API_OVERHEAD_TRACK_END(0)
 

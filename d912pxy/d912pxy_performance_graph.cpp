@@ -174,7 +174,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 		const char* gpun = "DX9";
 
 		if (!dx9)
-			gpun = d912pxy_s(dev)->GetCurrentGPUName();
+			gpun = d912pxy_s.dev.GetCurrentGPUName();
 
 		fwrite(cpub, 1, strlen(cpub), of);		
 		fwrite(emts[12], 1, strlen(emts[12]), of);

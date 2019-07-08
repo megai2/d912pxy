@@ -38,7 +38,7 @@ HRESULT d912pxy_device::EndScene(void)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	d912pxy_s(iframe)->EndSceneReset();
+	d912pxy_s.render.iframe.EndSceneReset();
 
 	return D3D_OK;
 }
@@ -62,7 +62,7 @@ HRESULT d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, INT
 
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_s(iframe)->CommitBatch(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+	d912pxy_s.render.iframe.CommitBatch(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
 #ifdef PER_BATCH_FLUSH_DEBUG
 	replayer->Finish();
@@ -82,7 +82,7 @@ HRESULT d912pxy_device::DrawIndexedPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveTy
 {
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
 #ifdef PER_BATCH_FLUSH_DEBUG
 	replayer->Finish();
@@ -115,45 +115,45 @@ HRESULT d912pxy_device::DrawIndexedPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, 
 	for (int i = 0; i != 32; ++i)
 		if (stageFormatsTrack[i] == D3DFMT_D24X8)
 		{
-			if (d912pxy_s(psoCache)->GetPShader())
-				TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_PCF_SAMPLER, i + 1, d912pxy_s(psoCache)->GetPShader()->GetID());
+			if (d912pxy_s.render.db.pso.GetPShader())
+				TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_PCF_SAMPLER, i + 1, d912pxy_s.render.db.pso.GetPShader()->GetID());
 		}
-
-	UINT srgbState = d912pxy_s(textureState)->GetTexStage(30);
+	
+	UINT srgbState = d912pxy_s.render.tex.GetTexStage(30);
 	if (srgbState)
 		for (int i = 0; i != 32; ++i)
 		{
 			if (srgbState & 1)
 			{
-				if (d912pxy_s(textureState)->GetTexStage(i) != mNullTextureSRV)
+				if (d912pxy_s.render.tex.GetTexStage(i) != mNullTextureSRV)
 				{
-					if (d912pxy_s(psoCache)->GetPShader())
-						TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_SRGB_READ, 1, d912pxy_s(psoCache)->GetPShader()->GetID());
+					if (d912pxy_s.render.db.pso.GetPShader())
+						TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_SRGB_READ, 1, d912pxy_s.render.db.pso.GetPShader()->GetID());
 					break;
 				}
 			}
 			srgbState = srgbState >> 1;
 		}
 
-	if (d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_SRGBWRITEENABLE))
-		if (d912pxy_s(psoCache)->GetPShader())
-			TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_SRGB_WRITE, 1, d912pxy_s(psoCache)->GetPShader()->GetID());
+	if (d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_SRGBWRITEENABLE))
+		if (d912pxy_s.render.db.pso.GetPShader())
+			TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_SRGB_WRITE, 1, d912pxy_s.render.db.pso.GetPShader()->GetID());
 
-	if (d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_ALPHATESTENABLE))
-		if (d912pxy_s(psoCache)->GetPShader())
-			TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_ALPHA_TEST, 1, d912pxy_s(psoCache)->GetPShader()->GetID());
+	if (d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_ALPHATESTENABLE))
+		if (d912pxy_s.render.db.pso.GetPShader())
+			TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_ALPHA_TEST, 1, d912pxy_s.render.db.pso.GetPShader()->GetID());
 
-	if (d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_CLIPPLANEENABLE))
+	if (d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_CLIPPLANEENABLE))
 	{
-		UINT32 cp = d912pxy_s(psoCache)->GetDX9RsValue(D3DRS_CLIPPLANEENABLE);
+		UINT32 cp = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_CLIPPLANEENABLE);
 		if (cp & 1)
 		{
-			if (d912pxy_s(psoCache)->GetVShader())
-				TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_CLIPPLANE0, 1, d912pxy_s(psoCache)->GetVShader()->GetID());
+			if (d912pxy_s.render.db.pso.GetVShader())
+				TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_CLIPPLANE0, 1, d912pxy_s.render.db.pso.GetVShader()->GetID());
 		}
 	}
 
-	d912pxy_vdecl* vdcl = d912pxy_s(psoCache)->GetIAFormat();
+	d912pxy_vdecl* vdcl = d912pxy_s.render.db.pso.GetIAFormat();
 
 	if (vdcl)
 	{
@@ -163,15 +163,15 @@ HRESULT d912pxy_device::DrawIndexedPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, 
 		for (int i = 0; i != numElms; ++i)
 		{
 			if ((vdArr[i].Usage == D3DDECLUSAGE_NORMAL) && (vdArr[i].Type == D3DDECLTYPE_UBYTE4))
-				if (d912pxy_s(psoCache)->GetVShader())
-					TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_UINT_NORMALS, 1, d912pxy_s(psoCache)->GetVShader()->GetID());
+				if (d912pxy_s.render.db.pso.GetVShader())
+					TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_UINT_NORMALS, 1, d912pxy_s.render.db.pso.GetVShader()->GetID());
 			if ((vdArr[i].Usage == D3DDECLUSAGE_TANGENT) && (vdArr[i].Type == D3DDECLTYPE_UBYTE4))
-				if (d912pxy_s(psoCache)->GetVShader())
-					TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_UINT_TANGENTS, 1, d912pxy_s(psoCache)->GetVShader()->GetID());
+				if (d912pxy_s.render.db.pso.GetVShader())
+					TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_UINT_TANGENTS, 1, d912pxy_s.render.db.pso.GetVShader()->GetID());
 		}		
 	}
 
-	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
 	API_OVERHEAD_TRACK_END(0)
 

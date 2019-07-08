@@ -29,10 +29,12 @@ class d912pxy_replay_passthru :
 	public d912pxy_replay_base
 {
 public:
-	d912pxy_replay_passthru(d912pxy_device* dev);
+	d912pxy_replay_passthru();
 	~d912pxy_replay_passthru();
 
 	//actions
+
+	void Init();
 
 	UINT StateTransit(d912pxy_resource* res, D3D12_RESOURCE_STATES to);
 	void OMStencilRef(DWORD ref);

@@ -71,7 +71,9 @@ HRESULT d912pxy_device::CreateVertexBuffer(UINT Length, DWORD Usage, DWORD FVF, 
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppVertexBuffer = PXY_COM_CAST_(IDirect3DVertexBuffer9, d912pxy_s(pool_vstream)->GetVStreamObject(Length, FVF, 0));
+	
+
+	*ppVertexBuffer = PXY_COM_CAST_(IDirect3DVertexBuffer9, d912pxy_s.pool.vstream.GetVStreamObject(Length, FVF, 0));
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -84,7 +86,7 @@ HRESULT d912pxy_device::CreateIndexBuffer(UINT Length, DWORD Usage, D3DFORMAT Fo
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppIndexBuffer = PXY_COM_CAST_(IDirect3DIndexBuffer9, d912pxy_s(pool_vstream)->GetVStreamObject(Length, Format, 1));
+	*ppIndexBuffer = PXY_COM_CAST_(IDirect3DIndexBuffer9, d912pxy_s.pool.vstream.GetVStreamObject(Length, Format, 1));
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -99,7 +101,7 @@ HRESULT d912pxy_device::CreateRenderTarget(UINT Width, UINT Height, D3DFORMAT Fo
 
 	API_OVERHEAD_TRACK_START(0)
 	
-	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s(pool_surface)->GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_RENDERTARGET, NULL));
+	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s.pool.surface.GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_RENDERTARGET, NULL));
 
 	API_OVERHEAD_TRACK_END(0)
 
@@ -112,7 +114,7 @@ HRESULT d912pxy_device::CreateDepthStencilSurface(UINT Width, UINT Height, D3DFO
 
 	API_OVERHEAD_TRACK_START(0)
 
-	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s(pool_surface)->GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_DEPTHSTENCIL, NULL));
+	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s.pool.surface.GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_DEPTHSTENCIL, NULL));
 
 	API_OVERHEAD_TRACK_END(0)
 

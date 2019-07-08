@@ -29,8 +29,10 @@ template <class QueItemType, class ProcImpl>
 class d912pxy_async_upload_thread : public d912pxy_noncom, public d912pxy_thread
 {
 public:
-	d912pxy_async_upload_thread(d912pxy_device* dev, UINT queueSize, UINT syncId, UINT throttleFactor, const wchar_t* objN, const char* thrdName);
+	d912pxy_async_upload_thread();
 	~d912pxy_async_upload_thread();
+
+	void Init(UINT queueSize, UINT syncId, UINT throttleFactor, const wchar_t* objN, const char* thrdName);
 
 	void QueueItem(QueItemType it);
 

@@ -133,8 +133,10 @@ class d912pxy_pso_cache :
 	public d912pxy_noncom, public d912pxy_thread
 {
 public:
-	d912pxy_pso_cache(d912pxy_device* dev);
+	d912pxy_pso_cache();
 	~d912pxy_pso_cache();
+
+	void Init();
 
 	//things that affect pso only
 	void State(D3DRENDERSTATETYPE State, DWORD Value);

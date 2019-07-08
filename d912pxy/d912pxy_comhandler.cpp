@@ -81,8 +81,8 @@ ULONG d912pxy_comhandler::Release()
 	{
 		LOG_DBG_DTDM("::CRE 0 %016llX", this);
 
-		if (d912pxy_s(dev))
-			d912pxy_s(dev)->IFrameCleanupEnqeue(this);
+		if (d912pxy_s.devComBase)
+			d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		else {
 
 			DeAllocateBase();
@@ -102,7 +102,7 @@ UINT d912pxy_comhandler::FinalReleaseTest()
 {
 	if (InterlockedAdd(&thrdRefc, 0))
 	{
-		d912pxy_s(dev)->IFrameCleanupEnqeue(this);
+		d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		return 2;
 	}
 	else {
@@ -116,7 +116,7 @@ UINT d912pxy_comhandler::FinalRelease()
 {
 	if (InterlockedAdd(&thrdRefc, 0))
 	{
-		d912pxy_s(dev)->IFrameCleanupEnqeue(this);
+		d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		return 2;
 	}
 	else {		
@@ -243,6 +243,9 @@ void d912pxy_comhandler::DeAllocateBase()
 		break;
 	case PXY_COM_OBJ_UNMANAGED:		
 		PXY_FREE(comBase);
+		break;
+	case PXY_COM_OBJ_STATIC:
+		;
 		break;
 	default:
 		LOG_ERR_THROW2(-1, "wrong com object typeid");

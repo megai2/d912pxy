@@ -34,17 +34,22 @@ SOFTWARE.
 	#define REPLAY_SYNC_RETURN(x) return x
 #endif
 
-d912pxy_replay_passthru::d912pxy_replay_passthru(d912pxy_device * dev) : d912pxy_replay_base(dev)
+d912pxy_replay_passthru::d912pxy_replay_passthru() 
 {
-	d912pxy_s(CMDReplay) = this;
 
-	d912pxy_s(GPUque)->EnableGID(CLG_RP1, PXY_INNER_CLG_PRIO_REPLAY);
-
-	cl = d912pxy_s(GPUcl)->GID(CLG_RP1);
 }
 
 d912pxy_replay_passthru::~d912pxy_replay_passthru()
 {
+}
+
+void d912pxy_replay_passthru::Init()
+{
+	NonCom_Init(L"replay ps");
+
+	d912pxy_s.dx12.que.EnableGID(CLG_RP1, PXY_INNER_CLG_PRIO_REPLAY);
+
+	cl = d912pxy_s.dx12.cl->GID(CLG_RP1);
 }
 
 UINT d912pxy_replay_passthru::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
@@ -104,7 +109,7 @@ void d912pxy_replay_passthru::PSOCompiled(d912pxy_pso_cache_item * dsc)
 
 void d912pxy_replay_passthru::PSORaw(d912pxy_trimmed_dx12_pso * dsc)
 {
-	psoPtr = d912pxy_s(psoCache)->UseByDesc(dsc, 0)->GetPtr();
+	psoPtr = d912pxy_s.render.db.pso.UseByDesc(dsc, 0)->GetPtr();
 
 	if (psoPtr)
 	{
@@ -118,7 +123,7 @@ void d912pxy_replay_passthru::PSORaw(d912pxy_trimmed_dx12_pso * dsc)
 
 void d912pxy_replay_passthru::PSORawFeedback(d912pxy_trimmed_dx12_pso * dsc, void ** ptr)
 {
-	*ptr = (void*)d912pxy_s(psoCache)->UseByDesc(dsc, 0);
+	*ptr = (void*)d912pxy_s.render.db.pso.UseByDesc(dsc, 0);
 }
 
 void d912pxy_replay_passthru::VBbind(d912pxy_vstream * buf, UINT stride, UINT slot, UINT offset)
@@ -146,7 +151,7 @@ void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCoun
 
 	REPLAY_SYNC_START;
 
-	d912pxy_s(batch)->PreDIP(cl, batchId);
+	d912pxy_s.render.batch.PreDIP(cl, batchId);
 
 	cl->DrawIndexedInstanced(
 		IndexCountPerInstance,
@@ -244,7 +249,7 @@ void d912pxy_replay_passthru::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 {
 	REPLAY_SYNC_START;
 
-	d912pxy_s(batch)->GPUWriteControl(si, of, cnt, bn);
+	d912pxy_s.render.batch.GPUWriteControl(si, of, cnt, bn);
 
 	REPLAY_SYNC_STOP;
 }
@@ -279,9 +284,9 @@ void d912pxy_replay_passthru::IFrameStart()
 {
 	psoPtr = NULL;
 
-	d912pxy_s(iframe)->SetRSigOnList(CLG_RP1);
+	d912pxy_s.render.iframe.SetRSigOnList(CLG_RP1);
 
-	cl = d912pxy_s(GPUcl)->GID(CLG_RP1);
+	cl = d912pxy_s.dx12.cl->GID(CLG_RP1);
 }
 
 void d912pxy_replay_passthru::IssueWork(UINT batch)

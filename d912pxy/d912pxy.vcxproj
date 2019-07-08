@@ -590,6 +590,7 @@
     <ClInclude Include="d912pxy_vtexture.h" />
     <ClInclude Include="dbg_imagewriter.h" />
     <ClInclude Include="d912pxy_instance.h" />
+    <ClInclude Include="d912pxy_replay_base.h" />
     <ClInclude Include="IDirect3D9Proxy.h" />
     <ClInclude Include="IDirect3DDevice9Proxy.h" />
     <ClInclude Include="stb_image.h" />
@@ -649,6 +650,7 @@
     <ClCompile Include="d912pxy_query.cpp" />
     <ClCompile Include="d912pxy_query_occlusion.cpp" />
     <ClCompile Include="d912pxy_replay.cpp" />
+    <ClCompile Include="d912pxy_replay_base.cpp" />
     <ClCompile Include="d912pxy_replay_passthru.cpp" />
     <ClCompile Include="d912pxy_replay_thread.cpp" />
     <ClCompile Include="d912pxy_resource.cpp" />

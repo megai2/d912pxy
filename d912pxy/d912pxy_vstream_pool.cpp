@@ -25,20 +25,15 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_vstream_pool.h"
 
-d912pxy_vstream_pool::d912pxy_vstream_pool(d912pxy_device * dev) : 
-	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>(
-		dev, 
-		PXY_INNDER_VSTREAM_POOL_BITIGNORE, 
-		PXY_INNDER_VSTREAM_POOL_BITLIMIT,
-		PXY_CFG_POOLING_VSTREAM_LIMITS,
-		&d912pxy_s(pool_vstream)
-	)
+d912pxy_vstream_pool::d912pxy_vstream_pool() : d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>()
 {	 
 }
 
 d912pxy_vstream_pool::~d912pxy_vstream_pool()
 {
-	d912pxy_s(pool_vstream) = NULL;
+	
+
+	pRunning = 0;
 
 	for (int i = 0; i != PXY_INNDER_VSTREAM_POOL_BITCNT; ++i)
 	{
@@ -55,6 +50,15 @@ d912pxy_vstream_pool::~d912pxy_vstream_pool()
 
 		delete memTable[i];
 	}
+}
+
+void d912pxy_vstream_pool::Init()
+{
+	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>::Init(
+		PXY_INNDER_VSTREAM_POOL_BITIGNORE,
+		PXY_INNDER_VSTREAM_POOL_BITLIMIT,
+		PXY_CFG_POOLING_VSTREAM_LIMITS
+	);
 }
 
 d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UINT isIB)

@@ -50,7 +50,7 @@ HRESULT d912pxy_resource::d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width,
 {
 	D3D12_CLEAR_VALUE optimizedClearValue = { clearVFmt, { clearV, 0 } };
 
-	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s.dev.GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
 
 	D3D12_RESOURCE_DESC rsDesc = { 
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0, 
@@ -59,7 +59,7 @@ HRESULT d912pxy_resource::d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width,
 		D3D12_TEXTURE_LAYOUT_UNKNOWN, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL 
 	};
 	
-	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateCommittedResource(
+	LOG_ERR_THROW(d912pxy_s.dx12.dev->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
 		&rsDesc,
@@ -77,7 +77,7 @@ HRESULT d912pxy_resource::d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width,
 
 HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt, UINT16* levels, UINT arrSz)
 {
-	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s.dev.GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
 	
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0,
@@ -86,7 +86,7 @@ HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt,
 		D3D12_TEXTURE_LAYOUT_UNKNOWN, D3D12_RESOURCE_FLAG_NONE
 	};
 
-	HRESULT hr = d912pxy_s(DXDev)->CreateCommittedResource(
+	HRESULT hr = d912pxy_s.dx12.dev->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
 		&rsDesc,
@@ -120,7 +120,7 @@ void d912pxy_resource::EvictFromGPU()
 	FRAME_METRIC_RESIDENCY(1)
 
 	ID3D12Pageable* mr = (ID3D12Pageable*)m_res;
-	d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->Evict(1, &mr), "Evict");
+	d912pxy_helper::ThrowIfFailed(d912pxy_s.dx12.dev->Evict(1, &mr), "Evict");
 	evicted = 1;	
 
 	FRAME_METRIC_RESIDENCY(0)
@@ -134,7 +134,7 @@ void d912pxy_resource::MakeGPUResident()
 	FRAME_METRIC_RESIDENCY(1)
 
 	ID3D12Pageable* mr = (ID3D12Pageable*)m_res;
-	d912pxy_helper::ThrowIfFailed(d912pxy_s(DXDev)->MakeResident(1, &mr), "MakeResident");
+	d912pxy_helper::ThrowIfFailed(d912pxy_s.dx12.dev->MakeResident(1, &mr), "MakeResident");
 	evicted = 0;
 
 	FRAME_METRIC_RESIDENCY(0)
@@ -145,7 +145,7 @@ void d912pxy_resource::BTransitGID(UINT subres, D3D12_RESOURCE_STATES to, d912px
 	if (to == stateCache)
 		return;
 
-	ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(id);
+	ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(id);
 
 	BTransitTo(subres, to, cl);
 }
@@ -191,7 +191,7 @@ HRESULT d912pxy_resource::d12res_rtgt(DXGI_FORMAT fmt, float * clearV, UINT widt
 {
 	D3D12_CLEAR_VALUE optimizedClearValue = { fmt, {clearV[0], clearV[1], clearV[2], clearV[3]} };
 
-	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s.dev.GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
 
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0,
@@ -200,7 +200,7 @@ HRESULT d912pxy_resource::d12res_rtgt(DXGI_FORMAT fmt, float * clearV, UINT widt
 		D3D12_TEXTURE_LAYOUT_UNKNOWN, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
 	};
 
-	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateCommittedResource(
+	LOG_ERR_THROW(d912pxy_s.dx12.dev->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
 		&rsDesc,
@@ -218,7 +218,7 @@ HRESULT d912pxy_resource::d12res_rtgt(DXGI_FORMAT fmt, float * clearV, UINT widt
 
 ID3D12Resource * d912pxy_resource::d12res_buffer_target(size_t size, D3D12_HEAP_TYPE heap)
 {
-	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(heap);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s.dev.GetResourceHeap(heap);
 
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_BUFFER, 0,
@@ -229,7 +229,7 @@ ID3D12Resource * d912pxy_resource::d12res_buffer_target(size_t size, D3D12_HEAP_
 
 	ID3D12Resource* ret;
 
-	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateCommittedResource(
+	LOG_ERR_THROW(d912pxy_s.dx12.dev->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
 		&rsDesc,
@@ -256,7 +256,7 @@ HRESULT d912pxy_resource::d12res_buffer(size_t size, D3D12_HEAP_TYPE heap)
 
 HRESULT d912pxy_resource::d12res_readback_buffer(size_t size)
 {
-	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_READBACK);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s.dev.GetResourceHeap(D3D12_HEAP_TYPE_READBACK);
 	
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_BUFFER, 0,
@@ -265,7 +265,7 @@ HRESULT d912pxy_resource::d12res_readback_buffer(size_t size)
 		D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE
 	};
 
-	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateCommittedResource(
+	LOG_ERR_THROW(d912pxy_s.dx12.dev->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
 		&rsDesc,
@@ -283,7 +283,7 @@ HRESULT d912pxy_resource::d12res_readback_buffer(size_t size)
 
 HRESULT d912pxy_resource::d12res_uav_buffer(size_t size, D3D12_HEAP_TYPE heap)
 {
-	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s(dev)->GetResourceHeap(heap);
+	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s.dev.GetResourceHeap(heap);
 	
 	D3D12_RESOURCE_DESC rsDesc = {
 		D3D12_RESOURCE_DIMENSION_BUFFER, 0,
@@ -292,7 +292,7 @@ HRESULT d912pxy_resource::d12res_uav_buffer(size_t size, D3D12_HEAP_TYPE heap)
 		D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
 	};
 
-	LOG_ERR_THROW(d912pxy_s(DXDev)->CreateCommittedResource(
+	LOG_ERR_THROW(d912pxy_s.dx12.dev->CreateCommittedResource(
 		&rhCfg,
 		D3D12_HEAP_FLAG_NONE,
 		&rsDesc,
@@ -339,6 +339,6 @@ intptr_t d912pxy_resource::GetVA_GPU()
 
 void d912pxy_resource::GetCopyableFootprints(UINT subres, D3D12_PLACED_SUBRESOURCE_FOOTPRINT* ret)
 {	
-	d912pxy_s(DXDev)->GetCopyableFootprints(&m_res->GetDesc(), subres, 1, 0, ret, 0, 0, 0);
+	d912pxy_s.dx12.dev->GetCopyableFootprints(&m_res->GetDesc(), subres, 1, 0, ret, 0, 0, 0);
 	LOG_DBG_DTDM("pfo %llu pfW %u pfH %u pdD %u", ret->Offset, ret->Footprint.Width, ret->Footprint.Height, ret->Footprint.Depth);
 }

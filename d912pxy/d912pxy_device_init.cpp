@@ -24,6 +24,42 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+void d912pxy_device::Init(IDirect3DDevice9* dev, void* par)
+{
+	d912pxy_comhandler::Init(PXY_COM_OBJ_STATIC, L"device");
+
+	PrintInfoBanner();
+	
+	d912pxy_s.com.Init();
+
+	initPtr = par;
+	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);
+
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.Init();
+	FRAME_METRIC_PRESENT(1)
+#endif
+
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+		perfGraph = new d912pxy_performance_graph(0);
+	else
+		perfGraph = NULL;
+
+	LOG_INFO_DTDM2(InitClassFields(), "Startup step  1/10");
+	LOG_INFO_DTDM2(InitVFS(), "Startup step  2/10");
+	LOG_INFO_DTDM2(InitThreadSyncObjects(), "Startup step  3/10");
+	LOG_INFO_DTDM2(SetupDevice(SelectSuitableGPU()), "Startup step  4/10");
+	LOG_INFO_DTDM2(InitDescriptorHeaps(), "Startup step  5/10");
+	LOG_INFO_DTDM2(InitSingletons(), "Startup step  6/10");
+	LOG_INFO_DTDM2(InitComPatches(), "Startup step  7/10");
+	LOG_INFO_DTDM2(InitNullSRV(), "Startup step  8/10");
+	LOG_INFO_DTDM2(InitDrawUPBuffers(), "Startup step  9/10");
+	LOG_INFO_DTDM2(InitDefaultSwapChain(&initialPresentParameters), "Startup step 10/10");
+	LOG_INFO_DTDM2(d912pxy_s.render.iframe.Start(), "Started first IFrame");
+
+	isRunning.SetValue(1);
+}
+
 void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATION_PARAMETERS* origPars, D3DPRESENT_PARAMETERS* origPP)
 {
 	if (dev)
@@ -75,16 +111,16 @@ void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATI
 
 void d912pxy_device::InitVFS()
 {
-	new d912pxy_vfs(d912pxy_vfs_lock_file);
+	d912pxy_s.vfs.Init(d912pxy_vfs_lock_file);
 
-	if (!d912pxy_s(vfs)->IsWriteAllowed())
+	if (!d912pxy_s.vfs.IsWriteAllowed())
 	{
 		LOG_INFO_DTDM("VFS is locked by another process, no data will be saved on disk");
 	}
 
-	d912pxy_s(vfs)->SetRoot(d912pxy_s(config)->GetValueRaw(PXY_CFG_VFS_ROOT));
+	d912pxy_s.vfs.SetRoot(d912pxy_s.config.GetValueRaw(PXY_CFG_VFS_ROOT));
 
-	UINT64 memcacheMask = d912pxy_s(config)->GetValueXI64(PXY_CFG_VFS_MEMCACHE_MASK);
+	UINT64 memcacheMask = d912pxy_s.config.GetValueXI64(PXY_CFG_VFS_MEMCACHE_MASK);
 
 	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			memcacheMask);
 	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		memcacheMask);
@@ -97,7 +133,7 @@ void d912pxy_device::InitVFS()
 
 void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT64 memCache)
 {
-	if (!d912pxy_s(vfs)->LoadVFS(id, name, ((1ULL << id) & memCache)) != 0ULL)
+	if (!d912pxy_s.vfs.LoadVFS(id, name, ((1ULL << id) & memCache)) != 0ULL)
 	{
 		LOG_ERR_DTDM("%S VFS not loaded", name);
 		LOG_ERR_THROW2(-1, "VFS error");
@@ -109,10 +145,10 @@ void d912pxy_device::InitClassFields()
 	ZeroMemory(swapchains, sizeof(intptr_t)*PXY_INNER_MAX_SWAP_CHAINS);
 
 	d912pxy_hlsl_generator::FillHandlers();
-	d912pxy_hlsl_generator::allowPP_suffix = d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ALLOW_PP_SUFFIX);
+	d912pxy_hlsl_generator::allowPP_suffix = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ALLOW_PP_SUFFIX);
 
-	d912pxy_vstream::threadedCtor = d912pxy_s(config)->GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
-	d912pxy_surface::threadedCtor = d912pxy_s(config)->GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);
+	d912pxy_vstream::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
+	d912pxy_surface::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);
 }
 
 void d912pxy_device::InitThreadSyncObjects()
@@ -122,43 +158,45 @@ void d912pxy_device::InitThreadSyncObjects()
 
 void d912pxy_device::InitSingletons()
 {	
-	new d912pxy_gpu_que(this, PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
+	d912pxy_s.dx12.que.Init(PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
 
-	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_MT_REPLAY_BEHAIVOUR))
-		new d912pxy_replay(this);
-	else
-		new d912pxy_replay_passthru(this);
+	if (d912pxy_s.config.GetValueUI64(PXY_CFG_MT_REPLAY_BEHAIVOUR))
+		d912pxy_s.render.replay.Init();
+	else {
+		LOG_ERR_DTDM("This feature is compile time disabled, using 1 thread replay");
+		d912pxy_s.render.replay.Init();
+	}
 
-	new d912pxy_shader_db(this);
+	d912pxy_s.render.db.shader.Init();
 
-	new d912pxy_iframe(this, m_dheaps);
-	
-	new d912pxy_texture_loader(this);
-	new d912pxy_buffer_loader(this);
-	new d912pxy_upload_pool(this);
-	new d912pxy_vstream_pool(this);
-	new d912pxy_surface_pool(this);
-	new d912pxy_cleanup_thread(this);
+	d912pxy_s.render.iframe.Init(m_dheaps);
+
+	d912pxy_s.thread.texld.Init();
+	d912pxy_s.thread.bufld.Init();
+	d912pxy_s.pool.upload.Init();
+	d912pxy_s.pool.vstream.Init();
+	d912pxy_s.pool.surface.Init();
+	d912pxy_s.thread.cleanup.Init();	
 }
 
 void d912pxy_device::InitComPatches()
 {
-	if (!d912pxy_s(config)->GetValueUI64(PXY_CFG_SDB_KEEP_PAIRS))
+	if (!d912pxy_s.config.GetValueUI64(PXY_CFG_SDB_KEEP_PAIRS))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_SHADER, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_shader::com_ReleaseWithPairRemoval);		
 	}
 
-	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CLEAR))
+	if (d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_CLEAR))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_CLEAR, &d912pxy_device::com_Clear_Emulated);
 	}
 
-	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET))
+	if (d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETRENDERSTATE, &d912pxy_device::com_SetRenderTarget_Compat);		
 	}
 
-	if (d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_CPU_API_REDUCTION))
+	if (d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_CPU_API_REDUCTION))
 	{	
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETVIEWPORT, &d912pxy_device::com_SetViewport_CAR);
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETSCISSORRECT, &d912pxy_device::com_SetScissorRect_CAR);
@@ -167,7 +205,7 @@ void d912pxy_device::InitComPatches()
 	}
 
 	{		
-		UINT64 occCfgValue = d912pxy_s(config)->GetValueUI64(PXY_CFG_COMPAT_OCCLUSION);
+		UINT64 occCfgValue = d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_OCCLUSION);
 
 		switch (occCfgValue)
 		{
@@ -190,17 +228,17 @@ void d912pxy_device::InitComPatches()
 		}				
 	}
 
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETTEXTURE, &d912pxy_device::com_SetTexture_PS);
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_PS);		
 	}
-	else if (d912pxy_s(config)->GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
+	else if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_Compat);
 	}
 
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_PRESENT, &d912pxy_device::com_Present_PG);
 	}
@@ -257,7 +295,7 @@ void d912pxy_device::PrintInfoBanner()
 	d912pxy_helper::InstallVehHandler();
 
 
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
 		LOG_INFO_DTDM("Running ps build, expect performance drops");
 
 	UINT64 memKb = 0;
@@ -278,7 +316,7 @@ void d912pxy_device::PrintInfoBanner()
 
 	for (int i = 0; i != PXY_CFG_CNT; ++i)
 	{
-		d912pxy_config_value_dsc* entry = d912pxy_s(config)->GetEntryRaw((d912pxy_config_value)i);
+		d912pxy_config_value_dsc* entry = d912pxy_s.config.GetEntryRaw((d912pxy_config_value)i);
 
 		LOG_INFO_DTDM("%s.%s = %s", entry->section, entry->name, entry->value);
 	}
@@ -290,7 +328,7 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 {
 	swapchains[0] = &d912pxy_swapchain::d912pxy_swapchain_com(0, pPresentationParameters)->swapchain;
 
-	d912pxy_s(iframe)->SetSwapper(swapchains[0]);
+	d912pxy_s.render.iframe.SetSwapper(swapchains[0]);
 }
 
 ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
@@ -298,7 +336,7 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	ComPtr<IDXGIFactory4> dxgiFactory;
 	UINT createFactoryFlags = 0;
 
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_DX_DBG_RUNTIME))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_DX_DBG_RUNTIME))
 	{
 		d912pxy_helper::d3d12_EnableDebugLayer();
 		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
@@ -458,7 +496,8 @@ void d912pxy_device::SetupDevice(ComPtr<ID3D12Device> device)
 {
 	m_d12evice = device;
 	m_d12evice_ptr = m_d12evice.Get();
-	d912pxy_s(DXDev) = m_d12evice_ptr;
+	
+	d912pxy_s.dx12.dev = m_d12evice_ptr;
 
 	D3D12_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT vaSizes;
 	m_d12evice->CheckFeatureSupport(D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT, &vaSizes, sizeof(vaSizes));

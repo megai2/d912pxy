@@ -48,7 +48,7 @@ d912pxy_query_occlusion::d912pxy_query_occlusion(D3DQUERYTYPE Type) : d912pxy_qu
 
 d912pxy_query_occlusion * d912pxy_query_occlusion::d912pxy_query_occlusion_com(D3DQUERYTYPE Type)
 {
-	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_QUERY_OCC);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_QUERY_OCC);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY_OCC);
 
 	new (&ret->query_occ)d912pxy_query_occlusion(Type);
@@ -73,7 +73,7 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 
 		queryFinished++;
 		frameIdx = g_gpuStack[g_writeStack].count;
-		d912pxy_s(CMDReplay)->QueryMark(this, 1);		
+		d912pxy_s.render.replay.QueryMark(this, 1);		
 		g_gpuStack[g_writeStack].stack[frameIdx] = this;
 		ThreadRef(1);
 		queryOpened = 1;
@@ -85,7 +85,7 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 			occ_Issue(D3DISSUE_BEGIN);
 
 		queryOpened = 0;
-		d912pxy_s(CMDReplay)->QueryMark(this, 0);			
+		d912pxy_s.render.replay.QueryMark(this, 0);			
 	}
 
 	API_OVERHEAD_TRACK_END(0)
@@ -133,7 +133,7 @@ void d912pxy_query_occlusion::QueryMark(UINT start, ID3D12GraphicsCommandList * 
 
 void d912pxy_query_occlusion::FlushQueryStack()
 {	
-	d912pxy_s(iframe)->StateSafeFlush(!bufferedReadback);
+	d912pxy_s.render.iframe.StateSafeFlush(!bufferedReadback);
 }
 
 
@@ -143,7 +143,7 @@ void d912pxy_query_occlusion::OnIFrameEnd()
 
 	if (writeStack->count)
 	{
-		ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
+		ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(CLG_SEQ);
 
 		for (int i = 0; i != writeStack->count; ++i)
 			writeStack->stack[i]->ForceClose(cl);
@@ -181,7 +181,7 @@ void d912pxy_query_occlusion::ForceClose(ID3D12GraphicsCommandList * cl)
 	if (queryOpened)
 	{
 		queryOpened = 0;
-		d912pxy_s(CMDReplay)->QueryMark(this, 0);
+		d912pxy_s.render.replay.QueryMark(this, 0);
 		//QueryMark(0, cl)
 	}
 }
@@ -191,7 +191,7 @@ UINT d912pxy_query_occlusion::InitOccQueryEmulation()
 	D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
 	queryHeapDesc.Count = PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME;
 	queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_OCCLUSION;
-	if (FAILED(d912pxy_s(DXDev)->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&g_occQueryHeap))))
+	if (FAILED(d912pxy_s.dx12.dev->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&g_occQueryHeap))))
 		return 1;
 
 	for (int i = 0; i != 2; ++i)

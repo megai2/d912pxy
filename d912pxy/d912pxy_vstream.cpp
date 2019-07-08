@@ -56,7 +56,7 @@ d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB
 
 d912pxy_vstream * d912pxy_vstream::d912pxy_vstream_com(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB)
 {
-	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_VSTREAM);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_VSTREAM);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VBUF);
 
 	new (&ret->vstream)d912pxy_vstream(Length, Usage, fmt, isIB);
@@ -104,7 +104,7 @@ D912PXY_METHOD_IMPL_NC(Unlock)(THIS)
 	API_OVERHEAD_TRACK_START(2)
 			
 	--lockDepth;
-	d912pxy_s(bufloadThread)->IssueUpload(lockInfo[lockDepth]);	
+	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
 
 	API_OVERHEAD_TRACK_END(2)
 
@@ -120,7 +120,7 @@ void d912pxy_vstream::UnlockRanged(UINT newOffset, UINT newSize)
 	lockInfo[lockDepth].offset = newOffset;
 	lockInfo[lockDepth].size = newSize;
 
-	d912pxy_s(bufloadThread)->IssueUpload(lockInfo[lockDepth]);
+	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);
 
 	API_OVERHEAD_TRACK_END(2)
 	
@@ -172,12 +172,12 @@ void d912pxy_vstream::NoteFormatChange(DWORD fmt, DWORD isIB)
 
 UINT d912pxy_vstream::FinalReleaseCB()
 {
-	if (d912pxy_s(pool_vstream))
+	if (d912pxy_s.pool.vstream.IsRunning())
 	{
 		EvictFromGPU();
 
 		d912pxy_vstream* tv = this;
-		d912pxy_s(pool_vstream)->PoolRW(d912pxy_s(pool_vstream)->MemCatFromSize(dx9desc.Size), &tv, 1);
+		d912pxy_s.pool.vstream.PoolRW(d912pxy_s.pool.vstream.MemCatFromSize(dx9desc.Size), &tv, 1);
 		return 0;
 	}
 	else {
@@ -225,8 +225,8 @@ void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12Grap
 	if (!ulObj)
 	{
 		BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
-		ulObj = d912pxy_s(pool_upload)->GetUploadObject(dx9desc.Size);
-		d912pxy_s(bufloadThread)->AddToFinishList(this);
+		ulObj = d912pxy_s.pool.upload.GetUploadObject(dx9desc.Size);
+		d912pxy_s.thread.bufld.AddToFinishList(this);
 	}
 	
 	UploadDataCopy(ulObj->DPtr() + linfo->offset, linfo->offset, linfo->size);

@@ -24,8 +24,9 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_device * dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom( L"replay thread"), d912pxy_thread(threadName, 1)
+d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom( L"replay thread"), d912pxy_thread()
 {
+	InitThread(threadName, 1);
 	exchRI = new d912pxy_ringbuffer<UINT32>(5, 0);
 	listGrp = iListGrp;	
 }
@@ -39,18 +40,18 @@ void d912pxy_replay_thread::ThreadJob()
 {
 	if (exchRI->HaveElements())
 	{
-		d912pxy_s(iframe)->SetRSigOnList(listGrp);
+		d912pxy_s.render.iframe.SetRSigOnList(listGrp);
 
-		ID3D12GraphicsCommandList* cl = d912pxy_s(GPUcl)->GID(listGrp);
+		ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(listGrp);
 
-		d912pxy_s(CMDReplay)->Replay(exchRI->PopElement(), exchRI->PopElement(), cl, this);
+		d912pxy_s.render.replay.Replay(exchRI->PopElement(), exchRI->PopElement(), cl, this);
 	}
 	else {
 		LOG_ERR_THROW2(-1, "RI exchange buffer is empty on replay thread wake");
 	}
 	
-	if (d912pxy_s(dev)->InterruptThreads())
-		d912pxy_s(dev)->LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
+	if (d912pxy_s.dev.InterruptThreads())
+		d912pxy_s.dev.LockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
 	else 
 		LOG_ERR_THROW2(-1, "Device is not interrupting threads while replaying thread exits from proc");
 
@@ -70,5 +71,5 @@ void d912pxy_replay_thread::Finish()
 
 void d912pxy_replay_thread::ThreadInitProc()
 {
-	d912pxy_s(dev)->InitLockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
+	d912pxy_s.dev.InitLockThread(PXY_INNER_THREADID_RPL_THRD0 + (UINT)listGrp - CLG_RP1);
 }

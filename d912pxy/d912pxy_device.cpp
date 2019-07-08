@@ -28,101 +28,57 @@ SOFTWARE.
 
 using namespace Microsoft::WRL;
 
-static d912pxy_device* lastDev = NULL;
-
-d912pxy_com_object * d912pxy_device::d912pxy_device_com(IDirect3DDevice9 * dev, void * par)
+d912pxy_com_object * d912pxy_device::d912pxy_device_com(void* baseMem, IDirect3DDevice9 * dev, void * par)
 {
 	size_t objSz = sizeof(d912pxy_device) + 8;
 
-	d912pxy_com_object* ret = 0;
-	PXY_MALLOC(ret, objSz, d912pxy_com_object*);
+	d912pxy_com_object* ret = (d912pxy_com_object*)baseMem;
 	ZeroMemory(ret, objSz);
 
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_DEVICE);
 
-	new (&ret->device)d912pxy_device(dev, par);
+	new (&ret->device)d912pxy_device();
+
+	ret->device.Init(dev, par);
 	
 	return ret;
 }
 
-d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(PXY_COM_OBJ_UNMANAGED, L"device")
+d912pxy_device::d912pxy_device() : d912pxy_comhandler()
 {
-	if (lastDev)
-	{
-		if (lastDev != this)
-		{
-			LOG_ERR_DTDM("Last device exited without cleanup");
-		}
-	}
-	else
-		lastDev = this;
-
-	d912pxy_s(dev) = this;
-
-	PrintInfoBanner();
-
-	d912pxy_s(comMgr) = new d912pxy_com_mgr();
-	d912pxy_s(comMgr)->Init();
-
-	initPtr = par;
-	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);	
-
-#ifdef ENABLE_METRICS
-	new d912pxy_metrics(this);
-	FRAME_METRIC_PRESENT(1)
-#endif
-
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
-		perfGraph = new d912pxy_performance_graph(0);
-	else
-		perfGraph = NULL;
-		 
-	LOG_INFO_DTDM2(InitClassFields(),									"Startup step  1/10");
-	LOG_INFO_DTDM2(InitVFS(),											"Startup step  2/10");
-	LOG_INFO_DTDM2(InitThreadSyncObjects(),								"Startup step  3/10");
-	LOG_INFO_DTDM2(SetupDevice(SelectSuitableGPU()),					"Startup step  4/10");
-	LOG_INFO_DTDM2(InitDescriptorHeaps(),								"Startup step  5/10");
-	LOG_INFO_DTDM2(InitSingletons(),									"Startup step  6/10");
-	LOG_INFO_DTDM2(InitComPatches(),									"Startup step  7/10");
-	LOG_INFO_DTDM2(InitNullSRV(),										"Startup step  8/10");
-	LOG_INFO_DTDM2(InitDrawUPBuffers(),									"Startup step  9/10");
-	LOG_INFO_DTDM2(InitDefaultSwapChain(&initialPresentParameters),		"Startup step 10/10");
-	LOG_INFO_DTDM2(d912pxy_s(iframe)->Start(),							"Started first IFrame");	
-
-	isRunning.SetValue(1);
 }
 
 d912pxy_device::~d912pxy_device(void)
 {	
 	LOG_INFO_DTDM("Device last reference removal");
-	lastDev = NULL;
+	d912pxy_s.devComBase = NULL;
 
 	LOG_INFO_DTDM("d912pxy exiting");
 	isRunning.SetValue(0);
 
 	swapOpLock.Hold();
 
-	LOG_INFO_DTDM2(d912pxy_s(iframe)->End(),		 "Last iframe ended");
+	LOG_INFO_DTDM2(d912pxy_s.render.iframe.End(),		 "Last iframe ended");
 	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(),		 "Additional DX9 objects freed");
-	LOG_INFO_DTDM2(d912pxy_s(GPUque)->Flush(0),      "Last gpu cmd lists flushed");
+	LOG_INFO_DTDM2(d912pxy_s.dx12.que.Flush(0),      "Last gpu cmd lists flushed");
 	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(),		 "Swapchain stopped");
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
 
-	LOG_INFO_DTDM2(delete d912pxy_s(thread_cleanup),	"Final cleanups  1/12");
+	LOG_INFO_DTDM2(d912pxy_s.thread.cleanup.~d912pxy_cleanup_thread(),	"Final cleanups  1/12");
 	swapOpLock.Release();
 		
-	LOG_INFO_DTDM2(delete d912pxy_s(bufloadThread),		"Final cleanups  2/11");
-	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups  3/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(iframe),			"Final cleanups  4/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(sdb),				"Final cleanups  5/12");
-	
-	LOG_INFO_DTDM2(delete d912pxy_s(pool_vstream),		"Final cleanups  6/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(pool_upload),		"Final cleanups  7/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(pool_surface),		"Final cleanups  8/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(GPUque),			"Final cleanups  9/12");
-	LOG_INFO_DTDM2(d912pxy_s(CMDReplay)->Free(),		"Final cleanups 10/12");	
-	LOG_INFO_DTDM2(delete d912pxy_s(vfs),				"Final cleanups 11/12");
+	LOG_INFO_DTDM2(d912pxy_s.thread.bufld.~d912pxy_buffer_loader(),	  		"Final cleanups  2/11");
+	LOG_INFO_DTDM2(d912pxy_s.thread.texld.~d912pxy_texture_loader(),		"Final cleanups  3/12");
+	LOG_INFO_DTDM2(d912pxy_s.render.iframe.~d912pxy_iframe(), 				"Final cleanups  4/12");
+	LOG_INFO_DTDM2(d912pxy_s.render.db.shader.~d912pxy_shader_db(),			"Final cleanups  5/12");
+		
+	LOG_INFO_DTDM2(d912pxy_s.pool.vstream.~d912pxy_vstream_pool(),		"Final cleanups  6/12");
+	LOG_INFO_DTDM2(d912pxy_s.pool.upload.~d912pxy_upload_pool(),		"Final cleanups  7/12");
+	LOG_INFO_DTDM2(d912pxy_s.pool.surface.~d912pxy_surface_pool(),		"Final cleanups  8/12");
+	LOG_INFO_DTDM2(d912pxy_s.dx12.que.~d912pxy_gpu_que(),				"Final cleanups  9/12");
+	LOG_INFO_DTDM2(d912pxy_s.render.replay.Free(),						"Final cleanups 10/12");	
+	LOG_INFO_DTDM2(d912pxy_s.vfs.~d912pxy_vfs(),						"Final cleanups 11/12");
 		
 	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
 		delete m_dheaps[i];
@@ -130,7 +86,7 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM("Final cleanups 12/12");
 	
 #ifdef ENABLE_METRICS
-	delete d912pxy_s(metrics);
+	d912pxy_s.log.metrics.~d912pxy_metrics();
 #endif
 
 	if (perfGraph)
@@ -139,8 +95,7 @@ d912pxy_device::~d912pxy_device(void)
 	if (initPtr)
 		((IDirect3D9*)initPtr)->Release();
 
-	d912pxy_s(comMgr)->DeInit();
-	delete d912pxy_s(comMgr);
+	d912pxy_s.com.DeInit();
 	
 	LOG_INFO_DTDM("d912pxy exited");
 
@@ -157,10 +112,6 @@ ULONG d912pxy_device::ReleaseDevice()
 
 		this->~d912pxy_device();
 		
-		d912pxy_s(dev) = NULL;
-
-		PXY_FREE(comObj);
-
 		d912pxy_final_cleanup();
 
 		return 0;
@@ -274,7 +225,7 @@ d912pxy_dheap * d912pxy_device::GetDHeap(UINT slot)
 void d912pxy_device::IFrameCleanupEnqeue(d912pxy_comhandler * obj)
 {
 	cleanupLock.Hold();
-	d912pxy_s(GPUque)->EnqueueCleanup(obj);
+	d912pxy_s.dx12.que.EnqueueCleanup(obj);
 	cleanupLock.Release();
 }
 
@@ -290,9 +241,9 @@ void d912pxy_device::ExternalFlush()
 
 	swapOpLock.Hold();
 
-	d912pxy_s(iframe)->End();
-	d912pxy_s(GPUque)->Flush(0);
-	d912pxy_s(iframe)->Start();
+	d912pxy_s.render.iframe.End();
+	d912pxy_s.dx12.que.Flush(0);
+	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
 }

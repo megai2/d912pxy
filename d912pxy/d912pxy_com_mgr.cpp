@@ -63,6 +63,7 @@ void d912pxy_com_mgr::Init()
 void d912pxy_com_mgr::DeInit()
 {
 	table.DeInit();
+	this->~d912pxy_com_mgr();
 }
 
 d912pxy_com_object * d912pxy_com_mgr::AllocateComObj(d912pxy_com_obj_typeid type)

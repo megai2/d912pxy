@@ -25,8 +25,26 @@ SOFTWARE.
 #include "stdafx.h"
 
 template<class ElementType, class ProcImpl>
-d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device * dev, UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg, ProcImpl* singleton) : d912pxy_pool<ElementType, ProcImpl>(dev, singleton)
+d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat() : d912pxy_pool<ElementType, ProcImpl>()
 {
+
+}
+
+template<class ElementType, class ProcImpl>
+d912pxy_pool_memcat<ElementType, ProcImpl>::~d912pxy_pool_memcat()
+{
+	
+
+	PXY_FREE(limits);
+	PXY_FREE(memTable);
+	PXY_FREE(this->rwMutex);
+}
+
+template<class ElementType, class ProcImpl>
+void d912pxy_pool_memcat<ElementType, ProcImpl>::Init(UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg)
+{
+	d912pxy_pool<ElementType, ProcImpl>::Init();
+
 	bitIgnore = iBitIgnore;
 	bitLimit = iBitLimit;
 	bitCnt = iBitLimit - iBitIgnore;
@@ -39,7 +57,7 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 
 	if (limitCfg != PXY_CFG_CNT)
 	{
-		wchar_t* vals = d912pxy_s(config)->GetValueRaw(limitCfg);
+		wchar_t* vals = d912pxy_s.config.GetValueRaw(limitCfg);
 
 		if ((vals[1] != L'x') || (vals[bitCnt * 5 + 2] != L'L'))
 		{
@@ -58,7 +76,7 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 
 				swscanf(&tmp[0], L"%hX", &limits[i]);
 			}
-		}		
+		}
 	}
 
 	PXY_MALLOC(memTable, sizeof(void*)*bitCnt, d912pxy_ringbuffer<ElementType>**);
@@ -73,20 +91,11 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat(d912pxy_device *
 	if (performaWarmUp)
 	{
 		for (int i = 0; i != bitCnt; ++i)
-		{		
+		{
 			for (int j = 0; j != limits[i]; ++j)
 				this->WarmUp(i);
 		}
 	}
-}
-
-template<class ElementType, class ProcImpl>
-d912pxy_pool_memcat<ElementType, ProcImpl>::~d912pxy_pool_memcat()
-{
-	PXY_FREE(limits);
-	PXY_FREE(memTable);
-	PXY_FREE(this->rwMutex);
-
 }
 
 template<class ElementType, class ProcImpl>
@@ -104,7 +113,7 @@ void d912pxy_pool_memcat<ElementType, ProcImpl>::PoolUnloadProc(ElementType val,
 		if (instantUnload)
 			val->PooledAction(0);
 		else 
-			d912pxy_s(thread_cleanup)->Watch(val);
+			d912pxy_s.thread.cleanup.Watch(val);
 	}
 }
 

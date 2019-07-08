@@ -29,7 +29,7 @@ class d912pxy_replay_thread :
 	public d912pxy_thread, public d912pxy_noncom
 {
 public:
-	d912pxy_replay_thread(d912pxy_device* dev, d912pxy_gpu_cmd_list_group iListGrp, char* threadName);
+	d912pxy_replay_thread(d912pxy_gpu_cmd_list_group iListGrp, char* threadName);
 	~d912pxy_replay_thread();
 
 	void ThreadJob();

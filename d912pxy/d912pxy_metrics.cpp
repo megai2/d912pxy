@@ -25,9 +25,32 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_metrics.h"
 
-d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom( L"metrics")
+d912pxy_metrics::d912pxy_metrics()
 {
-	d912pxy_s(metrics) = this;
+
+}
+
+d912pxy_metrics::~d912pxy_metrics()
+{
+	
+
+#ifndef DISABLE_P7LIB
+	FlushIFrameValues();
+
+	for (int i = 0; i != PXY_METRICS_API_OVERHEAD_COUNT + 1; ++i)
+		delete apiOverheadTime[i];
+
+	for (int i = 0; i != PXY_METRICS_IFRAME_COUNT; ++i)
+		delete iframeTime[i];
+
+	dheapMetrics->Release();
+	iframeMetrics->Release();
+#endif
+}
+
+void d912pxy_metrics::Init()
+{
+	NonCom_Init(L"metrics");
 
 #ifndef DISABLE_P7LIB
 	LOG_INFO_DTDM("collecting frame and descriptor heap statistics, expect some performance drop");
@@ -36,7 +59,7 @@ d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom( L"metri
 
 	dheapMetrics = P7_Create_Telemetry(l_pClient, TM("dheap"));
 	iframeMetrics = P7_Create_Telemetry(l_pClient, TM("iframe"));
-	
+
 	for (int i = 0; i != PXY_METRICS_IFRAME_COUNT; ++i)
 	{
 		iframeMetrics->Create(PXY_METRICS_IFRAME_TIME_NAMES[i], 0, 60000, 30000, 1, &metricIFrameTimes[i]);
@@ -56,31 +79,15 @@ d912pxy_metrics::d912pxy_metrics(d912pxy_device * dev) : d912pxy_noncom( L"metri
 	}
 
 	iframeMetrics->Create(TM("counters / draws"), 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT, PXY_INNER_MAX_IFRAME_BATCH_COUNT / 2, 1, &metricIFrameDraws);
-	iframeMetrics->Create(TM("counters / cleans"), 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT*3, PXY_INNER_MAX_IFRAME_BATCH_COUNT, 1, &metricIFrameCleans);
-	iframeMetrics->Create(TM("counters / upload offset"), 0, 1ULL << 10, 1ULL <<10, 1, &metricIFrameUploadOffset);
-	iframeMetrics->Create(TM("counters / mem used"), 0, 1024*20, 1024*15, 1, &metricTotalMemUsed);
+	iframeMetrics->Create(TM("counters / cleans"), 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT * 3, PXY_INNER_MAX_IFRAME_BATCH_COUNT, 1, &metricIFrameCleans);
+	iframeMetrics->Create(TM("counters / upload offset"), 0, 1ULL << 10, 1ULL << 10, 1, &metricIFrameUploadOffset);
+	iframeMetrics->Create(TM("counters / mem used"), 0, 1024 * 20, 1024 * 15, 1, &metricTotalMemUsed);
 
 	iframeMetrics->Create(TM("derived / prep per batch"), 0, 3000, 2000, 1, &metricIFramePerBatchPrep);
 	iframeMetrics->Create(TM("derived / overhead per batch"), 0, 3000, 2000, 1, &metricIFramePerBatchOverhead);
 	iframeMetrics->Create(TM("derived / app prep"), 0, 10000, 10000, 1, &metricIFrameAppPrep);
 
 	l_pClient->Release();
-#endif
-}
-
-d912pxy_metrics::~d912pxy_metrics()
-{
-#ifndef DISABLE_P7LIB
-	FlushIFrameValues();
-
-	for (int i = 0; i != PXY_METRICS_API_OVERHEAD_COUNT + 1; ++i)
-		delete apiOverheadTime[i];
-
-	for (int i = 0; i != PXY_METRICS_IFRAME_COUNT; ++i)
-		delete iframeTime[i];
-
-	dheapMetrics->Release();
-	iframeMetrics->Release();
 #endif
 }
 
@@ -150,7 +157,7 @@ void d912pxy_metrics::FlushIFrameValues()
 	iframeMetrics->Add(metricIFrameAppPrep, (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() - apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT])*10000 / (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() + 1));
 	iframeMetrics->Add(metricIFramePerBatchPrep, iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() / (lastDraws + 1));
 	iframeMetrics->Add(metricIFramePerBatchOverhead, apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT] / (lastDraws + 1));
-	iframeMetrics->Add(metricTotalMemUsed, d912pxy_s(memMgr)->GetMemoryUsedMB());
+	iframeMetrics->Add(metricTotalMemUsed, d912pxy_s.mem.GetMemoryUsedMB());
 }
 
 #endif

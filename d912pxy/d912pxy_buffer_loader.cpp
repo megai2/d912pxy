@@ -24,16 +24,21 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_buffer_loader::d912pxy_buffer_loader(d912pxy_device * dev) : d912pxy_async_upload_thread(dev, PXY_INNER_MAX_ASYNC_BUFFERLOADS, PXY_INNER_THREADID_BUF_LOADER, 10, L"buffer upload thread", "d912pxy bufld")
+d912pxy_buffer_loader::d912pxy_buffer_loader() 
 {
-	d912pxy_s(bufloadThread) = this;
-
-	d912pxy_s(GPUque)->EnableGID(CLG_BUF, PXY_INNER_CLG_PRIO_ASYNC_LOAD);	
-	Resume();
 }
 
 d912pxy_buffer_loader::~d912pxy_buffer_loader()
 {	
+	
+}
+
+void d912pxy_buffer_loader::Init()
+{
+	d912pxy_async_upload_thread::Init(PXY_INNER_MAX_ASYNC_BUFFERLOADS, PXY_INNER_THREADID_BUF_LOADER, 10, L"buffer upload thread", "d912pxy bufld");
+
+	d912pxy_s.dx12.que.EnableGID(CLG_BUF, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
+	Resume();
 }
 
 void d912pxy_buffer_loader::UploadItem(d912pxy_vstream_lock_data* it)
@@ -44,7 +49,7 @@ void d912pxy_buffer_loader::UploadItem(d912pxy_vstream_lock_data* it)
 
 void d912pxy_buffer_loader::ThreadWake()
 {
-	cl = d912pxy_s(GPUcl)->GID(CLG_BUF);
+	cl = d912pxy_s.dx12.cl->GID(CLG_BUF);
 	PIXBeginEvent(cl, 0xAA, "vstream upload");
 }
 

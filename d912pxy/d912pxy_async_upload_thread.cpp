@@ -25,8 +25,27 @@ SOFTWARE.
 #include "stdafx.h"
 
 template<class QueItemType, class ProcImpl>
-d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread(d912pxy_device * dev, UINT queueSize, UINT syncId, UINT throttleFactor, const wchar_t* objN, const char* thrdName) : d912pxy_noncom(objN), d912pxy_thread(thrdName, 1)
+d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread() : d912pxy_noncom(), d912pxy_thread()
 {
+
+}
+
+template<class QueItemType, class ProcImpl>
+d912pxy_async_upload_thread<QueItemType, ProcImpl>::~d912pxy_async_upload_thread()
+{
+	
+
+	Stop();
+	delete buffer;
+	delete finishList;
+}
+
+template<class QueItemType, class ProcImpl>
+void d912pxy_async_upload_thread<QueItemType, ProcImpl>::Init(UINT queueSize, UINT syncId, UINT throttleFactor, const wchar_t* objN, const char* thrdName)
+{
+	NonCom_Init(objN);
+	InitThread(thrdName, 1);
+
 	buffer = new d912pxy_ringbuffer<QueItemType>(queueSize, 2);
 	threadSyncId = syncId;
 
@@ -35,15 +54,7 @@ d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread(
 
 	finishList = new d912pxy_ringbuffer<void*>(64, 2);
 
-	dev->AddActiveThreads(1);	
-}
-
-template<class QueItemType, class ProcImpl>
-d912pxy_async_upload_thread<QueItemType, ProcImpl>::~d912pxy_async_upload_thread()
-{
-	Stop();
-	delete buffer;
-	delete finishList;
+	d912pxy_s.dev.AddActiveThreads(1);
 }
 
 template<class QueItemType, class ProcImpl>
@@ -75,7 +86,7 @@ void d912pxy_async_upload_thread<QueItemType, ProcImpl>::ThreadJob()
 template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::ThreadInitProc()
 {
-	d912pxy_s(dev)->InitLockThread(threadSyncId);
+	d912pxy_s.dev.InitLockThread(threadSyncId);
 	static_cast<ProcImpl>(this)->ThreadWake();
 }
 
@@ -94,10 +105,10 @@ UINT32 d912pxy_async_upload_thread<QueItemType, ProcImpl>::ItemsOnQueue()
 template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::CheckInterrupt()
 {
-	if (d912pxy_s(dev)->InterruptThreads())
+	if (d912pxy_s.dev.InterruptThreads())
 	{
 		static_cast<ProcImpl>(this)->OnThreadInterrupt();
-		d912pxy_s(dev)->LockThread(threadSyncId);
+		d912pxy_s.dev.LockThread(threadSyncId);
 		static_cast<ProcImpl>(this)->ThreadWake();
 	}
 }

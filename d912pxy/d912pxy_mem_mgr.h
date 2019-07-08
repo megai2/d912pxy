@@ -37,6 +37,8 @@ typedef struct d912pxy_dbg_mem_block {
 	UINT uid;
 } d912pxy_dbg_mem_block;
 
+static UINT global_d912pxy_mem_mgr_live = 0;
+
 
 class d912pxy_mem_mgr : public d912pxy_noncom {
 
@@ -67,6 +69,7 @@ public:
 
 	void LogLeaked();
 
+	void Init();
 	void PostInit();
 #ifdef _DEBUG
 	void StartTrackingBlocks() { allowTrackBlocks = 1; };

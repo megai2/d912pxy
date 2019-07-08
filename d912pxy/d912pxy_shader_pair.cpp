@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_shader_uid* shd, d912pxy_device* dev) : d912pxy_noncom( L"shader pair")
+d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_shader_uid* shd) : d912pxy_noncom( L"shader pair")
 {	
 	maxPsoId = 512;
 
@@ -41,7 +41,7 @@ d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d
 
 d912pxy_shader_pair::~d912pxy_shader_pair()
 {
-	if (d912pxy_s(sdb)->GetPrecompileFlag() & PXY_SDB_PSO_PRECOMPILE_SAVE)
+	if (d912pxy_s.render.db.shader.GetPrecompileFlag() & PXY_SDB_PSO_PRECOMPILE_SAVE)
 	{
 		d912pxy_shader_pair_cache_entry entryData;
 		ZeroMemory(&entryData, sizeof(d912pxy_shader_pair_cache_entry));
@@ -57,7 +57,7 @@ d912pxy_shader_pair::~d912pxy_shader_pair()
 			}
 		}
 
-		d912pxy_s(vfs)->ReWriteFileH(node, &entryData, sizeof(d912pxy_shader_pair_cache_entry), PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+		d912pxy_s.vfs.ReWriteFileH(node, &entryData, sizeof(d912pxy_shader_pair_cache_entry), PXY_VFS_BID_PSO_PRECOMPILE_LIST);
 	}
 
 	for (int i = 0; i != maxPsoId; ++i)
@@ -111,7 +111,7 @@ d912pxy_pso_cache_item* d912pxy_shader_pair::GetPSOCacheData(UINT32 idx, d912pxy
 	{		
 		ret = d912pxy_pso_cache_item::d912pxy_pso_cache_item_com(dsc);
 
-		d912pxy_s(psoCache)->CompileItem(ret);
+		d912pxy_s.render.db.pso.CompileItem(ret);
 
 		psoItems[idx] = ret;
 	}

@@ -26,7 +26,7 @@ SOFTWARE.
 
 d912pxy_shader * d912pxy_shader::d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, const DWORD * origCode, d912pxy_shader_uid uid)
 {
-	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_SHADER);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SHADER);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SHADER);
 
 	static const wchar_t* objName[2] = {
@@ -55,7 +55,7 @@ d912pxy_shader * d912pxy_shader::d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, 
 
 d912pxy_shader::d912pxy_shader(const wchar_t * shtName, const DWORD * fun) : d912pxy_comhandler(PXY_COM_OBJ_SHADER, shtName)
 {	
-	mUID = d912pxy_s(sdb)->GetUID((DWORD*)fun, &oLen);
+	mUID = d912pxy_s.render.db.shader.GetUID((DWORD*)fun, &oLen);
 
 	PXY_MALLOC(oCode, oLen * 4, DWORD*);
 	memcpy(oCode, fun, oLen * 4);
@@ -139,7 +139,7 @@ void d912pxy_shader::RemovePairs()
 	{
 		d912pxy_shader_pair_hash_type ha = pairs->GetElement();
 
-		d912pxy_s(sdb)->DeletePair(ha);
+		d912pxy_s.render.db.shader.DeletePair(ha);
 
 		pairs->Next();
 	}

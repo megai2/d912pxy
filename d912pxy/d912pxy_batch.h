@@ -74,8 +74,10 @@ typedef struct d912pxy_batch_stream_data_entry {
 class d912pxy_batch : public d912pxy_noncom
 {
 public:
-	d912pxy_batch(d912pxy_device* dev);
+	d912pxy_batch();
 	~d912pxy_batch();
+
+	void Init();
 
 	UINT NextBatch();
 

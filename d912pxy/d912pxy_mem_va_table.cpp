@@ -42,7 +42,7 @@ void d912pxy_mem_va_table::Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 en
 		LOG_ERR_THROW2(-1, "VA table allocation size is too small");
 	}
 
-	UINT64 pageSz = d912pxy_s(memMgr)->GetPageSize();
+	UINT64 pageSz = d912pxy_s.mem.GetPageSize();
 
 	entryShift = d912pxy_helper::GetClosestPow2(entryCount);
 	entryBase = 1ULL << (allocBitSize - entryShift);
@@ -69,11 +69,11 @@ void d912pxy_mem_va_table::Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 en
 
 	LOG_INFO_DTDM("reserving %u mb VA space (%u mb managment)", ((1ULL << allocBitSize) + manageRegionSz) >> 20, manageRegionSz >> 20);
 
-	baseAdr = d912pxy_s(memMgr)->ReserveVARangeAligned(allocBitSize, manageRegionSz);
+	baseAdr = d912pxy_s.mem.ReserveVARangeAligned(allocBitSize, manageRegionSz);
 
 	intptr_t manageBase = baseAdr + (1ULL << allocBitSize);
 
-	d912pxy_s(memMgr)->CommitVARange(manageBase, manageRegionSz);
+	d912pxy_s.mem.CommitVARange(manageBase, manageRegionSz);
 
 	for (int i = 0; i != entryCount; ++i)
 	{
@@ -101,7 +101,7 @@ void d912pxy_mem_va_table::Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 en
 
 void d912pxy_mem_va_table::DeInit()
 {
-	d912pxy_s(memMgr)->ReleaseReservedVARange(baseAdr);
+	d912pxy_s.mem.ReleaseReservedVARange(baseAdr);
 }
 
 void * d912pxy_mem_va_table::AllocateObj(UINT64 type)
@@ -126,7 +126,7 @@ void * d912pxy_mem_va_table::AllocateObj(UINT64 type)
 	d912pxy_mem_va_table_ref_counter refs = ++table[type].refBase[refId];
 
 	if (refs == 1)
-		d912pxy_s(memMgr)->CommitVARange(groupBase + refId * table[type].allocGrain, table[type].allocGrain);	
+		d912pxy_s.mem.CommitVARange(groupBase + refId * table[type].allocGrain, table[type].allocGrain);	
 
 	lock[type].Release();
 
@@ -147,7 +147,7 @@ void d912pxy_mem_va_table::DeAllocateObj(void * obj)
 	table[type].stackPtr[0] = objID;
 
 	if (!--table[type].refBase[refId])	
-		d912pxy_s(memMgr)->DeCommitVARange(refId * table[type].allocGrain + baseAdr + type * entryBase, table[type].allocGrain);
+		d912pxy_s.mem.DeCommitVARange(refId * table[type].allocGrain + baseAdr + type * entryBase, table[type].allocGrain);
 
 	lock[type].Release();
 }

@@ -80,6 +80,8 @@ public:
 	d912pxy_config();
 	~d912pxy_config();
 
+	void Init();
+
 	UINT64 GetValueXI64(d912pxy_config_value val);
 	UINT64 GetValueUI64(d912pxy_config_value val);
 	UINT32 GetValueUI32(d912pxy_config_value val);

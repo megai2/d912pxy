@@ -24,23 +24,31 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_cleanup_thread::d912pxy_cleanup_thread(d912pxy_device* dev) : d912pxy_noncom( L"delayed cleanup thread"), d912pxy_thread("d912pxy pool gc", 0)
+d912pxy_cleanup_thread::d912pxy_cleanup_thread() : d912pxy_noncom(), d912pxy_thread()
 {
-	d912pxy_s(thread_cleanup) = this;
 
-	iterationPeriod = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_CLEANUP_PERIOD);
-	iterationSubsleep = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_CLEANUP_SUBSLEEP);
-	lifetime = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_POOLING_LIFETIME);
-
-	buffer = new d912pxy_linked_list<d912pxy_comhandler*>();
-	SignalWork();
 }
 
 
 d912pxy_cleanup_thread::~d912pxy_cleanup_thread()
 {
+	
+
 	Stop();
 	delete buffer;
+}
+
+void d912pxy_cleanup_thread::Init()
+{
+	NonCom_Init(L"delayed cleanup thread");
+	InitThread("d912pxy pool gc", 0);
+
+	iterationPeriod = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_CLEANUP_PERIOD);
+	iterationSubsleep = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_CLEANUP_SUBSLEEP);
+	lifetime = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_POOLING_LIFETIME);
+
+	buffer = new d912pxy_linked_list<d912pxy_comhandler*>();
+	SignalWork();
 }
 
 void d912pxy_cleanup_thread::ThreadJob()
@@ -73,7 +81,7 @@ void d912pxy_cleanup_thread::ThreadJob()
 	}
 
 	//megai2: do external flush on device every wake cycle
-	d912pxy_s(dev)->ExternalFlush();
+	d912pxy_s.dev.ExternalFlush();
 
 	UINT32 etime = GetTickCount();
 

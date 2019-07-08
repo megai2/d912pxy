@@ -1144,7 +1144,7 @@ int d912pxy_hlsl_generator::IsRegDefined(DWORD op, UINT numOffset)
 void d912pxy_hlsl_generator::LoadGenProfile()
 {
 	UINT32 sz;
-	UINT32* data = (UINT32*)d912pxy_s(vfs)->LoadFileH(mUID, &sz, PXY_VFS_BID_SHADER_PROFILE);
+	UINT32* data = (UINT32*)d912pxy_s.vfs.LoadFileH(mUID, &sz, PXY_VFS_BID_SHADER_PROFILE);
 
 	if (data)
 	{
@@ -2256,7 +2256,7 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 void d912pxy_hlsl_generator::WriteExtraUnusedRegs()
 {
 	//megai2: defining extra unused regs kills gpu memory bandwith
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_FORCE_UNUSED_REGS))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_FORCE_UNUSED_REGS))
 	{
 		//megai2: force define not used registers to align vs-ps io properly
 		if (isPS)

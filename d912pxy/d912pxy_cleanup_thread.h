@@ -28,8 +28,10 @@ SOFTWARE.
 class d912pxy_cleanup_thread : public d912pxy_thread, public d912pxy_noncom
 {
 public:
-	d912pxy_cleanup_thread(d912pxy_device* dev);
+	d912pxy_cleanup_thread();
 	~d912pxy_cleanup_thread();
+
+	void Init();
 
 	void ThreadJob();
 	void Watch(d912pxy_comhandler* obj);

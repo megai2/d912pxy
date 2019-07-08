@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOnly) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"const buffer")
+d912pxy_cbuffer::d912pxy_cbuffer( UINT length, UINT uploadOnly) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"const buffer")
 {
 	if ((length & 0xFF) != 0)
 	{
@@ -40,7 +40,7 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOn
 			D3D12_CONSTANT_BUFFER_VIEW_DESC viDsc;
 			viDsc.BufferLocation = m_res->GetGPUVirtualAddress();
 			viDsc.SizeInBytes = length;
-			dHeap = dev->GetDHeap(PXY_INNER_HEAP_CBV);
+			dHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_CBV);
 			heapId = dHeap->CreateCBV(&viDsc);
 		}
 	}
@@ -54,7 +54,7 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOn
 	LOG_ERR_THROW(uploadRes->GetD12Obj()->Map(0, 0, (void**)&pointers.host));
 }
 
-d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, UINT length, UINT uploadOnly, void* n2) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"uav const buffer")
+d912pxy_cbuffer::d912pxy_cbuffer(UINT length, UINT uploadOnly, void* n2) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"uav const buffer")
 {
 	if ((length & 0xFF) != 0)
 	{
@@ -75,7 +75,7 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, UINT length, UINT uploadO
 	pointers.dev = GetVA_GPU();
 }
 
-d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, d912pxy_cbuffer * oBuf, UINT offset, UINT iSz) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"const buffer offset")
+d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_cbuffer * oBuf, UINT offset, UINT iSz) : d912pxy_resource(RTID_CBUFFER, PXY_COM_OBJ_NOVTABLE, L"const buffer offset")
 {
 	D3D12_CONSTANT_BUFFER_VIEW_DESC viDsc;
 
@@ -86,7 +86,7 @@ d912pxy_cbuffer::d912pxy_cbuffer(d912pxy_device * dev, d912pxy_cbuffer * oBuf, U
 
 	viDsc.BufferLocation = oBuf->GetD12Obj()->GetGPUVirtualAddress() + offset;
 	viDsc.SizeInBytes = iSz;
-	dHeap = dev->GetDHeap(PXY_INNER_HEAP_CBV);
+	dHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_CBV);
 	heapId = dHeap->CreateCBV(&viDsc);
 	
 	pointers.host = (intptr_t)oBuf->OffsetWritePoint(offset);
@@ -135,12 +135,12 @@ void d912pxy_cbuffer::Upload()
 {
 	//pointers.host = NULL;
 	//uploadRes->GetD12Obj()->Unmap(0, 0);
-	uploadRes->BCopyTo(this, 2, d912pxy_s(GPUcl)->GID(CLG_TOP));	
+	uploadRes->BCopyTo(this, 2, d912pxy_s.dx12.cl->GID(CLG_TOP));	
 }
 
 void d912pxy_cbuffer::UploadTarget(d912pxy_cbuffer * target, UINT offset, UINT size)
 {
-	ComPtr<ID3D12GraphicsCommandList> cq = d912pxy_s(GPUcl)->GID(CLG_SEQ);
+	ComPtr<ID3D12GraphicsCommandList> cq = d912pxy_s.dx12.cl->GID(CLG_SEQ);
 
 	target->BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, CLG_SEQ);
 
@@ -149,7 +149,7 @@ void d912pxy_cbuffer::UploadTarget(d912pxy_cbuffer * target, UINT offset, UINT s
 
 void d912pxy_cbuffer::UploadOffset(UINT offset, UINT size)
 {
-	ComPtr<ID3D12GraphicsCommandList> cq = d912pxy_s(GPUcl)->GID(CLG_TOP);
+	ComPtr<ID3D12GraphicsCommandList> cq = d912pxy_s.dx12.cl->GID(CLG_TOP);
 
 	BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, CLG_TOP);
 

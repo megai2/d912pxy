@@ -25,20 +25,16 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_surface_pool.h"
 
-d912pxy_surface_pool::d912pxy_surface_pool(d912pxy_device* dev) : d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>(dev, &d912pxy_s(pool_surface))
+d912pxy_surface_pool::d912pxy_surface_pool() : d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>()
 {
-	config = d912pxy_s(config)->GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
 
-	table = new d912pxy_memtree2(4, 4096, 2);
-
-	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1, d912pxy_thread_lock*);
-
-	this->rwMutex[0].Init();
 }
 
 d912pxy_surface_pool::~d912pxy_surface_pool()
 {
-	d912pxy_s(pool_surface) = NULL;
+	
+
+	pRunning = 0;
 
 	table->Begin();
 
@@ -63,6 +59,19 @@ d912pxy_surface_pool::~d912pxy_surface_pool()
 	delete table;
 
 	PXY_FREE(this->rwMutex);
+}
+
+void d912pxy_surface_pool::Init()
+{
+	d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>::Init();
+
+	config = d912pxy_s.config.GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
+
+	table = new d912pxy_memtree2(4, 4096, 2);
+
+	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1, d912pxy_thread_lock*);
+
+	this->rwMutex[0].Init();
 }
 
 d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback)
@@ -171,6 +180,6 @@ void d912pxy_surface_pool::PoolUnloadProc(d912pxy_surface * val, d912pxy_ringbuf
 		if (config & 0x10000)
 			val->PooledAction(0);
 		else 
-			d912pxy_s(thread_cleanup)->Watch(val);
+			d912pxy_s.thread.cleanup.Watch(val);
 	}
 }

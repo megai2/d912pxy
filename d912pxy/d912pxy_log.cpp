@@ -26,35 +26,13 @@ SOFTWARE.
 
 d912pxy_log::d912pxy_log()
 {
-	d912pxy_s(log) = this;
-
-	crashLog = NULL;
-	crashLogLine = 0;
-
-#ifndef DISABLE_P7LIB
-	//create P7 client object		
-	p7cli = P7_Create_Client(d912pxy_s(config)->GetValueRaw(PXY_CFG_LOG_P7CONFIG));
-
-	if (!p7cli)
-	{
-		MessageBox(0, L"P7 init error", L"d912pxy", MB_ICONERROR);
-		throw std::exception();
-	}
-
-	p7cli->Share(TM("logger"));
-
-	m_log = P7_Create_Trace(p7cli, TM("d912pxy"));
-	m_log->Register_Thread(TM("main thread"), 0);	
-
-	threadNameId = 0;
-#else
-	logfile = fopen(PXY_LOG_FILE_NAME, "w");
-#endif
 }
 
 
 d912pxy_log::~d912pxy_log()
 {
+	
+
 #ifndef DISABLE_P7LIB
 	
 	//megai2: wait a bit for final datas to be processed
@@ -68,6 +46,32 @@ d912pxy_log::~d912pxy_log()
 
 	if (crashLog)
 		fclose(crashLog);
+}
+
+void d912pxy_log::Init()
+{	
+	crashLog = NULL;
+	crashLogLine = 0;
+
+#ifndef DISABLE_P7LIB
+	//create P7 client object		
+	p7cli = P7_Create_Client(d912pxy_s.config.GetValueRaw(PXY_CFG_LOG_P7CONFIG));
+
+	if (!p7cli)
+	{
+		MessageBox(0, L"P7 init error", L"d912pxy", MB_ICONERROR);
+		throw std::exception();
+	}
+
+	p7cli->Share(TM("logger"));
+
+	m_log = P7_Create_Trace(p7cli, TM("d912pxy"));
+	m_log->Register_Thread(TM("main thread"), 0);
+
+	threadNameId = 0;
+#else
+	logfile = fopen(PXY_LOG_FILE_NAME, "w");
+#endif
 }
 
 #ifndef DISABLE_P7LIB

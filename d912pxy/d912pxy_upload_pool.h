@@ -29,7 +29,7 @@ class d912pxy_upload_pool;
 
 class d912pxy_upload_item : public d912pxy_comhandler {
 public:
-	d912pxy_upload_item(d912pxy_device * dev, UINT8 icat);
+	d912pxy_upload_item(UINT8 icat);
 	~d912pxy_upload_item();
 
 	void UploadTargetWithOffset(d912pxy_resource* res, UINT64 sofs, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList* cl);
@@ -65,8 +65,10 @@ private:
 class d912pxy_upload_pool : public d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>
 {
 public:
-	d912pxy_upload_pool(d912pxy_device* dev);
+	d912pxy_upload_pool();
 	~d912pxy_upload_pool();
+
+	void Init();
 
 	d912pxy_upload_item* GetUploadObject(UINT size);
 	ID3D12Resource* MakeUploadBuffer(UINT maxSize);

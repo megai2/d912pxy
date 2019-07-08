@@ -29,8 +29,10 @@ class d912pxy_gpu_que :
 	public d912pxy_noncom, public d912pxy_thread
 {
 public:
-	d912pxy_gpu_que(d912pxy_device* dev, UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences);
+	d912pxy_gpu_que();
 	~d912pxy_gpu_que();
+
+	void Init(UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences);
 
 	HRESULT ExecuteCurrentGPUWork(UINT doSwap);
 

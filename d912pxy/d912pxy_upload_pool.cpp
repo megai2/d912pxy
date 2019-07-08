@@ -25,21 +25,16 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_upload_pool.h"
 
-d912pxy_upload_pool::d912pxy_upload_pool(d912pxy_device * dev) : 
-	d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>(
-		dev, 
-		PXY_INNDER_UPLOAD_POOL_BITIGNORE, 
-		PXY_INNDER_UPLOAD_POOL_BITLIMIT, 
-		PXY_CFG_POOLING_UPLOAD_LIMITS, 
-		&d912pxy_s(pool_upload)
-	)
+d912pxy_upload_pool::d912pxy_upload_pool() : d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>()
 {
 
 }
 
 d912pxy_upload_pool::~d912pxy_upload_pool()
 {
-	d912pxy_s(pool_upload) = NULL;
+	
+
+	pRunning = 0;
 
 	if (memPool)
 		memPool->Release();
@@ -64,6 +59,15 @@ d912pxy_upload_pool::~d912pxy_upload_pool()
 	delete ctorLock;
 }
 
+void d912pxy_upload_pool::Init()
+{
+	d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>::Init(		
+		PXY_INNDER_UPLOAD_POOL_BITIGNORE,
+		PXY_INNDER_UPLOAD_POOL_BITLIMIT,
+		PXY_CFG_POOLING_UPLOAD_LIMITS	
+	);
+}
+
 d912pxy_upload_item * d912pxy_upload_pool::GetUploadObject(UINT size)
 {
 	d912pxy_upload_item * ret = NULL;
@@ -86,14 +90,14 @@ d912pxy_upload_item * d912pxy_upload_pool::AllocProc(UINT32 cat)
 {
 	d912pxy_upload_item * ret;
 
-	ret = new d912pxy_upload_item(d912pxy_s(dev), cat);
+	ret = new d912pxy_upload_item(cat);
 
 	return ret;
 }
 
 void d912pxy_upload_pool::EarlyInitProc()
 {
-	memPoolSize = d912pxy_s(config)->GetValueUI64(PXY_CFG_POOLING_UPLOAD_ALLOC_STEP) << 20;
+	memPoolSize = d912pxy_s.config.GetValueUI64(PXY_CFG_POOLING_UPLOAD_ALLOC_STEP) << 20;
 	memPool = NULL;
 
 	if (memPoolSize)
@@ -139,15 +143,15 @@ fallback:
 		{
 
 #ifdef ENABLE_METRICS		
-			d912pxy_s(metrics)->TrackUploadPoolUsage(memPoolSize >> 20);
-			d912pxy_s(metrics)->TrackUploadPoolUsage(0);
+			d912pxy_s.log.metrics.TrackUploadPoolUsage(memPoolSize >> 20);
+			d912pxy_s.log.metrics.TrackUploadPoolUsage(0);
 #endif
 			CreateMemPool();
 
 			memPoolOffset = 0;
 		}
 
-		HRESULT cprHR = d912pxy_s(DXDev)->CreatePlacedResource(
+		HRESULT cprHR = d912pxy_s.dx12.dev->CreatePlacedResource(
 			memPool,
 			memPoolOffset,
 			&rsDesc,
@@ -168,7 +172,7 @@ fallback:
 		ctorLock->Release();
 
 #ifdef ENABLE_METRICS		
-		d912pxy_s(metrics)->TrackUploadPoolUsage(memPoolOffset >> 20);
+		d912pxy_s.log.metrics.TrackUploadPoolUsage(memPoolOffset >> 20);
 #endif
 	}
 
@@ -184,21 +188,21 @@ void d912pxy_upload_pool::CreateMemPool()
 
 	const D3D12_HEAP_DESC heapDsc = {
 		memPoolSize,
-		d912pxy_s(dev)->GetResourceHeap(D3D12_HEAP_TYPE_UPLOAD),
+		d912pxy_s.dev.GetResourceHeap(D3D12_HEAP_TYPE_UPLOAD),
 		1 << PXY_INNDER_UPLOAD_POOL_BITIGNORE,
 		D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS
 	};
 
-	d912pxy_s(DXDev)->CreateHeap(
+	d912pxy_s.dx12.dev->CreateHeap(
 		&heapDsc,
 		IID_PPV_ARGS(&memPool)
 	);
 }
 
-d912pxy_upload_item::d912pxy_upload_item(d912pxy_device * dev, UINT8 icat) : d912pxy_comhandler(PXY_COM_OBJ_NOVTABLE, L"upload item")
+d912pxy_upload_item::d912pxy_upload_item(UINT8 icat) : d912pxy_comhandler(PXY_COM_OBJ_NOVTABLE, L"upload item")
 {
 	cat = icat;	
-	mRes = d912pxy_s(pool_upload)->MakeUploadBuffer(cat);
+	mRes = d912pxy_s.pool.upload.MakeUploadBuffer(cat);
 	LOG_ERR_THROW2(mRes->Map(0, 0, (void**)&mappedMemWofs), "upload pool memory map error on creation");
 }
 
@@ -219,7 +223,7 @@ void d912pxy_upload_item::UploadTarget(ID3D12Resource * res, UINT64 dofs, UINT64
 
 intptr_t d912pxy_upload_item::DPtr()
 {
-	//d912pxy_s(DXDev)->MakeResident(1, (ID3D12Pageable**)&mRes);
+	//d912pxy_s.dx12.dev->MakeResident(1, (ID3D12Pageable**)&mRes);
 
 	return (mappedMemWofs);
 }
@@ -246,12 +250,12 @@ void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height,
 
 UINT d912pxy_upload_item::FinalReleaseCB()
 {
-	if (d912pxy_s(pool_upload))
+	if (d912pxy_s.pool.upload.IsRunning())
 	{
-	//	d912pxy_s(DXDev)->Evict(1, (ID3D12Pageable**)&mRes);
+	//	d912pxy_s.dx12.dev->Evict(1, (ID3D12Pageable**)&mRes);
 
 		d912pxy_upload_item* tv = this;
-		d912pxy_s(pool_upload)->PoolRW(cat, &tv, 1);
+		d912pxy_s.pool.upload.PoolRW(cat, &tv, 1);
 		return 0;
 	}
 	else {
@@ -269,7 +273,7 @@ UINT32 d912pxy_upload_item::PooledAction(UINT32 use)
 
 	if (use)
 	{
-		mRes = d912pxy_s(pool_upload)->MakeUploadBuffer(cat);
+		mRes = d912pxy_s.pool.upload.MakeUploadBuffer(cat);
 		LOG_ERR_THROW2(mRes->Map(0, 0, (void**)&mappedMemWofs), "upload pool memory map error");
 	}
 	else {

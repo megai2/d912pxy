@@ -31,8 +31,10 @@ SOFTWARE.
 class d912pxy_shader_db : public d912pxy_noncom
 {
 public:
-	d912pxy_shader_db(d912pxy_device* dev);
+	d912pxy_shader_db();
 	~d912pxy_shader_db();
+
+	void Init();
 
 	d912pxy_shader_uid GetUID(DWORD* code, UINT32* len);		
 

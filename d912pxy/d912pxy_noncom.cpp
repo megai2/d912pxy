@@ -84,23 +84,18 @@ void d912pxy_noncom::ThrowErrorDbg(HRESULT hr, const char * msg)
 
 HRESULT d912pxy_noncom::com_GetDevice(d912pxy_com_object* obj, IDirect3DDevice9 ** ppDevice)
 {
-	*ppDevice = PXY_COM_CAST_(IDirect3DDevice9, d912pxy_s(dev));
+	*ppDevice = PXY_COM_CAST_(IDirect3DDevice9, &d912pxy_s.dev);
 	return D3D_OK;
 }
 
 void d912pxy_noncom::NonCom_Init(const wchar_t * logModule)
 {
-	d912pxy_s(log)->RegisterModule(logModule, &LGC_DEFAULT);
+	d912pxy_s.log.text.RegisterModule(logModule, &LGC_DEFAULT);
 
 	LOG_DBG_DTDM("new %s", logModule);
 
 #ifdef _DEBUG
 	LONG ouid = InterlockedIncrement(&g_ObjectsCounter);
-
-	if (ouid == 43710)
-	{
-		LOG_DBG_DTDM3("gotcha!");
-	}
 
 	LOG_DBG_DTDM("obj %u is %s", ouid, logModule);
 

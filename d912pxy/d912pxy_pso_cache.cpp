@@ -27,18 +27,50 @@ SOFTWARE.
 D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_pso_cache::cDscBase;
 UINT d912pxy_pso_cache::allowRealtimeChecks = 0;
 
-d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom( L"PSO cache"), d912pxy_thread("d912pxy pso compile", 0)
+d912pxy_pso_cache::d912pxy_pso_cache() 
 {
-	d912pxy_s(psoCache) = this;
+
+}
+
+d912pxy_pso_cache::~d912pxy_pso_cache()
+{
+	Stop();
+	delete psoCompileBuffer;
+
+	delete cacheIndexes;
+
+	/*UINT32 itemsToClean;
+
+	d912pxy_memtree_node* mtnp = cacheData->GetNodePool(&itemsToClean);
+
+	for (int i = 0; i != itemsToClean; ++i)
+	{
+		UINT64 cid = mtnp[i].contentId;
+		if (cid)
+		{
+			d912pxy_pso_cache_item* item = (d912pxy_pso_cache_item*)cid;
+
+			item->Release();
+		}
+	}
+
+	delete cacheData;*/
+}
+
+void d912pxy_pso_cache::Init()
+{
+	NonCom_Init(L"PSO cache");
+
+	InitThread("d912pxy pso compile", 0);
 
 	cacheIndexes = new d912pxy_memtree2(sizeof(d912pxy_trimmed_dx12_pso) - d912pxy_trimmed_dx12_pso_hash_offset, PXY_INNER_MAX_PSO_CACHE_NODES, 2);
 	cacheIncID = 0;
 
-	fileCacheFlags = (UINT8)d912pxy_s(config)->GetValueUI64(PXY_CFG_SDB_USE_PSO_KEY_CACHE);
+	fileCacheFlags = (UINT8)d912pxy_s.config.GetValueUI64(PXY_CFG_SDB_USE_PSO_KEY_CACHE);
 
 	cCPSO = NULL;
 
-	d912pxy_pso_cache::allowRealtimeChecks = d912pxy_s(config)->GetValueUI32(PXY_CFG_SDB_ALLOW_REALTIME_CHECKS);
+	d912pxy_pso_cache::allowRealtimeChecks = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ALLOW_REALTIME_CHECKS);
 
 	ZeroMemory(&d912pxy_pso_cache::cDscBase, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
@@ -166,32 +198,7 @@ d912pxy_pso_cache::d912pxy_pso_cache(d912pxy_device * dev) : d912pxy_noncom( L"P
 
 	dirty = 1;
 
-	psoCompileBuffer = new d912pxy_ringbuffer<d912pxy_pso_cache_item*>(0xFFFF, 0);	
-}
-
-d912pxy_pso_cache::~d912pxy_pso_cache()
-{
-	Stop();
-	delete psoCompileBuffer;
-
-	delete cacheIndexes;
-
-	/*UINT32 itemsToClean;
-
-	d912pxy_memtree_node* mtnp = cacheData->GetNodePool(&itemsToClean);
-
-	for (int i = 0; i != itemsToClean; ++i)
-	{
-		UINT64 cid = mtnp[i].contentId;
-		if (cid)
-		{
-			d912pxy_pso_cache_item* item = (d912pxy_pso_cache_item*)cid;
-
-			item->Release();
-		}
-	}
-
-	delete cacheData;*/
+	psoCompileBuffer = new d912pxy_ringbuffer<d912pxy_pso_cache_item*>(0xFFFF, 0);
 }
 
 void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
@@ -205,14 +212,14 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	switch (State)
 	{
 	case D3DRS_STENCILREF:
-		d912pxy_s(CMDReplay)->OMStencilRef(Value);
+		d912pxy_s.render.replay.OMStencilRef(Value);
 		DX9RSvalues[State] = Value;
 		break; //57,   /* Reference value used in stencil test */
 	case D3DRS_SCISSORTESTENABLE:
 		if (Value)
-			d912pxy_s(iframe)->RestoreScissor();
+			d912pxy_s.render.iframe.RestoreScissor();
 		else
-			d912pxy_s(iframe)->IgnoreScissor();
+			d912pxy_s.render.iframe.IgnoreScissor();
 		DX9RSvalues[State] = Value;
 		break;
 	case D3DRS_ZENABLE:
@@ -298,7 +305,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	case D3DRS_COLORWRITEENABLE:
 		{
-			d912pxy_s(iframe)->OptimizeZeroWriteRT(Value);
+			d912pxy_s.render.iframe.OptimizeZeroWriteRT(Value);
 			cDsc.BlendStateRT0.RenderTargetWriteMask = Value & 0xF;
 		}		
 		break; //168,  // per-channel write enable
@@ -409,7 +416,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	case D3DRS_SRGBWRITEENABLE:
 		DX9RSvalues[State] = Value;
-		//d912pxy_s(iframe)->TST()->SetTexStage(29, Value);
+		//d912pxy_s.render.iframe.TST()->SetTexStage(29, Value);
 		break;
 
 	case D3DRS_DEPTHBIAS:
@@ -442,7 +449,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	case D3DRS_ALPHAREF:
 	case D3DRS_ALPHAFUNC:
 		DX9RSvalues[State] = Value;
-		d912pxy_s(textureState)->SetTexture(31, (DX9RSvalues[D3DRS_ALPHATESTENABLE] & 1) | (DX9RSvalues[D3DRS_ALPHAFUNC] << 1) | (DX9RSvalues[D3DRS_ALPHAREF] << 5));
+		d912pxy_s.render.tex.SetTexture(31, (DX9RSvalues[D3DRS_ALPHATESTENABLE] & 1) | (DX9RSvalues[D3DRS_ALPHAFUNC] << 1) | (DX9RSvalues[D3DRS_ALPHAREF] << 5));
 		break;
 	case D3DRS_CLIPPLANEENABLE:
 	{
@@ -450,7 +457,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		if (!Value)
 		{
 			const float zvf4[4] = { 0, 0, 0, 0 };
-			d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLIP_P0, 1, (float*)zvf4);
+			d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLIP_P0, 1, (float*)zvf4);
 		}
 		break;
 	}
@@ -542,7 +549,7 @@ UINT d912pxy_pso_cache::Use()
 {
 	if (dirty)
 	{
-		d912pxy_s(CMDReplay)->PSORaw(&cDsc);
+		d912pxy_s.render.replay.PSORaw(&cDsc);
 
 		dirty = 0;		
 	} 
@@ -555,7 +562,7 @@ UINT d912pxy_pso_cache::UseCompiled(d912pxy_pso_cache_item * it)
 {	
 	if (it)
 	{
-		d912pxy_s(CMDReplay)->PSOCompiled(it);
+		d912pxy_s.render.replay.PSOCompiled(it);
 		cCPSO = it;
 
 		dirty = 0;
@@ -568,7 +575,7 @@ UINT d912pxy_pso_cache::UseCompiled(d912pxy_pso_cache_item * it)
 
 UINT d912pxy_pso_cache::UseWithFeedbackPtr(void ** feedback)
 {
-	d912pxy_s(CMDReplay)->PSORawFeedback(&cDsc, feedback);
+	d912pxy_s.render.replay.PSORawFeedback(&cDsc, feedback);
 
 	//megai2: force dirty to reset PSO to current state data 
 	dirty = 1;	
@@ -596,8 +603,8 @@ d912pxy_pso_cache_item* d912pxy_pso_cache::UseByDesc(d912pxy_trimmed_dx12_pso* d
 
 	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
 		return NULL;	
-			
-	d912pxy_pso_cache_item* item = d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheData((UINT32)id, dsc);
+
+	d912pxy_pso_cache_item* item = d912pxy_s.render.db.shader.GetPair(dsc->VS, dsc->PS)->GetPSOCacheData((UINT32)id, dsc);
 
 	return item;
 }
@@ -624,7 +631,7 @@ d912pxy_pso_cache_item * d912pxy_pso_cache::GetByDescMT(d912pxy_trimmed_dx12_pso
 	if (!dsc->VS || !dsc->PS || !dsc->InputLayout)
 		return NULL;
 
-	return d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc);
+	return d912pxy_s.render.db.shader.GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc);
 }
 
 ID3D12PipelineState* d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso * dsc, UINT32 frameStartTime)
@@ -652,7 +659,7 @@ ID3D12PipelineState* d912pxy_pso_cache::UseByDescMT(d912pxy_trimmed_dx12_pso * d
 		return NULL;
 	}
 	
-	return d912pxy_s(sdb)->GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc)->GetPtr();
+	return d912pxy_s.render.db.shader.GetPair(dsc->VS, dsc->PS)->GetPSOCacheDataMT((UINT32)id, dsc)->GetPtr();
 }
 
 void d912pxy_pso_cache::SetRootSignature(ComPtr<ID3D12RootSignature> sig)
@@ -663,7 +670,7 @@ void d912pxy_pso_cache::SetRootSignature(ComPtr<ID3D12RootSignature> sig)
 
 void d912pxy_pso_cache::MarkDirty(UINT force)
 {
-	frameCl = d912pxy_s(GPUcl)->GID(CLG_SEQ);
+	frameCl = d912pxy_s.dx12.cl->GID(CLG_SEQ);
 
 	dirty |= 1 | (force < 1);
 }
@@ -731,7 +738,7 @@ void d912pxy_pso_cache::LoadCachedData()
 	if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_READ)
 	{
 		UINT fsz = 0;
-		UINT32* max_ = (UINT32*)d912pxy_s(vfs)->LoadFileH(PXY_PSO_CACHE_KEYFILE_NAME, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS); // Alrai: I had to change the name of max as it was being considered a macro in PXY_MALLOC.
+		UINT32* max_ = (UINT32*)d912pxy_s.vfs.LoadFileH(PXY_PSO_CACHE_KEYFILE_NAME, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS); // Alrai: I had to change the name of max as it was being considered a macro in PXY_MALLOC.
 
 		psoKeyCache = NULL;
 
@@ -743,7 +750,7 @@ void d912pxy_pso_cache::LoadCachedData()
 
 			for (int i = 1; i != (*max_+1); ++i)
 			{
-				d912pxy_serialized_pso_key* psoTrimmedDsc = (d912pxy_serialized_pso_key*)d912pxy_s(vfs)->LoadFileH(i+1, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS);
+				d912pxy_serialized_pso_key* psoTrimmedDsc = (d912pxy_serialized_pso_key*)d912pxy_s.vfs.LoadFileH(i+1, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS);
 
 				if (fsz != sizeof(d912pxy_serialized_pso_key))
 				{
@@ -761,9 +768,9 @@ void d912pxy_pso_cache::LoadCachedData()
 				psoKeyCache[i] = psoTrimmedDsc;
 			}
 
-			if (d912pxy_s(sdb)->GetPrecompileFlag() & PXY_SDB_PSO_PRECOMPILE_LOAD)
+			if (d912pxy_s.render.db.shader.GetPrecompileFlag() & PXY_SDB_PSO_PRECOMPILE_LOAD)
 			{
-				d912pxy_memtree2* mt = d912pxy_s(vfs)->GetHeadTree(PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+				d912pxy_memtree2* mt = d912pxy_s.vfs.GetHeadTree(PXY_VFS_BID_PSO_PRECOMPILE_LIST);
 
 				mt->Begin();
 
@@ -772,7 +779,7 @@ void d912pxy_pso_cache::LoadCachedData()
 					UINT32 entryOffset = (UINT32)mt->CurrentCID();
 					if (entryOffset != 0)
 					{
-						d912pxy_shader_pair_cache_entry* entry = (d912pxy_shader_pair_cache_entry*)d912pxy_s(vfs)->GetCachePointer(entryOffset, PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+						d912pxy_shader_pair_cache_entry* entry = (d912pxy_shader_pair_cache_entry*)d912pxy_s.vfs.GetCachePointer(entryOffset, PXY_VFS_BID_PSO_PRECOMPILE_LIST);
 
 						d912pxy_shader* vs = NULL;
 						d912pxy_shader* ps = NULL;
@@ -800,13 +807,13 @@ void d912pxy_pso_cache::LoadCachedData()
 								memcpy(dscMem, psoKeyCache[i]->staticPsoDesc, d912pxy_trimmed_pso_static_data_size);
 
 								d912pxy_vdecl* vdcl;
-								d912pxy_s(dev)->CreateVertexDeclaration(psoKeyCache[i]->declData, (IDirect3DVertexDeclaration9**)&vdcl);
+								d912pxy_s.dev.CreateVertexDeclaration(psoKeyCache[i]->declData, (IDirect3DVertexDeclaration9**)&vdcl);
 
 								dsc.PS = ps;
 								dsc.VS = vs;
 								dsc.InputLayout = vdcl;
 
-								d912pxy_shader_pair* pair = d912pxy_s(sdb)->GetPair(vs, ps);
+								d912pxy_shader_pair* pair = d912pxy_s.render.db.shader.GetPair(vs, ps);
 
 								pair->PrecompilePSO(i, &dsc);
 
@@ -851,8 +858,8 @@ void d912pxy_pso_cache::SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc
 		memcpy(cacheEntry.declData, dsc->InputLayout->GetDeclarationPtr(&unused), sizeof(D3DVERTEXELEMENT9) * PXY_INNER_MAX_VDECL_LEN);
 		memcpy(cacheEntry.staticPsoDesc, (void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset), d912pxy_trimmed_pso_static_data_size);
 
-		d912pxy_s(vfs)->ReWriteFileH(id + 1, &cacheEntry, sizeof(d912pxy_serialized_pso_key), PXY_VFS_BID_PSO_CACHE_KEYS);
-		d912pxy_s(vfs)->ReWriteFileH(PXY_PSO_CACHE_KEYFILE_NAME, &cacheIncID, 4, PXY_VFS_BID_PSO_CACHE_KEYS);
+		d912pxy_s.vfs.ReWriteFileH(id + 1, &cacheEntry, sizeof(d912pxy_serialized_pso_key), PXY_VFS_BID_PSO_CACHE_KEYS);
+		d912pxy_s.vfs.ReWriteFileH(PXY_PSO_CACHE_KEYFILE_NAME, &cacheIncID, 4, PXY_VFS_BID_PSO_CACHE_KEYS);
 	}
 }
 
@@ -891,7 +898,7 @@ d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_trimmed_dx12_pso* sDsc) :
 
 d912pxy_pso_cache_item * d912pxy_pso_cache_item::d912pxy_pso_cache_item_com(d912pxy_trimmed_dx12_pso * sDsc)
 {
-	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_PSO_ITEM);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_PSO_ITEM);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY);
 
 	new (&ret->pso_item)d912pxy_pso_cache_item(sDsc);
@@ -985,7 +992,7 @@ void d912pxy_pso_cache_item::CreatePSO()
 	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", desc->VS->GetID(), desc->PS->GetID());
 
 	try {
-		LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj)), "PSO item are not created");
+		LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj)), "PSO item are not created");
 	}
 	catch (...)
 	{
@@ -1014,8 +1021,8 @@ void d912pxy_pso_cache_item::CreatePSODerived(UINT64 derivedAlias)
 	void* shdDerCSO[2];
 	UINT shdDerCSOSz[2];
 
-	shdDerCSO[0] = d912pxy_s(vfs)->LoadFileH(derivedAlias, &shdDerCSOSz[0], PXY_VFS_BID_DERIVED_CSO_VS);
-	shdDerCSO[1] = d912pxy_s(vfs)->LoadFileH(derivedAlias, &shdDerCSOSz[1], PXY_VFS_BID_DERIVED_CSO_PS);
+	shdDerCSO[0] = d912pxy_s.vfs.LoadFileH(derivedAlias, &shdDerCSOSz[0], PXY_VFS_BID_DERIVED_CSO_VS);
+	shdDerCSO[1] = d912pxy_s.vfs.LoadFileH(derivedAlias, &shdDerCSOSz[1], PXY_VFS_BID_DERIVED_CSO_PS);
 
 	d912pxy_pso_cache::cDscBase.VS.BytecodeLength = shdDerCSOSz[0];
 	d912pxy_pso_cache::cDscBase.PS.BytecodeLength = shdDerCSOSz[1];
@@ -1030,14 +1037,14 @@ void d912pxy_pso_cache_item::CreatePSODerived(UINT64 derivedAlias)
 
 void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 {
-	d912pxy_shader_pair_hash_type pairUID = d912pxy_s(sdb)->GetPairUID(desc->VS, desc->PS);
-	UINT32 psoKey = d912pxy_s(psoCache)->GetHashedKey(desc);
+	d912pxy_shader_pair_hash_type pairUID = d912pxy_s.render.db.shader.GetPairUID(desc->VS, desc->PS);
+	UINT32 psoKey = d912pxy_s.render.db.pso.GetHashedKey(desc);
 	UINT64 derivedAlias = pairUID ^ (UINT64)psoKey;
 
 	LOG_DBG_DTDM3("DX9 PSO realtime check emulation for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
 
 	//megai2: both derived cso files are present, just load them to pso and compile on dx12 side
-	if (d912pxy_s(vfs)->IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_PS) && d912pxy_s(vfs)->IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_VS))
+	if (d912pxy_s.vfs.IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_PS) && d912pxy_s.vfs.IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_VS))
 	{
 		CreatePSODerived(derivedAlias);
 		return;
@@ -1046,8 +1053,8 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	char* shdSrc[2];
 	UINT shdSrcSz[2];
 
-	shdSrc[0] = (char*)d912pxy_s(vfs)->LoadFileH(desc->VS->GetID(), &shdSrcSz[0], PXY_VFS_BID_SHADER_SOURCES);
-	shdSrc[1] = (char*)d912pxy_s(vfs)->LoadFileH(desc->PS->GetID(), &shdSrcSz[1], PXY_VFS_BID_SHADER_SOURCES);
+	shdSrc[0] = (char*)d912pxy_s.vfs.LoadFileH(desc->VS->GetID(), &shdSrcSz[0], PXY_VFS_BID_SHADER_SOURCES);
+	shdSrc[1] = (char*)d912pxy_s.vfs.LoadFileH(desc->PS->GetID(), &shdSrcSz[1], PXY_VFS_BID_SHADER_SOURCES);
 
 	if (!shdSrc[0] || !shdSrc[1])
 	{
@@ -1241,8 +1248,8 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	if ((!bcVS.blob) || (!bcPS.blob))
 		LOG_ERR_DTDM("PSO RCE fail for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
 
-	d912pxy_s(vfs)->WriteFileH(derivedAlias, bcVS.code, (UINT)bcVS.sz, PXY_VFS_BID_DERIVED_CSO_VS);
-	d912pxy_s(vfs)->WriteFileH(derivedAlias, bcPS.code, (UINT)bcPS.sz, PXY_VFS_BID_DERIVED_CSO_PS);
+	d912pxy_s.vfs.WriteFileH(derivedAlias, bcVS.code, (UINT)bcVS.sz, PXY_VFS_BID_DERIVED_CSO_VS);
+	d912pxy_s.vfs.WriteFileH(derivedAlias, bcPS.code, (UINT)bcPS.sz, PXY_VFS_BID_DERIVED_CSO_PS);
 
 	delete replVS;
 	delete replPS;

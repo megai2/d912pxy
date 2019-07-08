@@ -23,6 +23,7 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "d912pxy_replay_base.h"
 
 #ifdef _DEBUG
 	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[DbgStackGet()]; it->type = x
@@ -34,29 +35,42 @@ SOFTWARE.
 	#define REPLAY_STACK_IGNORE return 0
 #endif
 
-d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
+d912pxy_replay::d912pxy_replay() 
 {
-	d912pxy_s(CMDReplay) = this;
+
+}
+
+d912pxy_replay::~d912pxy_replay()
+{	
+	if (numThreads > 1)
+		delete gpuw_que;
+}
+
+void d912pxy_replay::Init()
+{
+	NonCom_Init(L"replay mt");
+	
+	stack = (d912pxy_replay_item*)malloc(sizeof(d912pxy_replay_item)*PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
 
 	stackTop = 0;
 	stopMarker = 0;
 
-	numThreads = (UINT)d912pxy_s(config)->GetValueUI64(PXY_CFG_MT_REPLAY_THREADS);
+	numThreads = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_MT_REPLAY_THREADS);
 
-	dev->AddActiveThreads(numThreads);
+	d912pxy_s.dev.AddActiveThreads(numThreads);
 
 	for (int i = 0; i != numThreads; ++i)
-	{		
+	{
 		d912pxy_gpu_cmd_list_group clg = (d912pxy_gpu_cmd_list_group)(CLG_RP1 + i);
-		
-		char thrdName[255];		
+
+		char thrdName[255];
 		sprintf(thrdName, "d912pxy replay %u", i);
-		
-		d912pxy_s(GPUque)->EnableGID(clg, PXY_INNER_CLG_PRIO_REPLAY + i);
 
-		threads[i] = new d912pxy_replay_thread(dev, clg, thrdName);
+		d912pxy_s.dx12.que.EnableGID(clg, PXY_INNER_CLG_PRIO_REPLAY + i);
 
-		transitData[i].saved = 0;		
+		threads[i] = new d912pxy_replay_thread(clg, thrdName);
+
+		transitData[i].saved = 0;
 	}
 
 	ReRangeThreads(PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
@@ -78,7 +92,7 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 	replay_handlers[DRPL_RPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSO;
 	replay_handlers[DRPL_RPSF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSF;
 	replay_handlers[DRPL_CPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_CPSO;
-	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;	
+	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;
 	replay_handlers[DRPL_PRMT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_PRMT;
 	replay_handlers[DRPL_QUMA] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_QUMA;
 
@@ -91,13 +105,6 @@ d912pxy_replay::d912pxy_replay(d912pxy_device * dev) : d912pxy_replay_base(dev)
 		gpuw_que = NULL;
 		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;
 	}
-
-}
-
-d912pxy_replay::~d912pxy_replay()
-{	
-	if (numThreads > 1)
-		delete gpuw_que;
 }
 
 UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
@@ -496,7 +503,7 @@ void d912pxy_replay::Free()
 			threads[i]->Stop();
 		delete threads[i];
 	}
-	delete this;
+	this->~d912pxy_replay();
 }
 
 UINT d912pxy_replay::GetStackTop()
@@ -562,22 +569,22 @@ void d912pxy_replay::SaveCLState(UINT thread)
 	trd->bfacStk = lastBFactorStk;
 	trd->srefStk = lastSRefStk;
 
-	trd->surfBind[0] = d912pxy_s(iframe)->GetBindedSurface(0);
-	trd->surfBind[1] = d912pxy_s(iframe)->GetBindedSurface(1);
+	trd->surfBind[0] = d912pxy_s.render.iframe.GetBindedSurface(0);
+	trd->surfBind[1] = d912pxy_s.render.iframe.GetBindedSurface(1);
 
-	trd->indexBuf = d912pxy_s(iframe)->GetIBuf();
+	trd->indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
 	for (int i = 0; i!= PXY_INNER_REPLAY_THREADS_MAX;++i)
-		trd->streams[i] = d912pxy_s(iframe)->GetStreamSource(i);
+		trd->streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
 
-	trd->pso = *d912pxy_s(psoCache)->GetCurrentDsc();
+	trd->pso = *d912pxy_s.render.db.pso.GetCurrentDsc();
 
-	trd->main_viewport = *d912pxy_s(iframe)->GetViewport();
-	trd->main_scissor = *d912pxy_s(iframe)->GetScissorRect();
+	trd->main_viewport = *d912pxy_s.render.iframe.GetViewport();
+	trd->main_scissor = *d912pxy_s.render.iframe.GetScissorRect();
 
 	trd->saved = 1;
 
-	trd->cpso = d912pxy_s(psoCache)->GetCurrentCPSO();
+	trd->cpso = d912pxy_s.render.db.pso.GetCurrentCPSO();
 }
 
 #ifdef _DEBUG
@@ -697,7 +704,7 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 	if (!*context)
 		return;
 
-	d912pxy_s(batch)->PreDIP(cl, it->batchId);
+	d912pxy_s.render.batch.PreDIP(cl, it->batchId);
 
 	cl->DrawIndexedInstanced(
 		it->IndexCountPerInstance,
@@ -759,7 +766,7 @@ void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommand
 
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context)
 {
-	ID3D12PipelineState * pso = d912pxy_s(psoCache)->UseByDescMT(&it->rawState, 0);
+	ID3D12PipelineState * pso = d912pxy_s.render.db.pso.UseByDescMT(&it->rawState, 0);
 		
 	if (pso && (*context != pso))					
 		cl->SetPipelineState(pso);	
@@ -779,7 +786,7 @@ void d912pxy_replay::RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCom
 
 void d912pxy_replay::RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl, void** unused)
 {	
-	*it->feedbackPtr = d912pxy_s(psoCache)->GetByDescMT(&it->rawState, 0);	
+	*it->feedbackPtr = d912pxy_s.render.db.pso.GetByDescMT(&it->rawState, 0);	
 }
 
 void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void** unused)
@@ -807,7 +814,7 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 
 void d912pxy_replay::RHA_GPUW(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void ** unused)
 {
-	d912pxy_s(batch)->GPUWriteControl(it->streamIdx, it->offset, it->size, it->bn);
+	d912pxy_s.render.batch.GPUWriteControl(it->streamIdx, it->offset, it->size, it->bn);
 }
 
 void d912pxy_replay::RHA_GPUW_MT(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void ** unused)
@@ -825,13 +832,4 @@ void d912pxy_replay::RHA_PRMT(d912pxy_replay_primitive_topology * it, ID3D12Grap
 void d912pxy_replay::RHA_QUMA(d912pxy_replay_query_mark * it, ID3D12GraphicsCommandList * cl, void ** unused)
 {
 	it->obj->QueryMark(it->start, cl);
-}
-
-d912pxy_replay_base::d912pxy_replay_base(d912pxy_device * dev) : d912pxy_noncom( L"replay")
-{
-
-}
-
-d912pxy_replay_base::~d912pxy_replay_base()
-{
 }

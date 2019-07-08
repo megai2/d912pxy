@@ -119,15 +119,15 @@ SOFTWARE.
 
 #ifdef _DEBUG
 
-#define PXY_MALLOC(pointer, size, tcast) (d912pxy_s(memMgr)->pxy_malloc_dbg((void**)&pointer, size, __FILE__, __LINE__, __FUNCTION__))
-#define PXY_REALLOC(pointer, size, tcast) (d912pxy_s(memMgr)->pxy_realloc_dbg((void**)&pointer, size, __FILE__, __LINE__, __FUNCTION__))
-#define PXY_FREE(pointer) (d912pxy_s(memMgr)->pxy_free_dbg((void**)&pointer, __FILE__, __LINE__, __FUNCTION__))
+#define PXY_MALLOC(pointer, size, tcast) (d912pxy_s.mem.pxy_malloc_dbg((void**)&pointer, size, __FILE__, __LINE__, __FUNCTION__))
+#define PXY_REALLOC(pointer, size, tcast) (d912pxy_s.mem.pxy_realloc_dbg((void**)&pointer, size, __FILE__, __LINE__, __FUNCTION__))
+#define PXY_FREE(pointer) (d912pxy_s.mem.pxy_free_dbg((void**)&pointer, __FILE__, __LINE__, __FUNCTION__))
 
 #else
 
-#define PXY_MALLOC(pointer, size, tcast) pointer = (tcast)(d912pxy_s(memMgr)->pxy_malloc(size))
-#define PXY_REALLOC(pointer, size, tcast) pointer = (tcast)(d912pxy_s(memMgr)->pxy_realloc((void*)pointer, size))
-#define PXY_FREE(pointer) (d912pxy_s(memMgr)->pxy_free((void*)pointer))
+#define PXY_MALLOC(pointer, size, tcast) pointer = (tcast)(d912pxy_s.mem.pxy_malloc(size))
+#define PXY_REALLOC(pointer, size, tcast) pointer = (tcast)(d912pxy_s.mem.pxy_realloc((void*)pointer, size))
+#define PXY_FREE(pointer) (d912pxy_s.mem.pxy_free((void*)pointer))
 
 #endif
 
@@ -149,16 +149,16 @@ SOFTWARE.
 //metrics macros =======================
 
 #ifdef ENABLE_METRICS
-	#define FRAME_METRIC_CLEANUPS(a) d912pxy_s(metrics)->TrackCleanupCount(a);
-	#define FRAME_METRIC_DHEAP(a,b) d912pxy_s(metrics)->TrackDHeapSlots(a,b);
-	#define FRAME_METRIC_EXEC(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_EXEC);
-	#define FRAME_METRIC_SYNC(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC);
-	#define FRAME_METRIC_SYNC_WAKE(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC_WAKE);
-	#define FRAME_METRIC_THREAD(a,b) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_THREAD_TEX+b);
-	#define FRAME_METRIC_PRESENT(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_PREP);
-	#define FRAME_METRIC_RESIDENCY(a) d912pxy_s(metrics)->TrackIFrameTime(a, PXY_METRICS_IFRAME_RESIDENCY);
-	#define API_OVERHEAD_TRACK_START(a) d912pxy_s(metrics)->TrackAPIOverheadStart(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);
-	#define API_OVERHEAD_TRACK_END(a) d912pxy_s(metrics)->TrackAPIOverheadEnd(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);		
+	#define FRAME_METRIC_CLEANUPS(a) d912pxy_s.log.metrics.TrackCleanupCount(a);
+	#define FRAME_METRIC_DHEAP(a,b) d912pxy_s.log.metrics.TrackDHeapSlots(a,b);
+	#define FRAME_METRIC_EXEC(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_EXEC);
+	#define FRAME_METRIC_SYNC(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC);
+	#define FRAME_METRIC_SYNC_WAKE(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC_WAKE);
+	#define FRAME_METRIC_THREAD(a,b) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_THREAD_TEX+b);
+	#define FRAME_METRIC_PRESENT(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_PREP);
+	#define FRAME_METRIC_RESIDENCY(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_RESIDENCY);
+	#define API_OVERHEAD_TRACK_START(a) d912pxy_s.log.metrics.TrackAPIOverheadStart(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);
+	#define API_OVERHEAD_TRACK_END(a) d912pxy_s.log.metrics.TrackAPIOverheadEnd(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);		
 #else 
 	#define FRAME_METRIC_CLEANUPS(a)
 	#define FRAME_METRIC_DHEAP(a,b)
@@ -178,22 +178,22 @@ SOFTWARE.
 	#define TM(i_pStr)         L##i_pStr
 #endif
 
-#define LOG_INFO_DTDM(fmt, ...) (d912pxy_s(log)->_PXY_LOG_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#define LOG_WARN_DTDM(fmt, ...) (d912pxy_s(log)->_PXY_LOG_WARNING(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-#define LOG_ERR_DTDM(fmt, ...) (d912pxy_s(log)->_PXY_LOG_ERROR(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+#define LOG_INFO_DTDM(fmt, ...) (d912pxy_s.log.text._PXY_LOG_INFO(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+#define LOG_WARN_DTDM(fmt, ...) (d912pxy_s.log.text._PXY_LOG_WARNING(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+#define LOG_ERR_DTDM(fmt, ...) (d912pxy_s.log.text._PXY_LOG_ERROR(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 #define LOG_INFO_DTDM2(code, fmt, ...) code; LOG_INFO_DTDM(fmt, __VA_ARGS__)
 
 #ifdef ENABLE_DEBUG_LOGGING
 	#ifdef _DEBUG
-		#define LOG_DBG_DTDM(fmt, ...) ;//(d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM2(fmt, ...) ;//(d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM3(fmt, ...) (d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM(fmt, ...) ;//(d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM2(fmt, ...) ;//(d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM3(fmt, ...) (d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 		#define LOG_DX_SET_NAME(obj, val) obj->SetName(val)
         #define LOG_ASSERT(cnd, text) if (!cnd) LOG_ERR_THROW2(-1, text)
 	#else 
-		#define LOG_DBG_DTDM(fmt, ...) (d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM2(fmt, ...) (d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
-		#define LOG_DBG_DTDM3(fmt, ...) (d912pxy_s(log)->_PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM(fmt, ...) (d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM2(fmt, ...) (d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
+		#define LOG_DBG_DTDM3(fmt, ...) (d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 		#define LOG_DX_SET_NAME(obj, val) obj->SetName(val)
 		#define LOG_ASSERT(cnd, text) if (!cnd) LOG_ERR_THROW2(-1, text)
 	#endif
@@ -315,34 +315,4 @@ static const wchar_t* d912pxy_gpu_cmd_list_group_name [] = {
 #define PXY_INSTANCE_PAR
 #define PXY_INSTANCE_PASS 
 
-class d912pxy_global_objects {
-public:
-	d912pxy_global_objects() {  };
-	~d912pxy_global_objects() {  };
-
-	static d912pxy_shader_db* sdb;
-	static d912pxy_vstream_pool* pool_vstream;
-	static d912pxy_surface_pool* pool_surface;
-	static d912pxy_upload_pool* pool_upload;
-	static d912pxy_cleanup_thread* thread_cleanup;
-	static d912pxy_iframe* iframe;
-	static d912pxy_gpu_que* GPUque;
-	static d912pxy_gpu_cmd_list* GPUcl;
-	static ID3D12Device* DXDev;
-	static d912pxy_replay_base* CMDReplay;
-	static d912pxy_texture_state* textureState;
-	static d912pxy_pso_cache* psoCache;
-	static d912pxy_texture_loader* texloadThread;
-	static d912pxy_buffer_loader* bufloadThread;
-	static d912pxy_batch* batch;	
-	static d912pxy_vfs* vfs;
-	static d912pxy_device* dev;
-	static d912pxy_metrics* metrics;
-	static d912pxy_config* config;
-	static d912pxy_log* log;
-	static d912pxy_mem_mgr* memMgr;
-	static d912pxy_com_mgr* comMgr;
-};
-
-#define d912pxy_s(a) d912pxy_global_objects::a
-#define d912pxy_s_dcl(a,t) t* d912pxy_global_objects::a = 0;
+#define d912pxy_s d912pxy_global::instance

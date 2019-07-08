@@ -71,12 +71,12 @@ HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 	swapOpLock.Hold();
 
 	m_dupEmul->OnFrameEnd();
-	d912pxy_s(iframe)->End();
-	d912pxy_s(GPUque)->Flush(0);
+	d912pxy_s.render.iframe.End();
+	d912pxy_s.dx12.que.Flush(0);
 
 	HRESULT ret = swapchains[0]->SetPresentParameters(pPresentationParameters);
 	
-	d912pxy_s(iframe)->Start();
+	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
 
@@ -94,13 +94,13 @@ HRESULT d912pxy_device::InnerPresentExecute()
 	swapOpLock.Hold();
 
 	m_dupEmul->OnFrameEnd();
-	d912pxy_s(iframe)->End();
+	d912pxy_s.render.iframe.End();
 
 	API_OVERHEAD_TRACK_END(0)
 	FRAME_METRIC_PRESENT(0)
 
 	LOG_DBG_DTDM2("Present Exec GPU");
-	return d912pxy_s(GPUque)->ExecuteCommands(1);
+	return d912pxy_s.dx12.que.ExecuteCommands(1);
 }
 
 void d912pxy_device::InnerPresentFinish()
@@ -110,7 +110,7 @@ void d912pxy_device::InnerPresentFinish()
 	FRAME_METRIC_PRESENT(1)
 	API_OVERHEAD_TRACK_START(0)
 
-	d912pxy_s(iframe)->Start();
+	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
 
@@ -124,8 +124,8 @@ HRESULT d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, 
 	HRESULT ret = InnerPresentExecute();
 
 #ifdef ENABLE_METRICS
-	d912pxy_s(metrics)->TrackDrawCount(d912pxy_s(iframe)->GetBatchCount());
-	d912pxy_s(metrics)->FlushIFrameValues();	
+	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.iframe.GetBatchCount());
+	d912pxy_s.log.metrics.FlushIFrameValues();	
 #endif 
 	
 	InnerPresentFinish();
@@ -137,11 +137,11 @@ HRESULT d912pxy_device::Present_PG(const RECT * pSourceRect, const RECT * pDestR
 {
 	HRESULT ret = InnerPresentExecute();
 
-	perfGraph->RecordPresent(d912pxy_s(iframe)->GetBatchCount());
+	perfGraph->RecordPresent(d912pxy_s.render.iframe.GetBatchCount());
 
 #ifdef ENABLE_METRICS
-	d912pxy_s(metrics)->TrackDrawCount(d912pxy_s(iframe)->GetBatchCount());
-	d912pxy_s(metrics)->FlushIFrameValues();
+	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.iframe.GetBatchCount());
+	d912pxy_s.log.metrics.FlushIFrameValues();
 #endif s
 
 	InnerPresentFinish();

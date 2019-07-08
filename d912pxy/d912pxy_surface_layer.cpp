@@ -99,7 +99,7 @@ D912PXY_METHOD_IMPL_NC(UnlockRect)(THIS)
 
 	if (!lockDepth)
 	{
-		d912pxy_s(texloadThread)->IssueUpload(&base->surface, surfMem, subres);
+		d912pxy_s.thread.texld.IssueUpload(&base->surface, surfMem, subres);
 	}
 
 	return D3D_OK;
@@ -126,7 +126,7 @@ void * d912pxy_surface_layer::SurfacePixel(UINT32 x, UINT32 y)
 
 d912pxy_surface_layer * d912pxy_surface_layer::d912pxy_surface_layer_com(d912pxy_com_object * iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix)
 {
-	d912pxy_com_object* ret = d912pxy_s(comMgr)->AllocateComObj(PXY_COM_OBJ_SURFACE_LAYER);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SURFACE_LAYER);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE_LAYER);
 
 	new (&ret->layer)d912pxy_surface_layer(iBase, iSubres, iBSize, iWPitch, iWidth, imemPerPix);
@@ -137,5 +137,5 @@ d912pxy_surface_layer * d912pxy_surface_layer::d912pxy_surface_layer_com(d912pxy
 void d912pxy_surface_layer::DeAllocate(d912pxy_surface_layer * obj)
 {
 	obj->~d912pxy_surface_layer();
-	d912pxy_s(comMgr)->DeAllocateComObj(PXY_COM_CAST_(d912pxy_com_object, obj));
+	d912pxy_s.com.DeAllocateComObj(PXY_COM_CAST_(d912pxy_com_object, obj));
 }
