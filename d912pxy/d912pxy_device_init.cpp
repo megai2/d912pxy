@@ -193,7 +193,7 @@ void d912pxy_device::InitComPatches()
 
 	if (d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET))
 	{
-		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETRENDERSTATE, &d912pxy_device::com_SetRenderTarget_Compat);		
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETRENDERTARGET, &d912pxy_device::com_SetRenderTarget_Compat);		
 	}
 
 	if (d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_CPU_API_REDUCTION))
