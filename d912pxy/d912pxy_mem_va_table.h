@@ -57,6 +57,10 @@ public:
 	d912pxy_mem_va_table_obj_id ObjIdFromAdr(void* obj);
 	d912pxy_mem_va_table_obj_id ObjIdFromAdr2(void* obj, UINT64 type);
 
+	void* GetObj(UINT64 type, d912pxy_mem_va_table_obj_id id);
+
+	intptr_t GetBaseAdr();
+
 private:
 	intptr_t baseAdr;
 	UINT64 entryCount;

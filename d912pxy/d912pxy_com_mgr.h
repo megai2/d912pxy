@@ -59,6 +59,10 @@ public:
 	d912pxy_com_object* AllocateComObj(d912pxy_com_obj_typeid type);
 	void DeAllocateComObj(d912pxy_com_object* obj);
 
+	d912pxy_com_object* GetComObject(d912pxy_com_obj_typeid type, d912pxy_mem_va_table_obj_id id);
+
+	d912pxy_com_object* GetComObjectByLowAdr(UINT32 lowAdr);
+
 private:
 	d912pxy_mem_va_table table;
 };

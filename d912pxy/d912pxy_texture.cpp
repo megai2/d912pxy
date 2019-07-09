@@ -34,7 +34,6 @@ d912pxy_texture::d912pxy_texture(UINT Width, UINT Height, UINT Levels, DWORD Usa
 	LOG_DBG_DTDM("tex usage is %u", Usage);
 
 	srvIDc[1] = (Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL);
-	srvIDc[0] = 0;
 
 	if (m_levels != 0)
 		baseSurface = d912pxy_s.pool.surface.GetSurface(Width, Height, Format, m_levels, 1, Usage, &srvIDc[0]);
@@ -48,7 +47,7 @@ d912pxy_texture::d912pxy_texture(UINT Width, UINT Height, UINT Levels, DWORD Usa
 
 d912pxy_texture * d912pxy_texture::d912pxy_texture_com(UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format)
 {
-	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_TEXTURE);
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(((Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL)) ? PXY_COM_OBJ_TEXTURE_RTDS : PXY_COM_OBJ_TEXTURE);
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_TEXTURE_2D);
 
 	new (&ret->tex_2d)d912pxy_texture(Width, Height, Levels, Usage, Format);

@@ -50,6 +50,7 @@ public:
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDHeapHandle();
 	UINT GetSRVHeapId();
+	UINT GetSRVHeapIdRTDS();
 	d912pxy_surface_layer* GetLayer(UINT32 mip, UINT32 ar);
 	D3DSURFACE_DESC GetDX9DescAtLevel(UINT level);
 

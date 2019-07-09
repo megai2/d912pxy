@@ -47,11 +47,8 @@ d912pxy_ctexture::d912pxy_ctexture(UINT edgeLength, UINT Levels, DWORD Usage, D3
 		faceSurfaces[i] = baseSurface;
 	}
 
-	srvIDc[1] = (Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL);
-	srvIDc[0] = 0;	
-	
-	if (!srvIDc[1])
-		srvIDc[0] = baseSurface->GetSRVHeapId();
+	srvIDc[1] = 0;	
+	srvIDc[0] = baseSurface->GetSRVHeapId();
 }
 
 

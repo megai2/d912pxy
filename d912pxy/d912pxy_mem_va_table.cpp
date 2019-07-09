@@ -166,3 +166,15 @@ d912pxy_mem_va_table_obj_id d912pxy_mem_va_table::ObjIdFromAdr2(void * obj, UINT
 {
 	return (d912pxy_mem_va_table_obj_id)(((intptr_t)obj & objMask) / table[type].itemSize);
 }
+
+void * d912pxy_mem_va_table::GetObj(UINT64 type, d912pxy_mem_va_table_obj_id id)
+{
+	intptr_t groupBase = baseAdr + type * entryBase;
+
+	return (void*)(groupBase + id * table[type].itemSize);
+}
+
+intptr_t d912pxy_mem_va_table::GetBaseAdr()
+{
+	return baseAdr;
+}

@@ -31,7 +31,7 @@ public:
 	d912pxy_basetexture();
 	~d912pxy_basetexture();
 
-	UINT GetSRVHeapId();
+	UINT GetSRVHeapId(UINT mode);
 
 	D912PXY_METHOD_(DWORD, SetLOD)(PXY_THIS_ DWORD LODNew);
 	D912PXY_METHOD_(DWORD, GetLOD)(PXY_THIS);

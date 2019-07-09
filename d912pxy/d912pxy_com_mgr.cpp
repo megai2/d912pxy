@@ -75,3 +75,13 @@ void d912pxy_com_mgr::DeAllocateComObj(d912pxy_com_object * obj)
 {
 	table.DeAllocateObj(obj);
 }
+
+d912pxy_com_object * d912pxy_com_mgr::GetComObject(d912pxy_com_obj_typeid type, d912pxy_mem_va_table_obj_id id)
+{
+	return (d912pxy_com_object*)table.GetObj(type, id);
+}
+
+d912pxy_com_object * d912pxy_com_mgr::GetComObjectByLowAdr(UINT32 lowAdr)
+{
+	return (d912pxy_com_object*)((intptr_t)table.GetBaseAdr() | lowAdr);
+}

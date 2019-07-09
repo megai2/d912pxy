@@ -36,7 +36,7 @@ HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 
 	if (pTexture)
 	{
-		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId();
+		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId((intptr_t)pTexture & 0x10000000);
 	}
 
 	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
@@ -56,7 +56,7 @@ HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTextu
 
 	if (pTexture)
 	{
-		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId();
+		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId((intptr_t)pTexture & 0x10000000);
 	}
 
 	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);

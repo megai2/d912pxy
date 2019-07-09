@@ -39,10 +39,12 @@ d912pxy_basetexture::~d912pxy_basetexture()
 
 #undef D912PXY_METHOD_IMPL_CN
 
-UINT d912pxy_basetexture::GetSRVHeapId()
+UINT d912pxy_basetexture::GetSRVHeapId(UINT mode)
 {
-	if (srvIDc[1])
-		return baseSurface->GetSRVHeapId();
+	if (mode)
+	{
+		return baseSurface->GetSRVHeapIdRTDS();
+	}
 	else
 		return srvIDc[0];
 }

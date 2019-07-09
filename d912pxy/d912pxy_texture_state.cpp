@@ -139,8 +139,9 @@ UINT d912pxy_texture_state::Use()
 
 	while (df)
 	{
-		if (df & 1)
+		if (df & 1)		
 			d912pxy_s.render.batch.GPUWrite((void*)((intptr_t)&current.texHeapID[0] + i * 16), 1, i);
+		
 		++i;
 		df = df >> 1;
 	}
