@@ -42,8 +42,9 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_ENABLE_PROFILING,
 	PXY_CFG_SDB_FORCE_UNUSED_REGS,
 	PXY_CFG_SDB_ALLOW_REALTIME_CHECKS,
-	PXY_CFG_MT_REPLAY_BEHAIVOUR,
-	PXY_CFG_MT_REPLAY_THREADS,	
+	PXY_CFG_REPLAY_BEHAIVOUR,
+	PXY_CFG_REPLAY_THREADS,	
+	PXY_CFG_REPLAY_ITEMS_PER_BATCH,
 	PXY_CFG_MT_VSTREAM_CTOR,
 	PXY_CFG_MT_SURFACE_CTOR,
 	PXY_CFG_LOG_P7CONFIG,
@@ -107,8 +108,9 @@ private:
 		{L"sdb", L"enable_profiling", L"0"},//PXY_CFG_SDB_ENABLE_PROFILING
 		{L"sdb", L"force_unused_regs", L"0"},//PXY_CFG_SDB_FORCE_UNUSED_REGS
 		{L"sdb", L"allow_realtime_checks", L"0"},//PXY_CFG_SDB_ALLOW_REALTIME_CHECKS
-		{L"mt", L"replay", L"1"},//PXY_CFG_MT_REPLAY_BEHAIVOUR
-		{L"mt", L"replay_threads", L"1"},//PXY_CFG_MT_REPLAY_THREADS
+		{L"replay", L"replay", L"1"},//PXY_CFG_REPLAY_BEHAIVOUR
+		{L"replay", L"replay_threads", L"1"},//PXY_CFG_REPLAY_THREADS
+		{L"replay", L"items_per_batch", L"100"},//PXY_CFG_REPLAY_ITEMS_PER_BATCH
 		{L"mt", L"vstream_ctor", L"0"},//PXY_CFG_MT_VSTREAM_CTOR
 		{L"mt", L"surface_ctor", L"0"},//PXY_CFG_MT_SURFACE_CTOR
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG

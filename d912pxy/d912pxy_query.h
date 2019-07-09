@@ -25,6 +25,8 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
+#define D3DISSUE_FORCED 0x4
+
 class d912pxy_query : public d912pxy_comhandler
 {
 public:	

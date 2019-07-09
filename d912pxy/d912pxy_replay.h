@@ -272,7 +272,7 @@ public:
 	void DbgStackIncrement();
 	UINT DbgStackIgnore();
 #endif
-
+	
 private:
 	d912pxy_replay_handler_func replay_handlers[DRPL_COUNT];
 
@@ -300,6 +300,7 @@ private:
 
 	UINT stackTop;
 	LONG stackTopMT;
+	UINT maxReplayItems;
 	
 	UINT lastSRefStk;
 	UINT lastBFactorStk;

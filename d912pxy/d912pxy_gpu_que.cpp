@@ -214,7 +214,7 @@ void d912pxy_gpu_que::SwitchCurrentCL()
 {
 	//we are commiting our commands list, so we must wait while new one is setup
 	d912pxy_s.dev.LockAsyncThreads();
-
+		
 	//execute current command List
 	//iterate to next
 	//and write back this one to que

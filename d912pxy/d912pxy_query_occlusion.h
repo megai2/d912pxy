@@ -43,7 +43,7 @@ public:
 	static void OnIFrameEnd();
 	static void OnIFrameStart();
 
-	void ForceClose(ID3D12GraphicsCommandList* cl);
+	void ForceClose();
 
 
 	static UINT InitOccQueryEmulation();

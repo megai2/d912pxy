@@ -431,15 +431,11 @@ void d912pxy_iframe::End()
 
 	d912pxy_query_occlusion::OnIFrameEnd();
 
-
 	if (mSwapChain) 
 		mSwapChain->EndFrame();
 
 	LOG_DBG_DTDM2("End Frame %u", mCurrentFrameIndex);
 	++mCurrentFrameIndex;
-
-
-
 }
 
 void d912pxy_iframe::EndSceneReset()

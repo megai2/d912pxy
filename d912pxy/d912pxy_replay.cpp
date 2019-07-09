@@ -51,12 +51,15 @@ void d912pxy_replay::Init()
 	NonCom_Init(L"replay mt");
 	
 	stack = 0;
-	PXY_MALLOC(stack, (sizeof(d912pxy_replay_item)*PXY_INNER_MAX_IFRAME_BATCH_REPLAY), d912pxy_replay_item*);
+	
+	maxReplayItems = PXY_INNER_MAX_IFRAME_BATCH_COUNT * d912pxy_s.config.GetValueUI32(PXY_CFG_REPLAY_ITEMS_PER_BATCH);
+
+	PXY_MALLOC(stack, (sizeof(d912pxy_replay_item)*maxReplayItems), d912pxy_replay_item*);
 
 	stackTop = 0;
 	stopMarker = 0;
 
-	numThreads = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_MT_REPLAY_THREADS);
+	numThreads = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_REPLAY_THREADS);
 
 	d912pxy_s.dev.AddActiveThreads(numThreads);
 
@@ -74,7 +77,7 @@ void d912pxy_replay::Init()
 		transitData[i].saved = 0;
 	}
 
-	ReRangeThreads(PXY_INNER_MAX_IFRAME_BATCH_REPLAY);
+	ReRangeThreads(maxReplayItems);
 
 	for (int i = 0; i != numThreads; ++i)
 		threads[i]->Resume();
@@ -99,7 +102,7 @@ void d912pxy_replay::Init()
 
 	if (numThreads > 1)
 	{
-		gpuw_que = new d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>(PXY_INNER_MAX_IFRAME_BATCH_REPLAY, 0);
+		gpuw_que = new d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>(maxReplayItems, 0);
 		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW_MT;
 	}
 	else {
@@ -436,7 +439,7 @@ UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_
 
 void d912pxy_replay::Finish()
 {
-	if (stackTop >= PXY_INNER_MAX_IFRAME_BATCH_REPLAY)
+	if (stackTop >= maxReplayItems)
 	{
 		LOG_ERR_THROW2(-1, "too many replay items");
 	}
@@ -485,7 +488,7 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 		rangeEnds[i] = switchRange * (i + 1);
 
 		if (i == (numThreads - 1))
-			rangeEnds[i] = PXY_INNER_MAX_IFRAME_BATCH_REPLAY;		
+			rangeEnds[i] = maxReplayItems;		
 
 		threads[i]->ExecRange(switchRange * i, rangeEnds[i]);
 	}

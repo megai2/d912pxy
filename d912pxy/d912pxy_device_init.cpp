@@ -160,7 +160,7 @@ void d912pxy_device::InitSingletons()
 {	
 	d912pxy_s.dx12.que.Init(PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
 
-	if (d912pxy_s.config.GetValueUI64(PXY_CFG_MT_REPLAY_BEHAIVOUR))
+	if (d912pxy_s.config.GetValueUI64(PXY_CFG_REPLAY_BEHAIVOUR))
 		d912pxy_s.render.replay.Init();
 	else {
 		LOG_ERR_DTDM("This feature is compile time disabled, using 1 thread replay");
@@ -211,8 +211,7 @@ void d912pxy_device::InitComPatches()
 		{
 			case 2:
 			case 3:
-				d912pxy_query_occlusion::InitOccQueryEmulation();
-				d912pxy_query_occlusion::bufferedReadback = occCfgValue & 1;
+				d912pxy_query_occlusion::InitOccQueryEmulation();				
 				break;
 			case 1:
 				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_ISSUE, &d912pxy_query::com_IssueNOP);

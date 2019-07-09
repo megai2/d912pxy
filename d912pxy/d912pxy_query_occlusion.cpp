@@ -34,8 +34,6 @@ ID3D12QueryHeap* g_occQueryHeap = 0;
 d912pxy_query_occlusion_gpu_stack g_gpuStack[2] = { 0 };
 UINT32 g_writeStack = 0;
 
-UINT32 d912pxy_query_occlusion::bufferedReadback = 0;
-
 #define PXY_OCCLUSION_TYPE D3D12_QUERY_TYPE_OCCLUSION
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_QUERY_OCCLUSION
 
@@ -71,6 +69,13 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 		if (g_gpuStack[g_writeStack].count >= PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME)
 			FlushQueryStack();			
 
+		//megai2: as we use addition on query result read due to inter-cl force close/open thingy, we need to clear result on fully open condition
+		if (!(dwIssueFlags & D3DISSUE_FORCED))
+			queryResult = 0;
+		else if (!queryOpened)
+			//if force open called when query is closed normally, ignore it
+			return D3D_OK;
+
 		queryFinished++;
 		frameIdx = g_gpuStack[g_writeStack].count;
 		d912pxy_s.render.replay.QueryMark(this, 1);		
@@ -80,10 +85,6 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 		++g_gpuStack[g_writeStack].count;
 	}
 	else {
-		//megai2: should not need this but it can be, so i keep it here for now
-		if (!queryOpened)
-			occ_Issue(D3DISSUE_BEGIN);
-
 		queryOpened = 0;
 		d912pxy_s.render.replay.QueryMark(this, 0);			
 	}
@@ -133,7 +134,7 @@ void d912pxy_query_occlusion::QueryMark(UINT start, ID3D12GraphicsCommandList * 
 
 void d912pxy_query_occlusion::FlushQueryStack()
 {	
-	d912pxy_s.render.iframe.StateSafeFlush(!bufferedReadback);
+	d912pxy_s.render.iframe.StateSafeFlush(0);
 }
 
 
@@ -146,7 +147,7 @@ void d912pxy_query_occlusion::OnIFrameEnd()
 		ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(CLG_SEQ);
 
 		for (int i = 0; i != writeStack->count; ++i)
-			writeStack->stack[i]->ForceClose(cl);
+			writeStack->stack[i]->ForceClose();
 
 		cl->ResolveQueryData(g_occQueryHeap, PXY_OCCLUSION_TYPE, 0, writeStack->count, writeStack->readbackBuffer->GetD12Obj(), 0);
 	}
@@ -154,6 +155,15 @@ void d912pxy_query_occlusion::OnIFrameEnd()
 
 void d912pxy_query_occlusion::OnIFrameStart()
 {
+	d912pxy_query_occlusion_gpu_stack* writeStack = &g_gpuStack[g_writeStack];
+
+	//megai2: open query after force close
+	if (writeStack->count)
+	{
+		for (int i = 0; i != writeStack->count; ++i)
+			writeStack->stack[i]->Issue(D3DISSUE_BEGIN | D3DISSUE_FORCED);
+	}
+
 	d912pxy_query_occlusion_gpu_stack* readStack = &g_gpuStack[!g_writeStack];
 
 	if (readStack->count)
@@ -172,17 +182,15 @@ void d912pxy_query_occlusion::OnIFrameStart()
 
 		readStack->count = 0;
 	}
-
+	
 	g_writeStack = !g_writeStack;
 }
 
-void d912pxy_query_occlusion::ForceClose(ID3D12GraphicsCommandList * cl)
+void d912pxy_query_occlusion::ForceClose()
 {
 	if (queryOpened)
 	{
-		queryOpened = 0;
 		d912pxy_s.render.replay.QueryMark(this, 0);
-		//QueryMark(0, cl)
 	}
 }
 
@@ -239,8 +247,8 @@ void d912pxy_query_occlusion::DeInitOccQueryEmulation()
 }
 
 void d912pxy_query_occlusion::SetQueryResult(UINT32 v)
-{
-	queryResult = v;
+{	
+	queryResult += v;
 	queryFinished--;
 	ThreadRef(-1);
 }
