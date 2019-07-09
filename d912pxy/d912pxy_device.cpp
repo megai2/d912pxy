@@ -51,7 +51,6 @@ d912pxy_device::d912pxy_device() : d912pxy_comhandler()
 d912pxy_device::~d912pxy_device(void)
 {	
 	LOG_INFO_DTDM("Device last reference removal");
-	d912pxy_s.devComBase = NULL;
 
 	LOG_INFO_DTDM("d912pxy exiting");
 	isRunning.SetValue(0);
@@ -62,6 +61,8 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(),		 "Additional DX9 objects freed");
 	LOG_INFO_DTDM2(d912pxy_s.dx12.que.Flush(0),      "Last gpu cmd lists flushed");
 	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(),		 "Swapchain stopped");
+
+	d912pxy_s.devComBase = NULL;
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
 

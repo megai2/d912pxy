@@ -85,7 +85,8 @@ ULONG d912pxy_comhandler::Release()
 			d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		else {
 
-			DeAllocateBase();
+			if (FinalReleaseCB())
+				DeAllocateBase();
 
 			API_OVERHEAD_TRACK_END(1)
 
