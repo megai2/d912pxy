@@ -1882,8 +1882,8 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETDEVICE, &d912pxy_noncom::com_GetDevice);
 	d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETTYPE, &d912pxy_query::com_GetType);
 	d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETDATASIZE, &d912pxy_query::com_GetDataSize);
-	d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_ISSUE, &d912pxy_query::com_IssueNOP);
-	d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETDATA, &d912pxy_query::com_GetDataZeroOverride);
+	d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_ISSUE, &d912pxy_query_occlusion::com_occ_Issue);
+	d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETDATA, &d912pxy_query_occlusion::com_occ_GetData);
 
 	//base texture
 	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_UNK_QUERY_INTERFACE, &d912pxy_comhandler::com_QueryInterface);
