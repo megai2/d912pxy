@@ -102,7 +102,5 @@ private:
 	UINT subresCountCache;	
 
 	UINT ulMarked;
-	d912pxy_upload_item** ul;
-
 };
 

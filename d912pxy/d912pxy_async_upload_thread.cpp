@@ -46,6 +46,7 @@ void d912pxy_async_upload_thread<QueItemType, ProcImpl>::Init(UINT queueSize, UI
 	NonCom_Init(objN);
 	InitThread(thrdName, 1);
 
+	ulMem = NULL;
 	buffer = new d912pxy_ringbuffer<QueItemType>(queueSize, 2);
 	threadSyncId = syncId;
 
@@ -103,11 +104,35 @@ UINT32 d912pxy_async_upload_thread<QueItemType, ProcImpl>::ItemsOnQueue()
 }
 
 template<class QueItemType, class ProcImpl>
+d912pxy_upload_item * d912pxy_async_upload_thread<QueItemType, ProcImpl>::GetUploadMem(UINT32 size)
+{
+	if (!ulMem)
+	{
+		ulMem = d912pxy_s.pool.upload.GetUploadObject(1);
+	}
+
+	if (!ulMem->HaveFreeSpace(size))
+	{
+		ulMem->Release();
+		ulMem = d912pxy_s.pool.upload.GetUploadObject((UINT)max(size * 2, ulMem->GetSize() * 2));
+	}
+
+	return ulMem;
+}
+
+template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::CheckInterrupt()
 {
 	if (d912pxy_s.dev.InterruptThreads())
 	{
 		static_cast<ProcImpl>(this)->OnThreadInterrupt();
+
+		if (ulMem)
+		{
+			ulMem->Release();
+			ulMem = NULL;
+		}
+
 		d912pxy_s.dev.LockThread(threadSyncId);
 		static_cast<ProcImpl>(this)->ThreadWake();
 	}

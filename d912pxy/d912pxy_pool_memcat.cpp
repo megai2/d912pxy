@@ -33,9 +33,6 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat() : d912pxy_pool
 template<class ElementType, class ProcImpl>
 d912pxy_pool_memcat<ElementType, ProcImpl>::~d912pxy_pool_memcat()
 {
-	
-
-	PXY_FREE(limits);
 	PXY_FREE(memTable);
 	PXY_FREE(this->rwMutex);
 }
@@ -48,35 +45,12 @@ void d912pxy_pool_memcat<ElementType, ProcImpl>::Init(UINT32 iBitIgnore, UINT32 
 	bitIgnore = iBitIgnore;
 	bitLimit = iBitLimit;
 	bitCnt = iBitLimit - iBitIgnore;
-	instantUnload = 0;
-
-	PXY_MALLOC(limits, sizeof(UINT16)*bitCnt, UINT16*);
-	ZeroMemory(limits, sizeof(UINT16)*bitCnt);
-
-	UINT performaWarmUp = 0;
 
 	if (limitCfg != PXY_CFG_CNT)
 	{
 		wchar_t* vals = d912pxy_s.config.GetValueRaw(limitCfg);
 
-		if ((vals[1] != L'x') || (vals[bitCnt * 5 + 2] != L'L'))
-		{
-			this->LOG_ERR_THROW2(-1, "Wrong pooling limit config value");
-		}
-		else {
-			wchar_t tmp[5];
-			tmp[4] = 0;
-
-			performaWarmUp = vals[bitCnt * 5 + 3] == L'1';
-			instantUnload = vals[bitCnt * 5 + 4] == L'1';
-
-			for (int i = 0; i != bitCnt; ++i)
-			{
-				*((UINT64*)&tmp[0]) = *((UINT64*)&vals[2 + i * 5]);
-
-				swscanf(&tmp[0], L"%hX", &limits[i]);
-			}
-		}
+		
 	}
 
 	PXY_MALLOC(memTable, sizeof(void*)*bitCnt, d912pxy_ringbuffer<ElementType>**);
@@ -86,15 +60,6 @@ void d912pxy_pool_memcat<ElementType, ProcImpl>::Init(UINT32 iBitIgnore, UINT32 
 	{
 		memTable[i] = new d912pxy_ringbuffer<ElementType>(64, 2);
 		this->rwMutex[i].Init();
-	}
-
-	if (performaWarmUp)
-	{
-		for (int i = 0; i != bitCnt; ++i)
-		{
-			for (int j = 0; j != limits[i]; ++j)
-				this->WarmUp(i);
-		}
 	}
 }
 
@@ -107,13 +72,12 @@ d912pxy_ringbuffer<ElementType>* d912pxy_pool_memcat<ElementType, ProcImpl>::Get
 template<class ElementType, class ProcImpl>
 void d912pxy_pool_memcat<ElementType, ProcImpl>::PoolUnloadProc(ElementType val, UINT32 cat)
 {
-	if (GetCatBuffer(cat)->TotalElements() >= limits[cat])
+	if (!IsPoolHaveFreeSpace())
 	{
+		AddMemoryToPool(-((INT)MemCatToSize(cat)));
+
 		val->NoteDeletion(GetTickCount());
-		if (instantUnload)
-			val->PooledAction(0);
-		else 
-			d912pxy_s.thread.cleanup.Watch(val);
+		d912pxy_s.thread.cleanup.Watch(val);
 	}
 }
 
@@ -136,6 +100,18 @@ template<class ElementType, class ProcImpl>
 UINT d912pxy_pool_memcat<ElementType, ProcImpl>::MemCatToSize(UINT cat)
 {
 	return 1 << (cat + bitIgnore);
+}
+
+template<class ElementType, class ProcImpl>
+UINT d912pxy_pool_memcat<ElementType, ProcImpl>::IsPoolHaveFreeSpace()
+{
+	return maxMemoryInPool > memoryInPool;
+}
+
+template<class ElementType, class ProcImpl>
+void d912pxy_pool_memcat<ElementType, ProcImpl>::AddMemoryToPool(INT sz)
+{
+	memoryInPool += sz;
 }
 
 template class d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>;

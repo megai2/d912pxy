@@ -62,7 +62,7 @@ public:
 	UINT32 PooledAction(UINT32 use);
 	void UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size);
 
-	void ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl);
+	void ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl, d912pxy_upload_item* ulObj);
 
 	void FinishUpload(ID3D12GraphicsCommandList * cl);
 
@@ -84,7 +84,7 @@ private:
 	
 	void* data;
 
-	d912pxy_upload_item* ulObj;
+	UINT inUploadState;
 
 	d912pxy_vstream_lock_data lockInfo[PXY_INNER_MAX_LOCK_DEPTH];
 	LONG lockDepth;	

@@ -41,14 +41,17 @@ public:
 	UINT MemCatFromSize(UINT sz);
 	UINT MemCatToSize(UINT cat);
 
+	UINT IsPoolHaveFreeSpace();
+	void AddMemoryToPool(INT sz);
+
 private:
 	UINT32 bitIgnore;
 	UINT32 bitLimit;
 	UINT32 bitCnt;
-	UINT32 instantUnload;
 
-	UINT16* limits;
-
+	UINT32 maxMemoryInPool;
+	UINT32 memoryInPool;
+	
 protected:
 	d912pxy_ringbuffer<ElementType>** memTable;
 };

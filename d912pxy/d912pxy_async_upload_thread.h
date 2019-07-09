@@ -43,9 +43,13 @@ public:
 
 	UINT32 ItemsOnQueue();
 
+	d912pxy_upload_item* GetUploadMem(UINT32 size);
+
 protected:
 	void CheckInterrupt();
 	d912pxy_ringbuffer<void*>* finishList;
+
+	d912pxy_upload_item* ulMem;
 
 private:	
 	
@@ -55,6 +59,6 @@ private:
 	UINT threadSyncId;
 
 	UINT uploadCount;
-	UINT uploadTrigger;
+	UINT uploadTrigger;	
 };
 

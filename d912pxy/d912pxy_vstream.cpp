@@ -34,7 +34,7 @@ d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB
 {		
 	lockDepth = 0;
 
-	ulObj = NULL;
+	inUploadState = 0;
 
 	PXY_MALLOC(data, Length, void*);
 
@@ -217,28 +217,25 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 	return 1;
 }
 
-void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl)
+void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl, d912pxy_upload_item* ulObj)
 {			
 	if (!m_res)
 		ConstructResource();
 
-	if (!ulObj)
+	if (!inUploadState)
 	{
 		BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
-		ulObj = d912pxy_s.pool.upload.GetUploadObject(dx9desc.Size);
+		inUploadState = 1;
 		d912pxy_s.thread.bufld.AddToFinishList(this);
 	}
-	
-	UploadDataCopy(ulObj->DPtr() + linfo->offset, linfo->offset, linfo->size);
-	
-	ulObj->UploadTargetWithOffset(this, linfo->offset, linfo->offset, linfo->size, cl);	
+		
+	ulObj->UploadTargetWithOffset(this->GetD12Obj(), linfo->offset, linfo->offset, linfo->size, data, cl);	
 }
 
 void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
 {
 	BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
-	ulObj->Release();
-	ulObj = NULL;
+	inUploadState = 0;
 }
 
 void d912pxy_vstream::ConstructResource()

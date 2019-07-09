@@ -94,8 +94,8 @@ private:
 
 	d912pxy_config_value_dsc data[PXY_CFG_CNT] = {
 		{L"pooling", L"upload_alloc_step", L"16"},//PXY_CFG_POOLING_UPLOAD_ALLOC_STEP
-		{L"pooling", L"upload_limits", L"0x0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 L00"},//PXY_CFG_POOLING_UPLOAD_LIMITS		
-		{L"pooling", L"vstream_limits", L"0x0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 L00"},//PXY_CFG_POOLING_VSTREAM_LIMITS
+		{L"pooling", L"upload_limits", L"0"},//PXY_CFG_POOLING_UPLOAD_LIMITS		
+		{L"pooling", L"vstream_limits", L"0"},//PXY_CFG_POOLING_VSTREAM_LIMITS
 		{L"pooling", L"surface_limits",L"00000"},//PXY_CFG_POOLING_SURFACE_LIMITS
 		{L"pooling", L"lifetime",L"10000"},//PXY_CFG_POOLING_LIFETIME
 		{L"samplers", L"min_lod", L"0"},//PXY_CFG_SAMPLERS_MIN_LOD		

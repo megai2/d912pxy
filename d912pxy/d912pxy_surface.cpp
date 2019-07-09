@@ -30,7 +30,6 @@ UINT32 d912pxy_surface::threadedCtor = 0;
 d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface texture")
 {
 	isPooled = 0;	
-	ul = NULL;
 	layers = NULL;
 	dheapId = -1;
 	dheapIdFeedback = srvFeedback;
@@ -53,8 +52,6 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 
 		PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
 		PXY_MALLOC(subresSizes, sizeof(size_t) * 1, size_t*);
-		PXY_MALLOC(ul, 8, d912pxy_upload_item**);
-		ZeroMemory(ul, 8);
 
 		LOG_DBG_DTDM("w %u h %u u %u FCC NULL", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
 		return;
@@ -135,8 +132,7 @@ d912pxy_surface::~d912pxy_surface()
 {
 	PXY_FREE(subresFootprints);
 	PXY_FREE(subresSizes);
-	PXY_FREE(ul);
-	
+		
 	if (rtdsHPtr.ptr == 0)
 	{
 		if (m_res)
@@ -295,17 +291,16 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 		return;
 	}
 
-	if (!ul[lv])
-	{		
-		ul[lv] = d912pxy_s.pool.upload.GetUploadObject(subresFootprints[lv].Footprint.RowPitch*subresFootprints[lv].Footprint.Height);		
-		if (!ulMarked)
-		{
-			ThreadRef(1);
-			d912pxy_s.thread.texld.AddToFinishList(this);
-		}
-		ulMarked = 1;		
-	}
+	d912pxy_upload_item* ul = d912pxy_s.thread.texld.GetUploadMem(
+		(UINT32)d912pxy_helper::AlignValueByPow2(subresFootprints[lv].Footprint.RowPitch*subresFootprints[lv].Footprint.Height, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT));
 
+	if (!ulMarked)
+	{
+		ThreadRef(1);
+		d912pxy_s.thread.texld.AddToFinishList(this);
+	}
+	ulMarked = 1;		
+	
 	UINT wPitch = GetWPitchLV(lv);
 	UINT blockHeight = subresFootprints[lv].Footprint.Height;
 
@@ -322,7 +317,21 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 			;;
 	}
 
-	ul[lv]->Reconstruct(
+	ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(CLG_TEX);
+
+	D3D12_TEXTURE_COPY_LOCATION srcR = { ul->GetResourcePtr(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, 0 };
+
+	if (!m_res)
+	{
+		d12res_tex2d(surf_dx9dsc.Width, surf_dx9dsc.Height, m_fmt, &descCache.MipLevels, descCache.DepthOrArraySize);
+		dheapId = AllocateSRV();
+	}
+
+	GetCopyableFootprints(lv, &srcR.PlacedFootprint);
+
+	srcR.PlacedFootprint.Offset = ul->GetCurrentOffset();
+
+	ul->Reconstruct(
 		mem,
 		subresFootprints[lv].Footprint.RowPitch,
 		blockHeight,
@@ -330,7 +339,11 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 		0
 	);	
 
-	UploadSurfaceData(ul[lv], lv, d912pxy_s.dx12.cl->GID(CLG_TEX));
+	D3D12_TEXTURE_COPY_LOCATION dstR = { m_res, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, lv };
+
+	BTransit(lv, D3D12_RESOURCE_STATE_COPY_DEST, stateCache, cl);
+	cl->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
+	BTransit(lv, stateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);
 	
 	ThreadRef(-1);
 }
@@ -485,9 +498,6 @@ void d912pxy_surface::UpdateDescCache()
 
 	UINT32 ulArrSize = sizeof(d912pxy_upload_item*) * subresCountCache;
 
-	PXY_MALLOC(ul, ulArrSize, d912pxy_upload_item**);
-	ZeroMemory(ul, ulArrSize);
-
 	PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
 	PXY_MALLOC(subresSizes, sizeof(size_t)*subresCountCache, size_t*);
 	
@@ -628,14 +638,14 @@ void d912pxy_surface::FinishUpload()
 {	
 	UINT subCnt = descCache.DepthOrArraySize*descCache.MipLevels;
 
-	for (int i = 0; i != subCnt; ++i)
+	/*for (int i = 0; i != subCnt; ++i)
 	{
 		if (!ul[i])
 			continue;
 
 		ul[i]->Release();
 		ul[i] = NULL;
-	}
+	}*/
 
 	ulMarked = 0;
 
@@ -730,25 +740,6 @@ UINT d912pxy_surface::GetWPitchLV(UINT lv)
 	default:
 		return w * mem_perPixel;
 	}
-}
-
-void d912pxy_surface::UploadSurfaceData(d912pxy_upload_item* inUl, UINT lv, ID3D12GraphicsCommandList* cl)
-{
-	D3D12_TEXTURE_COPY_LOCATION srcR = { inUl->GetResourcePtr(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, 0 };
-
-	if (!m_res)
-	{
-		d12res_tex2d(surf_dx9dsc.Width, surf_dx9dsc.Height, m_fmt, &descCache.MipLevels, descCache.DepthOrArraySize);
-		dheapId = AllocateSRV();
-	}
-
-	GetCopyableFootprints(lv, &srcR.PlacedFootprint);
-
-	D3D12_TEXTURE_COPY_LOCATION dstR = { m_res, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, lv };
-	
-	BTransit(lv, D3D12_RESOURCE_STATE_COPY_DEST, stateCache, cl);
-	cl->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
-	BTransit(lv, stateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);		
 }
 
 D3DSURFACE_DESC d912pxy_surface::GetDX9DescAtLevel(UINT level)

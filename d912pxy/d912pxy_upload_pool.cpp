@@ -32,8 +32,6 @@ d912pxy_upload_pool::d912pxy_upload_pool() : d912pxy_pool_memcat<d912pxy_upload_
 
 d912pxy_upload_pool::~d912pxy_upload_pool()
 {
-	
-
 	pRunning = 0;
 
 	if (memPool)
@@ -80,7 +78,7 @@ d912pxy_upload_item * d912pxy_upload_pool::GetUploadObject(UINT size)
 	}
 	else {
 		LOG_DBG_DTDM2("upload obj reuse %u-%u", mc, size);
-		ret->PooledAction(1);			
+		ret->PooledAction(1);
 	}
 
 	return ret;
@@ -89,6 +87,8 @@ d912pxy_upload_item * d912pxy_upload_pool::GetUploadObject(UINT size)
 d912pxy_upload_item * d912pxy_upload_pool::AllocProc(UINT32 cat)
 {
 	d912pxy_upload_item * ret;
+
+	AddMemoryToPool(MemCatToSize(cat));
 
 	ret = new d912pxy_upload_item(cat);
 
@@ -189,7 +189,7 @@ void d912pxy_upload_pool::CreateMemPool()
 	const D3D12_HEAP_DESC heapDsc = {
 		memPoolSize,
 		d912pxy_s.dev.GetResourceHeap(D3D12_HEAP_TYPE_UPLOAD),
-		1 << PXY_INNDER_UPLOAD_POOL_BITIGNORE,
+		0,
 		D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS
 	};
 
@@ -202,6 +202,8 @@ void d912pxy_upload_pool::CreateMemPool()
 d912pxy_upload_item::d912pxy_upload_item(UINT8 icat) : d912pxy_comhandler(PXY_COM_OBJ_NOVTABLE, L"upload item")
 {
 	cat = icat;	
+	space = d912pxy_s.pool.upload.MemCatToSize(cat);
+	usedSpace = 0;
 	mRes = d912pxy_s.pool.upload.MakeUploadBuffer(cat);
 	LOG_ERR_THROW2(mRes->Map(0, 0, (void**)&mappedMemWofs), "upload pool memory map error on creation");
 }
@@ -211,14 +213,16 @@ d912pxy_upload_item::~d912pxy_upload_item()
 
 }
 
-void d912pxy_upload_item::UploadTargetWithOffset(d912pxy_resource * res, UINT64 sofs, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList * cl)
+void d912pxy_upload_item::UploadTargetWithOffset(ID3D12Resource * res, UINT64 sofs, UINT64 dofs, UINT64 sz, void* src, ID3D12GraphicsCommandList * cl)
 {
-	cl->CopyBufferRegion(res->GetD12Obj(), dofs, mRes, sofs, sz);
+	memcpy((void*)DPtrOffset(usedSpace), (void*)((intptr_t)src + sofs), sz);
+	cl->CopyBufferRegion(res, dofs, mRes, usedSpace, sz);
+	usedSpace += sz;
 }
 
-void d912pxy_upload_item::UploadTarget(ID3D12Resource * res, UINT64 dofs, UINT64 sz, ID3D12GraphicsCommandList * cl)
+void d912pxy_upload_item::UploadTarget(ID3D12Resource * res, UINT64 dofs, UINT64 sz, void* src, ID3D12GraphicsCommandList * cl)
 {
-	cl->CopyBufferRegion(res, dofs, mRes, dofs, sz);
+	UploadTargetWithOffset(res, 0, dofs, sz, src, cl);
 }
 
 intptr_t d912pxy_upload_item::DPtr()
@@ -235,7 +239,7 @@ intptr_t d912pxy_upload_item::DPtrOffset(UINT64 offset)
 
 void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, const D3D12_RANGE * wofs)
 {
-	intptr_t bufferRef = (intptr_t)DPtr();
+	intptr_t bufferRef = (intptr_t)DPtrOffset(usedSpace);
 	intptr_t srcm = (intptr_t)mem;
 		
 	//megai2: well..
@@ -246,6 +250,10 @@ void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height,
 		bufferRef += rowPitch;
 		srcm = srcm + size;
 	}
+
+	usedSpace += rowPitch * height;
+
+	usedSpace = d912pxy_helper::AlignValueByPow2(usedSpace, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
 }
 
 UINT d912pxy_upload_item::FinalReleaseCB()
@@ -253,6 +261,8 @@ UINT d912pxy_upload_item::FinalReleaseCB()
 	if (d912pxy_s.pool.upload.IsRunning())
 	{
 	//	d912pxy_s.dx12.dev->Evict(1, (ID3D12Pageable**)&mRes);
+
+		usedSpace = 0;
 
 		d912pxy_upload_item* tv = this;
 		d912pxy_s.pool.upload.PoolRW(cat, &tv, 1);
@@ -288,4 +298,9 @@ UINT32 d912pxy_upload_item::PooledAction(UINT32 use)
 	PooledActionExit();
 
 	return 1;
+}
+
+UINT d912pxy_upload_item::HaveFreeSpace(UINT32 size)
+{
+	return (space - usedSpace) > size;
 }

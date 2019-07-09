@@ -497,3 +497,12 @@ UINT64 d912pxy_helper::GetClosestPow2(UINT64 size)
 
 	return 63;
 }
+
+UINT64 d912pxy_helper::AlignValueByPow2(UINT64 val, UINT64 pow2val)
+{
+	UINT64 mask = (pow2val - 1);
+	if (val & mask)
+		return (val & ~mask) + pow2val;
+	else
+		return val;
+}
