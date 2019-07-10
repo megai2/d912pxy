@@ -74,10 +74,12 @@ public:
 #ifdef _DEBUG
 	void StartTrackingBlocks() { allowTrackBlocks = 1; };
 	UINT32 GetMemoryUsedMB() { return (UINT32)(memUsed >> 20); };
+	UINT32 GetVAMemoryUsedMB() { return (UINT32)(memVAUsed >> 20); };
 #else 
 	void StartTrackingBlocks() { };
 
 	UINT32 GetMemoryUsedMB() { return 0; };
+	UINT32 GetVAMemoryUsedMB() { return 0; };
 #endif
 
 private:
@@ -98,5 +100,6 @@ private:
 	d912pxy_StackWalker* stkWlk;
 
 	LONG64 memUsed;
+	LONG64 memVAUsed;
 #endif
 };

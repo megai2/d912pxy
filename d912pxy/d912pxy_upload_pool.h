@@ -84,14 +84,6 @@ public:
 
 	d912pxy_upload_item* AllocProc(UINT32 cat);	
 
-	void EarlyInitProc();
-private:		
-	void CreateMemPool();
-
-	d912pxy_thread_lock* ctorLock;
-
-	ID3D12Heap* memPool;
-	UINT64 memPoolOffset;
-	UINT64 memPoolSize;
+	void EarlyInitProc();	
 };
 

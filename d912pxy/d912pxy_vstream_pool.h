@@ -44,6 +44,8 @@ public:
 
 	d912pxy_vstream* AllocProc(UINT32 cat);
 
+	ID3D12Resource* GetPlacedVStream(UINT32 size);
+
 	void EarlyInitProc();
 };
 

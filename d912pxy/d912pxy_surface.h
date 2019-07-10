@@ -68,7 +68,7 @@ public:
 	   	
 	UINT FinalReleaseCB();
 	UINT32 PooledAction(UINT32 use);
-	void MarkPooled(UINT uid) { isPooled = uid; };
+	void MarkPooled(UINT uid);
 	void SetDHeapIDFeedbackPtr(UINT32* feedbackPtr) { dheapIdFeedback = feedbackPtr; };
 	
 	void initInternalBuf();

@@ -52,8 +52,16 @@ private:
 
 	UINT32 maxMemoryInPool;
 	UINT32 memoryInPool;
-	UINT32 peristentUsage;
-	
+	UINT32 peristentUsage;	
 protected:
+	void CreateMemPool();
+	ID3D12Resource* CreatePlacedResource(UINT32 size, D3D12_RESOURCE_DESC* rsDesc);
+
 	d912pxy_ringbuffer<ElementType>** memTable;
+
+	ID3D12Heap* memPool;
+	UINT64 memPoolOffset;
+	UINT64 memPoolSize;
+	D3D12_HEAP_TYPE memPoolHeapType;
+	d912pxy_thread_lock* memPoolLock;
 };

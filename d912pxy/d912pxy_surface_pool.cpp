@@ -63,6 +63,10 @@ d912pxy_surface_pool::~d912pxy_surface_pool()
 
 void d912pxy_surface_pool::Init()
 {
+#ifdef ENABLE_METRICS
+	poolSize = 0;
+#endif
+
 	d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>::Init();
 
 	config = d912pxy_s.config.GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);

@@ -87,6 +87,10 @@ void d912pxy_mem_mgr::ReleaseReservedVARange(intptr_t base)
 
 void d912pxy_mem_mgr::CommitVARange(intptr_t base, UINT64 size)
 {
+#ifdef _DEBUG
+	memVAUsed += size;
+#endif
+
 	if (VirtualAlloc((void*)base, size, MEM_COMMIT, PAGE_READWRITE) != (void*)base)
 	{				
 		LOG_ERR_THROW2(HRESULT_FROM_WIN32(GetLastError()), "CommitVARange fail");
@@ -95,6 +99,10 @@ void d912pxy_mem_mgr::CommitVARange(intptr_t base, UINT64 size)
 
 void d912pxy_mem_mgr::DeCommitVARange(intptr_t base, UINT64 size)
 {
+#ifdef _DEBUG
+	memVAUsed -= size;
+#endif
+
 	if (!VirtualFree((void*)base, size, MEM_DECOMMIT))
 	{
 		LOG_ERR_THROW2(HRESULT_FROM_WIN32(GetLastError()), "DeCommitVARange fail");
@@ -446,6 +454,7 @@ void d912pxy_mem_mgr::Init()
 
 	recursionCheck = 0;
 	memUsed = 0;
+	memVAUsed = 0;
 #endif
 }
 

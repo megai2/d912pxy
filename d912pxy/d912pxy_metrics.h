@@ -89,7 +89,9 @@ private:
 	tUINT8 metricIFramePerBatchOverhead;
 	tUINT8 metricIFrameAppPrep;	
 
+	tUINT8 metricMemVA;
 	tUINT8 metricMemHeap;
+	tUINT8 metricMemSurf;
 	tUINT8 metricMemUl;
 	tUINT8 metricMemUlFp[4];
 	tUINT8 metricMemWatched;

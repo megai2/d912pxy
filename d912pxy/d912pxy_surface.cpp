@@ -378,6 +378,10 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 		return 0;
 	}
 
+#ifdef ENABLE_METRICS
+	d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz() * (use ? 1 : -1));
+#endif
+
 	if ((surf_dx9dsc.Usage != D3DUSAGE_DEPTHSTENCIL) && (surf_dx9dsc.Usage != D3DUSAGE_RENDERTARGET))
 	{
 		if (use)
@@ -445,6 +449,14 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 	PooledActionExit();
 
 	return 1;
+}
+
+void d912pxy_surface::MarkPooled(UINT uid)
+{
+	isPooled = uid;
+#ifdef ENABLE_METRICS
+	d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz());
+#endif
 }
 
 d912pxy_surface_layer * d912pxy_surface::GetLayer(UINT32 mip, UINT32 ar)

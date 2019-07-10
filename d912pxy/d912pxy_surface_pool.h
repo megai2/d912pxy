@@ -44,6 +44,11 @@ public:
 
 	void PoolUnloadProc(d912pxy_surface* val, d912pxy_ringbuffer<d912pxy_surface*>* tbl);
 
+#ifdef ENABLE_METRICS
+	UINT64 GetPoolSizeMB() { return poolSize >> 20; };
+	void ChangePoolSize(INT dlt) { poolSize += dlt; };
+#endif
+	   
 private:
 	d912pxy_memtree2* table;
 
@@ -51,5 +56,8 @@ private:
 
 	UINT64 config;
 
+#ifdef ENABLE_METRICS
+	UINT64 poolSize;
+#endif
 };
 

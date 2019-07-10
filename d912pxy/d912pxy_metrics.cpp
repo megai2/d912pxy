@@ -70,6 +70,7 @@ void d912pxy_metrics::Init()
 
 	iframeMetrics->Create(TM("counters / draws"), 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT, PXY_INNER_MAX_IFRAME_BATCH_COUNT / 2, 1, &metricIFrameDraws);
 	iframeMetrics->Create(TM("counters / cleans"), 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT * 3, PXY_INNER_MAX_IFRAME_BATCH_COUNT, 1, &metricIFrameCleans);
+	iframeMetrics->Create(TM("mem / pool / surf"), 0, 1ULL << 12, 1ULL << 12, 1, &metricMemSurf);
 	iframeMetrics->Create(TM("mem / pool / ul"), 0, 1ULL << 10, 1ULL << 10, 1, &metricMemUl);
 	iframeMetrics->Create(TM("mem / pool / vstream"), 0, 1ULL << 10, 1ULL << 10, 1, &metricMemVStream);
 	iframeMetrics->Create(TM("mem / ul / raw / buf"), 0, 1ULL << 10, 1ULL << 10, 1, &metricMemUlFp[0]);
@@ -77,6 +78,7 @@ void d912pxy_metrics::Init()
 	iframeMetrics->Create(TM("mem / ul / aligned / buf"), 0, 1ULL << 10, 1ULL << 10, 1, &metricMemUlFp[2]);
 	iframeMetrics->Create(TM("mem / ul / aligned / tex"), 0, 1ULL << 10, 1ULL << 10, 1, &metricMemUlFp[3]);
 	iframeMetrics->Create(TM("mem / heap"), 0, 1024 * 5, 1024 * 15, 1, &metricMemHeap);
+	iframeMetrics->Create(TM("mem / VA"), 0, 1024 * 5, 1024 * 15, 1, &metricMemVA);
 	iframeMetrics->Create(TM("mem / watched"), 0, 65535, 0, 1, &metricMemWatched);
 
 	iframeMetrics->Create(TM("derived / prep per batch"), 0, 3000, 2000, 1, &metricIFramePerBatchPrep);
@@ -136,8 +138,10 @@ void d912pxy_metrics::FlushIFrameValues()
 	iframeMetrics->Add(metricIFramePerBatchPrep, iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() / (lastDraws + 1));
 //	iframeMetrics->Add(metricIFramePerBatchOverhead, apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT] / (lastDraws + 1));
 	iframeMetrics->Add(metricMemHeap, d912pxy_s.mem.GetMemoryUsedMB());
+	iframeMetrics->Add(metricMemVA, d912pxy_s.mem.GetVAMemoryUsedMB());
 	iframeMetrics->Add(metricMemWatched, d912pxy_s.thread.cleanup.TotalWatchedItems());
 	iframeMetrics->Add(metricMemVStream, d912pxy_s.pool.vstream.GetMemoryInPoolMb());
+	iframeMetrics->Add(metricMemSurf, d912pxy_s.pool.surface.GetPoolSizeMB());
 }
 
 #endif

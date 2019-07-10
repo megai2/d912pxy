@@ -254,7 +254,9 @@ void d912pxy_vstream::ConstructResource()
 		return;
 	}
 
-	ID3D12Resource* tmpLocation = d12res_buffer_target(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
+	//megai2: tmp location is needed to drop into ConstructResource from other threads when we are in ConstructResource
+
+	ID3D12Resource* tmpLocation = d912pxy_s.pool.vstream.GetPlacedVStream(dx9desc.Size);
 	bindData.i.BufferLocation = tmpLocation->GetGPUVirtualAddress();
 
 	m_res = tmpLocation;
