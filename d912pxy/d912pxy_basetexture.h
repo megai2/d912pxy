@@ -40,6 +40,10 @@ public:
 	D912PXY_METHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(PXY_THIS);
 	D912PXY_METHOD_(void, GenerateMipSubLevels)(PXY_THIS);
 
+	D912PXY_METHOD_(DWORD, GetPriority_SRVhack)(PXY_THIS);
+
+	D912PXY_METHOD_NC_(DWORD, GetPriority_SRVhack)(THIS);
+
 	d912pxy_surface* GetBaseSurface() { return baseSurface; };
 
 protected:

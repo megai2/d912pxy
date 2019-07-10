@@ -37,6 +37,11 @@ d912pxy_basetexture::~d912pxy_basetexture()
 	baseSurface->Release();
 }
 
+D912PXY_METHOD_IMPL_NC_(DWORD, GetPriority_SRVhack)(THIS)
+{
+	return baseSurface->GetSRVHeapId();
+}
+
 #undef D912PXY_METHOD_IMPL_CN
 
 UINT d912pxy_basetexture::GetSRVHeapId(UINT mode)

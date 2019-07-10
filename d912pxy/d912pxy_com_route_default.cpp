@@ -1204,7 +1204,7 @@ D912PXY_METHOD_IMPL(occ_GetData)(PXY_THIS_ void* pData, DWORD dwSize, DWORD dwGe
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_basetexture
 
-#define D912PXY_ROUTE_IMPL_PREFIX return obj->basetex
+#define D912PXY_ROUTE_IMPL_PREFIX return obj->basetex.
 
 D912PXY_METHOD_IMPL_(DWORD, SetLOD)(PXY_THIS_ DWORD LODNew)
 {
@@ -1245,6 +1245,13 @@ D912PXY_METHOD_IMPL_(void, GenerateMipSubLevels)(PXY_THIS)
 {
 	D912PXY_ROUTE_IMPL_START
 		D912PXY_ROUTE_IMPL_STUB_(D3D_OK);
+	D912PXY_ROUTE_IMPL_END
+}
+
+D912PXY_METHOD_IMPL_(DWORD, GetPriority_SRVhack)(PXY_THIS)
+{
+	D912PXY_ROUTE_IMPL_START
+		D912PXY_ROUTE_IMPL_PREFIX GetPriority_SRVhack();
 	D912PXY_ROUTE_IMPL_END
 }
 
@@ -1894,7 +1901,7 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA, &d912pxy_resource::com_GetPrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_RESOURCE_FREEPRIVATEDATA, &d912pxy_resource::com_FreePrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_RESOURCE_SETPRIORITY, &d912pxy_resource::com_SetPriority);
-	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_resource::com_GetPriority);
+	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_basetexture::com_GetPriority_SRVhack);
 	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_RESOURCE_PRELOAD, &d912pxy_resource::com_PreLoad);
 	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_RESOURCE_GETTYPE, &d912pxy_resource::com_GetType);
 	d912pxy_com_route_set(PXY_COM_ROUTE_BASE_TEXTURE, PXY_COM_METHOD_BASETEXTURE_SETLOD, &d912pxy_basetexture::com_SetLOD);
@@ -1913,7 +1920,7 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_2D, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA, &d912pxy_resource::com_GetPrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_2D, PXY_COM_METHOD_RESOURCE_FREEPRIVATEDATA, &d912pxy_resource::com_FreePrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_2D, PXY_COM_METHOD_RESOURCE_SETPRIORITY, &d912pxy_resource::com_SetPriority);
-	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_2D, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_resource::com_GetPriority);
+	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_2D, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_basetexture::com_GetPriority_SRVhack);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_2D, PXY_COM_METHOD_RESOURCE_PRELOAD, &d912pxy_resource::com_PreLoad);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_2D, PXY_COM_METHOD_RESOURCE_GETTYPE, &d912pxy_resource::com_GetType);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_2D, PXY_COM_METHOD_BASETEXTURE_SETLOD, &d912pxy_basetexture::com_SetLOD);
@@ -1937,7 +1944,7 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_3D, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA, &d912pxy_resource::com_GetPrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_3D, PXY_COM_METHOD_RESOURCE_FREEPRIVATEDATA, &d912pxy_resource::com_FreePrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_3D, PXY_COM_METHOD_RESOURCE_SETPRIORITY, &d912pxy_resource::com_SetPriority);
-	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_3D, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_resource::com_GetPriority);
+	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_3D, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_basetexture::com_GetPriority_SRVhack);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_3D, PXY_COM_METHOD_RESOURCE_PRELOAD, &d912pxy_resource::com_PreLoad);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_3D, PXY_COM_METHOD_RESOURCE_GETTYPE, &d912pxy_resource::com_GetType);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_3D, PXY_COM_METHOD_BASETEXTURE_SETLOD, &d912pxy_basetexture::com_SetLOD);
@@ -1961,7 +1968,7 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_CUBE, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA, &d912pxy_resource::com_GetPrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_CUBE, PXY_COM_METHOD_RESOURCE_FREEPRIVATEDATA, &d912pxy_resource::com_FreePrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_CUBE, PXY_COM_METHOD_RESOURCE_SETPRIORITY, &d912pxy_resource::com_SetPriority);
-	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_CUBE, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_resource::com_GetPriority);
+	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_CUBE, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_basetexture::com_GetPriority_SRVhack);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_CUBE, PXY_COM_METHOD_RESOURCE_PRELOAD, &d912pxy_resource::com_PreLoad);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_CUBE, PXY_COM_METHOD_RESOURCE_GETTYPE, &d912pxy_resource::com_GetType);
 	d912pxy_com_route_set(PXY_COM_ROUTE_TEXTURE_CUBE, PXY_COM_METHOD_BASETEXTURE_SETLOD, &d912pxy_basetexture::com_SetLOD);
