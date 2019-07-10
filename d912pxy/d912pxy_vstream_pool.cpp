@@ -92,7 +92,6 @@ d912pxy_vstream * d912pxy_vstream_pool::AllocProc(UINT32 cat)
 
 ID3D12Resource * d912pxy_vstream_pool::GetPlacedVStream(UINT32 size)
 {
-//	d12res_buffer_target(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT)
 	ID3D12Resource* ret = NULL;
 
 	if (!memPool || (size >= memPoolSize))

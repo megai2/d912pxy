@@ -259,6 +259,8 @@ void d912pxy_vstream::ConstructResource()
 	ID3D12Resource* tmpLocation = d912pxy_s.pool.vstream.GetPlacedVStream(dx9desc.Size);
 	bindData.i.BufferLocation = tmpLocation->GetGPUVirtualAddress();
 
+	stateCache = D3D12_RESOURCE_STATE_GENERIC_READ;
+
 	m_res = tmpLocation;
 
 	ctorSync.Release();
