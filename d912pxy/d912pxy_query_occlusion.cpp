@@ -62,7 +62,7 @@ d912pxy_query_occlusion::~d912pxy_query_occlusion()
 
 D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	if (dwIssueFlags & D3DISSUE_BEGIN)
 	{
@@ -89,7 +89,7 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 		d912pxy_s.render.replay.QueryMark(this, 0);			
 	}
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -98,14 +98,14 @@ D912PXY_METHOD_IMPL_NC(occ_GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGet
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	if(queryFinished)		
 		FlushQueryStack();
 
 	((DWORD*)pData)[0] = queryResult;				
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return !queryFinished ? S_OK : S_FALSE;
 

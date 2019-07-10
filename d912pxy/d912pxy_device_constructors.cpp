@@ -30,11 +30,11 @@ HRESULT d912pxy_device::CreateTexture(UINT Width, UINT Height, UINT Levels, DWOR
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 		
 	*ppTexture = PXY_COM_CAST_(IDirect3DTexture9, d912pxy_texture::d912pxy_texture_com(Width, Height, Levels, Usage, Format));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -43,11 +43,11 @@ HRESULT d912pxy_device::CreateVolumeTexture(UINT Width, UINT Height, UINT Depth,
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	*ppVolumeTexture = PXY_COM_CAST_(IDirect3DVolumeTexture9, new d912pxy_vtexture(this, Width, Height, Depth, Levels, Usage, Format));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -56,11 +56,11 @@ HRESULT d912pxy_device::CreateCubeTexture(UINT EdgeLength, UINT Levels, DWORD Us
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	*ppCubeTexture = PXY_COM_CAST_(IDirect3DCubeTexture9, d912pxy_ctexture::d912pxy_ctexture_com(EdgeLength, Levels, Usage, Format));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -69,13 +69,13 @@ HRESULT d912pxy_device::CreateVertexBuffer(UINT Length, DWORD Usage, DWORD FVF, 
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	
 
 	*ppVertexBuffer = PXY_COM_CAST_(IDirect3DVertexBuffer9, d912pxy_s.pool.vstream.GetVStreamObject(Length, FVF, 0));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -84,11 +84,11 @@ HRESULT d912pxy_device::CreateIndexBuffer(UINT Length, DWORD Usage, D3DFORMAT Fo
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	*ppIndexBuffer = PXY_COM_CAST_(IDirect3DIndexBuffer9, d912pxy_s.pool.vstream.GetVStreamObject(Length, Format, 1));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -99,11 +99,11 @@ HRESULT d912pxy_device::CreateRenderTarget(UINT Width, UINT Height, D3DFORMAT Fo
 
 	LOG_DBG_DTDM("new RT FMT: %u", Format);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 	
 	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s.pool.surface.GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_RENDERTARGET, NULL));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -112,11 +112,11 @@ HRESULT d912pxy_device::CreateDepthStencilSurface(UINT Width, UINT Height, D3DFO
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s.pool.surface.GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_DEPTHSTENCIL, NULL));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -125,11 +125,11 @@ HRESULT d912pxy_device::CreateStateBlock(D3DSTATEBLOCKTYPE Type, IDirect3DStateB
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 	
 	*ppSB = PXY_COM_CAST_(IDirect3DStateBlock9, d912pxy_sblock::d912pxy_sblock_com(Type));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -138,11 +138,11 @@ HRESULT d912pxy_device::CreateVertexDeclaration(CONST D3DVERTEXELEMENT9* pVertex
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	*ppDecl = PXY_COM_CAST_(IDirect3DVertexDeclaration9, d912pxy_vdecl::d912pxy_vdecl_com(pVertexElements));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }
@@ -151,11 +151,11 @@ HRESULT d912pxy_device::CreateVertexShader(CONST DWORD* pFunction, IDirect3DVert
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	*ppShader = PXY_COM_CAST_(IDirect3DVertexShader9, d912pxy_shader::d912pxy_shader_com(1, pFunction, 0));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 	
 	return D3D_OK; 
 }
@@ -164,11 +164,11 @@ HRESULT d912pxy_device::CreatePixelShader(CONST DWORD* pFunction, IDirect3DPixel
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	*ppShader = PXY_COM_CAST_(IDirect3DPixelShader9, d912pxy_shader::d912pxy_shader_com(0, pFunction, 0));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -179,7 +179,7 @@ HRESULT d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	switch (Type)
 	{
@@ -190,7 +190,7 @@ HRESULT d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery
 			*ppQuery = PXY_COM_CAST_(IDirect3DQuery9, d912pxy_query::d912pxy_query_com(Type));
 	}
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return 0; 
 }
@@ -199,7 +199,7 @@ HRESULT d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Height, D3D
 {
 	LOG_DBG_DTDM3(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	//megai2: hacky way to fix dxgi backbuffer format change
 	switch (Format)
@@ -214,7 +214,7 @@ HRESULT d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Height, D3D
 	
 	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_surface::d912pxy_surface_com(Width, Height, Format, D3DUSAGE_D912PXY_FORCE_RT, D3DMULTISAMPLE_NONE, 0, 0, &levels, 1, NULL));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }

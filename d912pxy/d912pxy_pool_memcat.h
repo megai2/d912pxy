@@ -43,6 +43,7 @@ public:
 
 	UINT IsPoolHaveFreeSpace();
 	void AddMemoryToPool(INT sz);
+	UINT32 GetMemoryInPoolMb();
 
 private:
 	UINT32 bitIgnore;
@@ -51,6 +52,7 @@ private:
 
 	UINT32 maxMemoryInPool;
 	UINT32 memoryInPool;
+	UINT32 peristentUsage;
 	
 protected:
 	d912pxy_ringbuffer<ElementType>** memTable;

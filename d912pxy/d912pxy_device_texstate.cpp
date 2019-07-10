@@ -28,7 +28,7 @@ SOFTWARE.
 
 HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
 
@@ -41,14 +41,14 @@ HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 
 	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }
 
 HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
 
@@ -70,14 +70,14 @@ HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTextu
 	else
 		stageFormatsTrack[Stage] = D3DFMT_UNKNOWN;
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
 { 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	LOG_DBG_DTDM("Sampler[%u][%u] = %u", Sampler, Type, Value);
 
@@ -85,7 +85,7 @@ HRESULT d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type,
 
 	d912pxy_s.render.tex.ModSampler(Sampler, Type, Value);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }

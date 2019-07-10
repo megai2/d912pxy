@@ -155,9 +155,7 @@ SOFTWARE.
 	#define FRAME_METRIC_SYNC_WAKE(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_SYNC_WAKE);
 	#define FRAME_METRIC_THREAD(a,b) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_THREAD_TEX+b);
 	#define FRAME_METRIC_PRESENT(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_PREP);
-	#define FRAME_METRIC_RESIDENCY(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_RESIDENCY);
-	#define API_OVERHEAD_TRACK_START(a) d912pxy_s.log.metrics.TrackAPIOverheadStart(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);
-	#define API_OVERHEAD_TRACK_END(a) d912pxy_s.log.metrics.TrackAPIOverheadEnd(API_OVERHEAD_TRACK_LOCAL_ID_DEFINE);		
+	#define FRAME_METRIC_RESIDENCY(a) d912pxy_s.log.metrics.TrackIFrameTime(a, PXY_METRICS_IFRAME_RESIDENCY);	
 #else 
 	#define FRAME_METRIC_CLEANUPS(a)
 	#define FRAME_METRIC_DHEAP(a,b)
@@ -167,8 +165,6 @@ SOFTWARE.
 	#define FRAME_METRIC_THREAD(a,b)
 	#define FRAME_METRIC_PRESENT(a) 
 	#define FRAME_METRIC_RESIDENCY(a)
-	#define API_OVERHEAD_TRACK_START(a)
-	#define API_OVERHEAD_TRACK_END(a)
 #endif
 
 //logging macro =======================

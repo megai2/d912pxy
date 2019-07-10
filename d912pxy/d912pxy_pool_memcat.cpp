@@ -46,12 +46,11 @@ void d912pxy_pool_memcat<ElementType, ProcImpl>::Init(UINT32 iBitIgnore, UINT32 
 	bitLimit = iBitLimit;
 	bitCnt = iBitLimit - iBitIgnore;
 
-	if (limitCfg != PXY_CFG_CNT)
-	{
-		wchar_t* vals = d912pxy_s.config.GetValueRaw(limitCfg);
+	maxMemoryInPool = 0;
+	memoryInPool = 0;
 
-		
-	}
+	if (limitCfg != PXY_CFG_CNT)	
+		maxMemoryInPool = d912pxy_s.config.GetValueUI32(limitCfg) << 20;			
 
 	PXY_MALLOC(memTable, sizeof(void*)*bitCnt, d912pxy_ringbuffer<ElementType>**);
 	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock)*bitCnt, d912pxy_thread_lock*);
@@ -73,11 +72,15 @@ template<class ElementType, class ProcImpl>
 void d912pxy_pool_memcat<ElementType, ProcImpl>::PoolUnloadProc(ElementType val, UINT32 cat)
 {
 	if (!IsPoolHaveFreeSpace())
-	{
-		AddMemoryToPool(-((INT)MemCatToSize(cat)));
+	{		
+		if (val->IsPersistentlyPooled())
+			return;
 
 		val->NoteDeletion(GetTickCount());
 		d912pxy_s.thread.cleanup.Watch(val);
+	}
+	else {
+		val->PoolPersistently();
 	}
 }
 
@@ -112,6 +115,12 @@ template<class ElementType, class ProcImpl>
 void d912pxy_pool_memcat<ElementType, ProcImpl>::AddMemoryToPool(INT sz)
 {
 	memoryInPool += sz;
+}
+
+template<class ElementType, class ProcImpl>
+UINT32 d912pxy_pool_memcat<ElementType, ProcImpl>::GetMemoryInPoolMb()
+{
+	return memoryInPool >> 20;
 }
 
 template class d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>;

@@ -141,11 +141,6 @@ fallback:
 		
 		if (memPoolOffset + maxSize >= memPoolSize)
 		{
-
-#ifdef ENABLE_METRICS		
-			d912pxy_s.log.metrics.TrackUploadPoolUsage(memPoolSize >> 20);
-			d912pxy_s.log.metrics.TrackUploadPoolUsage(0);
-#endif
 			CreateMemPool();
 
 			memPoolOffset = 0;
@@ -170,10 +165,6 @@ fallback:
 		memPoolOffset += maxSize;
 
 		ctorLock->Release();
-
-#ifdef ENABLE_METRICS		
-		d912pxy_s.log.metrics.TrackUploadPoolUsage(memPoolOffset >> 20);
-#endif
 	}
 
 	return ret;
@@ -284,9 +275,14 @@ UINT32 d912pxy_upload_item::PooledAction(UINT32 use)
 	if (use)
 	{
 		mRes = d912pxy_s.pool.upload.MakeUploadBuffer(cat);
+
+		d912pxy_s.pool.upload.AddMemoryToPool(space);
+
 		LOG_ERR_THROW2(mRes->Map(0, 0, (void**)&mappedMemWofs), "upload pool memory map error");
 	}
 	else {
+
+		d912pxy_s.pool.upload.AddMemoryToPool(-space);
 
 		mRes->Release();
 		mRes = NULL;

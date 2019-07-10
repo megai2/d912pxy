@@ -32,7 +32,7 @@ HRESULT d912pxy_device::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	LOG_DBG_DTDM("bind @%u with %u : %u", StreamNumber, OffsetInBytes, Stride);
 
@@ -44,14 +44,14 @@ HRESULT d912pxy_device::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer
 	else
 		d912pxy_s.render.iframe.SetVBuf(0, StreamNumber, OffsetInBytes, Stride);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 	
 	return D3D_OK; 
 }
 
 HRESULT d912pxy_device::SetStreamSource_CAR(UINT StreamNumber, IDirect3DVertexBuffer9 * pStreamData, UINT OffsetInBytes, UINT Stride)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
 		return D3DERR_INVALIDCALL;
@@ -61,28 +61,28 @@ HRESULT d912pxy_device::SetStreamSource_CAR(UINT StreamNumber, IDirect3DVertexBu
 	else
 		d912pxy_s.render.iframe.SetVBufIfChanged(0, StreamNumber, OffsetInBytes, Stride);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::SetIndices_CAR(IDirect3DIndexBuffer9 * pIndexData)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	if (pIndexData)
 		d912pxy_s.render.iframe.SetIBufIfChanged(PXY_COM_LOOKUP(pIndexData, vstream));
 	else
 		d912pxy_s.render.iframe.SetIBufIfChanged(0);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::SetStreamSourceFreq(UINT StreamNumber, UINT Divider)
 { 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	LOG_DBG_DTDM("stream %u div %u", StreamNumber, Divider);
 
@@ -91,7 +91,7 @@ HRESULT d912pxy_device::SetStreamSourceFreq(UINT StreamNumber, UINT Divider)
 
 	d912pxy_s.render.iframe.SetStreamFreq(StreamNumber, Divider);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }
@@ -100,14 +100,14 @@ HRESULT d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	if (pIndexData)
 		d912pxy_s.render.iframe.SetIBuf(PXY_COM_LOOKUP(pIndexData, vstream));
 	else 
 		d912pxy_s.render.iframe.SetIBuf(0);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }
@@ -118,14 +118,14 @@ HRESULT d912pxy_device::SetVertexDeclaration(IDirect3DVertexDeclaration9* pDecl)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	if (pDecl)
 	{
 		d912pxy_s.render.db.pso.IAFormat(PXY_COM_LOOKUP(pDecl, vdecl));
 	}
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }

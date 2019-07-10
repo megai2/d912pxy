@@ -40,7 +40,7 @@ d912pxy_draw_up::~d912pxy_draw_up()
 
 void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
@@ -57,12 +57,12 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 
 	PopVSBinds();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
 void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void * pIndexData, D3DFORMAT IndexDataFormat, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	UINT hiInd = IndexDataFormat == D3DFMT_INDEX32;
 	d912pxy_draw_up_buffer_name indBuf = hiInd ? PXY_DUP_DIPI4 : PXY_DUP_DIPI2;
@@ -82,7 +82,7 @@ void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UIN
 
 	PopVSBinds();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
 void d912pxy_draw_up::OnFrameEnd()

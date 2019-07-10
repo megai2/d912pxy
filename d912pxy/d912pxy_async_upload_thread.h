@@ -45,6 +45,9 @@ public:
 
 	d912pxy_upload_item* GetUploadMem(UINT32 size);
 
+	UINT32 GetMemFootprintMB();
+	UINT32 GetMemFootprintAlignedMB();
+
 protected:
 	void CheckInterrupt();
 	d912pxy_ringbuffer<void*>* finishList;
@@ -52,7 +55,9 @@ protected:
 	d912pxy_upload_item* ulMem;
 
 private:	
-	
+	UINT64 ulMemFootprint;
+	UINT64 ulMemFootprintAligned;
+
 	d912pxy_ringbuffer<QueItemType>* buffer;
 	
 	d912pxy_thread_lock writeLock;

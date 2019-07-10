@@ -31,6 +31,7 @@ d912pxy_comhandler::d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t
 	thrdRefc = 0;
 	beingWatched = 0;
 	poolSync.LockedSet(1);
+	persistentlyPooled = 0;
 	comBase = (d912pxy_com_object*)((intptr_t)this - 8);
 }
 
@@ -45,6 +46,7 @@ d912pxy_comhandler::~d912pxy_comhandler()
 
 void d912pxy_comhandler::Init(d912pxy_com_obj_typeid tid, const wchar_t * moduleText)
 {
+	persistentlyPooled = 0;
 	objType = tid;
 	refc = 1;
 	thrdRefc = 0;
@@ -73,7 +75,7 @@ ULONG d912pxy_comhandler::AddRef()
 
 ULONG d912pxy_comhandler::Release()
 {
-	API_OVERHEAD_TRACK_START(1)
+	
 
 	LONG decR = InterlockedAdd(&refc, -1);
 
@@ -88,13 +90,13 @@ ULONG d912pxy_comhandler::Release()
 			if (FinalReleaseCB())
 				DeAllocateBase();
 
-			API_OVERHEAD_TRACK_END(1)
+			
 
 			return 0;
 		}
 	}
 
-	API_OVERHEAD_TRACK_END(1)
+	
 
 	return decR;
 }

@@ -25,24 +25,6 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-#define PXY_METRICS_API_OVERHEAD_DEVICE 0
-#define PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING 1
-#define PXY_METRICS_API_OVERHEAD_DEVICE_CLIPPING 2
-#define PXY_METRICS_API_OVERHEAD_DEVICE_CONSTRUCTORS 3
-#define PXY_METRICS_API_OVERHEAD_DEVICE_PSO 4
-#define PXY_METRICS_API_OVERHEAD_DEVICE_SHADERS 5
-#define PXY_METRICS_API_OVERHEAD_DEVICE_STREAMS 6
-#define PXY_METRICS_API_OVERHEAD_DEVICE_SURFACE 7
-#define PXY_METRICS_API_OVERHEAD_DEVICE_SWAPCHAIN 8
-#define PXY_METRICS_API_OVERHEAD_DEVICE_TEXSTATE 9
-#define PXY_METRICS_API_OVERHEAD_VSTREAM 10
-#define PXY_METRICS_API_OVERHEAD_TEXTURE 11
-#define PXY_METRICS_API_OVERHEAD_SURFACE 12
-#define PXY_METRICS_API_OVERHEAD_COM 13
-#define PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING_UP 14
-#define PXY_METRICS_API_OVERHEAD_QUERY_OCCLUSION 15
-#define PXY_METRICS_API_OVERHEAD_COUNT 16
-
 #define PXY_METRICS_IFRAME_PREP 0
 #define PXY_METRICS_IFRAME_EXEC 1
 #define PXY_METRICS_IFRAME_SYNC 2
@@ -56,38 +38,18 @@ SOFTWARE.
 #define PXY_METRICS_IFRAME_RESIDENCY 10
 #define PXY_METRICS_IFRAME_COUNT 11
 
-static const wchar_t* PXY_METRICS_API_OVERHEAD_NAMES[] = {
-	L"overhead / dev",
-	L"overhead / dev / draw",
-	L"overhead / dev / clip",
-	L"overhead / dev / ctrs",
-	L"overhead / dev / pso",
-	L"overhead / dev / shd",
-	L"overhead / dev / strm",
-	L"overhead / dev / surf",
-	L"overhead / dev / swpc",
-	L"overhead / dev / texs",
-	L"overhead / vstream",
-	L"overhead / texture",
-	L"overhead / surface",
-	L"overhead / com",
-	L"overhead / dev / dup",
-	L"overhead / query / occlusion",
-	L"overhead / total"
-};
-
 static const wchar_t* PXY_METRICS_IFRAME_TIME_NAMES [] = {
-	L"time / prep",
-	L"time / exec",
-	L"time / sync",
-	L"time / thread / tex",
-	L"time / thread / buf",
-	L"time / thread / rp0",
-	L"time / thread / rp1",
-	L"time / thread / rp2",
-	L"time / thread / rp3",
-	L"time / sync wake",
-	L"time / residency"
+	L"total / prep",
+	L"total / exec",
+	L"total / sync",
+	L"thread / tex",
+	L"thread / buf",
+	L"thread / rp0",
+	L"thread / rp1",
+	L"thread / rp2",
+	L"thread / rp3",
+	L"total / sync wake",
+	L"total / residency"
 };
 
 static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {
@@ -108,37 +70,36 @@ public:
 	void Init();
 	   
 #ifndef DISABLE_P7LIB
-	void TrackAPIOverheadStart(UINT group);
-	void TrackAPIOverheadEnd(UINT group);
 
 	void TrackIFrameTime(UINT start, UINT group);
 	void TrackDHeapSlots(UINT idx, UINT slots);
 
 	void TrackDrawCount(UINT draws);
 	void TrackCleanupCount(UINT cleanups);
-	void TrackUploadPoolUsage(UINT64 usage);
+	void TrackUploadMemUsage();
 
 	void FlushIFrameValues();
 
 private:
 	IP7_Telemetry* iframeMetrics;	
-	tUINT8 metricIFrameTimes[PXY_METRICS_IFRAME_COUNT];
-	tUINT8 metricIFrameAPIOverhead[PXY_METRICS_API_OVERHEAD_COUNT + 1];
+	tUINT8 metricIFrameTimes[PXY_METRICS_IFRAME_COUNT];	
 	tUINT8 metricIFrameDraws;
-	tUINT8 metricIFrameCleans;
-	tUINT8 metricIFrameUploadOffset;
-	tUINT8 metricTotalMemUsed;
+	tUINT8 metricIFrameCleans;	
 	tUINT8 metricIFramePerBatchPrep;
 	tUINT8 metricIFramePerBatchOverhead;
 	tUINT8 metricIFrameAppPrep;	
 
+	tUINT8 metricMemHeap;
+	tUINT8 metricMemUl;
+	tUINT8 metricMemUlFp[4];
+	tUINT8 metricMemWatched;
+	tUINT8 metricMemVStream;
+
 	IP7_Telemetry* dheapMetrics;
 	tUINT8 metricDHeapSlots[PXY_INNER_MAX_DSC_HEAPS];
 	
-	Stopwatch* iframeTime[PXY_METRICS_IFRAME_COUNT];
-	Stopwatch* apiOverheadTime[PXY_METRICS_API_OVERHEAD_COUNT+1];
-	UINT64 apiOverheadTotalTime[PXY_METRICS_API_OVERHEAD_COUNT+1];	
-
+	Stopwatch* iframeTime[PXY_METRICS_IFRAME_COUNT];	
+	
 	UINT lastDraws;
 #endif
 };

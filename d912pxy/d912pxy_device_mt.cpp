@@ -72,6 +72,10 @@ void d912pxy_device::LockAsyncThreads()
 		threadLockdEvents[i].Hold();
 	}
 
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.TrackUploadMemUsage();
+#endif
+
 	threadLock.Release();
 
 	//megai2: sync batch here due to GPUW replay

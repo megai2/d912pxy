@@ -46,9 +46,10 @@ void d912pxy_cleanup_thread::Init()
 	iterationPeriod = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_CLEANUP_PERIOD);
 	iterationSubsleep = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_CLEANUP_SUBSLEEP);
 	lifetime = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_POOLING_LIFETIME);
+	watchCount = 0;
 
 	buffer = new d912pxy_linked_list<d912pxy_comhandler*>();
-	SignalWork();
+	SignalWork();	
 }
 
 void d912pxy_cleanup_thread::ThreadJob()
@@ -67,6 +68,9 @@ void d912pxy_cleanup_thread::ThreadJob()
 				Sleep(iterationSubsleep);
 
 			buffer->IterRemove();
+#ifdef ENABLE_METRICS
+			--watchCount;
+#endif
 			obj->Watching(-1);
 			
 		}
@@ -108,6 +112,9 @@ void d912pxy_cleanup_thread::Watch(d912pxy_comhandler * obj)
 {	
 	if (obj->Watching(0) < 2)
 	{
+#ifdef ENABLE_METRICS
+		++watchCount;
+#endif
 		buffer->Insert(obj);
 		obj->Watching(1);
 	}

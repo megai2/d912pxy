@@ -36,8 +36,11 @@ public:
 	void ThreadJob();
 	void Watch(d912pxy_comhandler* obj);
 
+	UINT TotalWatchedItems() { return watchCount; };
+
 private:
 	d912pxy_linked_list<d912pxy_comhandler*>* buffer;
+	UINT watchCount;
 	
 	UINT iterationPeriod;
 	UINT iterationSubsleep;

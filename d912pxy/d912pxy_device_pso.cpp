@@ -30,7 +30,7 @@ HRESULT d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
 { 
 	LOG_DBG_DTDM("RS %u = %u", State, Value);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	/*if (State > D3DRS_BLENDOPALPHA)
 		return D3DERR_INVALIDCALL;*/
@@ -142,7 +142,7 @@ HRESULT d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
 			d912pxy_s.render.db.pso.State(State,Value);
 	}
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }
@@ -151,7 +151,7 @@ HRESULT d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 	
 	switch (State)
 	{
@@ -172,7 +172,7 @@ HRESULT d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 		*pValue = d912pxy_s.render.db.pso.GetDX9RsValue(State);		
 	}
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -187,11 +187,11 @@ HRESULT d912pxy_device::EndStateBlock(IDirect3DStateBlock9** ppSB)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 			
 	*ppSB = PXY_COM_CAST_(IDirect3DStateBlock9, d912pxy_sblock::d912pxy_sblock_com(D3DSBT_ALL));
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }

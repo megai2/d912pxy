@@ -50,6 +50,8 @@ d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB
 
 	NoteFormatChange(fmt, isIB);
 
+	d912pxy_s.pool.vstream.AddMemoryToPool(dx9desc.Size);
+
 	if (!threadedCtor)
 		ConstructResource();		
 }
@@ -73,7 +75,7 @@ d912pxy_vstream::~d912pxy_vstream()
 
 D912PXY_METHOD_IMPL_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 {
-	API_OVERHEAD_TRACK_START(2)
+	
 
 	d912pxy_vstream_lock_data linfo;
 	linfo.dst = this;
@@ -94,26 +96,26 @@ D912PXY_METHOD_IMPL_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** pp
 	
 	*ppbData = (void*)((intptr_t)(data) + OffsetToLock);
 
-	API_OVERHEAD_TRACK_END(2)
+	
 
 	return D3D_OK;
 }
 
 D912PXY_METHOD_IMPL_NC(Unlock)(THIS)
 {
-	API_OVERHEAD_TRACK_START(2)
+	
 			
 	--lockDepth;
 	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
 
-	API_OVERHEAD_TRACK_END(2)
+	
 
 	return D3D_OK;
 }
 
 void d912pxy_vstream::UnlockRanged(UINT newOffset, UINT newSize)
 {
-	API_OVERHEAD_TRACK_START(2)
+	
 
 	--lockDepth;
 
@@ -122,7 +124,7 @@ void d912pxy_vstream::UnlockRanged(UINT newOffset, UINT newSize)
 
 	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);
 
-	API_OVERHEAD_TRACK_END(2)
+	
 	
 }
 
@@ -200,6 +202,8 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 		if (!threadedCtor)
 			ConstructResource();
 
+		d912pxy_s.pool.vstream.AddMemoryToPool(dx9desc.Size);
+
 		PXY_MALLOC(data, dx9desc.Size, void*);
 	}
 	else {
@@ -208,6 +212,8 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 			m_res->Release();
 			m_res = NULL;
 		}
+
+		d912pxy_s.pool.vstream.AddMemoryToPool(-((INT)dx9desc.Size));
 
 		PXY_FREE(data);
 	}

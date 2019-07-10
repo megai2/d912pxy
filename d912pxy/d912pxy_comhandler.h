@@ -86,6 +86,9 @@ public:
 
 	void DeAllocateBase();
 
+	UINT IsPersistentlyPooled() { return persistentlyPooled; };
+	void PoolPersistently() { persistentlyPooled = 1; };
+
 protected:
 	d912pxy_com_object* comBase;
 
@@ -94,6 +97,7 @@ private:
 	LONG refc;
 	UINT32 timestamp;	
 	LONG beingWatched;	
+	UINT persistentlyPooled;
 	d912pxy_com_obj_typeid objType;
 
 	d912pxy_thread_lock poolSync;	

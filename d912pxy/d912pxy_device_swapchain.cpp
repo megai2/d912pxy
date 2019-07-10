@@ -66,7 +66,7 @@ HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapOpLock.Hold();
 
@@ -80,7 +80,7 @@ HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 
 	swapOpLock.Release();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 		
 	return ret; 
 }
@@ -89,14 +89,14 @@ HRESULT d912pxy_device::InnerPresentExecute()
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapOpLock.Hold();
 
 	m_dupEmul->OnFrameEnd();
 	d912pxy_s.render.iframe.End();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 	FRAME_METRIC_PRESENT(0)
 
 	LOG_DBG_DTDM2("Present Exec GPU");
@@ -108,7 +108,7 @@ void d912pxy_device::InnerPresentFinish()
 	LOG_DBG_DTDM(__FUNCTION__);
 
 	FRAME_METRIC_PRESENT(1)
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	d912pxy_s.render.iframe.Start();
 
@@ -116,7 +116,7 @@ void d912pxy_device::InnerPresentFinish()
 
 	LOG_DBG_DTDM("Present finished");
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
 HRESULT d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
@@ -153,11 +153,11 @@ HRESULT d912pxy_device::GetBackBuffer(UINT iSwapChain, UINT iBackBuffer, D3DBACK
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	HRESULT ret = swapchains[iSwapChain]->GetBackBuffer(iBackBuffer, Type, ppBackBuffer);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return ret;
 }
@@ -173,33 +173,33 @@ void d912pxy_device::SetGammaRamp(UINT iSwapChain, DWORD Flags, CONST D3DGAMMARA
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapchains[iSwapChain]->SetGammaRamp(Flags, pRamp);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
 void d912pxy_device::GetGammaRamp(UINT iSwapChain, D3DGAMMARAMP* pRamp)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapchains[iSwapChain]->GetGammaRamp(pRamp);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
 HRESULT d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurface9* pDestSurface) 
 {	
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapchains[iSwapChain]->GetFrontBufferData(pDestSurface);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -208,7 +208,7 @@ HRESULT d912pxy_device::TestCooperativeLevel(void)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapOpLock.Hold();
 
@@ -216,7 +216,7 @@ HRESULT d912pxy_device::TestCooperativeLevel(void)
 
 	swapOpLock.Release();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return ret;
 }

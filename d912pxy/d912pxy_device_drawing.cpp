@@ -60,7 +60,7 @@ HRESULT d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, INT
 { 
 	LOG_DBG_DTDM("DrawIndexed PT %u BV %u MV %u NV %u SI %u PC %u", PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	d912pxy_s.render.iframe.CommitBatch(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
@@ -73,14 +73,14 @@ HRESULT d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, INT
 	iframe->Start();
 #endif
 
-	API_OVERHEAD_TRACK_END(0)
+	
 		
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::DrawIndexedPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
@@ -93,7 +93,7 @@ HRESULT d912pxy_device::DrawIndexedPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveTy
 	iframe->Start();
 #endif
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -101,7 +101,7 @@ HRESULT d912pxy_device::DrawIndexedPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveTy
 
 HRESULT d912pxy_device::DrawIndexedPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 #ifdef PER_BATCH_FLUSH_DEBUG
 	replayer->Finish();
@@ -173,7 +173,7 @@ HRESULT d912pxy_device::DrawIndexedPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, 
 
 	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }

@@ -65,11 +65,11 @@ HRESULT d912pxy_texture::GetLevelDesc(UINT Level, D3DSURFACE_DESC * pDesc)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(1)
+	
 
 	*pDesc = baseSurface->GetDX9DescAtLevel(Level);
 
-	API_OVERHEAD_TRACK_END(1)
+	
 
 	return D3D_OK;
 }
@@ -78,7 +78,7 @@ HRESULT d912pxy_texture::GetSurfaceLevel(UINT Level, IDirect3DSurface9 ** ppSurf
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(1)
+	
 
 		if (srvIDc[1])
 		{
@@ -89,7 +89,7 @@ HRESULT d912pxy_texture::GetSurfaceLevel(UINT Level, IDirect3DSurface9 ** ppSurf
 
 	(*ppSurfaceLevel)->AddRef();
 
-	API_OVERHEAD_TRACK_END(1)
+	
 
 	return D3D_OK;
 }
@@ -116,12 +116,12 @@ HRESULT d912pxy_texture::AddDirtyRect(const RECT * pDirtyRect)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(1)
+	
 
 	if (m_levels == 1)
 		baseSurface->GetLayer(0, 0)->SetDirtyRect(pDirtyRect->left, pDirtyRect->right, pDirtyRect->top, pDirtyRect->bottom);
 
-	API_OVERHEAD_TRACK_END(1)
+	
 
 	return D3D_OK;
 }

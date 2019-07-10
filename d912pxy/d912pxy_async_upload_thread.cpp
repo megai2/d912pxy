@@ -108,16 +108,37 @@ d912pxy_upload_item * d912pxy_async_upload_thread<QueItemType, ProcImpl>::GetUpl
 {
 	if (!ulMem)
 	{
-		ulMem = d912pxy_s.pool.upload.GetUploadObject(1);
-	}
-
-	if (!ulMem->HaveFreeSpace(size))
+		ulMem = d912pxy_s.pool.upload.GetUploadObject(size * 2);
+#ifdef ENABLE_METRICS
+		ulMemFootprintAligned += ulMem->GetSize();
+#endif
+	} else if (!ulMem->HaveFreeSpace(size))
 	{
 		ulMem->Release();
-		ulMem = d912pxy_s.pool.upload.GetUploadObject((UINT)max(size * 2, ulMem->GetSize() * 2));
+		ulMem = d912pxy_s.pool.upload.GetUploadObject((UINT)max(size, ulMem->GetSize() * 2));
+
+#ifdef ENABLE_METRICS		
+		ulMemFootprintAligned += ulMem->GetSize();
+#endif
 	}
 
+#ifdef ENABLE_METRICS
+	ulMemFootprint += size;	
+#endif
+
 	return ulMem;
+}
+
+template<class QueItemType, class ProcImpl>
+UINT32 d912pxy_async_upload_thread<QueItemType, ProcImpl>::GetMemFootprintMB()
+{
+	return (UINT32)(ulMemFootprint >> 20);
+}
+
+template<class QueItemType, class ProcImpl>
+UINT32 d912pxy_async_upload_thread<QueItemType, ProcImpl>::GetMemFootprintAlignedMB()
+{
+	return (UINT32)(ulMemFootprintAligned >> 20);
 }
 
 template<class QueItemType, class ProcImpl>
@@ -134,6 +155,12 @@ void d912pxy_async_upload_thread<QueItemType, ProcImpl>::CheckInterrupt()
 		}
 
 		d912pxy_s.dev.LockThread(threadSyncId);
+
+#ifdef ENABLE_METRICS		
+		ulMemFootprint = 0;
+		ulMemFootprintAligned = 0;
+#endif
+
 		static_cast<ProcImpl>(this)->ThreadWake();
 	}
 }
