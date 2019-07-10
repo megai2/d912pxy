@@ -32,9 +32,7 @@ d912pxy_metrics::d912pxy_metrics()
 
 d912pxy_metrics::~d912pxy_metrics()
 {
-	
-
-#ifndef DISABLE_P7LIB
+#ifdef ENABLE_METRICS
 	FlushIFrameValues();
 
 	for (int i = 0; i != PXY_METRICS_IFRAME_COUNT; ++i)
@@ -49,7 +47,7 @@ void d912pxy_metrics::Init()
 {
 	NonCom_Init(L"metrics");
 
-#ifndef DISABLE_P7LIB
+#ifdef ENABLE_METRICS
 	LOG_INFO_DTDM("collecting frame and descriptor heap statistics, expect some performance drop");
 
 	IP7_Client *l_pClient = P7_Get_Shared(TM("logger"));
@@ -89,7 +87,7 @@ void d912pxy_metrics::Init()
 #endif
 }
 
-#ifndef DISABLE_P7LIB
+#ifdef ENABLE_METRICS
 
 void d912pxy_metrics::TrackIFrameTime(UINT start, UINT group)
 {

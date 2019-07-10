@@ -69,7 +69,7 @@ public:
 
 	void Init();
 	   
-#ifndef DISABLE_P7LIB
+#ifdef ENABLE_METRICS
 
 	void TrackIFrameTime(UINT start, UINT group);
 	void TrackDHeapSlots(UINT idx, UINT slots);
