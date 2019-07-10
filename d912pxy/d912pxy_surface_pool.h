@@ -46,7 +46,7 @@ public:
 
 #ifdef ENABLE_METRICS
 	UINT64 GetPoolSizeMB() { return poolSize >> 20; };
-	void ChangePoolSize(INT dlt) { poolSize += dlt; };
+	void ChangePoolSize(INT dlt);
 #endif
 	   
 private:

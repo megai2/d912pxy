@@ -36,7 +36,7 @@ d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB
 
 	inUploadState = 0;
 
-	PXY_MALLOC(data, Length, void*);
+	PXY_MALLOC_GPU_HOST_COPY(data, Length, void*);
 
 	dx9desc.FVF = 0;
 	dx9desc.Pool = D3DPOOL_DEFAULT;
@@ -68,8 +68,8 @@ d912pxy_vstream * d912pxy_vstream::d912pxy_vstream_com(UINT Length, DWORD Usage,
 
 d912pxy_vstream::~d912pxy_vstream()
 {
-	if (GetCurrentPoolSyncValue()) {
-		PXY_FREE(data);
+	if (GetCurrentPoolSyncValue()) {		
+		PXY_FREE_GPU_HOST_COPY(data);
 	}
 }
 
@@ -102,29 +102,21 @@ D912PXY_METHOD_IMPL_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** pp
 }
 
 D912PXY_METHOD_IMPL_NC(Unlock)(THIS)
-{
-	
-			
+{			
 	--lockDepth;
 	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
-
 	
-
 	return D3D_OK;
 }
 
 void d912pxy_vstream::UnlockRanged(UINT newOffset, UINT newSize)
 {
-	
-
 	--lockDepth;
 
 	lockInfo[lockDepth].offset = newOffset;
 	lockInfo[lockDepth].size = newSize;
 
-	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);
-
-	
+	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
 	
 }
 
@@ -204,7 +196,7 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 
 		d912pxy_s.pool.vstream.AddMemoryToPool(dx9desc.Size);
 
-		PXY_MALLOC(data, dx9desc.Size, void*);
+		PXY_MALLOC_GPU_HOST_COPY(data, dx9desc.Size, void*);		
 	}
 	else {
 		if (m_res)
@@ -215,7 +207,8 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 
 		d912pxy_s.pool.vstream.AddMemoryToPool(-((INT)dx9desc.Size));
 
-		PXY_FREE(data);
+
+		PXY_FREE_GPU_HOST_COPY(data);		
 	}
 
 	PooledActionExit();

@@ -116,6 +116,20 @@ SOFTWARE.
 #define PXY_MEM_MGR_TRIES 100
 #define PXY_MEM_MGR_RETRY_WAIT 100
 
+#define USE_VA_FOR_HOST_MEMORY 
+
+#ifdef USE_VA_FOR_HOST_MEMORY
+
+#define PXY_MALLOC_GPU_HOST_COPY(pointer, size, tcast) pointer = d912pxy_s.pool.hostPow2.AllocateObjPow2(size);
+#define PXY_FREE_GPU_HOST_COPY(pointer) d912pxy_s.pool.hostPow2.DeAllocateObj(pointer);
+
+#else 
+
+#define PXY_MALLOC_GPU_HOST_COPY(pointer, size, tcast) PXY_MALLOC(pointer, size, tcast)
+#define PXY_FREE_GPU_HOST_COPY(pointer) PXY_FREE(pointer)
+
+#endif
+
 #ifdef _DEBUG
 
 #define PXY_MALLOC(pointer, size, tcast) (d912pxy_s.mem.pxy_malloc_dbg((void**)&pointer, size, __FILE__, __LINE__, __FUNCTION__))

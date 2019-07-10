@@ -34,6 +34,7 @@ typedef struct d912pxy_instance {
 		d912pxy_vstream_pool vstream;
 		d912pxy_surface_pool surface;
 		d912pxy_upload_pool upload;	
+		d912pxy_mem_va_table hostPow2;
 	} pool;
 
 	struct thread {

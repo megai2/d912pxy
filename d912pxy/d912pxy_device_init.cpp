@@ -32,6 +32,15 @@ void d912pxy_device::Init(IDirect3DDevice9* dev, void* par)
 	
 	d912pxy_s.com.Init();
 
+	UINT64 pow2sizes[PXY_INNER_MAX_POW2_ALLOC_POW - PXY_INNER_MIN_POW2_ALLOC_POW];
+
+	for (int i = PXY_INNER_MIN_POW2_ALLOC_POW; i != PXY_INNER_MAX_POW2_ALLOC_POW; ++i)
+	{
+		pow2sizes[i - PXY_INNER_MIN_POW2_ALLOC_POW] = 1ULL << i;
+	}
+
+	d912pxy_s.pool.hostPow2.Init(pow2sizes, d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_HOST_VA_RESERVE), PXY_INNER_MAX_POW2_ALLOC_POW - PXY_INNER_MIN_POW2_ALLOC_POW);
+
 	initPtr = par;
 	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);
 

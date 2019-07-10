@@ -31,16 +31,15 @@ d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_com_object * iBase, UINT32 
 	wPitch = iWPitch;
 	width = iWidth;
 	memPerPix = imemPerPix;	
-
-	PXY_MALLOC(surfMem, iBSize, void*);
+	
+	PXY_MALLOC_GPU_HOST_COPY(surfMem, iBSize, void*);
 
 	intRefc = 0;
 }
 
 d912pxy_surface_layer::~d912pxy_surface_layer()
 {
-	PXY_FREE(surfMem);
-
+	PXY_FREE_GPU_HOST_COPY(surfMem);	 
 }
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_surface_layer

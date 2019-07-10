@@ -96,6 +96,9 @@ d912pxy_device::~d912pxy_device(void)
 	if (initPtr)
 		((IDirect3D9*)initPtr)->Release();
 
+	d912pxy_s.pool.hostPow2.DeInit();
+	d912pxy_s.pool.hostPow2.~d912pxy_mem_va_table();
+
 	d912pxy_s.com.DeInit();
 	
 	LOG_INFO_DTDM("d912pxy exited");

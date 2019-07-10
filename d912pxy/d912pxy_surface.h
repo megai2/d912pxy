@@ -63,8 +63,10 @@ public:
 	void DelayedLoad(void* mem, UINT lv);
 	
 	size_t GetFootprintMemSz();
+	size_t GetFootprintMemSzDX9();
 	UINT GetWPitchDX9(UINT lv);
 	UINT GetWPitchLV(UINT lv);
+	UINT FixBlockHeight(UINT lv);
 	   	
 	UINT FinalReleaseCB();
 	UINT32 PooledAction(UINT32 use);
@@ -98,7 +100,7 @@ private:
 	
 	d912pxy_surface_layer** layers;
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* subresFootprints;
-	size_t* subresSizes;
+	size_t subresSizes;
 	UINT subresCountCache;	
 
 	UINT ulMarked;

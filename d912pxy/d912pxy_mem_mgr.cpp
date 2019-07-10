@@ -149,8 +149,8 @@ intptr_t d912pxy_mem_mgr::ReserveVARangeAligned(UINT64 pow2shift, UINT64 addedSi
 
 void* d912pxy_mem_mgr::inRealloc(void* block, size_t sz) { // Returns pointer or nullptr if failed.
 	
-	//return HeapReAlloc(g_procHeap, 0, block, sz);
-
+	return HeapReAlloc(g_procHeap, 0, block, sz);
+	/*
 	//make new
 	void* tempPoint = inMalloc(sz);
 	
@@ -165,21 +165,21 @@ void* d912pxy_mem_mgr::inRealloc(void* block, size_t sz) { // Returns pointer or
 	//delete old
 	inFree(block);
 	
-	return tempPoint;
+	return tempPoint;*/
 
 }
 
 void* d912pxy_mem_mgr::inMalloc(size_t sz) { // Returns pointer or nullptr if failed.
 
-	//return HeapAlloc(g_procHeap, 0, sz);
-	return VirtualAlloc(NULL, sz, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	return HeapAlloc(g_procHeap, 0, sz);
+	//return VirtualAlloc(NULL, sz, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
 }
 
 void d912pxy_mem_mgr::inFree(void* block) {
 
-	//HeapFree(g_procHeap, 0, block);
-	VirtualFree(block, 0, MEM_RELEASE);
+	HeapFree(g_procHeap, 0, block);
+	//VirtualFree(block, 0, MEM_RELEASE);
 }
 
 

@@ -187,3 +187,12 @@ void d912pxy_surface_pool::PoolUnloadProc(d912pxy_surface * val, d912pxy_ringbuf
 			d912pxy_s.thread.cleanup.Watch(val);
 	}
 }
+
+#ifdef ENABLE_METRICS
+
+void d912pxy_surface_pool::ChangePoolSize(INT dlt)
+{
+	poolSize += dlt;
+}
+
+#endif

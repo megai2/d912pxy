@@ -40,6 +40,9 @@ typedef struct d912pxy_mem_va_table_entry
 } d912pxy_mem_va_table_entry;
 
 #define PXY_INNER_MAX_VA_TABLE_ENTRYS 32
+#define PXY_INNER_MIN_POW2_ALLOC_POW 10
+#define PXY_INNER_MAX_POW2_ALLOC_POW 30
+#define PXY_INNER_ALLOC_GRAIN_POW2 25
 
 class d912pxy_mem_va_table : public d912pxy_noncom
 {
@@ -50,6 +53,7 @@ public:
 	void Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 entryCount);
 	void DeInit();
 
+	void* AllocateObjPow2(UINT64 size);
 	void* AllocateObj(UINT64 type);
 	void DeAllocateObj(void* obj);
 

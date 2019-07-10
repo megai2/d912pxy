@@ -51,8 +51,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	{
 
 		PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
-		PXY_MALLOC(subresSizes, sizeof(size_t) * 1, size_t*);
-
+		
 		LOG_DBG_DTDM("w %u h %u u %u FCC NULL", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
 		return;
 	}
@@ -131,8 +130,7 @@ d912pxy_surface * d912pxy_surface::d912pxy_surface_com(UINT Width, UINT Height, 
 d912pxy_surface::~d912pxy_surface()
 {
 	PXY_FREE(subresFootprints);
-	PXY_FREE(subresSizes);
-		
+			
 	if (rtdsHPtr.ptr == 0)
 	{
 		if (m_res)
@@ -219,12 +217,18 @@ size_t d912pxy_surface::GetFootprintMemSz()
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	size_t retSum = 0;
+	size_t ret = 0;
 
-	for (int i = 0; i != subresCountCache; ++i)
-		retSum += subresSizes[i];
+	for (int i = 0; i != descCache.DepthOrArraySize; ++i)
+	{
+		for (int j = 0; j != descCache.MipLevels; ++j)
+		{
+			UINT subresId = i * descCache.MipLevels + j;
+			ret += subresFootprints[subresId].Footprint.RowPitch*FixBlockHeight(subresId);
+		}
+	}
 	
-	return retSum;
+	return ret;
 }
 
 DXGI_FORMAT d912pxy_surface::GetDSVFormat()
@@ -291,8 +295,10 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 		return;
 	}
 
+	UINT blockHeight = FixBlockHeight(lv);
+
 	d912pxy_upload_item* ul = d912pxy_s.thread.texld.GetUploadMem(
-		(UINT32)d912pxy_helper::AlignValueByPow2(subresFootprints[lv].Footprint.RowPitch*subresFootprints[lv].Footprint.Height, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT));
+		(UINT32)d912pxy_helper::AlignValueByPow2(subresFootprints[lv].Footprint.RowPitch*blockHeight, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT));
 
 	if (!ulMarked)
 	{
@@ -302,20 +308,9 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 	ulMarked = 1;		
 	
 	UINT wPitch = GetWPitchLV(lv);
-	UINT blockHeight = subresFootprints[lv].Footprint.Height;
+	
 
-	switch (surf_dx9dsc.Format)
-	{
-		case D3DFMT_DXT1:
-		case D3DFMT_DXT2:
-		case D3DFMT_DXT3:
-		case D3DFMT_DXT4:
-		case D3DFMT_DXT5:
-		case D3DFMT_ATI2:
-			blockHeight = blockHeight >> 2;
-		default:
-			;;
-	}
+
 
 	ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(CLG_TEX);
 
@@ -378,12 +373,12 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 		return 0;
 	}
 
-#ifdef ENABLE_METRICS
-	d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz() * (use ? 1 : -1));
-#endif
-
 	if ((surf_dx9dsc.Usage != D3DUSAGE_DEPTHSTENCIL) && (surf_dx9dsc.Usage != D3DUSAGE_RENDERTARGET))
 	{
+#ifdef ENABLE_METRICS
+		d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz() * (use ? 1 : -1));
+#endif
+
 		if (use)
 		{
 			if (!threadedCtor)
@@ -455,7 +450,8 @@ void d912pxy_surface::MarkPooled(UINT uid)
 {
 	isPooled = uid;
 #ifdef ENABLE_METRICS
-	d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz());
+	if ((surf_dx9dsc.Usage != D3DUSAGE_DEPTHSTENCIL) && (surf_dx9dsc.Usage != D3DUSAGE_RENDERTARGET))
+		d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz());
 #endif
 }
 
@@ -511,7 +507,6 @@ void d912pxy_surface::UpdateDescCache()
 	UINT32 ulArrSize = sizeof(d912pxy_upload_item*) * subresCountCache;
 
 	PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
-	PXY_MALLOC(subresSizes, sizeof(size_t)*subresCountCache, size_t*);
 	
 	d912pxy_s.dx12.dev->GetCopyableFootprints(
 		&descCache,
@@ -521,7 +516,7 @@ void d912pxy_surface::UpdateDescCache()
 		subresFootprints,
 		NULL,
 		NULL,
-		subresSizes
+		&subresSizes
 	);	
 }
 
@@ -609,13 +604,15 @@ void d912pxy_surface::AllocateLayers()
 			layers[subresId] = d912pxy_surface_layer::d912pxy_surface_layer_com(
 				comBase,
 				subresId,
-				subresFootprints[subresId].Footprint.RowPitch*subresFootprints[subresId].Footprint.Height,
+				subresFootprints[subresId].Footprint.RowPitch*FixBlockHeight(subresId),
 				GetWPitchDX9(subresId),
 				subresFootprints[subresId].Footprint.Width,
 				mem_perPixel
 			);
 		}
 	}
+
+	
 }
 
 void d912pxy_surface::FreeLayers()
@@ -752,6 +749,26 @@ UINT d912pxy_surface::GetWPitchLV(UINT lv)
 	default:
 		return w * mem_perPixel;
 	}
+}
+
+UINT d912pxy_surface::FixBlockHeight(UINT lv)
+{
+	UINT blockHeight = subresFootprints[lv].Footprint.Height;
+
+	switch (surf_dx9dsc.Format)
+	{
+	case D3DFMT_DXT1:
+	case D3DFMT_DXT2:
+	case D3DFMT_DXT3:
+	case D3DFMT_DXT4:
+	case D3DFMT_DXT5:
+	case D3DFMT_ATI2:
+		blockHeight = blockHeight >> 2;
+	default:
+		;;
+	}
+
+	return blockHeight;
 }
 
 D3DSURFACE_DESC d912pxy_surface::GetDX9DescAtLevel(UINT level)
