@@ -72,13 +72,20 @@ d912pxy_shader_uid d912pxy_shader_db::GetUID(DWORD * code, UINT32* len)
 	return hash;
 }
 
-d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_pshader* ps)
-{	
+d912pxy_shader_pair_hash_type d912pxy_shader_db::GetPairUID(d912pxy_vshader * vs, d912pxy_pshader * ps)
+{
 	d912pxy_shader_uid pdc[2] = { vs->GetID(), ps->GetID() };
 
 	LOG_DBG_DTDM2("ShaderPair %016llX %016llX", pdc[0], pdc[1]);
-	
+
 	d912pxy_shader_pair_hash_type ha = (d912pxy_shader_pair_hash_type)(pdc[0] ^ pdc[1]);
+
+	return ha;
+}
+
+d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_pshader* ps)
+{	
+	d912pxy_shader_pair_hash_type ha = GetPairUID(vs, ps);
 		
 	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->PointAtMemMTR(&ha, sizeof(d912pxy_shader_pair_hash_type));
 	
@@ -91,6 +98,8 @@ d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_vshader* vs, d912pxy_ps
 
 		if (!it)
 		{
+			d912pxy_shader_uid pdc[2] = { vs->GetID(), ps->GetID() };
+
 			it = new d912pxy_shader_pair(ha, pdc, m_dev);
 
 			vs->NotePairUsage(ha);

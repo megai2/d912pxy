@@ -75,14 +75,6 @@ d3d9ProxyCB_OnDevCreate D3D9ProxyCb_get_OnDevCreate() {
 	return pxCb_devCreate;
 }
 
-void D3D9ProxyCb_set_OnDevDestroy(d3d9ProxyCB_OnDevDestroy pxFun) {
-	pxCb_devDestroy = pxFun;
-}
-
-d3d9ProxyCB_OnDevDestroy D3D9ProxyCb_get_OnDevDestroy() {
-	return pxCb_devDestroy;
-}
-
 //Direct3DCreate9
 extern "C" IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
 

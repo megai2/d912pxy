@@ -53,7 +53,7 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 	ulObj = NULL;
 
-	data = malloc(Length);
+	PXY_MALLOC(data, Length, void*);
 
 	dx9desc.FVF = 0;
 	dx9desc.Pool = D3DPOOL_DEFAULT;
@@ -73,8 +73,9 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 d912pxy_vstream::~d912pxy_vstream()
 {
-	if (data)
-		free(data);
+	if (GetCurrentPoolSyncValue()) {
+		PXY_FREE(data);
+	}
 }
 
 D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
@@ -201,7 +202,7 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 		if (!threadedCtor)
 			ConstructResource();
 
-		data = malloc(dx9desc.Size);		
+		PXY_MALLOC(data, dx9desc.Size, void*);
 	}
 	else {
 		if (m_res)
@@ -210,13 +211,12 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 			m_res = NULL;
 		}
 
-		free(data);
-		data = NULL;
+		PXY_FREE(data);
 	}
 
 	PooledActionExit();
 
-	return 0;
+	return 1;
 }
 
 void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl)
@@ -232,8 +232,8 @@ void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12Grap
 	}
 	
 	UploadDataCopy(ulObj->DPtr() + linfo->offset, linfo->offset, linfo->size);
-
-	ulObj->UploadTargetWithOffset(this, linfo->offset, linfo->offset, linfo->size, cl);
+	
+	ulObj->UploadTargetWithOffset(this, linfo->offset, linfo->offset, linfo->size, cl);	
 }
 
 void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
@@ -259,6 +259,11 @@ void d912pxy_vstream::ConstructResource()
 	m_res = tmpLocation;
 
 	ctorSync.Release();
+}
+
+UINT d912pxy_vstream::GetLength()
+{
+	return dx9desc.Size;
 }
 
 void d912pxy_vstream::UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size)

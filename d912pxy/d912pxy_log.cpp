@@ -56,6 +56,10 @@ d912pxy_log::d912pxy_log()
 d912pxy_log::~d912pxy_log()
 {
 #ifndef DISABLE_P7LIB
+	
+	//megai2: wait a bit for final datas to be processed
+	Sleep(2000);
+
 	p7cli->Release();
 #else
 	if (logfile)
@@ -103,6 +107,9 @@ void d912pxy_log::WriteCrashLogLine(wchar_t * buf)
 		{
 			++i;
 			sprintf(fn, "%s%u.txt", PXY_CRASH_LOG_FILE_PATH, i);
+
+			if (i >= 10)
+				break;
 		}
 
 		crashLog = fopen(fn, "w");

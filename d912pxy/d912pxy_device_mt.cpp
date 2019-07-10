@@ -64,7 +64,7 @@ void d912pxy_device::LockAsyncThreads()
 	d912pxy_s(texloadThread)->SignalWork();
 	d912pxy_s(bufloadThread)->SignalWork();
 	d912pxy_s(CMDReplay)->Finish();
-
+	
 	threadLock.Add(activeThreadCount);	
 	
 	for (int i = 0; i != activeThreadCount; ++i)
@@ -73,6 +73,11 @@ void d912pxy_device::LockAsyncThreads()
 	}
 
 	threadLock.Release();
+
+	//megai2: sync batch here due to GPUW replay
+	d912pxy_s(batch)->FrameEnd();
+
+	d912pxy_s(CMDReplay)->Start();
 	
 	FRAME_METRIC_SYNC(0)
 }

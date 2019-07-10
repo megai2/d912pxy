@@ -35,6 +35,9 @@ SOFTWARE.
 #define PXY_VFS_BID_SHADER_PROFILE 1
 #define PXY_VFS_BID_PSO_CACHE_KEYS 2
 #define PXY_VFS_BID_PSO_PRECOMPILE_LIST 3
+#define PXY_VFS_BID_SHADER_SOURCES 4
+#define PXY_VFS_BID_DERIVED_CSO_VS 5
+#define PXY_VFS_BID_DERIVED_CSO_PS 6
 
 #define PXY_VFS_SIGNATURE 0x443931325043b46
 #define PXY_VFS_VER 1
@@ -52,8 +55,8 @@ public:
 	d912pxy_vfs(const char* lockPath);
 	~d912pxy_vfs();
 
-	void SetRoot(const char* rootPath);
-	void* LoadVFS(UINT id, const char* name);
+	void SetRoot(wchar_t* rootPath);
+	void* LoadVFS(UINT id, const char* name, UINT memCache);
 
 	UINT64 IsPresentN(const char* fnpath, UINT32 vfsId);
 	UINT64 IsPresentH(UINT64 fnHash, UINT32 vfsId);
@@ -87,6 +90,7 @@ private:
 
 	d912pxy_memtree2* m_vfsFileOffsets[PXY_VFS_MAX_BID];
 	UINT64 m_vfsLastFileOffset[PXY_VFS_MAX_BID];
+
 
 };
 

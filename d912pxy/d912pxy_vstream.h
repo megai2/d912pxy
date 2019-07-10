@@ -85,6 +85,8 @@ public:
 
 	void ConstructResource();
 
+	UINT GetLength();
+
 	static UINT32 threadedCtor;
 
 private:	
@@ -103,5 +105,6 @@ private:
 	LONG lockDepth;	
 
 	d912pxy_thread_lock ctorSync;
+
 };
 

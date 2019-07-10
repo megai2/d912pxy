@@ -45,6 +45,7 @@ void d912pxy_buffer_loader::UploadItem(d912pxy_vstream_lock_data* it)
 void d912pxy_buffer_loader::ThreadWake()
 {
 	cl = d912pxy_s(GPUcl)->GID(CLG_BUF);
+	PIXBeginEvent(cl, 0xAA, "vstream upload");
 }
 
 void d912pxy_buffer_loader::OnThreadInterrupt()
@@ -53,6 +54,8 @@ void d912pxy_buffer_loader::OnThreadInterrupt()
 	{
 		((d912pxy_vstream*)finishList->PopElement())->FinishUpload(cl);
 	}
+
+	PIXEndEvent(cl);
 }
 
 void d912pxy_buffer_loader::IssueUpload(d912pxy_vstream_lock_data lck)

@@ -44,6 +44,35 @@ HRESULT WINAPI d912pxy_device::SetRenderTarget(DWORD RenderTargetIndex, IDirect3
 	return D3D_OK; 
 }
 
+HRESULT __stdcall d912pxy_device::SetRenderTarget_Compat(IDirect3DDevice9 * self, DWORD RenderTargetIndex, IDirect3DSurface9 * pRenderTarget)
+{
+	API_OVERHEAD_TRACK_START(0)
+
+	if (RenderTargetIndex >= PXY_INNER_MAX_RENDER_TARGETS)
+		return D3DERR_INVALIDCALL;
+
+	d912pxy_surface* rtSurf = (d912pxy_surface*)pRenderTarget;
+
+	d912pxy_s(iframe)->BindSurface(1 + RenderTargetIndex, rtSurf);
+
+	D3DVIEWPORT9 wp;
+	wp.X = 0;
+	wp.Y = 0;
+
+	D3DSURFACE_DESC sdsc = rtSurf->GetDX9DescAtLevel(0);
+
+	wp.Width = sdsc.Width;
+	wp.Height = sdsc.Height;
+	wp.MaxZ = 1;
+	wp.MinZ = 0;
+
+	self->SetViewport(&wp);
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
 HRESULT WINAPI d912pxy_device::GetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9** ppRenderTarget)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
@@ -113,8 +142,21 @@ HRESULT WINAPI d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CO
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
+HRESULT __stdcall d912pxy_device::Clear_Emulated(IDirect3DDevice9 * self, DWORD Count, const D3DRECT * pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
+	d912pxy_device* _self = (d912pxy_device*)self;
+
+	API_OVERHEAD_TRACK_START(0)
+
+	_self->m_clearEmul->Clear(Count, pRects, Flags, Color, Z, Stencil);
+
+	API_OVERHEAD_TRACK_END(0)
+
+	return D3D_OK;
+}
+
+HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
+{	
 	LOG_DBG_DTDM("Clear Rects: %u", Count);
 
 	API_OVERHEAD_TRACK_START(0)
@@ -133,7 +175,6 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 
 		if (surf)
 			d912pxy_s(CMDReplay)->RTClear(surf, fvColor, d912pxy_s(iframe)->GetViewport());
-		//iframe->GetBindedSurface(1)->d912_rtv_clear(fvColor, Count, (D3D12_RECT*)pRects);//megai2: rect is 4 uint structure, may comply
 	}
 
 	if (Flags & (D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER))
@@ -144,8 +185,6 @@ HRESULT WINAPI d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD F
 
 		if (surf)
 			d912pxy_s(CMDReplay)->DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf, d912pxy_s(iframe)->GetViewport());
-
-		//	surf->d912_dsv_clear(Z, Stencil & 0xFF, Count, (D3D12_RECT*)pRects, (D3D12_CLEAR_FLAGS)cvtCf);
 	}
 
 	API_OVERHEAD_TRACK_END(0)

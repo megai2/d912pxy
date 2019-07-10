@@ -66,6 +66,7 @@ void d912pxy_texture_loader::IssueUpload(d912pxy_surface * surf, void* mem, UINT
 
 void d912pxy_texture_loader::ThreadWake()
 {
+	PIXBeginEvent(d912pxy_s(GPUcl)->GID(CLG_TEX), 0x0000AA, "surface upload");
 }
 
 void d912pxy_texture_loader::OnThreadInterrupt()
@@ -95,6 +96,8 @@ void d912pxy_texture_loader::OnThreadInterrupt()
 			((d912pxy_surface*)finishList->PopElement())->FinishUpload();
 		}
 	}
+
+	PIXEndEvent(d912pxy_s(GPUcl)->GID(CLG_TEX));
 }
 
 void d912pxy_texture_loader::UploadItem(d912pxy_texture_load_item* it)

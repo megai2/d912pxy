@@ -56,10 +56,6 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 				d912pxy_s(textureState)->AddDirtyFlag(Value);
 			}
 		break;
-		case D3DRS_STENCILREF:
-			d912pxy_s(CMDReplay)->OMStencilRef(Value);
-		break; //57,   /* Reference value used in stencil test */
-
 		case D3DRS_BLENDFACTOR:
 		{
 			DWORD Color = Value;

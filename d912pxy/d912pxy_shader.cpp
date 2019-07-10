@@ -30,7 +30,7 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, co
 	
 	mUID = d912pxy_s(sdb)->GetUID((DWORD*)fun, &oLen);
 
-	oCode = (DWORD*)malloc(oLen*4);
+	PXY_MALLOC(oCode, oLen * 4, DWORD*);
 	memcpy(oCode, fun, oLen * 4);
 
 	bytecode.code = 0;
@@ -39,7 +39,7 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, co
 	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
 }
 
-d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d912pxy_shader_uid uid) : d912pxy_comhandler(shtName)
+d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d912pxy_shader_uid uid, UINT isVS) : d912pxy_comhandler(shtName)
 {
 	m_dev = dev;
 	mUID = uid;
@@ -48,7 +48,7 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d9
 
 	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
 
-	d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID);
+	d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID, isVS);
 
 	bytecode = replacer->GetCode();
 
@@ -62,24 +62,26 @@ d912pxy_shader::~d912pxy_shader()
 {
 	delete pairs;
 
-	if (oCode)
-		free(oCode);
-
-	if ((!bytecode.blob) && (bytecode.code))
-		free(bytecode.code);
+	if (oCode) {
+		PXY_FREE(oCode);
+	}
+	if ((!bytecode.blob) && (bytecode.code)) {
+		PXY_FREE(bytecode.code);
+	}
 }
 
 D3D12_SHADER_BYTECODE * d912pxy_shader::GetCode()
 {
 	if (!bytecode.code)
 	{	
-		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID);
+		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID, 0);
 
 		bytecode = replacer->GetCode();
 
 		delete replacer;
 
-		free(oCode);		
+		//free(oCode);
+		PXY_FREE(oCode);
 
 		oCode = NULL;
 	}
