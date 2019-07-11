@@ -231,6 +231,7 @@ const char* d912pxy_hlsl_generator_reg_names_proc_vs[20] = {
 d912pxy_hlsl_generator_sio_handler d912pxy_hlsl_generator::SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt] = { 0 };
 
 UINT d912pxy_hlsl_generator::allowPP_suffix = 0;
+UINT32 d912pxy_hlsl_generator::NaNguard_flag = 0;
 
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : d912pxy_noncom(L"hlsl generator")
 {
@@ -1896,7 +1897,10 @@ void d912pxy_hlsl_generator::ProcSIO_MIN(DWORD * op)
 
 void d912pxy_hlsl_generator::ProcSIO_RCP(DWORD * op)
 {
-	ProcSIO_1OP(op, "dx9_rcp(", ")");
+	if ((NaNguard_flag >> (isPS * PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT)) & PXY_SDB_HLSL_NAN_GUARD_RCP)
+		ProcSIO_1OP(op, "dx9_rcp_guarded(", ")");
+	else
+		ProcSIO_1OP(op, "dx9_rcp(", ")");
 }
 
 void d912pxy_hlsl_generator::ProcSIO_CMP(DWORD * op)
@@ -1970,8 +1974,13 @@ void d912pxy_hlsl_generator::ProcSIO_POW(DWORD * op)
 
 void d912pxy_hlsl_generator::ProcSIO_RSQ(DWORD * op)
 {
-	ProcSIO_1OP(op, "dx9_rsqrt(", ")");
+	if ((NaNguard_flag >> (isPS * PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT)) & PXY_SDB_HLSL_NAN_GUARD_RSQ)
+		ProcSIO_1OP(op, "dx9_rsqrt_guarded(", ")");
+	else
+		ProcSIO_1OP(op, "dx9_rsqrt(", ")");
 }
+
+
 
 void d912pxy_hlsl_generator::ProcSIO_NRM(DWORD * op)
 {
@@ -2217,6 +2226,11 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 		//		HLSL_GEN_WRITE_PROC("*/");
 		HLSL_GEN_WRITE_PROC("");
 
+		if ((NaNguard_flag >> PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT) & PXY_SDB_HLSL_NAN_GUARD_RET)
+		{
+			HLSL_GEN_WRITE_PROC("dx9_ps_nan_cull_emulation(dx9_ret_color_reg_ac);");
+		}
+
 		if (genProfile[PXY_INNER_SHDR_BUG_ALPHA_TEST])
 		{
 			if (genProfile[PXY_INNER_SHDR_BUG_SRGB_WRITE])
@@ -2244,6 +2258,11 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 	else {
 		HLSL_GEN_WRITE_PROC("");
 		HLSL_GEN_WRITE_PROC("dx9_halfpixel_pos_reg_ac = dx9_fix_halfpixel_offset(dx9_halfpixel_pos_reg_ac);");
+
+		if (NaNguard_flag & PXY_SDB_HLSL_NAN_GUARD_RET)
+		{
+			HLSL_GEN_WRITE_PROC("dx9_vs_nan_cull_emulation(dx9_halfpixel_pos_reg_ac);");
+		}
 	}
 
 	HLSL_GEN_WRITE_PROC("");

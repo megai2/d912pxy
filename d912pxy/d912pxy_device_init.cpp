@@ -155,6 +155,7 @@ void d912pxy_device::InitClassFields()
 
 	d912pxy_hlsl_generator::FillHandlers();
 	d912pxy_hlsl_generator::allowPP_suffix = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ALLOW_PP_SUFFIX);
+	d912pxy_hlsl_generator::NaNguard_flag = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_NAN_GUARD_FLAG);
 
 	d912pxy_vstream::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
 	d912pxy_surface::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);

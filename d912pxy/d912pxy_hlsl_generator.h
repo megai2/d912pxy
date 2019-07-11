@@ -92,6 +92,11 @@ typedef struct d912pxy_hlsl_generator_memout {
 } d912pxy_hlsl_generator_memout;
 #pragma pack(pop)
 
+#define PXY_SDB_HLSL_NAN_GUARD_RCP 1
+#define PXY_SDB_HLSL_NAN_GUARD_RSQ 2
+#define PXY_SDB_HLSL_NAN_GUARD_RET 4
+#define PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT 3
+
 class d912pxy_hlsl_generator : public d912pxy_noncom
 {
 public:
@@ -127,6 +132,7 @@ public:
 		
 	static void FillHandlers();
 	static UINT allowPP_suffix;
+	static UINT32 NaNguard_flag;
 
 private:
 	//sio handlers
@@ -228,6 +234,6 @@ private:
 	void DefineIOReg(DWORD op, UINT asConstant);
 	int IsRegDefined(DWORD op, UINT numOffset);
 	
-	static d912pxy_hlsl_generator_sio_handler SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt];	
+	static d912pxy_hlsl_generator_sio_handler SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt];		
 };
 
