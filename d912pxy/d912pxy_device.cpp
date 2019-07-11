@@ -28,68 +28,58 @@ SOFTWARE.
 
 using namespace Microsoft::WRL;
 
-d912pxy_device::d912pxy_device(IDirect3DDevice9* dev, void* par) : d912pxy_comhandler(L"device")
+d912pxy_com_object * d912pxy_device::d912pxy_device_com(void* baseMem, IDirect3DDevice9 * dev, void * par)
 {
-	d912pxy_s(dev) = this;
+	size_t objSz = sizeof(d912pxy_device) + 8;
 
-	PrintInfoBanner();
+	d912pxy_com_object* ret = (d912pxy_com_object*)baseMem;
+	ZeroMemory(ret, objSz);
 
-	initPtr = par;
-	CopyOriginalDX9Data(dev, &creationData, &initialPresentParameters);	
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_DEVICE);
 
-#ifdef ENABLE_METRICS
-	new d912pxy_metrics(this);
-	FRAME_METRIC_PRESENT(1)
-#endif
+	new (&ret->device)d912pxy_device();
 
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
-		perfGraph = new d912pxy_performance_graph(0);
-	else
-		perfGraph = NULL;
-		 
-	LOG_INFO_DTDM2(InitClassFields(),									"Startup step  1/10");
-	LOG_INFO_DTDM2(InitVFS(),											"Startup step  2/10");
-	LOG_INFO_DTDM2(InitThreadSyncObjects(),								"Startup step  3/10");
-	LOG_INFO_DTDM2(SetupDevice(SelectSuitableGPU()),					"Startup step  4/10");
-	LOG_INFO_DTDM2(InitDescriptorHeaps(),								"Startup step  5/10");
-	LOG_INFO_DTDM2(InitSingletons(),									"Startup step  6/10");
-	LOG_INFO_DTDM2(InitComPatches(),									"Startup step  7/10");
-	LOG_INFO_DTDM2(InitNullSRV(),										"Startup step  8/10");
-	LOG_INFO_DTDM2(InitDrawUPBuffers(),									"Startup step  9/10");
-	LOG_INFO_DTDM2(InitDefaultSwapChain(&initialPresentParameters),		"Startup step 10/10");
-	LOG_INFO_DTDM2(d912pxy_s(iframe)->Start(),							"Started first IFrame");	
+	ret->device.Init(dev, par);
+	
+	return ret;
+}
 
-	isRunning.SetValue(1);
+d912pxy_device::d912pxy_device() : d912pxy_comhandler()
+{
 }
 
 d912pxy_device::~d912pxy_device(void)
 {	
+	LOG_INFO_DTDM("Device last reference removal");
+
 	LOG_INFO_DTDM("d912pxy exiting");
 	isRunning.SetValue(0);
 
 	swapOpLock.Hold();
 
-	LOG_INFO_DTDM2(d912pxy_s(iframe)->End(),		 "Last iframe ended");
+	LOG_INFO_DTDM2(d912pxy_s.render.iframe.End(),		 "Last iframe ended");
 	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(),		 "Additional DX9 objects freed");
-	LOG_INFO_DTDM2(d912pxy_s(GPUque)->Flush(0),      "Last gpu cmd lists flushed");
-	LOG_INFO_DTDM2(swapchains[0]->Release(),		 "Swapchain stopped");
+	LOG_INFO_DTDM2(d912pxy_s.dx12.que.Flush(0),      "Last gpu cmd lists flushed");
+	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(),		 "Swapchain stopped");
+
+	d912pxy_s.devComBase = NULL;
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
 
-	LOG_INFO_DTDM2(delete d912pxy_s(thread_cleanup),	"Final cleanups  1/12");
+	LOG_INFO_DTDM2(d912pxy_s.thread.cleanup.~d912pxy_cleanup_thread(),	"Final cleanups  1/12");
 	swapOpLock.Release();
 		
-	LOG_INFO_DTDM2(delete d912pxy_s(bufloadThread),		"Final cleanups  2/11");
-	LOG_INFO_DTDM2(delete d912pxy_s(texloadThread),		"Final cleanups  3/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(iframe),			"Final cleanups  4/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(sdb),				"Final cleanups  5/12");
-	
-	LOG_INFO_DTDM2(delete d912pxy_s(pool_vstream),		"Final cleanups  6/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(pool_upload),		"Final cleanups  7/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(pool_surface),		"Final cleanups  8/12");
-	LOG_INFO_DTDM2(delete d912pxy_s(GPUque),			"Final cleanups  9/12");
-	LOG_INFO_DTDM2(d912pxy_s(CMDReplay)->Free(),		"Final cleanups 10/12");	
-	LOG_INFO_DTDM2(delete d912pxy_s(vfs),				"Final cleanups 11/12");
+	LOG_INFO_DTDM2(d912pxy_s.thread.bufld.~d912pxy_buffer_loader(),	  		"Final cleanups  2/11");
+	LOG_INFO_DTDM2(d912pxy_s.thread.texld.~d912pxy_texture_loader(),		"Final cleanups  3/12");
+	LOG_INFO_DTDM2(d912pxy_s.render.iframe.~d912pxy_iframe(), 				"Final cleanups  4/12");
+	LOG_INFO_DTDM2(d912pxy_s.render.db.shader.~d912pxy_shader_db(),			"Final cleanups  5/12");
+		
+	LOG_INFO_DTDM2(d912pxy_s.pool.vstream.~d912pxy_vstream_pool(),		"Final cleanups  6/12");
+	LOG_INFO_DTDM2(d912pxy_s.pool.upload.~d912pxy_upload_pool(),		"Final cleanups  7/12");
+	LOG_INFO_DTDM2(d912pxy_s.pool.surface.~d912pxy_surface_pool(),		"Final cleanups  8/12");
+	LOG_INFO_DTDM2(d912pxy_s.dx12.que.~d912pxy_gpu_que(),				"Final cleanups  9/12");
+	LOG_INFO_DTDM2(d912pxy_s.render.replay.Free(),						"Final cleanups 10/12");	
+	LOG_INFO_DTDM2(d912pxy_s.vfs.~d912pxy_vfs(),						"Final cleanups 11/12");
 		
 	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
 		delete m_dheaps[i];
@@ -97,7 +87,7 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM("Final cleanups 12/12");
 	
 #ifdef ENABLE_METRICS
-	delete d912pxy_s(metrics);
+	d912pxy_s.log.metrics.~d912pxy_metrics();
 #endif
 
 	if (perfGraph)
@@ -105,12 +95,34 @@ d912pxy_device::~d912pxy_device(void)
 
 	if (initPtr)
 		((IDirect3D9*)initPtr)->Release();
+
+	d912pxy_s.pool.hostPow2.DeInit();
+	d912pxy_s.pool.hostPow2.~d912pxy_mem_va_table();
+
+	d912pxy_s.com.DeInit();
 	
 	LOG_INFO_DTDM("d912pxy exited");
 
 #ifdef _DEBUG
 	d912pxy_helper::d3d12_ReportLeaks();
 #endif	
+}
+
+ULONG d912pxy_device::ReleaseDevice()
+{
+	if (GetCOMRefCount() == 1)
+	{
+		d912pxy_com_object* comObj = comBase;
+
+		this->~d912pxy_device();
+		
+		d912pxy_final_cleanup();
+
+		return 0;
+
+	}
+	else 
+		return Release();
 }
 
 void d912pxy_device::FreeAdditionalDX9Objects()
@@ -123,53 +135,13 @@ void d912pxy_device::FreeAdditionalDX9Objects()
 	mNullTexture->Release();
 }
 
-HRESULT WINAPI d912pxy_device::QueryInterface(REFIID riid, void** ppvObj)
-{ 
-	return d912pxy_comhandler::QueryInterface(riid, ppvObj);
-}
-
-static d912pxy_device* lastDev = NULL;
-
-ULONG WINAPI d912pxy_device::AddRef(void)
-{ 
-	if (lastDev)
-	{
-		if (lastDev != this)
-		{
-			LOG_ERR_DTDM("Last device exited without cleanup");
-		}		
-	}
-	else
-		lastDev = this;
-
-	return d912pxy_comhandler::AddRef();
-}
-
-ULONG WINAPI d912pxy_device::Release(void)
-{ 	
-	if (GetCOMRefCount() == 1)
-	{
-		LOG_INFO_DTDM("Device last reference removal");
-		lastDev = NULL;
-
-		d912pxy_comhandler::Release();
-
-		//d912pxy_s(memMgr)->LogLeaked();
-		d912pxy_final_cleanup();
-
-		return 0;
-
-	} else 
-		return d912pxy_comhandler::Release();	
-}
-
-UINT WINAPI d912pxy_device::GetAvailableTextureMem(void)
+UINT d912pxy_device::GetAvailableTextureMem(void)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	return gpu_totalVidmemMB; 
 }
 
-HRESULT WINAPI d912pxy_device::GetDeviceCaps(D3DCAPS9* pCaps)
+HRESULT d912pxy_device::GetDeviceCaps(D3DCAPS9* pCaps)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 	if (!pCaps)
@@ -178,7 +150,7 @@ HRESULT WINAPI d912pxy_device::GetDeviceCaps(D3DCAPS9* pCaps)
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::GetDisplayMode(UINT iSwapChain, D3DDISPLAYMODE* pMode)
+HRESULT d912pxy_device::GetDisplayMode(UINT iSwapChain, D3DDISPLAYMODE* pMode)
 { 
 	LOG_DBG_DTDM("GetDisplayMode swCh %u ", iSwapChain);
 
@@ -200,7 +172,7 @@ HRESULT WINAPI d912pxy_device::GetDisplayMode(UINT iSwapChain, D3DDISPLAYMODE* p
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::GetCreationParameters(D3DDEVICE_CREATION_PARAMETERS *pParameters)
+HRESULT d912pxy_device::GetCreationParameters(D3DDEVICE_CREATION_PARAMETERS *pParameters)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
@@ -212,13 +184,13 @@ HRESULT WINAPI d912pxy_device::GetCreationParameters(D3DDEVICE_CREATION_PARAMETE
 	return D3D_OK;
 }
 
-void WINAPI d912pxy_device::SetCursorPosition(int X, int Y, DWORD Flags)
+void d912pxy_device::SetCursorPosition(int X, int Y, DWORD Flags)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	SetCursorPos(X, Y);	 
 }
 
-HRESULT WINAPI d912pxy_device::ValidateDevice(DWORD* pNumPasses)
+HRESULT d912pxy_device::ValidateDevice(DWORD* pNumPasses)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	//megai2: pretend we can do anything! YES!
@@ -226,7 +198,7 @@ HRESULT WINAPI d912pxy_device::ValidateDevice(DWORD* pNumPasses)
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::GetDirect3D(IDirect3D9 ** ppv)
+HRESULT d912pxy_device::GetDirect3D(IDirect3D9 ** ppv)
 {
 	*ppv = (IDirect3D9*)initPtr;
 	(*ppv)->AddRef();
@@ -257,7 +229,7 @@ d912pxy_dheap * d912pxy_device::GetDHeap(UINT slot)
 void d912pxy_device::IFrameCleanupEnqeue(d912pxy_comhandler * obj)
 {
 	cleanupLock.Hold();
-	d912pxy_s(GPUque)->EnqueueCleanup(obj);
+	d912pxy_s.dx12.que.EnqueueCleanup(obj);
 	cleanupLock.Release();
 }
 
@@ -273,9 +245,9 @@ void d912pxy_device::ExternalFlush()
 
 	swapOpLock.Hold();
 
-	d912pxy_s(iframe)->End();
-	d912pxy_s(GPUque)->Flush(0);
-	d912pxy_s(iframe)->Start();
+	d912pxy_s.render.iframe.End();
+	d912pxy_s.dx12.que.Flush(0);
+	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
 }

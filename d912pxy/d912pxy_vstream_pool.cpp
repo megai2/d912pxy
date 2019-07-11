@@ -25,20 +25,13 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_vstream_pool.h"
 
-d912pxy_vstream_pool::d912pxy_vstream_pool(d912pxy_device * dev) : 
-	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>(
-		dev, 
-		PXY_INNDER_VSTREAM_POOL_BITIGNORE, 
-		PXY_INNDER_VSTREAM_POOL_BITLIMIT,
-		PXY_CFG_POOLING_VSTREAM_LIMITS,
-		&d912pxy_s(pool_vstream)
-	)
+d912pxy_vstream_pool::d912pxy_vstream_pool() : d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>()
 {	 
 }
 
 d912pxy_vstream_pool::~d912pxy_vstream_pool()
 {
-	d912pxy_s(pool_vstream) = NULL;
+	pRunning = 0;
 
 	for (int i = 0; i != PXY_INNDER_VSTREAM_POOL_BITCNT; ++i)
 	{
@@ -55,6 +48,18 @@ d912pxy_vstream_pool::~d912pxy_vstream_pool()
 
 		delete memTable[i];
 	}
+}
+
+void d912pxy_vstream_pool::Init()
+{
+	memPoolSize = d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_VSTREAM_ALLOC_STEP);
+	memPoolHeapType = D3D12_HEAP_TYPE_DEFAULT;
+
+	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>::Init(
+		PXY_INNDER_VSTREAM_POOL_BITIGNORE,
+		PXY_INNDER_VSTREAM_POOL_BITLIMIT,
+		PXY_CFG_POOLING_VSTREAM_LIMITS
+	);
 }
 
 d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UINT isIB)
@@ -82,7 +87,49 @@ d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UI
 
 d912pxy_vstream * d912pxy_vstream_pool::AllocProc(UINT32 cat)
 {
-	return new d912pxy_vstream(m_dev, MemCatToSize(cat) , 0, 0, 0);
+	return d912pxy_vstream::d912pxy_vstream_com(MemCatToSize(cat) , 0, 0, 0);
+}
+
+ID3D12Resource * d912pxy_vstream_pool::GetPlacedVStream(UINT32 size)
+{
+	ID3D12Resource* ret = NULL;
+
+	if (!memPool || (size >= memPoolSize))
+	{
+	fallback:
+		d912pxy_resource* dxBuffer = new d912pxy_resource(RTID_UL_BUF, PXY_COM_OBJ_NOVTABLE, L"vstream data");
+		dxBuffer->d12res_buffer(size, D3D12_HEAP_TYPE_DEFAULT);
+		dxBuffer->Release();
+
+		ret = dxBuffer->GetD12Obj();
+		ret->AddRef();
+	}
+	else {
+
+		D3D12_RESOURCE_DESC rsDesc = {
+			D3D12_RESOURCE_DIMENSION_BUFFER,
+			0,
+			size,
+			1,
+			1,
+			1,
+			DXGI_FORMAT_UNKNOWN,
+			{1, 0},
+			D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+			D3D12_RESOURCE_FLAG_NONE
+		};
+
+		ret = CreatePlacedResource(size, &rsDesc);
+
+		if (!ret)
+		{
+			LOG_ERR_DTDM("CreatePlacedResource failed with po %llX ps %llX", memPoolOffset, memPoolSize);
+			goto fallback;
+		}
+
+	}
+
+	return ret;
 }
 
 void d912pxy_vstream_pool::EarlyInitProc()

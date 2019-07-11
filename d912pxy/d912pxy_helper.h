@@ -56,4 +56,8 @@ namespace d912pxy_helper {
 
 	char* StrGetCurrentLineStart(char* buffer);
 	char* StrNextLine(char* buffer);
+
+	UINT64 GetClosestPow2(UINT64 size);
+
+	UINT64 AlignValueByPow2(UINT64 val, UINT64 pow2val);
 }

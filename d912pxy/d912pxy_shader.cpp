@@ -24,11 +24,38 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, const DWORD * fun) : d912pxy_comhandler(shtName)
+d912pxy_shader * d912pxy_shader::d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, const DWORD * origCode, d912pxy_shader_uid uid)
 {
-	m_dev = dev;
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SHADER);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SHADER);
+
+	static const wchar_t* objName[2] = {
+		L"pshader",
+		L"vshader"
+	};
 	
-	mUID = d912pxy_s(sdb)->GetUID((DWORD*)fun, &oLen);
+	try {
+
+		if (origCode)
+			new (&ret->shader)d912pxy_shader(objName[isVs], origCode);
+		else
+			new (&ret->shader)d912pxy_shader(objName[isVs], uid, isVs);
+
+	} 
+	catch (...)
+	{
+		ret->com.DeAllocateBase();
+
+		return 0;
+	}
+
+
+	return &ret->shader;
+}
+
+d912pxy_shader::d912pxy_shader(const wchar_t * shtName, const DWORD * fun) : d912pxy_comhandler(PXY_COM_OBJ_SHADER, shtName)
+{	
+	mUID = d912pxy_s.render.db.shader.GetUID((DWORD*)fun, &oLen);
 
 	PXY_MALLOC(oCode, oLen * 4, DWORD*);
 	memcpy(oCode, fun, oLen * 4);
@@ -39,9 +66,8 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, co
 	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
 }
 
-d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d912pxy_shader_uid uid, UINT isVS) : d912pxy_comhandler(shtName)
+d912pxy_shader::d912pxy_shader(const wchar_t * shtName, d912pxy_shader_uid uid, UINT isVS) : d912pxy_comhandler(PXY_COM_OBJ_SHADER, shtName)
 {
-	m_dev = dev;
 	mUID = uid;
 
 	oCode = NULL;
@@ -55,7 +81,10 @@ d912pxy_shader::d912pxy_shader(d912pxy_device * dev, const wchar_t * shtName, d9
 	delete replacer;	
 
 	if (!bytecode.code)
+	{
 		LOG_ERR_THROW2(-1, "shader cso load error");
+		delete pairs;
+	}
 }
 
 d912pxy_shader::~d912pxy_shader()
@@ -110,7 +139,7 @@ void d912pxy_shader::RemovePairs()
 	{
 		d912pxy_shader_pair_hash_type ha = pairs->GetElement();
 
-		d912pxy_s(sdb)->DeletePair(ha);
+		d912pxy_s.render.db.shader.DeletePair(ha);
 
 		pairs->Next();
 	}
@@ -118,25 +147,9 @@ void d912pxy_shader::RemovePairs()
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_shader
 
-/*** IDirect3DVertexShader9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice)
+D912PXY_METHOD_IMPL_NC_(ULONG, ReleaseWithPairRemoval)(THIS)
 {
-	*ppDevice = (IDirect3DDevice9*)m_dev;
-
-	return D3D_OK;
-}
-
-D912PXY_METHOD_IMPL(GetFunction)(THIS_ void* arg, UINT* pSizeOfData)
-{
-	//IT WILL NOT WORK!
-	//LOG_ERR_THROW(-1, "Get shader function is not meant to work");
-
-	return D3D_OK;
-}
-
-D912PXY_METHOD_IMPL_(ULONG, ReleaseWithPairRemoval)(THIS)
-{
-	ULONG ret = ((d912pxy_comhandler*)this)->Release();
+	ULONG ret = Release();
 
 	if (!ret)
 	{

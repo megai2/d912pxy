@@ -73,8 +73,8 @@ typedef struct d912pxy_trimmed_depth_stencil_desc
 } d912pxy_trimmed_depth_stencil_desc;
 
 typedef struct d912pxy_trimmed_dx12_pso {
-	d912pxy_vshader* VS;
-	d912pxy_pshader* PS;
+	d912pxy_shader* VS;
+	d912pxy_shader* PS;
 	d912pxy_vdecl* InputLayout;
 
 	UINT vdeclHash;
@@ -97,17 +97,16 @@ typedef struct d912pxy_serialized_pso_key {
 
 class d912pxy_pso_cache_item : public d912pxy_comhandler {
 
-public:
-	d912pxy_pso_cache_item(d912pxy_device* dev, d912pxy_trimmed_dx12_pso* sDsc);
-
-	void Compile();
-	void CreatePSO();
-	void CreatePSODerived(UINT64 alias);
-
+public:	
+	static d912pxy_pso_cache_item* d912pxy_pso_cache_item_com(d912pxy_trimmed_dx12_pso* sDsc);
 	~d912pxy_pso_cache_item()
 	{
 		obj = nullptr;
 	};
+
+	void Compile();
+	void CreatePSO();
+	void CreatePSODerived(UINT64 alias);
 
 	//UINT Status() { return m_status; };
 
@@ -116,6 +115,8 @@ public:
 	void RealtimeIntegrityCheck();
 
 private:
+	d912pxy_pso_cache_item(d912pxy_trimmed_dx12_pso* sDsc);
+
 
 	ID3D12PipelineState * retPtr;
 	ComPtr<ID3D12PipelineState> obj;
@@ -132,13 +133,15 @@ class d912pxy_pso_cache :
 	public d912pxy_noncom, public d912pxy_thread
 {
 public:
-	d912pxy_pso_cache(d912pxy_device* dev);
+	d912pxy_pso_cache();
 	~d912pxy_pso_cache();
+
+	void Init();
 
 	//things that affect pso only
 	void State(D3DRENDERSTATETYPE State, DWORD Value);
-	void VShader(d912pxy_vshader* vs);
-	void PShader(d912pxy_pshader* ps);
+	void VShader(d912pxy_shader* vs);
+	void PShader(d912pxy_shader* ps);
 	void IAFormat(d912pxy_vdecl* vertexDcl);
 	void IAFormatInstanced(d912pxy_vdecl* vertexDcl);
 
@@ -165,8 +168,8 @@ public:
 		return mVDecl;
 	};
 
-	d912pxy_pshader* GetPShader();
-	d912pxy_vshader* GetVShader();
+	d912pxy_shader* GetPShader();
+	d912pxy_shader* GetVShader();
 
 	void ThreadJob();
 

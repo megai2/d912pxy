@@ -26,39 +26,32 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_CLIPPING
 
-HRESULT WINAPI d912pxy_device::SetClipPlane(DWORD Index, CONST float* pPlane)
+HRESULT d912pxy_device::SetClipPlane(DWORD Index, CONST float* pPlane)
 {
-	API_OVERHEAD_TRACK_START(0)
-
 	if (Index > 0)
 		return D3D_OK;
 
-	d912pxy_s(batch)->SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLIP_P0, 1, (float*)pPlane);  
-	return D3D_OK;
-
-	API_OVERHEAD_TRACK_END(0)
+	
+	d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLIP_P0, 1, (float*)pPlane);  
+	return D3D_OK;	
 }
 
 //scissors
 
-HRESULT WINAPI d912pxy_device::SetScissorRect(CONST RECT* pRect)
+HRESULT d912pxy_device::SetScissorRect(CONST RECT* pRect)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
-
-	API_OVERHEAD_TRACK_START(0)
-
-	d912pxy_s(iframe)->SetScissors((D3D12_RECT*)pRect);
-
-	API_OVERHEAD_TRACK_END(0)
-
+			
+	d912pxy_s.render.iframe.SetScissors((D3D12_RECT*)pRect);
+	
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
+HRESULT d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	D3D12_VIEWPORT main_viewport;
 	main_viewport.Height = pViewport->Height * 1.0f;
@@ -68,16 +61,16 @@ HRESULT WINAPI d912pxy_device::SetViewport(CONST D3DVIEWPORT9* pViewport)
 	main_viewport.MaxDepth = pViewport->MaxZ;
 	main_viewport.MinDepth = pViewport->MinZ;
 
-	d912pxy_s(iframe)->SetViewport(&main_viewport);
+	d912pxy_s.render.iframe.SetViewport(&main_viewport);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
-HRESULT __stdcall d912pxy_device::SetViewport_CAR(IDirect3DDevice9 * self, const D3DVIEWPORT9 * pViewport)
+HRESULT d912pxy_device::SetViewport_CAR(const D3DVIEWPORT9 * pViewport)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	D3D12_VIEWPORT main_viewport;
 	main_viewport.Height = pViewport->Height * 1.0f;
@@ -87,20 +80,20 @@ HRESULT __stdcall d912pxy_device::SetViewport_CAR(IDirect3DDevice9 * self, const
 	main_viewport.MaxDepth = pViewport->MaxZ;
 	main_viewport.MinDepth = pViewport->MinZ;
 
-	d912pxy_s(iframe)->SetViewportIfChanged(&main_viewport);
+	d912pxy_s.render.iframe.SetViewportIfChanged(&main_viewport);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
-HRESULT __stdcall d912pxy_device::SetScissorRect_CAR(IDirect3DDevice9 * self, const RECT * pRect)
+HRESULT d912pxy_device::SetScissorRect_CAR(const RECT * pRect)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
-	d912pxy_s(iframe)->SetScissorsIfChanged((D3D12_RECT*)pRect);
+	d912pxy_s.render.iframe.SetScissorsIfChanged((D3D12_RECT*)pRect);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }

@@ -37,6 +37,8 @@ typedef struct d912pxy_dbg_mem_block {
 	UINT uid;
 } d912pxy_dbg_mem_block;
 
+static UINT global_d912pxy_mem_mgr_live = 0;
+
 
 class d912pxy_mem_mgr : public d912pxy_noncom {
 
@@ -44,6 +46,13 @@ public:
 
 	d912pxy_mem_mgr();
 	~d912pxy_mem_mgr();
+
+	UINT64 GetPageSize();
+
+	void ReleaseReservedVARange(intptr_t base);
+	void CommitVARange(intptr_t base, UINT64 size);
+	void DeCommitVARange(intptr_t base, UINT64 size);
+	intptr_t ReserveVARangeAligned(UINT64 pow2shift, UINT64 addedSize);
 
 	bool pxy_malloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function); 
 	bool pxy_realloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function); 
@@ -60,14 +69,17 @@ public:
 
 	void LogLeaked();
 
+	void Init();
 	void PostInit();
 #ifdef _DEBUG
 	void StartTrackingBlocks() { allowTrackBlocks = 1; };
 	UINT32 GetMemoryUsedMB() { return (UINT32)(memUsed >> 20); };
+	UINT32 GetVAMemoryUsedMB() { return (UINT32)(memVAUsed >> 20); };
 #else 
 	void StartTrackingBlocks() { };
 
 	UINT32 GetMemoryUsedMB() { return 0; };
+	UINT32 GetVAMemoryUsedMB() { return 0; };
 #endif
 
 private:
@@ -75,6 +87,8 @@ private:
 	void* inMalloc(size_t sz);
 	void* inRealloc(void* block, size_t sz);
 	void inFree(void* cp);
+
+	SYSTEM_INFO sysinf;	
 
 #ifdef _DEBUG
 	d912pxy_thread_lock blocksAllocated;
@@ -86,5 +100,6 @@ private:
 	d912pxy_StackWalker* stkWlk;
 
 	LONG64 memUsed;
+	LONG64 memVAUsed;
 #endif
 };

@@ -26,10 +26,8 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_TEXTURE
 
-d912pxy_ctexture::d912pxy_ctexture(d912pxy_device* dev, UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format) : d912pxy_basetexture(dev)
+d912pxy_ctexture::d912pxy_ctexture(UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format) : d912pxy_basetexture()
 {
-	srvIDc = (UINT32*)((intptr_t)this - 8);
-
 	m_levels = Levels;
 
 	LOG_DBG_DTDM("ctexture w:%u", edgeLength);
@@ -40,78 +38,65 @@ d912pxy_ctexture::d912pxy_ctexture(d912pxy_device* dev, UINT edgeLength, UINT Le
 		LOG_ERR_THROW2(-1, "cubemap ds");// baseSurface = new d912pxy_surface(dev, edgeLength, edgeLength, Format, D3DMULTISAMPLE_NONE, 0, 0, 1);
 	else if (m_levels != 0)
 	{
-		baseSurface = d912pxy_s(pool_surface)->GetSurface(edgeLength, edgeLength, Format, m_levels, 6, 0, &srvIDc[0]);
+		baseSurface = d912pxy_s.pool.surface.GetSurface(edgeLength, edgeLength, Format, m_levels, 6, 0, &srvIDc[0]);
 	} else 
-		baseSurface = new d912pxy_surface(dev, edgeLength, edgeLength, Format, Usage, D3DMULTISAMPLE_NONE, 0, 0, &m_levels, 6, &srvIDc[0]);
+		baseSurface = d912pxy_surface::d912pxy_surface_com(edgeLength, edgeLength, Format, Usage, D3DMULTISAMPLE_NONE, 0, 0, &m_levels, 6, &srvIDc[0]);
 
 	for (int i = 0; i != 6; ++i)
 	{		
 		faceSurfaces[i] = baseSurface;
 	}
 
-	srvIDc[1] = 0;
-	
-	if (!srvIDc[1])
-		srvIDc[0] = baseSurface->GetSRVHeapId();
+	srvIDc[1] = 0;	
+	srvIDc[0] = baseSurface->GetSRVHeapId();
 }
 
 
+d912pxy_ctexture * d912pxy_ctexture::d912pxy_ctexture_com(UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format)
+{
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_TEXTURE);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_TEXTURE_CUBE);
+
+	new (&ret->tex_cube)d912pxy_ctexture(edgeLength, Levels, Usage, Format);
+
+	return &ret->tex_cube;
+}
+
 d912pxy_ctexture::~d912pxy_ctexture()
 {
-	baseSurface->Release();
 }
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_ctexture
 
-D912PXY_IUNK_IMPL
-
-/*** IDirect3DBaseTexture9 METHOD_IMPLs ***/
-/*** IDirect3DResource9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) { return d912pxy_resource::GetDevice(ppDevice); }
-D912PXY_METHOD_IMPL(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) { return d912pxy_resource::SetPrivateData(refguid, pData, SizeOfData, Flags); }
-D912PXY_METHOD_IMPL(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) { return d912pxy_resource::GetPrivateData(refguid, pData, pSizeOfData); }
-D912PXY_METHOD_IMPL(FreePrivateData)(THIS_ REFGUID refguid) { return d912pxy_resource::FreePrivateData(refguid); }
-D912PXY_METHOD_IMPL_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) { return d912pxy_resource::SetPriority(PriorityNew); }
-D912PXY_METHOD_IMPL_(DWORD, GetPriority)(THIS) { return d912pxy_basetexture::GetPriority(); }
-D912PXY_METHOD_IMPL_(void, PreLoad)(THIS) { d912pxy_resource::PreLoad(); }
-D912PXY_METHOD_IMPL_(D3DRESOURCETYPE, GetType)(THIS) { return d912pxy_resource::GetType(); }
-
-D912PXY_METHOD_IMPL_(DWORD, SetLOD)(THIS_ DWORD LODNew) { return d912pxy_basetexture::SetLOD(LODNew); }
-D912PXY_METHOD_IMPL_(DWORD, GetLOD)(THIS) { return d912pxy_basetexture::GetLOD(); }
-D912PXY_METHOD_IMPL_(DWORD, GetLevelCount)(THIS) { return d912pxy_basetexture::GetLevelCount(); }
-D912PXY_METHOD_IMPL(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) { return d912pxy_basetexture::SetAutoGenFilterType(FilterType); }
-D912PXY_METHOD_IMPL_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) { return d912pxy_basetexture::GetAutoGenFilterType(); }
-D912PXY_METHOD_IMPL_(void, GenerateMipSubLevels)(THIS) { d912pxy_basetexture::GenerateMipSubLevels(); }
-
-D912PXY_METHOD_IMPL(GetLevelDesc)(THIS_ UINT Level, D3DSURFACE_DESC *pDesc)
+D912PXY_METHOD_IMPL_NC(GetLevelDesc)(THIS_ UINT Level, D3DSURFACE_DESC *pDesc)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(1)
+	
 
 	*pDesc = baseSurface->GetDX9DescAtLevel(Level);
 
-	API_OVERHEAD_TRACK_END(1)
+	
 
 	return D3D_OK;
 }
 
-D912PXY_METHOD_IMPL(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface)
+D912PXY_METHOD_IMPL_NC(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(1)
+	
 
-	*ppCubeMapSurface = (IDirect3DSurface9*)baseSurface->GetLayer(Level, FaceType);
+	*ppCubeMapSurface = PXY_COM_CAST_(IDirect3DSurface9, baseSurface->GetLayer(Level, FaceType));
 	(*ppCubeMapSurface)->AddRef();
 
 
-	API_OVERHEAD_TRACK_END(1)
+	
 
 	return D3D_OK; 
 }
 
-D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
+D912PXY_METHOD_IMPL_NC(LockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
 { 
 	LOG_DBG_DTDM("LockRect lv %u fc %u", Level, FaceType);
 
@@ -120,7 +105,7 @@ D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLO
 	return D3D_OK; 
 }
 
-D912PXY_METHOD_IMPL(UnlockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level)
+D912PXY_METHOD_IMPL_NC(UnlockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
@@ -129,7 +114,7 @@ D912PXY_METHOD_IMPL(UnlockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level)
 	return D3D_OK; 
 }
 
-D912PXY_METHOD_IMPL(AddDirtyRect)(THIS_ D3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect)
+D912PXY_METHOD_IMPL_NC(AddDirtyRect)(THIS_ D3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect)
 { 
 //	faceSurfaces[FaceType]->SetDirtyRect(pDirtyRect->left, pDirtyRect->right, pDirtyRect->top, pDirtyRect->bottom);
 	return D3D_OK; 

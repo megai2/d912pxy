@@ -25,7 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 template<class ElementType>
-d912pxy_ringbuffer<ElementType>::d912pxy_ringbuffer(UINT iMaxElements, UINT iGrow) : d912pxy_noncom(0, L"ringbuffer")
+d912pxy_ringbuffer<ElementType>::d912pxy_ringbuffer(UINT iMaxElements, UINT iGrow) : d912pxy_noncom(L"ringbuffer")
 {
 	UINT memSize = sizeof(ElementType)*iMaxElements;
 

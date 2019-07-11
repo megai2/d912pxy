@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2019 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -24,37 +24,18 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, const DWORD * fun) : d912pxy_shader(dev, L"pshader", fun)
-{
+typedef struct d912pxy_com_route_vtable {
+	void* funcs[PXY_INNER_MAX_COM_ROUTE_TABLE_LENGTH];
+} d912pxy_com_route_vtable;
 
+d912pxy_com_route_vtable g_tables[PXY_COM_ROUTE_COUNT];
+
+void d912pxy_com_route_set(d912pxy_com_route_table table, UINT32 index, void * func)
+{
+	g_tables[table].funcs[index] = func;
 }
 
-d912pxy_pshader::d912pxy_pshader(d912pxy_device * dev, d912pxy_shader_uid uid) : d912pxy_shader(dev, L"pshader", uid, 0)
+void * d912pxy_com_route_get_vtable(d912pxy_com_route_table table)
 {
+	return (void*)&g_tables[table];
 }
-
-d912pxy_pshader::~d912pxy_pshader()
-{
-}
-
-#define D912PXY_METHOD_IMPL_CN d912pxy_pshader
-
-D912PXY_IUNK_IMPL
-
-/*** IDirect3DVertexShader9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice)
-{
-	return d912pxy_shader::GetDevice(ppDevice);
-}
-
-D912PXY_METHOD_IMPL(GetFunction)(THIS_ void* arg, UINT* pSizeOfData)
-{
-	return d912pxy_shader::GetFunction(arg, pSizeOfData);
-}
-
-D912PXY_METHOD_IMPL_(ULONG, ReleaseWithPairRemoval)(IDirect3DPixelShader9* thisPtr)
-{
-	return ((d912pxy_shader*)((d912pxy_pshader*)thisPtr))->ReleaseWithPairRemoval();
-}
-
-#undef D912PXY_METHOD_IMPL_CN

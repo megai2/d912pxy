@@ -28,39 +28,42 @@ SOFTWARE.
 
 //megai2: why nuke exist? cuz it do his job
 
-#define D912PXY_METHOD(meth) HRESULT WINAPI meth
-#define D912PXY_METHOD_(a,b) a WINAPI b
+#define PXY_COM_LOOKUP(var, obj) &(PXY_COM_CAST(d912pxy_com_object, var)->obj)
+#define PXY_COM_CAST(type, var) ((type*)var)
+#define PXY_COM_CAST_(type, var) ((type*)((void*)((intptr_t)var  - 8)))
+#define PXY_THIS d912pxy_com_object* obj
+#define PXY_THIS_ d912pxy_com_object* obj,
 
-#define D912PXY_METHOD_IMPL_(a,b) a D912PXY_METHOD_IMPL_CN :: b
-#define D912PXY_METHOD_IMPL(a) HRESULT D912PXY_METHOD_IMPL_CN :: a
+#define D912PXY_METHOD(meth) static HRESULT WINAPI com_##meth
+#define D912PXY_METHOD_(a,b) static a WINAPI com_##b
 
-#define D912PXY_IUNK_IMPL \
-/*** IUnknown methods ***/ \
-D912PXY_METHOD_IMPL(QueryInterface)(THIS_ REFIID riid, void** ppvObj) \
-{ \
-	return d912pxy_comhandler::QueryInterface(riid, ppvObj); \
-} \
- \
-D912PXY_METHOD_IMPL_(ULONG, AddRef)(THIS) \
-{ \
-	return d912pxy_comhandler::AddRef(); \
-} \
- \
-D912PXY_METHOD_IMPL_(ULONG, Release)(THIS) \
-{ \
-	return d912pxy_comhandler::Release(); \
-} 
+#define D912PXY_METHOD_IMPL_(a,b) a D912PXY_METHOD_IMPL_CN :: com_##b
+#define D912PXY_METHOD_IMPL(a) HRESULT D912PXY_METHOD_IMPL_CN :: com_##a
+
+#define D912PXY_METHOD_NC(meth) HRESULT meth
+#define D912PXY_METHOD_NC_(a,b) a b
+
+#define D912PXY_METHOD_IMPL_NC_(a,b) a D912PXY_METHOD_IMPL_CN :: b
+#define D912PXY_METHOD_IMPL_NC(a) HRESULT D912PXY_METHOD_IMPL_CN :: a
+
+#define D912PXY_IUNK_IMPL 
 
 class d912pxy_comhandler : public d912pxy_noncom
 {
 public:
-	d912pxy_comhandler(const wchar_t* moduleText);
-	d912pxy_comhandler(d912pxy_device* dev, const wchar_t* moduleText);
+	d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t* moduleText);
+	d912pxy_comhandler();	
 	virtual ~d912pxy_comhandler();
 
-	HRESULT WINAPI QueryInterface(REFIID riid, void** ppvObj);
-	ULONG WINAPI AddRef();
-	ULONG WINAPI Release();
+	void Init(d912pxy_com_obj_typeid tid, const wchar_t* moduleText);
+
+	D912PXY_METHOD(QueryInterface)(PXY_THIS_ REFIID riid, void** ppvObj);
+	D912PXY_METHOD_(ULONG, AddRef)(PXY_THIS);
+	D912PXY_METHOD_(ULONG, Release)(PXY_THIS);
+
+	HRESULT QueryInterface(REFIID riid, void** ppvObj);
+	ULONG AddRef();
+	ULONG Release();
 
 	UINT FinalReleaseTest();
 
@@ -81,12 +84,25 @@ public:
 
 	LONG GetCurrentPoolSyncValue() { return poolSync.GetValue(); };
 
+	void DeAllocateBase();
+
+	UINT IsPersistentlyPooled() { return persistentlyPooled; };
+	void PoolPersistently() { persistentlyPooled = 1; };
+
+protected:
+	d912pxy_com_object* comBase;
+
 private:
 	LONG thrdRefc;
 	LONG refc;
 	UINT32 timestamp;	
-	LONG beingWatched;
+	LONG beingWatched;	
+	UINT persistentlyPooled;
+	d912pxy_com_obj_typeid objType;
 
-	d912pxy_thread_lock poolSync;
+	d912pxy_thread_lock poolSync;	
 };
+
+
+
 

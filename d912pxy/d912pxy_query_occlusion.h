@@ -28,28 +28,22 @@ SOFTWARE.
 class d912pxy_query_occlusion : public d912pxy_query
 {
 public:
-	d912pxy_query_occlusion(d912pxy_device* dev, D3DQUERYTYPE Type);
+	static d912pxy_query_occlusion* d912pxy_query_occlusion_com(D3DQUERYTYPE Type);
 	~d912pxy_query_occlusion();
 
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
+	D912PXY_METHOD(occ_Issue)(PXY_THIS_ DWORD dwIssueFlags);
+	D912PXY_METHOD(occ_GetData)(PXY_THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
 
-	/*** IDirect3DQuery9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD_(D3DQUERYTYPE, GetType)(THIS);
-	D912PXY_METHOD_(DWORD, GetDataSize)(THIS);
-	D912PXY_METHOD(Issue)(THIS_ DWORD dwIssueFlags);
-	D912PXY_METHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);	
+	D912PXY_METHOD_NC(occ_Issue)(THIS_ DWORD dwIssueFlags);
+	D912PXY_METHOD_NC(occ_GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
 
 	void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
 
-	void FlushQueryStack();
-	void OnIFrameEnd();
-	void OnIFrameStart();
+	static void FlushQueryStack();
+	static void OnIFrameEnd();
+	static void OnIFrameStart();
 
-	void ForceClose(ID3D12GraphicsCommandList* cl);
+	void ForceClose();
 
 
 	static UINT InitOccQueryEmulation();
@@ -60,6 +54,8 @@ public:
 
 
 private:
+	d912pxy_query_occlusion(D3DQUERYTYPE Type);
+
 	void SetQueryResult(UINT32 v);
 
 	UINT32 queryResult;

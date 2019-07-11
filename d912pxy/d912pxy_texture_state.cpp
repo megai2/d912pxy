@@ -1,33 +1,14 @@
 #include "stdafx.h"
 
-d912pxy_texture_state::d912pxy_texture_state(d912pxy_device * dev) : d912pxy_noncom(dev, L"texture state")
+d912pxy_texture_state::d912pxy_texture_state() 
 {
-	d912pxy_s(textureState) = this;
 
-	samplerHeap = m_dev->GetDHeap(PXY_INNER_HEAP_SPL);
-
-	splLookup = new d912pxy_memtree2(sizeof(d912pxy_trimmed_sampler_dsc), 20, 2);
-
-	UINT16 defaultMinLOD = (UINT16)d912pxy_s(config)->GetValueUI64(PXY_CFG_SAMPLERS_MIN_LOD);
-
-	ZeroMemory(&splDsc, sizeof(D3D12_SAMPLER_DESC));
-	splDsc.ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;	
-	splDsc.MaxLOD = 1e9;
-
-	ZeroMemory(&current, sizeof(d912pxy_device_texture_state));
-
-	for (int i = 0; i != PXY_INNER_MAX_TEXTURE_STAGES; ++i)
-	{
-		trimmedSpl[i].Dsc0 = 0x49;
-		trimmedSpl[i].Dsc1 = 0x49;		
-		trimmedSpl[i].MinLOD = (UINT16)defaultMinLOD;
-	}
-
-	current.dirty = 0xFFFFFFFFFF;
 }
 
 d912pxy_texture_state::~d912pxy_texture_state()
 {
+	
+
 	splLookup->Begin();
 
 	while (!splLookup->IterEnd())
@@ -40,6 +21,32 @@ d912pxy_texture_state::~d912pxy_texture_state()
 	}
 
 	delete splLookup;
+}
+
+void d912pxy_texture_state::Init()
+{
+	NonCom_Init(L"texture state");
+
+	samplerHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_SPL);
+
+	splLookup = new d912pxy_memtree2(sizeof(d912pxy_trimmed_sampler_dsc), 20, 2);
+
+	UINT16 defaultMinLOD = (UINT16)d912pxy_s.config.GetValueUI64(PXY_CFG_SAMPLERS_MIN_LOD);
+
+	ZeroMemory(&splDsc, sizeof(D3D12_SAMPLER_DESC));
+	splDsc.ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	splDsc.MaxLOD = 1e9;
+
+	ZeroMemory(&current, sizeof(d912pxy_device_texture_state));
+
+	for (int i = 0; i != PXY_INNER_MAX_TEXTURE_STAGES; ++i)
+	{
+		trimmedSpl[i].Dsc0 = 0x49;
+		trimmedSpl[i].Dsc1 = 0x49;
+		trimmedSpl[i].MinLOD = (UINT16)defaultMinLOD;
+	}
+
+	current.dirty = 0xFFFFFFFFFF;
 }
 
 void d912pxy_texture_state::SetTexture(UINT stage, UINT srv)
@@ -132,8 +139,9 @@ UINT d912pxy_texture_state::Use()
 
 	while (df)
 	{
-		if (df & 1)
-			d912pxy_s(batch)->GPUWrite((void*)((intptr_t)&current.texHeapID[0] + i * 16), 1, i);
+		if (df & 1)		
+			d912pxy_s.render.batch.GPUWrite((void*)((intptr_t)&current.texHeapID[0] + i * 16), 1, i);
+		
 		++i;
 		df = df >> 1;
 	}

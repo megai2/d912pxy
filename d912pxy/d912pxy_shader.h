@@ -30,15 +30,17 @@ SOFTWARE.
 class d912pxy_shader : public d912pxy_comhandler
 {
 public:
-	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, const DWORD* fun);
-	d912pxy_shader(d912pxy_device* dev, const wchar_t * shtName, d912pxy_shader_uid uid, UINT isVS);
+	static d912pxy_shader* d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, const DWORD* origCode, d912pxy_shader_uid uid);
+
+	d912pxy_shader(const wchar_t * shtName, const DWORD* fun);
+	d912pxy_shader(const wchar_t * shtName, d912pxy_shader_uid uid, UINT isVS);
 	~d912pxy_shader();
 
-	/*** IDirect3DVertexShader9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(GetFunction)(THIS_ void* arg, UINT* pSizeOfData);
+	D912PXY_METHOD(GetFunction)(PXY_THIS_ void* arg, UINT* pSizeOfData);
 
-	D912PXY_METHOD_(ULONG, ReleaseWithPairRemoval)(THIS);	
+	D912PXY_METHOD_(ULONG, ReleaseWithPairRemoval)(PXY_THIS);
+
+	D912PXY_METHOD_NC_(ULONG, ReleaseWithPairRemoval)(THIS);
 	
 	D3D12_SHADER_BYTECODE* GetCode();
 

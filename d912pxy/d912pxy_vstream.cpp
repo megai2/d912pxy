@@ -28,32 +28,15 @@ SOFTWARE.
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_VSTREAM
 #define D912PXY_METHOD_IMPL_CN d912pxy_vstream
 
-D912PXY_IUNK_IMPL
-
-/*** IDirect3DResource9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) { return GetDevice(ppDevice); }
-D912PXY_METHOD_IMPL(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) { return SetPrivateData(refguid, pData, SizeOfData, Flags); }
-D912PXY_METHOD_IMPL(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) { return GetPrivateData(refguid, pData, pSizeOfData); }
-D912PXY_METHOD_IMPL(FreePrivateData)(THIS_ REFGUID refguid) { return FreePrivateData(refguid); }
-D912PXY_METHOD_IMPL_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) { return SetPriority(PriorityNew); }
-D912PXY_METHOD_IMPL_(DWORD, GetPriority)(THIS) { return GetPriority(); }
-D912PXY_METHOD_IMPL_(void, PreLoad)(THIS) { return PreLoad(); }
-D912PXY_METHOD_IMPL_(D3DRESOURCETYPE, GetType)(THIS) { return GetType(); }
-
-D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC *pDesc)
-{
-	return D3DERR_INVALIDCALL;
-}
-
 UINT32 d912pxy_vstream::threadedCtor = 0;
 
-d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(dev, isIB ? RTID_IBUF : RTID_VBUF, isIB ? L"vstream i" : L"vstream v")
+d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(isIB ? RTID_IBUF : RTID_VBUF, PXY_COM_OBJ_VSTREAM, isIB ? L"vstream i" : L"vstream v")
 {		
 	lockDepth = 0;
 
-	ulObj = NULL;
+	inUploadState = 0;
 
-	PXY_MALLOC(data, Length, void*);
+	PXY_MALLOC_GPU_HOST_COPY(data, Length, void*);
 
 	dx9desc.FVF = 0;
 	dx9desc.Pool = D3DPOOL_DEFAULT;
@@ -67,20 +50,32 @@ d912pxy_vstream::d912pxy_vstream(d912pxy_device * dev, UINT Length, DWORD Usage,
 
 	NoteFormatChange(fmt, isIB);
 
+	d912pxy_s.pool.vstream.AddMemoryToPool(dx9desc.Size);
+
 	if (!threadedCtor)
 		ConstructResource();		
 }
 
+d912pxy_vstream * d912pxy_vstream::d912pxy_vstream_com(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB)
+{
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_VSTREAM);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VBUF);
+
+	new (&ret->vstream)d912pxy_vstream(Length, Usage, fmt, isIB);
+
+	return &ret->vstream;
+}
+
 d912pxy_vstream::~d912pxy_vstream()
 {
-	if (GetCurrentPoolSyncValue()) {
-		PXY_FREE(data);
+	if (GetCurrentPoolSyncValue()) {		
+		PXY_FREE_GPU_HOST_COPY(data);
 	}
 }
 
-D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
+D912PXY_METHOD_IMPL_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 {
-	API_OVERHEAD_TRACK_START(2)
+	
 
 	d912pxy_vstream_lock_data linfo;
 	linfo.dst = this;
@@ -101,21 +96,28 @@ D912PXY_METHOD_IMPL(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbDa
 	
 	*ppbData = (void*)((intptr_t)(data) + OffsetToLock);
 
-	API_OVERHEAD_TRACK_END(2)
+	
 
 	return D3D_OK;
 }
 
-D912PXY_METHOD_IMPL(Unlock)(THIS)
-{
-	API_OVERHEAD_TRACK_START(2)
-			
+D912PXY_METHOD_IMPL_NC(Unlock)(THIS)
+{			
 	--lockDepth;
-	d912pxy_s(bufloadThread)->IssueUpload(lockInfo[lockDepth]);	
-
-	API_OVERHEAD_TRACK_END(2)
-
+	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
+	
 	return D3D_OK;
+}
+
+void d912pxy_vstream::UnlockRanged(UINT newOffset, UINT newSize)
+{
+	--lockDepth;
+
+	lockInfo[lockDepth].offset = newOffset;
+	lockInfo[lockDepth].size = newSize;
+
+	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
+	
 }
 
 void d912pxy_vstream::IFrameBindVB(UINT stride, UINT slot, UINT offset, ID3D12GraphicsCommandList * cl)
@@ -164,27 +166,17 @@ void d912pxy_vstream::NoteFormatChange(DWORD fmt, DWORD isIB)
 
 UINT d912pxy_vstream::FinalReleaseCB()
 {
-	if (d912pxy_s(pool_vstream))
+	if (d912pxy_s.pool.vstream.IsRunning())
 	{
 		EvictFromGPU();
 
 		d912pxy_vstream* tv = this;
-		d912pxy_s(pool_vstream)->PoolRW(d912pxy_s(pool_vstream)->MemCatFromSize(dx9desc.Size), &tv, 1);
+		d912pxy_s.pool.vstream.PoolRW(d912pxy_s.pool.vstream.MemCatFromSize(dx9desc.Size), &tv, 1);
 		return 0;
 	}
 	else {
 		return 1;
 	}
-}
-
-IDirect3DVertexBuffer9 * d912pxy_vstream::AsDX9VB()
-{
-	return this;
-}
-
-IDirect3DIndexBuffer9 * d912pxy_vstream::AsDX9IB()
-{
-	return d912pxy_vstream_to_index(this);
 }
 
 UINT32 d912pxy_vstream::PooledAction(UINT32 use)
@@ -202,7 +194,9 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 		if (!threadedCtor)
 			ConstructResource();
 
-		PXY_MALLOC(data, dx9desc.Size, void*);
+		d912pxy_s.pool.vstream.AddMemoryToPool(dx9desc.Size);
+
+		PXY_MALLOC_GPU_HOST_COPY(data, dx9desc.Size, void*);		
 	}
 	else {
 		if (m_res)
@@ -211,7 +205,10 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 			m_res = NULL;
 		}
 
-		PXY_FREE(data);
+		d912pxy_s.pool.vstream.AddMemoryToPool(-((INT)dx9desc.Size));
+
+
+		PXY_FREE_GPU_HOST_COPY(data);		
 	}
 
 	PooledActionExit();
@@ -219,28 +216,25 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 	return 1;
 }
 
-void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl)
+void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl, d912pxy_upload_item* ulObj)
 {			
 	if (!m_res)
 		ConstructResource();
 
-	if (!ulObj)
+	if (!inUploadState)
 	{
 		BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
-		ulObj = d912pxy_s(pool_upload)->GetUploadObject(dx9desc.Size);
-		d912pxy_s(bufloadThread)->AddToFinishList(this);
+		inUploadState = 1;
+		d912pxy_s.thread.bufld.AddToFinishList(this);
 	}
-	
-	UploadDataCopy(ulObj->DPtr() + linfo->offset, linfo->offset, linfo->size);
-	
-	ulObj->UploadTargetWithOffset(this, linfo->offset, linfo->offset, linfo->size, cl);	
+		
+	ulObj->UploadTargetWithOffset(this->GetD12Obj(), linfo->offset, linfo->offset, linfo->size, data, cl);	
 }
 
 void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
 {
 	BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
-	ulObj->Release();
-	ulObj = NULL;
+	inUploadState = 0;
 }
 
 void d912pxy_vstream::ConstructResource()
@@ -253,8 +247,12 @@ void d912pxy_vstream::ConstructResource()
 		return;
 	}
 
-	ID3D12Resource* tmpLocation = d12res_buffer_target(dx9desc.Size, D3D12_HEAP_TYPE_DEFAULT);
+	//megai2: tmp location is needed to drop into ConstructResource from other threads when we are in ConstructResource
+
+	ID3D12Resource* tmpLocation = d912pxy_s.pool.vstream.GetPlacedVStream(dx9desc.Size);
 	bindData.i.BufferLocation = tmpLocation->GetGPUVirtualAddress();
+
+	stateCache = D3D12_RESOURCE_STATE_GENERIC_READ;
 
 	m_res = tmpLocation;
 

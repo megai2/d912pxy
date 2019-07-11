@@ -49,6 +49,8 @@ public:
 	d912pxy_log();
 	~d912pxy_log();
 
+	void Init();
+
 #ifndef DISABLE_P7LIB
 	IP7_Trace* GetP7Trace();
 #endif

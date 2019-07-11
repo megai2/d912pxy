@@ -24,77 +24,57 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_SURFACE
-
-d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_surface * iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix)
+d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_com_object * iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix)
 {
 	base = iBase;
 	subres = iSubres;
 	wPitch = iWPitch;
 	width = iWidth;
 	memPerPix = imemPerPix;	
-
-	PXY_MALLOC(surfMem, iBSize, void*);
+	
+	PXY_MALLOC_GPU_HOST_COPY(surfMem, iBSize, void*);
 
 	intRefc = 0;
 }
 
 d912pxy_surface_layer::~d912pxy_surface_layer()
 {
-	PXY_FREE(surfMem);
-
+	PXY_FREE_GPU_HOST_COPY(surfMem);	 
 }
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_surface_layer
 
-D912PXY_METHOD_IMPL(QueryInterface)(THIS_ REFIID riid, void** ppvObj)
+D912PXY_METHOD_IMPL_NC(QueryInterface)(THIS_ REFIID riid, void** ppvObj)
 {
-	return base->QueryInterface(riid, ppvObj);
+	return PXY_COM_CAST(IUnknown, base)->QueryInterface(riid, ppvObj);
 }
 
-D912PXY_METHOD_IMPL_(ULONG, AddRef)(THIS)
+D912PXY_METHOD_IMPL_NC_(ULONG, AddRef)(THIS)
 {
 	++intRefc;
-	base->AddRef();
+
+	PXY_COM_CAST(IUnknown, base)->AddRef();
+
 	return intRefc;
 }
 
-D912PXY_METHOD_IMPL_(ULONG, Release)(THIS)
+D912PXY_METHOD_IMPL_NC_(ULONG, Release)(THIS)
 {
 	--intRefc;
-	base->Release();
+
+	PXY_COM_CAST(IUnknown, base)->Release();
+
 	return intRefc;
 }
 
-/*** IDirect3DResource9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) { return base->GetDevice(ppDevice); }
-D912PXY_METHOD_IMPL(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) { return base->SetPrivateData(refguid, pData, SizeOfData, Flags); }
-D912PXY_METHOD_IMPL(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) { return base->GetPrivateData(refguid, pData, pSizeOfData); }
-D912PXY_METHOD_IMPL(FreePrivateData)(THIS_ REFGUID refguid) { return base->FreePrivateData(refguid); }
-D912PXY_METHOD_IMPL_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) { return base->SetPriority(PriorityNew); }
-D912PXY_METHOD_IMPL_(DWORD, GetPriority)(THIS) { return base->GetPriority(); }
-D912PXY_METHOD_IMPL_(void, PreLoad)(THIS) { base->PreLoad(); }
-D912PXY_METHOD_IMPL_(D3DRESOURCETYPE, GetType)(THIS) { return base->GetType(); }
 
-//surface methods
-D912PXY_METHOD_IMPL(GetContainer)(THIS_ REFIID riid, void** ppContainer)
+D912PXY_METHOD_IMPL_NC(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
 {
-	return D3DERR_INVALIDCALL;
+	return PXY_COM_CAST(IDirect3DSurface9, base)->GetDesc(pDesc);
 }
 
-D912PXY_METHOD_IMPL(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
+D912PXY_METHOD_IMPL_NC(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
 {
-	API_OVERHEAD_TRACK_START(1)
-	HRESULT ret = base->GetDesc(pDesc);	
-	API_OVERHEAD_TRACK_END(1)
-
-	return ret;
-}
-
-D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
-{
-	API_OVERHEAD_TRACK_START(1)
-
 	void* surfMemRef = surfMem;
 
 	if (pRect)
@@ -109,39 +89,22 @@ D912PXY_METHOD_IMPL(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRe
 
 	++lockDepth;
 
-	API_OVERHEAD_TRACK_END(1)
-
 	return D3D_OK;
 }
 
-D912PXY_METHOD_IMPL(UnlockRect)(THIS)
+D912PXY_METHOD_IMPL_NC(UnlockRect)(THIS)
 {
-	API_OVERHEAD_TRACK_START(1)
-
 	--lockDepth;
 
 	if (!lockDepth)
 	{
-		d912pxy_s(texloadThread)->IssueUpload(base, surfMem, subres);
+		d912pxy_s.thread.texld.IssueUpload(&base->surface, surfMem, subres);
 	}
 
-	API_OVERHEAD_TRACK_END(1)
-
-	return D3D_OK;
-}
-
-D912PXY_METHOD_IMPL(GetDC)(THIS_ HDC *phdc)
-{
-	return D3DERR_INVALIDCALL;
-}
-
-D912PXY_METHOD_IMPL(ReleaseDC)(THIS_ HDC hdc)
-{
 	return D3D_OK;
 }
 
 #undef D912PXY_METHOD_IMPL_CN
-#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 
 
 void d912pxy_surface_layer::SetDirtyRect(UINT32 left, UINT32 right, UINT32 top, UINT32 bottom)
 {
@@ -153,22 +116,25 @@ void d912pxy_surface_layer::SetDirtyRect(UINT32 left, UINT32 right, UINT32 top, 
 	drect.y2 = bottom;
 }
 
-BOOL FileExists(LPCSTR szPath)
-{
-	DWORD dwAttrib = GetFileAttributesA(szPath);
-
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
-		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-}
-
-HRESULT d912pxy_surface_layer::UnlockRectEx(UINT32 transform)
-{
-	return UnlockRect();
-}
-
 void * d912pxy_surface_layer::SurfacePixel(UINT32 x, UINT32 y)
 {
 	void* surfMemRef = surfMem;
 
 	return (void*)((intptr_t)surfMemRef + (intptr_t)((x + y*width)*memPerPix));
+}
+
+d912pxy_surface_layer * d912pxy_surface_layer::d912pxy_surface_layer_com(d912pxy_com_object * iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix)
+{
+	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SURFACE_LAYER);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE_LAYER);
+
+	new (&ret->layer)d912pxy_surface_layer(iBase, iSubres, iBSize, iWPitch, iWidth, imemPerPix);
+
+	return &ret->layer;
+}
+
+void d912pxy_surface_layer::DeAllocate(d912pxy_surface_layer * obj)
+{
+	obj->~d912pxy_surface_layer();
+	d912pxy_s.com.DeAllocateComObj(PXY_COM_CAST_(d912pxy_com_object, obj));
 }

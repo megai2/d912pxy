@@ -29,9 +29,11 @@ SOFTWARE.
 typedef enum d912pxy_config_value {
 	PXY_CFG_POOLING_UPLOAD_ALLOC_STEP = 0,
 	PXY_CFG_POOLING_UPLOAD_LIMITS = 1,
+	PXY_CFG_POOLING_VSTREAM_ALLOC_STEP,
 	PXY_CFG_POOLING_VSTREAM_LIMITS,
 	PXY_CFG_POOLING_SURFACE_LIMITS,
 	PXY_CFG_POOLING_LIFETIME,
+	PXY_CFG_POOLING_HOST_VA_RESERVE,
 	PXY_CFG_SAMPLERS_MIN_LOD,	
 	PXY_CFG_CLEANUP_PERIOD,
 	PXY_CFG_CLEANUP_SUBSLEEP,	
@@ -42,8 +44,9 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_ENABLE_PROFILING,
 	PXY_CFG_SDB_FORCE_UNUSED_REGS,
 	PXY_CFG_SDB_ALLOW_REALTIME_CHECKS,
-	PXY_CFG_MT_REPLAY_BEHAIVOUR,
-	PXY_CFG_MT_REPLAY_THREADS,	
+	PXY_CFG_REPLAY_BEHAIVOUR,
+	PXY_CFG_REPLAY_THREADS,	
+	PXY_CFG_REPLAY_ITEMS_PER_BATCH,
 	PXY_CFG_MT_VSTREAM_CTOR,
 	PXY_CFG_MT_SURFACE_CTOR,
 	PXY_CFG_LOG_P7CONFIG,
@@ -80,6 +83,8 @@ public:
 	d912pxy_config();
 	~d912pxy_config();
 
+	void Init();
+
 	UINT64 GetValueXI64(d912pxy_config_value val);
 	UINT64 GetValueUI64(d912pxy_config_value val);
 	UINT32 GetValueUI32(d912pxy_config_value val);
@@ -91,10 +96,12 @@ private:
 
 	d912pxy_config_value_dsc data[PXY_CFG_CNT] = {
 		{L"pooling", L"upload_alloc_step", L"16"},//PXY_CFG_POOLING_UPLOAD_ALLOC_STEP
-		{L"pooling", L"upload_limits", L"0x0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 L00"},//PXY_CFG_POOLING_UPLOAD_LIMITS		
-		{L"pooling", L"vstream_limits", L"0x0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 L00"},//PXY_CFG_POOLING_VSTREAM_LIMITS
+		{L"pooling", L"upload_limit", L"128"},//PXY_CFG_POOLING_UPLOAD_LIMITS		
+		{L"pooling", L"vstream_alloc_step", L"16"},//PXY_CFG_POOLING_VSTREAM_ALLOC_STEP
+		{L"pooling", L"vstream_limit", L"256"},//PXY_CFG_POOLING_VSTREAM_LIMITS
 		{L"pooling", L"surface_limits",L"00000"},//PXY_CFG_POOLING_SURFACE_LIMITS
 		{L"pooling", L"lifetime",L"10000"},//PXY_CFG_POOLING_LIFETIME
+		{L"pooling", L"host_va_reserve",L"37"},//PXY_CFG_POOLING_HOST_VA_RESERVE
 		{L"samplers", L"min_lod", L"0"},//PXY_CFG_SAMPLERS_MIN_LOD		
 		{L"cleanup", L"period",L"10000"},//PXY_CFG_CLEANUP_PERIOD
 		{L"cleanup", L"subsleep",L"250"},//PXY_CFG_CLEANUP_SUBSLEEP	
@@ -105,8 +112,9 @@ private:
 		{L"sdb", L"enable_profiling", L"0"},//PXY_CFG_SDB_ENABLE_PROFILING
 		{L"sdb", L"force_unused_regs", L"0"},//PXY_CFG_SDB_FORCE_UNUSED_REGS
 		{L"sdb", L"allow_realtime_checks", L"0"},//PXY_CFG_SDB_ALLOW_REALTIME_CHECKS
-		{L"mt", L"replay", L"1"},//PXY_CFG_MT_REPLAY_BEHAIVOUR
-		{L"mt", L"replay_threads", L"1"},//PXY_CFG_MT_REPLAY_THREADS
+		{L"replay", L"replay", L"1"},//PXY_CFG_REPLAY_BEHAIVOUR
+		{L"replay", L"replay_threads", L"1"},//PXY_CFG_REPLAY_THREADS
+		{L"replay", L"items_per_batch", L"100"},//PXY_CFG_REPLAY_ITEMS_PER_BATCH
 		{L"mt", L"vstream_ctor", L"0"},//PXY_CFG_MT_VSTREAM_CTOR
 		{L"mt", L"surface_ctor", L"0"},//PXY_CFG_MT_SURFACE_CTOR
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG

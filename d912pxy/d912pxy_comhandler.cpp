@@ -24,20 +24,19 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_comhandler::d912pxy_comhandler(const wchar_t* moduleText) : d912pxy_noncom(NULL, moduleText)
+d912pxy_comhandler::d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t* moduleText) : d912pxy_noncom(moduleText)
 {
+	objType = tid;
 	refc = 1;
 	thrdRefc = 0;
 	beingWatched = 0;
 	poolSync.LockedSet(1);
+	persistentlyPooled = 0;
+	comBase = (d912pxy_com_object*)((intptr_t)this - 8);
 }
 
-d912pxy_comhandler::d912pxy_comhandler(d912pxy_device * dev, const wchar_t * moduleText) : d912pxy_noncom(dev, moduleText)
+d912pxy_comhandler::d912pxy_comhandler()
 {
-	refc = 1;
-	thrdRefc = 0;
-	beingWatched = 0;
-	poolSync.LockedSet(1);
 }
 
 d912pxy_comhandler::~d912pxy_comhandler()
@@ -45,9 +44,23 @@ d912pxy_comhandler::~d912pxy_comhandler()
 
 }
 
+void d912pxy_comhandler::Init(d912pxy_com_obj_typeid tid, const wchar_t * moduleText)
+{
+	persistentlyPooled = 0;
+	objType = tid;
+	refc = 1;
+	thrdRefc = 0;
+	beingWatched = 0;
+	poolSync.Init();
+	poolSync.LockedSet(1);
+	NonCom_Init(moduleText);
+	comBase = (d912pxy_com_object*)((intptr_t)this - 8);
+}
+
+#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_COM
+
 HRESULT d912pxy_comhandler::QueryInterface(REFIID riid, void ** ppvObj)
 {
-
 	LOG_DBG_DTDM("::CQI");
 	*ppvObj = this;
 	return NOERROR;
@@ -60,11 +73,9 @@ ULONG d912pxy_comhandler::AddRef()
 	return InterlockedAdd(&refc, 1);
 }
 
-#define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_COM
-
 ULONG d912pxy_comhandler::Release()
 {
-	API_OVERHEAD_TRACK_START(1)
+	
 
 	LONG decR = InterlockedAdd(&refc, -1);
 
@@ -72,29 +83,29 @@ ULONG d912pxy_comhandler::Release()
 	{
 		LOG_DBG_DTDM("::CRE 0 %016llX", this);
 
-		if (m_dev)
-			m_dev->IFrameCleanupEnqeue(this);
+		if (d912pxy_s.devComBase)
+			d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		else {
 
-			API_OVERHEAD_TRACK_END(1)
+			if (FinalReleaseCB())
+				DeAllocateBase();
 
-			delete this;
+			
+
 			return 0;
 		}
 	}
 
-	API_OVERHEAD_TRACK_END(1)
+	
 
 	return decR;
 }
-
-#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE
 
 UINT d912pxy_comhandler::FinalReleaseTest()
 {
 	if (InterlockedAdd(&thrdRefc, 0))
 	{
-		m_dev->IFrameCleanupEnqeue(this);
+		d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		return 2;
 	}
 	else {
@@ -108,12 +119,14 @@ UINT d912pxy_comhandler::FinalRelease()
 {
 	if (InterlockedAdd(&thrdRefc, 0))
 	{
-		m_dev->IFrameCleanupEnqeue(this);
+		d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		return 2;
 	}
 	else {		
 		if (FinalReleaseCB())
-			delete this;
+		{
+			DeAllocateBase();
+		}
 		return 1;
 	}
 }
@@ -185,3 +198,62 @@ int d912pxy_comhandler::Watching(LONG v)
 {
 	return InterlockedAdd(&beingWatched, v);
 }
+
+void d912pxy_comhandler::DeAllocateBase()
+{
+#define dtor_call(a) ((a*)(this))->~a()
+
+	switch (objType)
+	{
+	case PXY_COM_OBJ_VSTREAM:
+		dtor_call(d912pxy_vstream);
+		break;
+	case PXY_COM_OBJ_SURFACE:
+		dtor_call(d912pxy_surface);
+		break;
+	case PXY_COM_OBJ_QUERY:
+		dtor_call(d912pxy_query);
+		break;
+	case PXY_COM_OBJ_QUERY_OCC:
+		dtor_call(d912pxy_query_occlusion);
+		break;
+	case PXY_COM_OBJ_TEXTURE:
+		(&comBase->basetex)->~d912pxy_basetexture();
+		break;
+	case PXY_COM_OBJ_TEXTURE_RTDS:
+		(&comBase->basetex)->~d912pxy_basetexture();
+		break;
+	case PXY_COM_OBJ_VDECL:
+		dtor_call(d912pxy_vdecl);
+		break;
+	case PXY_COM_OBJ_SHADER:
+		dtor_call(d912pxy_shader);
+		break;
+	case PXY_COM_OBJ_SWAPCHAIN:
+		dtor_call(d912pxy_swapchain);
+		break;
+	case PXY_COM_OBJ_SURFACE_LAYER:
+		LOG_ERR_THROW2(-1, "surface_layer comhandler dtor");
+		break;
+	case PXY_COM_OBJ_SBLOCK:
+		dtor_call(d912pxy_sblock);
+		break;
+	case PXY_COM_OBJ_PSO_ITEM:
+		dtor_call(d912pxy_pso_cache_item);
+		break;
+	case PXY_COM_OBJ_NOVTABLE:
+		delete this;
+		break;
+	case PXY_COM_OBJ_UNMANAGED:		
+		PXY_FREE(comBase);
+		break;
+	case PXY_COM_OBJ_STATIC:
+		;
+		break;
+	default:
+		LOG_ERR_THROW2(-1, "wrong com object typeid");
+		break;
+	}
+}
+
+#undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE

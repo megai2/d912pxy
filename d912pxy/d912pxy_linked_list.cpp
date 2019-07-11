@@ -52,6 +52,9 @@ d912pxy_linked_list<ElementType>::~d912pxy_linked_list()
 		// Alrai: Watch this one.
 	}
 
+	if (base)
+		PXY_FREE(base);
+
 	delete nodePool;
 }
 

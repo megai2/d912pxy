@@ -26,41 +26,37 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_SHADERS
 
-HRESULT WINAPI d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
+HRESULT d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
-	d912pxy_vshader* shd = (d912pxy_vshader*)pShader;
+	d912pxy_s.render.db.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
 
-	d912pxy_s(psoCache)->VShader(shd);
-
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader) 
+HRESULT d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader) 
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
-	d912pxy_pshader* shd = (d912pxy_pshader*)pShader;
+	d912pxy_s.render.db.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
 
-	d912pxy_s(psoCache)->PShader(shd);
-
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
+HRESULT d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 #ifdef _DEBUG
 	if (PXY_INNER_MAX_SHADER_CONSTS <= ((StartRegister + Vector4fCount) * 4))
@@ -70,18 +66,18 @@ HRESULT WINAPI d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONS
 	}
 #endif
 
-	d912pxy_s(batch)->SetShaderConstF(0, StartRegister, Vector4fCount, (float*)pConstantData);
+	d912pxy_s.render.batch.SetShaderConstF(0, StartRegister, Vector4fCount, (float*)pConstantData);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount) 
+HRESULT d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount) 
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 #ifdef _DEBUG
 	if (PXY_INNER_MAX_SHADER_CONSTS <= ((StartRegister + Vector4fCount) * 4))
@@ -91,9 +87,9 @@ HRESULT WINAPI d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST
 	}
 #endif
 
-	d912pxy_s(batch)->SetShaderConstF(1, StartRegister, Vector4fCount, (float*)pConstantData);
+	d912pxy_s.render.batch.SetShaderConstF(1, StartRegister, Vector4fCount, (float*)pConstantData);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
@@ -118,7 +114,7 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 		LOG_ERR_THROW2(ret, "SerializeRootSignature failed");
 	}
 
-	LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rsObj)), "CreateRootSignature failed");
+	LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rsObj)), "CreateRootSignature failed");
 
 	return rsObj;
 }
@@ -126,7 +122,7 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId)
 {
 	UINT32 size;
-	UINT32* data = (UINT32*)d912pxy_s(vfs)->LoadFileH(faultyId, &size, PXY_VFS_BID_SHADER_PROFILE);
+	UINT32* data = (UINT32*)d912pxy_s.vfs.LoadFileH(faultyId, &size, PXY_VFS_BID_SHADER_PROFILE);
 
 	if (data == NULL)
 	{
@@ -134,7 +130,7 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 		ZeroMemory(data, PXY_INNER_SHDR_BUG_FILE_SIZE);
 		data[type] = val;
 
-		d912pxy_s(vfs)->WriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
+		d912pxy_s.vfs.WriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
 	}
 	else {
 
@@ -147,7 +143,7 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 		{
 			data[type] = val;
 
-			d912pxy_s(vfs)->ReWriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
+			d912pxy_s.vfs.ReWriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
 		}
 	}
 

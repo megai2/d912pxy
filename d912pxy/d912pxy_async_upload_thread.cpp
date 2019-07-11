@@ -25,8 +25,28 @@ SOFTWARE.
 #include "stdafx.h"
 
 template<class QueItemType, class ProcImpl>
-d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread(d912pxy_device * dev, UINT queueSize, UINT syncId, UINT throttleFactor, const wchar_t* objN, const char* thrdName) : d912pxy_noncom(dev, objN), d912pxy_thread(thrdName, 1)
+d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread() : d912pxy_noncom(), d912pxy_thread()
 {
+
+}
+
+template<class QueItemType, class ProcImpl>
+d912pxy_async_upload_thread<QueItemType, ProcImpl>::~d912pxy_async_upload_thread()
+{
+	
+
+	Stop();
+	delete buffer;
+	delete finishList;
+}
+
+template<class QueItemType, class ProcImpl>
+void d912pxy_async_upload_thread<QueItemType, ProcImpl>::Init(UINT queueSize, UINT syncId, UINT throttleFactor, const wchar_t* objN, const char* thrdName)
+{
+	NonCom_Init(objN);
+	InitThread(thrdName, 1);
+
+	ulMem = NULL;
 	buffer = new d912pxy_ringbuffer<QueItemType>(queueSize, 2);
 	threadSyncId = syncId;
 
@@ -35,15 +55,7 @@ d912pxy_async_upload_thread<QueItemType, ProcImpl>::d912pxy_async_upload_thread(
 
 	finishList = new d912pxy_ringbuffer<void*>(64, 2);
 
-	dev->AddActiveThreads(1);	
-}
-
-template<class QueItemType, class ProcImpl>
-d912pxy_async_upload_thread<QueItemType, ProcImpl>::~d912pxy_async_upload_thread()
-{
-	Stop();
-	delete buffer;
-	delete finishList;
+	d912pxy_s.dev.AddActiveThreads(1);
 }
 
 template<class QueItemType, class ProcImpl>
@@ -75,7 +87,7 @@ void d912pxy_async_upload_thread<QueItemType, ProcImpl>::ThreadJob()
 template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::ThreadInitProc()
 {
-	d912pxy_s(dev)->InitLockThread(threadSyncId);
+	d912pxy_s.dev.InitLockThread(threadSyncId);
 	static_cast<ProcImpl>(this)->ThreadWake();
 }
 
@@ -92,12 +104,63 @@ UINT32 d912pxy_async_upload_thread<QueItemType, ProcImpl>::ItemsOnQueue()
 }
 
 template<class QueItemType, class ProcImpl>
+d912pxy_upload_item * d912pxy_async_upload_thread<QueItemType, ProcImpl>::GetUploadMem(UINT32 size)
+{
+	if (!ulMem)
+	{
+		ulMem = d912pxy_s.pool.upload.GetUploadObject(size * 2);
+#ifdef ENABLE_METRICS
+		ulMemFootprintAligned += ulMem->GetSize();
+#endif
+	} else if (!ulMem->HaveFreeSpace(size))
+	{
+		ulMem->Release();
+		ulMem = d912pxy_s.pool.upload.GetUploadObject((UINT)max(size, ulMem->GetSize() * 2));
+
+#ifdef ENABLE_METRICS		
+		ulMemFootprintAligned += ulMem->GetSize();
+#endif
+	}
+
+#ifdef ENABLE_METRICS
+	ulMemFootprint += size;	
+#endif
+
+	return ulMem;
+}
+
+template<class QueItemType, class ProcImpl>
+UINT32 d912pxy_async_upload_thread<QueItemType, ProcImpl>::GetMemFootprintMB()
+{
+	return (UINT32)(ulMemFootprint >> 20);
+}
+
+template<class QueItemType, class ProcImpl>
+UINT32 d912pxy_async_upload_thread<QueItemType, ProcImpl>::GetMemFootprintAlignedMB()
+{
+	return (UINT32)(ulMemFootprintAligned >> 20);
+}
+
+template<class QueItemType, class ProcImpl>
 void d912pxy_async_upload_thread<QueItemType, ProcImpl>::CheckInterrupt()
 {
-	if (m_dev->InterruptThreads())
+	if (d912pxy_s.dev.InterruptThreads())
 	{
 		static_cast<ProcImpl>(this)->OnThreadInterrupt();
-		m_dev->LockThread(threadSyncId);
+
+		if (ulMem)
+		{
+			ulMem->Release();
+			ulMem = NULL;
+		}
+
+		d912pxy_s.dev.LockThread(threadSyncId);
+
+#ifdef ENABLE_METRICS		
+		ulMemFootprint = 0;
+		ulMemFootprintAligned = 0;
+#endif
+
 		static_cast<ProcImpl>(this)->ThreadWake();
 	}
 }

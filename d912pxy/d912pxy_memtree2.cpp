@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_memtree2::d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow) : d912pxy_noncom(NULL, L"memtree2")
+d912pxy_memtree2::d912pxy_memtree2(UINT nMemSz, UINT iMaxNodes, UINT iGrow) : d912pxy_noncom( L"memtree2")
 {
 	maxNodes = iMaxNodes;
 	grow = iGrow;

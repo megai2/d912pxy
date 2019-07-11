@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_replacer::d912pxy_shader_replacer(DWORD * fun, UINT len, d912pxy_shader_uid UID, UINT isVs) : d912pxy_noncom(NULL, L"shader replacer")
+d912pxy_shader_replacer::d912pxy_shader_replacer(DWORD * fun, UINT len, d912pxy_shader_uid UID, UINT isVs) : d912pxy_noncom( L"shader replacer")
 {
 	mUID = UID;
 	oCode = fun;
@@ -229,7 +229,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 
 		if (saveSource)
 		{
-			d912pxy_s(vfs)->WriteFileH(mUID, imem, size, PXY_VFS_BID_SHADER_SOURCES);
+			d912pxy_s.vfs.WriteFileH(mUID, imem, size, PXY_VFS_BID_SHADER_SOURCES);
 		}
 
 		return ret2;
@@ -244,7 +244,7 @@ d912pxy_shader_code d912pxy_shader_replacer::LoadFromCSO(const char* bfolder)
 	ret.sz = 0;
 	ret.blob = nullptr;
 		
-	ret.code = d912pxy_s(vfs)->LoadFileH(mUID, (UINT*)&ret.sz, PXY_VFS_BID_CSO);
+	ret.code = d912pxy_s.vfs.LoadFileH(mUID, (UINT*)&ret.sz, PXY_VFS_BID_CSO);
 
 	return ret;
 
@@ -252,7 +252,7 @@ d912pxy_shader_code d912pxy_shader_replacer::LoadFromCSO(const char* bfolder)
 
 void d912pxy_shader_replacer::SaveCSO(d912pxy_shader_code code, const char * bfolder)
 {
-	d912pxy_s(vfs)->WriteFileH(mUID, code.code, (UINT32)code.sz, PXY_VFS_BID_CSO);
+	d912pxy_s.vfs.WriteFileH(mUID, code.code, (UINT32)code.sz, PXY_VFS_BID_CSO);
 }
 
 d912pxy_hlsl_generator_memout* d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)

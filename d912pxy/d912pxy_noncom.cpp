@@ -34,9 +34,9 @@ HANDLE gLeakMapLock;
 
 #endif
 
-d912pxy_noncom::d912pxy_noncom(d912pxy_device * dev, const wchar_t * logModule)
+d912pxy_noncom::d912pxy_noncom(const wchar_t * logModule)
 {
-	NonCom_Init(dev, logModule);
+	NonCom_Init(logModule);
 }
 
 d912pxy_noncom::d912pxy_noncom()
@@ -59,7 +59,7 @@ d912pxy_noncom::~d912pxy_noncom()
 		CloseHandle(gLeakMapLock);
 		for (std::map<UINT, const wchar_t*>::iterator it = gLeakTracker->begin(); it != gLeakTracker->end(); ++it)
 		{
-			LOG_DBG_DTDM3("obj %s is leaked", it->second);
+			LOG_DBG_DTDM3("obj %u = %s is leaked", it->first, it->second);
 		}		
 	}
 
@@ -82,21 +82,21 @@ void d912pxy_noncom::ThrowErrorDbg(HRESULT hr, const char * msg)
 	d912pxy_helper::ThrowIfFailed(hr, msg);
 }
 
-HRESULT d912pxy_noncom::GetDevice(IDirect3DDevice9 ** ppDevice)
+HRESULT d912pxy_noncom::com_GetDevice(d912pxy_com_object* obj, IDirect3DDevice9 ** ppDevice)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-	*ppDevice = m_dev;
+	*ppDevice = PXY_COM_CAST_(IDirect3DDevice9, &d912pxy_s.dev);
 	return D3D_OK;
 }
 
-void d912pxy_noncom::NonCom_Init(d912pxy_device * dev, const wchar_t * logModule)
+void d912pxy_noncom::NonCom_Init(const wchar_t * logModule)
 {
-	d912pxy_s(log)->RegisterModule(logModule, &LGC_DEFAULT);
+	d912pxy_s.log.text.RegisterModule(logModule, &LGC_DEFAULT);
 
 	LOG_DBG_DTDM("new %s", logModule);
 
 #ifdef _DEBUG
 	LONG ouid = InterlockedIncrement(&g_ObjectsCounter);
+
 	LOG_DBG_DTDM("obj %u is %s", ouid, logModule);
 
 	if (ouid == 1)
@@ -111,6 +111,9 @@ void d912pxy_noncom::NonCom_Init(d912pxy_device * dev, const wchar_t * logModule
 	ReleaseMutex(gLeakMapLock);
 
 #endif
+}
 
-	m_dev = dev;
+void d912pxy_noncom::ImplStubCall(const char * function, UINT line)
+{
+	LOG_DBG_DTDM("%S %u : stub", function, line);
 }

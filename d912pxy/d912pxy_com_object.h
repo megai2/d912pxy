@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2019 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -25,22 +25,25 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_vshader : public IDirect3DVertexShader9, public d912pxy_shader
-{
-public:
-	d912pxy_vshader(d912pxy_device* dev, const DWORD* fun);
-	d912pxy_vshader(d912pxy_device* dev, d912pxy_shader_uid uid);
-	~d912pxy_vshader();
-
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
-
-	/*** IDirect3DPixelShader9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(GetFunction)(THIS_ void*, UINT* pSizeOfData);
-
-	static D912PXY_METHOD_(ULONG, ReleaseWithPairRemoval)(IDirect3DVertexShader9* thisPtr);
-};
-
+typedef struct d912pxy_com_object {
+	void* vtable;
+	union {
+		d912pxy_comhandler com;
+		d912pxy_vdecl vdecl;
+		d912pxy_resource res;
+		d912pxy_shader shader;
+		d912pxy_surface surface;
+		d912pxy_surface_layer layer;
+		d912pxy_device device;
+		d912pxy_vtexture tex_3d;
+		d912pxy_ctexture tex_cube;
+		d912pxy_texture tex_2d;
+		d912pxy_basetexture basetex;
+		d912pxy_vstream vstream;
+		d912pxy_query query;
+		d912pxy_query_occlusion query_occ;
+		d912pxy_swapchain swapchain;
+		d912pxy_sblock sblock;
+		d912pxy_pso_cache_item pso_item;
+	};
+} d912pxy_com_object;

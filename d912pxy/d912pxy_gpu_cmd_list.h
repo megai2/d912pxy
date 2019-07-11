@@ -35,7 +35,7 @@ class d912pxy_gpu_cmd_list :
 {
 
 public:
-	d912pxy_gpu_cmd_list(d912pxy_device* dev, ID3D12CommandQueue* que, UINT iMaxRefernecedObjs, UINT iGrowReferences, UINT iMaxCleanupPerSync, d912pxy_gpu_cleanup_thread* cleanupThread);
+	d912pxy_gpu_cmd_list(ID3D12CommandQueue* que, UINT iMaxRefernecedObjs, UINT iGrowReferences, UINT iMaxCleanupPerSync, d912pxy_gpu_cleanup_thread* cleanupThread);
 	~d912pxy_gpu_cmd_list();
 
 	void Execute();

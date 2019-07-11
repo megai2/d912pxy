@@ -29,8 +29,10 @@ template <class ElementType, class ProcImpl>
 class d912pxy_pool_memcat : public d912pxy_pool<ElementType, ProcImpl>
 {
 public:
-	d912pxy_pool_memcat(d912pxy_device* dev, UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg, ProcImpl* singleton);
+  	d912pxy_pool_memcat();
 	~d912pxy_pool_memcat();
+
+	void Init(UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg);
 
 	d912pxy_ringbuffer<ElementType>* GetCatBuffer(UINT32 cat);
 
@@ -39,14 +41,27 @@ public:
 	UINT MemCatFromSize(UINT sz);
 	UINT MemCatToSize(UINT cat);
 
+	UINT IsPoolHaveFreeSpace();
+	void AddMemoryToPool(INT sz);
+	UINT32 GetMemoryInPoolMb();
+
 private:
 	UINT32 bitIgnore;
 	UINT32 bitLimit;
 	UINT32 bitCnt;
-	UINT32 instantUnload;
 
-	UINT16* limits;
-
+	UINT32 maxMemoryInPool;
+	UINT32 memoryInPool;
+	UINT32 peristentUsage;	
 protected:
+	void CreateMemPool();
+	ID3D12Resource* CreatePlacedResource(UINT32 size, D3D12_RESOURCE_DESC* rsDesc);
+
 	d912pxy_ringbuffer<ElementType>** memTable;
+
+	ID3D12Heap* memPool;
+	UINT64 memPoolOffset;
+	UINT64 memPoolSize;
+	D3D12_HEAP_TYPE memPoolHeapType;
+	d912pxy_thread_lock* memPoolLock;
 };

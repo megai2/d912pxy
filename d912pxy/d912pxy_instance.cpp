@@ -25,13 +25,13 @@ SOFTWARE.
 #include "stdafx.h"
 #include "../thirdparty/renderdoc_app.h"
 
-d912pxy_device* d912translator;
+d912pxy_instance d912pxy_global::instance;
 
 IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* obj)
 {
 	d912pxy_first_init();
 	
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_MISC_USE_DX9))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_MISC_USE_DX9))
 	{
 		dev->InitPerfGraph();
 		return dev;
@@ -39,48 +39,44 @@ IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* 
 		if (dev->GetOrigD3D9Call()->DeviceType != D3DDEVTYPE_HAL)
 			return dev;		
 		
-	d912pxy_s(memMgr)->StartTrackingBlocks();
-	d912translator = new d912pxy_device(dev, obj);
+	d912pxy_s.mem.StartTrackingBlocks();
+
+	d912pxy_com_object* d912translator = d912pxy_device::d912pxy_device_com(&d912pxy_s.devComBase, dev, obj);
 	return (IDirect3DDevice9*)d912translator;
 }
 
 void d912pxy_first_init()
 {
-	if (d912pxy_s(memMgr) != NULL)	
-		return;	
-
 	//megai2: load config at dll load
 	//also do dirty tricks with memmgr
+	if (d912pxy_s.running)
+		return;
 
-	d912pxy_s(memMgr) = NULL;
+	d912pxy_s.running = 1;
 
-	new (malloc(sizeof(d912pxy_mem_mgr))) d912pxy_mem_mgr();
-	new (malloc(sizeof(d912pxy_config))) d912pxy_config();
-	new (malloc(sizeof(d912pxy_log))) d912pxy_log();
+	d912pxy_s.devComBase = NULL;
 
-	d912pxy_s(memMgr)->PostInit();
+	d912pxy_s.mem.Init();
+	d912pxy_s.config.Init();
+	d912pxy_s.log.text.Init();
+	d912pxy_s.mem.PostInit();
 
 	D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
 
-	if (d912pxy_s(config)->GetValueUI32(PXY_CFG_LOG_LOAD_RDOC))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_LOAD_RDOC))
 	{
 		HMODULE mod = LoadLibraryA("renderdoc.dll");
 	}
-
 }
 
 void d912pxy_final_cleanup()
 {
-	if (!d912pxy_s(memMgr))
+	if (!d912pxy_s.running)
 		return;
 
-	d912pxy_s(memMgr)->~d912pxy_mem_mgr();
-	d912pxy_s(log)->~d912pxy_log();
-	d912pxy_s(config)->~d912pxy_config();
+	d912pxy_s.mem.~d912pxy_mem_mgr();
+	d912pxy_s.log.text.~d912pxy_log();
+	d912pxy_s.config.~d912pxy_config();
 
-	free(d912pxy_s(memMgr));
-	free(d912pxy_s(log));
-	free(d912pxy_s(config));
-
-	d912pxy_s(memMgr) = NULL;	
+	d912pxy_s.running = 0;
 }

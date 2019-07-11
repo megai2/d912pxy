@@ -26,18 +26,24 @@ SOFTWARE.
 #include "d912pxy_pool.h"
 
 template<class ElementType, class ProcImpl>
-d912pxy_pool<ElementType, ProcImpl>::d912pxy_pool(d912pxy_device* dev, ProcImpl* singleton) : d912pxy_noncom(dev, L"object pool")
+d912pxy_pool<ElementType, ProcImpl>::d912pxy_pool()
 {
-	if (singleton)
-		*singleton = static_cast<ProcImpl>(this);
-
-	static_cast<ProcImpl>(this)->EarlyInitProc();
 }
 
 template<class ElementType, class ProcImpl>
 d912pxy_pool<ElementType, ProcImpl>::~d912pxy_pool()
 {
+	
+}
 
+template<class ElementType, class ProcImpl>
+void d912pxy_pool<ElementType, ProcImpl>::Init()
+{
+	pRunning = 1;
+
+	NonCom_Init(L"obj pool");
+
+	static_cast<ProcImpl>(this)->EarlyInitProc();
 }
 
 template<class ElementType, class ProcImpl>
@@ -89,7 +95,8 @@ template<class ElementType, class ProcImpl>
 void d912pxy_pool<ElementType, ProcImpl>::PoolUnloadProc(ElementType val, UINT32 cat)
 {
 	val->NoteDeletion(GetTickCount());
-	d912pxy_s(thread_cleanup)->Watch(val);
+
+	d912pxy_s.thread.cleanup.Watch(val);
 }
 
 template<class ElementType, class ProcImpl>
@@ -97,7 +104,7 @@ void d912pxy_pool<ElementType, ProcImpl>::WarmUp(UINT cat)
 {
 	ElementType v = static_cast<ProcImpl>(this)->AllocProc(cat);
 	PoolRW(cat, &v, 1);	
-	v->Release();	
+	v->Release();
 }
 
 template class d912pxy_pool<d912pxy_vstream*, d912pxy_vstream_pool*>;

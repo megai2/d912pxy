@@ -35,35 +35,36 @@ typedef struct d912pxy_resource_ptr {
 } d912pxy_resource_ptr;
 
 enum d912pxy_resource_typeid {
-	RTID_TEXTURE,
-	RTID_VBUF,
-	RTID_IBUF,
 	RTID_SURFACE,
+	RTID_VOLUME,
+	RTID_TEX,
+	RTID_VTEX,
+	RTID_CTEX,
+	RTID_VBUF,
+	RTID_IBUF,	
 	RTID_UL_BUF,
 	RTID_CBUFFER,
 	RTID_RB_BUF,
 	RTID_UNK
 };
 
-class d912pxy_resource : public IDirect3DResource9, public d912pxy_comhandler
+class d912pxy_resource : public d912pxy_comhandler
 {
 public:
-	d912pxy_resource(d912pxy_device* dev, d912pxy_resource_typeid type, const wchar_t* cat);
+	d912pxy_resource(d912pxy_resource_typeid type, d912pxy_com_obj_typeid tid, const wchar_t* cat);
 	~d912pxy_resource();
 
-	HRESULT WINAPI QueryInterface(REFIID riid, void** ppvObj);
-	ULONG WINAPI AddRef(void);
-	ULONG WINAPI Release(void);
-
+	
 	/*** IDirect3DResource9 methods ***/
-	HRESULT WINAPI GetDevice(IDirect3DDevice9** ppDevice);
-	HRESULT WINAPI SetPrivateData(REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags);
-	HRESULT WINAPI GetPrivateData(REFGUID refguid, void* pData, DWORD* pSizeOfData);
-	HRESULT WINAPI FreePrivateData(REFGUID refguid);
-	DWORD WINAPI SetPriority(DWORD PriorityNew);
-	DWORD WINAPI GetPriority();
-	void WINAPI PreLoad();
-	D3DRESOURCETYPE WINAPI GetType();
+	D912PXY_METHOD(SetPrivateData)(PXY_THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags);
+	D912PXY_METHOD(GetPrivateData)(PXY_THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData);
+	D912PXY_METHOD(FreePrivateData)(PXY_THIS_ REFGUID refguid);
+	D912PXY_METHOD_(DWORD, SetPriority)(PXY_THIS_ DWORD PriorityNew);
+	D912PXY_METHOD_(DWORD, GetPriority)(PXY_THIS);
+	D912PXY_METHOD_(void, PreLoad)(PXY_THIS);
+	D912PXY_METHOD_(D3DRESOURCETYPE, GetType)(PXY_THIS);
+
+	D912PXY_METHOD_NC_(D3DRESOURCETYPE, GetType)(THIS);
 
 	/////////////////////
 

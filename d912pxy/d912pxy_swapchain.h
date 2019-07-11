@@ -58,24 +58,25 @@ static const char* d912pxy_swapchain_state_names[] = {
 	"SWCS_COUNT"
 };
 
-class d912pxy_swapchain : public d912pxy_comhandler, public IDirect3DSwapChain9
+class d912pxy_swapchain : public d912pxy_comhandler
 {
-public:
-	d912pxy_swapchain(d912pxy_device* dev, int index, D3DPRESENT_PARAMETERS* in_pp);
+public:	
+	static d912pxy_com_object* d912pxy_swapchain_com(int index, D3DPRESENT_PARAMETERS* in_pp);
 	virtual ~d912pxy_swapchain();
 
-	HRESULT WINAPI QueryInterface(REFIID riid, void** ppvObj);
-	ULONG WINAPI AddRef(void);
-	ULONG WINAPI Release(void);
+	D912PXY_METHOD(Present)(PXY_THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags);
+	D912PXY_METHOD(GetFrontBufferData)(PXY_THIS_ IDirect3DSurface9* pDestSurface);
+	D912PXY_METHOD(GetBackBuffer)(PXY_THIS_ UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer);
+	D912PXY_METHOD(GetRasterStatus)(PXY_THIS_ D3DRASTER_STATUS* pRasterStatus);
+	D912PXY_METHOD(GetDisplayMode)(PXY_THIS_ D3DDISPLAYMODE* pMode);	
+	D912PXY_METHOD(GetPresentParameters)(PXY_THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters);
+	D912PXY_METHOD_(ULONG, ReleaseSwapChain)(PXY_THIS);
 
-	/*** IDirect3DSwapChain9 methods ***/
-	HRESULT WINAPI Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags);
-	HRESULT WINAPI GetFrontBufferData(IDirect3DSurface9* pDestSurface);
-	HRESULT WINAPI GetBackBuffer(UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer);
-	HRESULT WINAPI GetRasterStatus(D3DRASTER_STATUS* pRasterStatus);
-	HRESULT WINAPI GetDisplayMode(D3DDISPLAYMODE* pMode);
-	HRESULT WINAPI GetDevice(IDirect3DDevice9** ppDevice);
-	HRESULT WINAPI GetPresentParameters(D3DPRESENT_PARAMETERS* pPresentationParameters);
+	HRESULT Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags);
+	HRESULT GetFrontBufferData(IDirect3DSurface9* pDestSurface);
+	HRESULT GetBackBuffer(UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer);
+	HRESULT GetPresentParameters(D3DPRESENT_PARAMETERS* pPresentationParameters);
+	D912PXY_METHOD_NC_(ULONG, ReleaseSwapChain)(THIS);
 
 	///
 
@@ -100,6 +101,8 @@ public:
 	void ReanimateDXGI();
 
 private:	
+	d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS* in_pp);
+
 	void ChangeState(d912pxy_swapchain_state newState);
 
 	void ThrowCritialError(HRESULT ret, const char* msg);

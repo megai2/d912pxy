@@ -28,7 +28,7 @@ SOFTWARE.
 d912pxy_StackWalker::d912pxy_StackWalker(UINT32 opts, UINT32 saveCaller) : StackWalker(opts)
 {
 	if (!saveCaller)
-		d912pxy_s(log)->SyncCrashWrite(1);
+		d912pxy_s.log.text.SyncCrashWrite(1);
 
 	saveCallerToBuffer = saveCaller;
 	callerLineNr = 0;
@@ -38,7 +38,7 @@ d912pxy_StackWalker::d912pxy_StackWalker(UINT32 opts, UINT32 saveCaller) : Stack
 d912pxy_StackWalker::~d912pxy_StackWalker()
 {
 	if (!saveCallerToBuffer)
-		d912pxy_s(log)->SyncCrashWrite(0);
+		d912pxy_s.log.text.SyncCrashWrite(0);
 }
 
 void d912pxy_StackWalker::OnOutput(LPCSTR szText)
@@ -50,7 +50,7 @@ void d912pxy_StackWalker::OnOutput(LPCSTR szText)
 
 		//LOG_ERR_DTDM("%s", buf);
 
-		d912pxy_s(log)->WriteCrashLogLine(buf);
+		d912pxy_s.log.text.WriteCrashLogLine(buf);
 	}
 	else if (saveCallerToBuffer == callerLineNr)
 	{

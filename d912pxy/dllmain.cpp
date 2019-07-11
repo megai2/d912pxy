@@ -26,9 +26,12 @@ SOFTWARE.
 
 extern "C" HRESULT WINAPI CreateD912PXY(D3DPRESENT_PARAMETERS* presPars, IDirect3DDevice9** dev)
 {
-	d912pxy_device* proxy = new d912pxy_device(NULL, presPars);
+	d912pxy_first_init();
 
-	*dev = (IDirect3DDevice9*)proxy;
+	d912pxy_s.mem.StartTrackingBlocks();
+
+	d912pxy_com_object* d912translator = d912pxy_device::d912pxy_device_com(&d912pxy_s.devComBase, 0, presPars);
+	*dev = (IDirect3DDevice9*)d912translator;
 
 	return D3D_OK;
 }

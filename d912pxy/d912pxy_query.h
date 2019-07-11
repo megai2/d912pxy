@@ -25,31 +25,39 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_query : public IDirect3DQuery9, public d912pxy_comhandler
+#define D3DISSUE_FORCED 0x4
+
+class d912pxy_query : public d912pxy_comhandler
 {
-public:
-	d912pxy_query(d912pxy_device* dev, D3DQUERYTYPE Type);
+public:	
+	static d912pxy_query* d912pxy_query_com(D3DQUERYTYPE Type);
 	~d912pxy_query();
 
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
+	D912PXY_METHOD_(D3DQUERYTYPE, GetType)(PXY_THIS);
+	D912PXY_METHOD_(DWORD, GetDataSize)(PXY_THIS);
+	D912PXY_METHOD(Issue)(PXY_THIS_ DWORD dwIssueFlags);
+	D912PXY_METHOD(GetData)(PXY_THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);	
 
-	/*** IDirect3DQuery9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD_(D3DQUERYTYPE, GetType)(THIS);
-	D912PXY_METHOD_(DWORD, GetDataSize)(THIS);
-	D912PXY_METHOD(Issue)(THIS_ DWORD dwIssueFlags);
-	D912PXY_METHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	D912PXY_METHOD(GetDataZeroOverride)(PXY_THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	D912PXY_METHOD(GetDataOneOverride)(PXY_THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	D912PXY_METHOD(IssueNOP)(PXY_THIS_ DWORD dwIssueFlags);
+
+	D912PXY_METHOD_NC_(D3DQUERYTYPE, GetType)(THIS);
+	D912PXY_METHOD_NC_(DWORD, GetDataSize)(THIS);
+	D912PXY_METHOD_NC(Issue)(THIS_ DWORD dwIssueFlags);
+	D912PXY_METHOD_NC(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+
+	D912PXY_METHOD_NC(GetDataZeroOverride)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	D912PXY_METHOD_NC(GetDataOneOverride)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags);
+	D912PXY_METHOD_NC(IssueNOP)(THIS_ DWORD dwIssueFlags);
 
 	virtual void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
 
-	static D912PXY_METHOD(GetDataZeroOverride)(IDirect3DQuery9* self, void* pData, DWORD dwSize, DWORD dwGetDataFlags);
-	static D912PXY_METHOD(GetDataOneOverride)(IDirect3DQuery9* self, void* pData, DWORD dwSize, DWORD dwGetDataFlags);
-	static D912PXY_METHOD(IssueNOP)(IDirect3DQuery9* self, DWORD dwIssueFlags);
+protected:
+	d912pxy_query(D3DQUERYTYPE Type);
 
-private:	
+private:		
+
 	D3DQUERYTYPE m_type;
 	DWORD m_state;
 };

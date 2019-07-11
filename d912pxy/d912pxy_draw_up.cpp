@@ -2,14 +2,14 @@
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING_UP
 
-d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(dev, L"draw_up")
+d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(L"draw_up")
 {
 	for (int i = 0; i != PXY_DUP_COUNT; ++i)
 	{
 		UINT32 tmpUPbufSpace = 0xFFFF;
 		if (i == PXY_DUP_DPI)
 		{
-			tmpUPbufSpace = d912pxy_s(config)->GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
+			tmpUPbufSpace = d912pxy_s.config.GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
 		} 
 
 		AllocateBuffer((d912pxy_draw_up_buffer_name)i, tmpUPbufSpace);
@@ -21,6 +21,8 @@ d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(dev, L"dr
 			{
 				((UINT32*)buf[i].writePoint)[j] = j;
 			}
+
+			buf[i].offset = tmpUPbufSpace;
 		}
 	}
 }
@@ -38,34 +40,34 @@ d912pxy_draw_up::~d912pxy_draw_up()
 
 void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
-	UINT vstreamRegLen = VertexStreamZeroStride * d912pxy_s(iframe)->GetIndexCount(PrimitiveCount, PrimitiveType);
+	UINT vstreamRegLen = VertexStreamZeroStride * d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
 	UINT vsvOffset = BufferWrite(PXY_DUP_DPV, vstreamRegLen, pVertexStreamZeroData);
 
 	PushVSBinds();
 
-	d912pxy_s(iframe)->SetIBuf(buf[PXY_DUP_DPI].vstream);
-	d912pxy_s(iframe)->SetVBuf(buf[PXY_DUP_DPV].vstream, 0, vsvOffset, VertexStreamZeroStride);
+	d912pxy_s.render.iframe.SetIBuf(buf[PXY_DUP_DPI].vstream);
+	d912pxy_s.render.iframe.SetVBuf(buf[PXY_DUP_DPV].vstream, 0, vsvOffset, VertexStreamZeroStride);
 
 	//megai2: FIXME forced CommitBatch2 here for now, need to properly reflect config file
-	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);	
+	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);	
 
 	PopVSBinds();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
 void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void * pIndexData, D3DFORMAT IndexDataFormat, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	UINT hiInd = IndexDataFormat == D3DFMT_INDEX32;
 	d912pxy_draw_up_buffer_name indBuf = hiInd ? PXY_DUP_DIPI4 : PXY_DUP_DIPI2;
 
-	UINT indBufSz = (hiInd * 2 + 2)*d912pxy_s(iframe)->GetIndexCount(PrimitiveCount, PrimitiveType);
+	UINT indBufSz = (hiInd * 2 + 2)*d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
 	UINT vertBufSz = VertexStreamZeroStride * (MinVertexIndex + NumVertices);
 
 	UINT vsiOffset = BufferWrite(indBuf, indBufSz, pIndexData);
@@ -73,14 +75,14 @@ void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UIN
 
 	PushVSBinds();
 
-	d912pxy_s(iframe)->SetIBuf(buf[indBuf].vstream);
-	d912pxy_s(iframe)->SetVBuf(buf[PXY_DUP_DIPV].vstream, 0, vsvOffset, VertexStreamZeroStride);	
+	d912pxy_s.render.iframe.SetIBuf(buf[indBuf].vstream);
+	d912pxy_s.render.iframe.SetVBuf(buf[PXY_DUP_DIPV].vstream, 0, vsvOffset, VertexStreamZeroStride);	
 	//megai2: FIXME forced CommitBatch2 here for now, need to properly reflect config file
-	d912pxy_s(iframe)->CommitBatch2(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);		
+	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);		
 
 	PopVSBinds();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
 void d912pxy_draw_up::OnFrameEnd()
@@ -88,7 +90,7 @@ void d912pxy_draw_up::OnFrameEnd()
 	for (int i = 0; i != PXY_DUP_COUNT; ++i)
 	{
 		if (buf[i].writePoint)
-			buf[i].vstream->Unlock();
+			buf[i].vstream->UnlockRanged(0, buf[i].offset);
 
 		buf[i].writePoint = 0;
 	}
@@ -159,25 +161,25 @@ void d912pxy_draw_up::AllocateBuffer(d912pxy_draw_up_buffer_name bid, UINT len)
 		nIB = 1;
 	}
 
-	buf[bid].vstream = d912pxy_s(pool_vstream)->GetVStreamObject(len, nFmt, nIB);
+	buf[bid].vstream = d912pxy_s.pool.vstream.GetVStreamObject(len, nFmt, nIB);
 }
 
 void d912pxy_draw_up::PushVSBinds()
 {
-	oi = d912pxy_s(iframe)->GetIBuf();
-	oss = d912pxy_s(iframe)->GetStreamSource(0);
-	ossi = d912pxy_s(iframe)->GetStreamSource(1);
+	oi = d912pxy_s.render.iframe.GetIBuf();
+	oss = d912pxy_s.render.iframe.GetStreamSource(0);
+	ossi = d912pxy_s.render.iframe.GetStreamSource(1);
 
-	d912pxy_s(iframe)->SetStreamFreq(0, 1);
-	d912pxy_s(iframe)->SetStreamFreq(1, 0);
+	d912pxy_s.render.iframe.SetStreamFreq(0, 1);
+	d912pxy_s.render.iframe.SetStreamFreq(1, 0);
 }
 
 void d912pxy_draw_up::PopVSBinds()
 {
-	d912pxy_s(iframe)->SetIBuf(oi);
-	d912pxy_s(iframe)->SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
-	d912pxy_s(iframe)->SetStreamFreq(0, oss.divider);
-	d912pxy_s(iframe)->SetStreamFreq(1, ossi.divider);
+	d912pxy_s.render.iframe.SetIBuf(oi);
+	d912pxy_s.render.iframe.SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
+	d912pxy_s.render.iframe.SetStreamFreq(0, oss.divider);
+	d912pxy_s.render.iframe.SetStreamFreq(1, ossi.divider);
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

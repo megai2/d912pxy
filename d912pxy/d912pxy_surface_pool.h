@@ -28,8 +28,10 @@ SOFTWARE.
 class d912pxy_surface_pool : public d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>
 {
 public:
-	d912pxy_surface_pool(d912pxy_device* dev);
+	d912pxy_surface_pool();
 	~d912pxy_surface_pool();
+
+	void Init();
 
 	d912pxy_surface* GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback);
 
@@ -42,6 +44,11 @@ public:
 
 	void PoolUnloadProc(d912pxy_surface* val, d912pxy_ringbuffer<d912pxy_surface*>* tbl);
 
+#ifdef ENABLE_METRICS
+	UINT64 GetPoolSizeMB() { return poolSize >> 20; };
+	void ChangePoolSize(INT dlt);
+#endif
+	   
 private:
 	d912pxy_memtree2* table;
 
@@ -49,5 +56,8 @@ private:
 
 	UINT64 config;
 
+#ifdef ENABLE_METRICS
+	UINT64 poolSize;
+#endif
 };
 

@@ -24,18 +24,34 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_batch::d912pxy_batch(d912pxy_device* dev): d912pxy_noncom(dev, L"draw batch")
+d912pxy_batch::d912pxy_batch()
 {
-	d912pxy_s(batch) = this;
+}
+
+
+d912pxy_batch::~d912pxy_batch()
+{
+	
+
+	buffer->Release();
+	stream->Release();
+
+	copyPSO->Release();
+	copyRS->Release();
+}
+
+void d912pxy_batch::Init()
+{
+	NonCom_Init(L"draw batch");
 
 	streamIdx = 0;
 	batchNum = 0;
 	lastBatchCount = 0;
 	oddFrame = 0;
-	
-	stream = new d912pxy_cbuffer(dev, PXY_BATCH_STREAM_SIZE, 0, 0);
-	buffer = new d912pxy_cbuffer(dev, PXY_BATCH_GPU_BUFFER_SIZE, 0, 0);
-	
+
+	stream = new d912pxy_cbuffer(PXY_BATCH_STREAM_SIZE, 0, 0);
+	buffer = new d912pxy_cbuffer(PXY_BATCH_GPU_BUFFER_SIZE, 0, 0);
+
 	streamOfDlt[0] = 0;
 	streamOfDlt[1] = PXY_BATCH_STREAM_PER_FRAME_SIZE;
 	intptr_t streamBase = stream->HostPtr();
@@ -47,16 +63,6 @@ d912pxy_batch::d912pxy_batch(d912pxy_device* dev): d912pxy_noncom(dev, L"draw ba
 	memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
 
 	InitCopyCS();
-}
-
-
-d912pxy_batch::~d912pxy_batch()
-{
-	buffer->Release();
-	stream->Release();
-
-	copyPSO->Release();
-	copyRS->Release();
 }
 
 UINT d912pxy_batch::NextBatch()
@@ -71,7 +77,7 @@ void d912pxy_batch::SetShaderConstF(UINT type, UINT start, UINT cnt4, float * da
 
 void d912pxy_batch::FrameStart()
 {
-	topCl = d912pxy_s(GPUcl)->GID(CLG_TOP);
+	topCl = d912pxy_s.dx12.cl->GID(CLG_TOP);
 
 	memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
 	GPUWrite(stateTransfer, PXY_BATCH_GPU_ELEMENT_COUNT, 0);
@@ -158,7 +164,7 @@ void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 	//43-59 ss
 	//125 mt
 	//306 ps
-	d912pxy_s(CMDReplay)->GPUW(streamIdx, offset, size, batchNum);
+	d912pxy_s.render.replay.GPUW(streamIdx, offset, size, batchNum);
 	//GPUWriteControl(streamIdx, offset, size, batchNum);	
 
 	streamIdx += size;
@@ -196,7 +202,7 @@ void d912pxy_batch::InitCopyCS()
 
 	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = { 2, rootParameters, 0, 0, D3D12_ROOT_SIGNATURE_FLAG_NONE };
 
-	copyRS = m_dev->ConstructRootSignature(&rootSignatureDesc);
+	copyRS = d912pxy_s.dev.ConstructRootSignature(&rootSignatureDesc);
 	
 	//copy cs hlsl code
 	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 3, 0);
@@ -212,7 +218,7 @@ void d912pxy_batch::InitCopyCS()
 		D3D12_PIPELINE_STATE_FLAG_NONE 
 	};
 
-	LOG_ERR_THROW2(d912pxy_s(DXDev)->CreateComputePipelineState(&dsc, IID_PPV_ARGS(&copyPSO)), "CS pso creation err");
+	LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateComputePipelineState(&dsc, IID_PPV_ARGS(&copyPSO)), "CS pso creation err");
 
 	//cleanup
 	if (!CScode.blob)

@@ -26,25 +26,8 @@ SOFTWARE.
 
 d912pxy_vfs_file_header s_headerTable[PXY_VFS_MAX_FILES_PER_BID];
 
-d912pxy_vfs::d912pxy_vfs(const char* lockPath)
+d912pxy_vfs::d912pxy_vfs()
 {
-	d912pxy_s(vfs) = this;
-
-	lockFile = CreateFileA(lockPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
-	if (lockFile == INVALID_HANDLE_VALUE)
-	{		
-		writeAllowed = 0;
-	}
-	else {
-		DWORD pid = GetProcessId(GetCurrentProcess());
-		DWORD ret = 0;
-		WriteFile(lockFile, &pid, 4, &ret, NULL);
-		writeAllowed = 1;
-	}
-
-	ZeroMemory(m_vfsBlocks, sizeof(FILE*)*PXY_VFS_MAX_BID);
-	ZeroMemory(m_vfsFileOffsets, sizeof(d912pxy_memtree*)*PXY_VFS_MAX_BID);
-	ZeroMemory(m_vfsCache, sizeof(void*)*PXY_VFS_MAX_BID);
 }
 
 
@@ -68,6 +51,25 @@ d912pxy_vfs::~d912pxy_vfs()
 	{		
 		CloseHandle(lockFile);
 	}
+}
+
+void d912pxy_vfs::Init(const char * lockPath)
+{	
+	lockFile = CreateFileA(lockPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+	if (lockFile == INVALID_HANDLE_VALUE)
+	{
+		writeAllowed = 0;
+	}
+	else {
+		DWORD pid = GetProcessId(GetCurrentProcess());
+		DWORD ret = 0;
+		WriteFile(lockFile, &pid, 4, &ret, NULL);
+		writeAllowed = 1;
+	}
+
+	ZeroMemory(m_vfsBlocks, sizeof(FILE*)*PXY_VFS_MAX_BID);
+	ZeroMemory(m_vfsFileOffsets, sizeof(d912pxy_memtree*)*PXY_VFS_MAX_BID);
+	ZeroMemory(m_vfsCache, sizeof(void*)*PXY_VFS_MAX_BID);
 }
 
 void d912pxy_vfs::SetRoot(wchar_t * rootPath)

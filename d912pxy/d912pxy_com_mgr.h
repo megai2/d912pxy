@@ -22,25 +22,48 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+#pragma once
 #include "stdafx.h"
 
-typedef struct comObjVTable {
-	void* functions[1024];
-} comObjVTable;
+typedef enum d912pxy_com_obj_typeid {	
+	PXY_COM_OBJ_VSTREAM = 0,	
+	PXY_COM_OBJ_SURFACE = 1,
+	PXY_COM_OBJ_QUERY = 2,
+	PXY_COM_OBJ_QUERY_OCC = 3,
+	PXY_COM_OBJ_TEXTURE = 4,		
+	PXY_COM_OBJ_TEXTURE_RTDS = 5,	
+	PXY_COM_OBJ_VDECL = 6,
+	PXY_COM_OBJ_SHADER = 7,
+	PXY_COM_OBJ_SWAPCHAIN = 8,
+	PXY_COM_OBJ_SURFACE_LAYER = 9,
+	PXY_COM_OBJ_SBLOCK = 10,
+	PXY_COM_OBJ_PSO_ITEM = 11,
+	PXY_COM_OBJ_COUNT = 12,
+	PXY_COM_OBJ_NOVTABLE = 13,
+	PXY_COM_OBJ_STATIC = 14
+} d912pxy_com_obj_typeid;
 
-typedef struct comObj {
-	comObjVTable* vtbl;
-	UINT64 other;
-} comObj;
+#define PXY_COM_OBJ_UNMANAGED PXY_COM_OBJ_COUNT
 
-void d912pxy_com_set_method(void * objPtr, UINT32 methodIdx, void* newMethod)
+#define PXY_INNER_COM_MGR_VA_MASK_BITS 32
+
+class d912pxy_com_mgr : public d912pxy_noncom
 {
-	comObj* obj = (comObj*)objPtr;
+public:
+	d912pxy_com_mgr();
+	~d912pxy_com_mgr();
 
-	DWORD oldVP;
-	VirtualProtect(&obj->vtbl->functions[methodIdx], 0x8, PAGE_EXECUTE_READWRITE, &oldVP);
+	void Init();
+	void DeInit();
 
-	obj->vtbl->functions[methodIdx] = newMethod;
+	d912pxy_com_object* AllocateComObj(d912pxy_com_obj_typeid type);
+	void DeAllocateComObj(d912pxy_com_object* obj);
 
-	VirtualProtect(&obj->vtbl->functions[methodIdx], 0x8, oldVP, &oldVP);
-}
+	d912pxy_com_object* GetComObject(d912pxy_com_obj_typeid type, d912pxy_mem_va_table_obj_id id);
+
+	d912pxy_com_object* GetComObjectByLowAdr(UINT32 lowAdr);
+
+private:
+	d912pxy_mem_va_table table;
+};
+

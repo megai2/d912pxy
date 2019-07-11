@@ -27,84 +27,29 @@ SOFTWARE.
 
 #define D912PXY_METHOD_IMPL_CN d912pxy_basetexture
 
-d912pxy_basetexture::d912pxy_basetexture(d912pxy_device * dev) : d912pxy_resource(dev, RTID_TEXTURE, L"texture")
+d912pxy_basetexture::d912pxy_basetexture() : d912pxy_resource(RTID_TEX, PXY_COM_OBJ_TEXTURE, L"texture")
 {
 
 }
 
 d912pxy_basetexture::~d912pxy_basetexture()
 {
+	baseSurface->Release();
 }
 
-D912PXY_IUNK_IMPL
-
-/*** IDirect3DResource9 methods ***/
-D912PXY_METHOD_IMPL(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) { return d912pxy_resource::GetDevice(ppDevice); }
-D912PXY_METHOD_IMPL(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) { return d912pxy_resource::SetPrivateData(refguid, pData, SizeOfData, Flags); }
-D912PXY_METHOD_IMPL(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) { return d912pxy_resource::GetPrivateData(refguid, pData, pSizeOfData); }
-D912PXY_METHOD_IMPL(FreePrivateData)(THIS_ REFGUID refguid) { return d912pxy_resource::FreePrivateData(refguid); }
-D912PXY_METHOD_IMPL_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) { return d912pxy_resource::SetPriority(PriorityNew); }
-
-//do lil hack for speed
-D912PXY_METHOD_IMPL_(DWORD, GetPriority)(THIS) 
-{ 
+D912PXY_METHOD_IMPL_NC_(DWORD, GetPriority_SRVhack)(THIS)
+{
 	return baseSurface->GetSRVHeapId();
-}
-
-D912PXY_METHOD_IMPL_(void, PreLoad)(THIS) { d912pxy_resource::PreLoad(); }
-D912PXY_METHOD_IMPL_(D3DRESOURCETYPE, GetType)(THIS) { return d912pxy_resource::GetType(); }
-
-D912PXY_METHOD_IMPL_(DWORD, SetLOD)(DWORD LODNew)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return D3D_OK;
-}
-D912PXY_METHOD_IMPL_(DWORD, GetLOD)()
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return 0;
-}
-
-D912PXY_METHOD_IMPL_(DWORD, GetLevelCount)()
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return 1;
-}
-
-D912PXY_METHOD_IMPL(SetAutoGenFilterType)(D3DTEXTUREFILTERTYPE FilterType)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return D3D_OK;
-}
-
-D912PXY_METHOD_IMPL_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)()
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return D3DTEXF_POINT;
-}
-
-D912PXY_METHOD_IMPL_(void, GenerateMipSubLevels)()
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-	return;
 }
 
 #undef D912PXY_METHOD_IMPL_CN
 
-UINT d912pxy_basetexture::GetSRVHeapId()
+UINT d912pxy_basetexture::GetSRVHeapId(UINT mode)
 {
-	return baseSurface->GetSRVHeapId();
-}
-
-UINT d912pxy_basetexture::FinalRelease()
-{
-	void* bptr = (void*)srvIDc;
-	if (d912pxy_comhandler::FinalReleaseTest() == 3)
+	if (mode)
 	{
-		this->~d912pxy_basetexture();
-		PXY_FREE(bptr);
-		return 1;
+		return baseSurface->GetSRVHeapIdRTDS();
 	}
 	else
-		return 2;	
+		return srvIDc[0];
 }

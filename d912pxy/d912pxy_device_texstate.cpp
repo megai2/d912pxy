@@ -26,9 +26,9 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_TEXSTATE
 
-HRESULT WINAPI d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
+HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
 
@@ -36,25 +36,19 @@ HRESULT WINAPI d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pT
 
 	if (pTexture)
 	{
-		srvId = *(UINT64*)((intptr_t)pTexture - 0x8);//megai2: HOT
-		if (srvId & 0x100000000)
-		{
-			srvId = pTexture->GetPriority();
-		}
+		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId((intptr_t)pTexture & 0x10000000);
 	}
 
-	d912pxy_s(textureState)->SetTexture(Stage, (UINT32)srvId);
+	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::SetTexture_PS(IDirect3DDevice9* self, DWORD Stage, IDirect3DBaseTexture9* pTexture)
+HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	d912pxy_device* _self = (d912pxy_device*)self;
-
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
 
@@ -62,40 +56,36 @@ HRESULT WINAPI d912pxy_device::SetTexture_PS(IDirect3DDevice9* self, DWORD Stage
 
 	if (pTexture)
 	{
-		srvId = *(UINT64*)((intptr_t)pTexture - 0x8);//megai2: HOT
-		if (srvId & 0x100000000)
-		{
-			srvId = pTexture->GetPriority();
-		}
+		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId((intptr_t)pTexture & 0x10000000);
 	}
 
-	d912pxy_s(textureState)->SetTexture(Stage, (UINT32)srvId);
+	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
 
 	if (pTexture)
 	{
-		d912pxy_basetexture* btex = dynamic_cast<d912pxy_basetexture*>(pTexture);
+		d912pxy_basetexture* btex = PXY_COM_LOOKUP(pTexture, basetex);
 
-		_self->stageFormatsTrack[Stage] = btex->GetBaseSurface()->GetDX9DescAtLevel(0).Format;
+		stageFormatsTrack[Stage] = btex->GetBaseSurface()->GetDX9DescAtLevel(0).Format;
 	}
 	else
-		_self->stageFormatsTrack[Stage] = D3DFMT_UNKNOWN;
+		stageFormatsTrack[Stage] = D3DFMT_UNKNOWN;
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
+HRESULT d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
 { 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	LOG_DBG_DTDM("Sampler[%u][%u] = %u", Sampler, Type, Value);
 
 	Sampler = (Sampler & 0xF) + 16 * (Sampler >= D3DDMAPSAMPLER);
 
-	d912pxy_s(textureState)->ModSampler(Sampler, Type, Value);
+	d912pxy_s.render.tex.ModSampler(Sampler, Type, Value);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }

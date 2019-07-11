@@ -25,43 +25,39 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-#define PXY_INNER_MAX_VDECL_LEN 30
+#define PXY_INNER_MAX_VDECL_LEN 20
 
 typedef struct d912pxy_vdecl_elesn {
-	char s[255];
+	char s[10];
 } d912pxy_vdecl_elesn;
 
-class d912pxy_vdecl : public IDirect3DVertexDeclaration9, public d912pxy_comhandler
+class d912pxy_vdecl : public d912pxy_comhandler
 {
-public:
-	d912pxy_vdecl(d912pxy_device* dev, const D3DVERTEXELEMENT9* data);
+public:	
+	static d912pxy_vdecl* d912pxy_vdecl_com(const D3DVERTEXELEMENT9* data);
+
 	~d912pxy_vdecl();
 
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
+	D912PXY_METHOD(GetDeclaration)(PXY_THIS_ D3DVERTEXELEMENT9* pElement, UINT* pNumElements);
 
-	/*** IDirect3DVertexDeclaration9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(GetDeclaration)(THIS_ D3DVERTEXELEMENT9* pElement, UINT* pNumElements);
-
+	D912PXY_METHOD_NC(GetDeclaration)(THIS_ D3DVERTEXELEMENT9* pElement, UINT* pNumElements);
+	
 	D3DVERTEXELEMENT9* GetDeclarationPtr(UINT* pNumElements);
-	D3D12_INPUT_LAYOUT_DESC GetD12IA_InputElementFmt() { D3D12_INPUT_LAYOUT_DESC ret; ret.NumElements = declLen - 1; ret.pInputElementDescs = declData12; return ret; }
+	D3D12_INPUT_LAYOUT_DESC* GetD12IA_InputElementFmt();
 
 	void ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICATION newMode);
-
 	d912pxy_vdecl* GetInstancedModification();
 
 	UINT32 GetHash();
-
 	UINT GetUsedStreams();
-
-private:
 	
+private:
+	d912pxy_vdecl(const D3DVERTEXELEMENT9* data);
+
 	D3DVERTEXELEMENT9 declData[PXY_INNER_MAX_VDECL_LEN];
 	D3D12_INPUT_ELEMENT_DESC declData12[PXY_INNER_MAX_VDECL_LEN];
 	d912pxy_vdecl_elesn semantics[PXY_INNER_MAX_VDECL_LEN];
+	D3D12_INPUT_LAYOUT_DESC inputEleFmt;
 
 	DWORD declLen;
 	DWORD usedStreamSlots;
@@ -69,4 +65,3 @@ private:
 
 	d912pxy_vdecl* instancedDecl;
 };
-

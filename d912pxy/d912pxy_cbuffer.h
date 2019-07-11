@@ -28,9 +28,9 @@ SOFTWARE.
 class d912pxy_cbuffer : public d912pxy_resource
 {
 public:
-	d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOnly=0);	
-	d912pxy_cbuffer(d912pxy_device* dev, UINT length, UINT uploadOnly, void* n2);
-	d912pxy_cbuffer(d912pxy_device* dev, d912pxy_cbuffer* oBuf, UINT offset, UINT iSz);
+	d912pxy_cbuffer(UINT length, UINT uploadOnly=0);	
+	d912pxy_cbuffer(UINT length, UINT uploadOnly, void* n2);
+	d912pxy_cbuffer(d912pxy_cbuffer* oBuf, UINT offset, UINT iSz);
 	~d912pxy_cbuffer();
 
 	void WriteUINT32(UINT index, UINT32* val, UINT count);

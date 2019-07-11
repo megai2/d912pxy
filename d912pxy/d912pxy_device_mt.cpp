@@ -60,10 +60,10 @@ void d912pxy_device::LockAsyncThreads()
 	FRAME_METRIC_SYNC(1)
 
 	InterlockedIncrement(&threadInterruptState);
-
-	d912pxy_s(texloadThread)->SignalWork();
-	d912pxy_s(bufloadThread)->SignalWork();
-	d912pxy_s(CMDReplay)->Finish();
+	
+	d912pxy_s.thread.texld.SignalWork();
+	d912pxy_s.thread.bufld.SignalWork();
+	d912pxy_s.render.replay.Finish();
 	
 	threadLock.Add(activeThreadCount);	
 	
@@ -72,12 +72,16 @@ void d912pxy_device::LockAsyncThreads()
 		threadLockdEvents[i].Hold();
 	}
 
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.TrackUploadMemUsage();
+#endif
+
 	threadLock.Release();
 
 	//megai2: sync batch here due to GPUW replay
-	d912pxy_s(batch)->FrameEnd();
+	d912pxy_s.render.batch.FrameEnd();
 
-	d912pxy_s(CMDReplay)->Start();
+	d912pxy_s.render.replay.Start();
 	
 	FRAME_METRIC_SYNC(0)
 }

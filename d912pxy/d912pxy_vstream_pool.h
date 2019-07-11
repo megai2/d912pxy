@@ -35,12 +35,16 @@ SOFTWARE.
 class d912pxy_vstream_pool : public d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>
 {
 public:
-	d912pxy_vstream_pool(d912pxy_device* dev);
+	d912pxy_vstream_pool();
 	~d912pxy_vstream_pool();
+
+	void Init();
 
 	d912pxy_vstream* GetVStreamObject(UINT size, UINT fmt, UINT isIB);
 
 	d912pxy_vstream* AllocProc(UINT32 cat);
+
+	ID3D12Resource* GetPlacedVStream(UINT32 size);
 
 	void EarlyInitProc();
 };

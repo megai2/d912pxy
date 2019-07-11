@@ -29,8 +29,10 @@ SOFTWARE.
 class d912pxy_buffer_loader : public d912pxy_async_upload_thread<d912pxy_vstream_lock_data, d912pxy_buffer_loader*>
 {
 public:
-	d912pxy_buffer_loader(d912pxy_device* dev);
+	d912pxy_buffer_loader();
 	~d912pxy_buffer_loader();
+
+	void Init();
 
 	void IssueUpload(d912pxy_vstream_lock_data dst);
 	void UploadItem(d912pxy_vstream_lock_data* it);
@@ -39,6 +41,6 @@ public:
 	void OnThreadInterrupt();
 
 private:
-	ID3D12GraphicsCommandList* cl;
+	ID3D12GraphicsCommandList* cl;	
 };
 

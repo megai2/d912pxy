@@ -25,44 +25,51 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_surface_layer: public IDirect3DSurface9
+class d912pxy_surface_layer 
 {
-public:
-	d912pxy_surface_layer(d912pxy_surface* iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix);
-	~d912pxy_surface_layer();
+public:	
+	static d912pxy_surface_layer* d912pxy_surface_layer_com(d912pxy_com_object* iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix);
+	static void DeAllocate(d912pxy_surface_layer* obj);
+	
+	D912PXY_METHOD(QueryInterface)(PXY_THIS_ REFIID riid, void** ppvObj);
+	D912PXY_METHOD_(ULONG, AddRef)(PXY_THIS);
+	D912PXY_METHOD_(ULONG, Release)(PXY_THIS);
+	D912PXY_METHOD(GetDevice)(PXY_THIS_ IDirect3DDevice9** ppDevice);
+	D912PXY_METHOD(SetPrivateData)(PXY_THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags);
+	D912PXY_METHOD(GetPrivateData)(PXY_THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData);
+	D912PXY_METHOD(FreePrivateData)(PXY_THIS_ REFGUID refguid);
+	D912PXY_METHOD_(DWORD, SetPriority)(PXY_THIS_ DWORD PriorityNew);
+	D912PXY_METHOD_(DWORD, GetPriority)(PXY_THIS);
+	D912PXY_METHOD_(void, PreLoad)(PXY_THIS);
+	D912PXY_METHOD_(D3DRESOURCETYPE, GetType)(PXY_THIS);
+	D912PXY_METHOD(GetContainer)(PXY_THIS_ REFIID riid, void** ppContainer);
+	D912PXY_METHOD(GetDesc)(PXY_THIS_ D3DSURFACE_DESC *pDesc);
+	D912PXY_METHOD(LockRect)(PXY_THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags);
+	D912PXY_METHOD(UnlockRect)(PXY_THIS);
+	D912PXY_METHOD(GetDC)(PXY_THIS_ HDC *phdc);
+	D912PXY_METHOD(ReleaseDC)(PXY_THIS_ HDC hdc);
 
-	/*** IUnknown methods ***/
-	D912PXY_METHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
-	D912PXY_METHOD_(ULONG, AddRef)(THIS);
-	D912PXY_METHOD_(ULONG, Release)(THIS);
+	D912PXY_METHOD_NC(QueryInterface)(THIS_ REFIID riid, void** ppvObj);
+	D912PXY_METHOD_NC_(ULONG, AddRef)(THIS);
+	D912PXY_METHOD_NC_(ULONG, Release)(THIS);
 
-	/*** IDirect3DResource9 methods ***/
-	D912PXY_METHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice);
-	D912PXY_METHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags);
-	D912PXY_METHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData);
-	D912PXY_METHOD(FreePrivateData)(THIS_ REFGUID refguid);
-	D912PXY_METHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew);
-	D912PXY_METHOD_(DWORD, GetPriority)(THIS);
-	D912PXY_METHOD_(void, PreLoad)(THIS);
-	D912PXY_METHOD_(D3DRESOURCETYPE, GetType)(THIS);
-	D912PXY_METHOD(GetContainer)(THIS_ REFIID riid, void** ppContainer);
-	D912PXY_METHOD(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc);
-	D912PXY_METHOD(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags);
-	D912PXY_METHOD(UnlockRect)(THIS);
-	D912PXY_METHOD(GetDC)(THIS_ HDC *phdc);
-	D912PXY_METHOD(ReleaseDC)(THIS_ HDC hdc);
+	D912PXY_METHOD_NC(GetDesc)(D3DSURFACE_DESC *pDesc);
+	D912PXY_METHOD_NC(LockRect)(D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags);
+	D912PXY_METHOD_NC(UnlockRect)();
 
 	void SetDirtyRect(UINT32 left, UINT32 right, UINT32 top, UINT32 bottom);
-
-	HRESULT UnlockRectEx(UINT32 transform);
-
 	void* SurfacePixel(UINT32 x, UINT32 y);
 
+	d912pxy_com_object* GetBaseLayer() { return base; };
+
 private:
+	d912pxy_surface_layer(d912pxy_com_object* iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix);
+	~d912pxy_surface_layer();
+
 	UINT isDrect;	
 	D3DRECT drect;
 
-	d912pxy_surface * base;
+	d912pxy_com_object * base;
 	UINT32 subres;
 	
 	UINT32 lockDepth;

@@ -24,9 +24,9 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_gpu_cmd_list::d912pxy_gpu_cmd_list(d912pxy_device * dev, ID3D12CommandQueue* que, UINT iMaxRefernecedObjs, UINT iGrowReferences, UINT iMaxCleanupPerSync, d912pxy_gpu_cleanup_thread* cleanupThread) : d912pxy_noncom(dev, L"GPU command list")
+d912pxy_gpu_cmd_list::d912pxy_gpu_cmd_list(ID3D12CommandQueue* que, UINT iMaxRefernecedObjs, UINT iGrowReferences, UINT iMaxCleanupPerSync, d912pxy_gpu_cleanup_thread* cleanupThread) : d912pxy_noncom( L"GPU command list")
 {
-	ID3D12Device* dx12dev = d912pxy_s(DXDev);
+	ID3D12Device* dx12dev = d912pxy_s.dx12.dev;
 
 	mDXQue = que;
 	
@@ -152,7 +152,7 @@ void d912pxy_gpu_cmd_list::CleanupReferenced(UINT items)
 	while (mGpuRefs->HaveElements())
 	{
 		d912pxy_comhandler* obj = mGpuRefs->GetElement();
-		LOG_ASSERT(obj->FinalRelease(), "obj->FinalRelease() wrong cleanup");		
+		LOG_ASSERT(obj->FinalRelease(), "obj->FinalRelease() wrong cleanup");
 		mGpuRefs->Next();
 		++cleaned;
 		

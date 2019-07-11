@@ -30,15 +30,21 @@ class d912pxy_pool : public d912pxy_noncom
 {
 public:
 
-	d912pxy_pool(d912pxy_device* dev, ProcImpl* singleton);
+	d912pxy_pool();
 	~d912pxy_pool();
+
+	void Init();
 
 	virtual void PoolRW(UINT32 cat, ElementType* val, UINT8 rw);
 
 	virtual d912pxy_ringbuffer<ElementType>* GetCatBuffer(UINT32 cat);	
 	virtual void PoolUnloadProc(ElementType val, UINT32 cat);
 	virtual void WarmUp(UINT cat);
+
+	UINT IsRunning() { return pRunning; };
 	
 protected:
 	d912pxy_thread_lock* rwMutex;
+
+	UINT pRunning;
 };

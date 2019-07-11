@@ -26,11 +26,11 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_PSO
 
-HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
+HRESULT d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
 { 
 	LOG_DBG_DTDM("RS %u = %u", State, Value);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	/*if (State > D3DRS_BLENDOPALPHA)
 		return D3DERR_INVALIDCALL;*/
@@ -41,8 +41,8 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 			return 343434;
 		break;
 		case D3DRS_D912PXY_SETUP_PSO:
-			d912pxy_s(psoCache)->UseCompiled(0);
-			d912pxy_s(psoCache)->MarkDirty(0);
+			d912pxy_s.render.db.pso.UseCompiled(0);
+			d912pxy_s.render.db.pso.MarkDirty(0);
 		break;
 		case D3DRS_D912PXY_GPU_WRITE:
 			gpuWriteDsc = Value;
@@ -50,10 +50,10 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 		case D3DRS_D912PXY_DRAW:
 			if (Value == 0)
 			{
-				d912pxy_s(textureState)->Use();
+				d912pxy_s.render.tex.Use();
 			}
 			else {
-				d912pxy_s(textureState)->AddDirtyFlag(Value);
+				d912pxy_s.render.tex.AddDirtyFlag(Value);
 			}
 		break;
 		case D3DRS_BLENDFACTOR:
@@ -67,7 +67,7 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 				fvClra[i] = ((Color >> (i << 3)) & 0xFF) / 255.0f;
 			}
 
-			d912pxy_s(CMDReplay)->OMBlendFac(fvClra);
+			d912pxy_s.render.replay.OMBlendFac(fvClra);
 		}
 		break; //193,   /* D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR */
 		
@@ -139,61 +139,59 @@ HRESULT WINAPI d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Va
 		case D3DRS_ENABLEADAPTIVETESSELLATION: LOG_DBG_DTDM("RS unimpl 184"); break;
 
 		default:
-			d912pxy_s(psoCache)->State(State,Value);
+			d912pxy_s.render.db.pso.State(State,Value);
 	}
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
+HRESULT d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 	
 	switch (State)
 	{
 	case D3DRS_D912PXY_ENQUEUE_PSO_COMPILE:
-		d912pxy_s(psoCache)->UseWithFeedbackPtr((void**)pValue);
+		d912pxy_s.render.db.pso.UseWithFeedbackPtr((void**)pValue);
 		break;
 	case D3DRS_D912PXY_SETUP_PSO:
-		d912pxy_s(psoCache)->UseCompiled((d912pxy_pso_cache_item*)pValue);
+		d912pxy_s.render.db.pso.UseCompiled((d912pxy_pso_cache_item*)pValue);
 		break;
 	case D3DRS_D912PXY_GPU_WRITE:
-		d912pxy_s(batch)->GPUWrite((void*)pValue, gpuWriteDsc & 0xFFFF, (gpuWriteDsc >> 16));
+		d912pxy_s.render.batch.GPUWrite((void*)pValue, gpuWriteDsc & 0xFFFF, (gpuWriteDsc >> 16));
 		break;
 	case D3DRS_D912PXY_SAMPLER_ID:
-		d912pxy_s(textureState)->Use();
-		*pValue = d912pxy_s(textureState)->GetCurrent()->splHeapID[*pValue];
+		d912pxy_s.render.tex.Use();
+		*pValue = d912pxy_s.render.tex.GetCurrent()->splHeapID[*pValue];
 		break;
 	default:
-		*pValue = d912pxy_s(psoCache)->GetDX9RsValue(State);		
+		*pValue = d912pxy_s.render.db.pso.GetDX9RsValue(State);		
 	}
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::BeginStateBlock(void) 
+HRESULT d912pxy_device::BeginStateBlock(void) 
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	return D3D_OK; 
 }
 
-HRESULT WINAPI d912pxy_device::EndStateBlock(IDirect3DStateBlock9** ppSB) 
+HRESULT d912pxy_device::EndStateBlock(IDirect3DStateBlock9** ppSB) 
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
+			
+	*ppSB = PXY_COM_CAST_(IDirect3DStateBlock9, d912pxy_sblock::d912pxy_sblock_com(D3DSBT_ALL));
 
-	d912pxy_sblock* ret = new d912pxy_sblock(this, D3DSBT_ALL);
-
-	*ppSB = ret;
-
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK; 
 }

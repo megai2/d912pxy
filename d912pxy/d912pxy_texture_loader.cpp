@@ -24,23 +24,15 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_texture_loader::d912pxy_texture_loader(d912pxy_device* dev) : d912pxy_async_upload_thread(dev, PXY_INNER_MAX_ASYNC_TEXLOADS, PXY_INNER_THREADID_TEX_LOADER, 1, L"texture upload thread", "d912pxy texld")
+d912pxy_texture_loader::d912pxy_texture_loader() : d912pxy_async_upload_thread()
 {
-	d912pxy_s(texloadThread) = this;
-	d912pxy_s(GPUque)->EnableGID(CLG_TEX, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
 
-	allowAsyncLoad = d912pxy_s(config)->GetValueUI32(PXY_CFG_UPLOAD_TEX_ASYNC);
-
-	if (allowAsyncLoad)
-		asyncLoadPendingItems = new d912pxy_ringbuffer<d912pxy_surface*>(64, 2);
-	else
-		asyncLoadPendingItems = NULL;
-
-	Resume();
 }
 
 d912pxy_texture_loader::~d912pxy_texture_loader()
 {
+	
+
 	if (asyncLoadPendingItems)
 	{
 		if (asyncLoadPendingItems->HaveElements())
@@ -56,6 +48,22 @@ d912pxy_texture_loader::~d912pxy_texture_loader()
 	}
 }
 
+void d912pxy_texture_loader::Init()
+{
+	d912pxy_async_upload_thread::Init(PXY_INNER_MAX_ASYNC_TEXLOADS, PXY_INNER_THREADID_TEX_LOADER, 1, L"texture upload thread", "d912pxy texld");
+
+	d912pxy_s.dx12.que.EnableGID(CLG_TEX, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
+
+	allowAsyncLoad = d912pxy_s.config.GetValueUI32(PXY_CFG_UPLOAD_TEX_ASYNC);
+
+	if (allowAsyncLoad)
+		asyncLoadPendingItems = new d912pxy_ringbuffer<d912pxy_surface*>(64, 2);
+	else
+		asyncLoadPendingItems = NULL;
+
+	Resume();
+}
+
 void d912pxy_texture_loader::IssueUpload(d912pxy_surface * surf, void* mem, UINT subRes)
 {
 	d912pxy_texture_load_item it = { surf, mem, subRes };	
@@ -66,7 +74,7 @@ void d912pxy_texture_loader::IssueUpload(d912pxy_surface * surf, void* mem, UINT
 
 void d912pxy_texture_loader::ThreadWake()
 {
-	PIXBeginEvent(d912pxy_s(GPUcl)->GID(CLG_TEX), 0x0000AA, "surface upload");
+	PIXBeginEvent(d912pxy_s.dx12.cl->GID(CLG_TEX), 0x0000AA, "surface upload");
 }
 
 void d912pxy_texture_loader::OnThreadInterrupt()
@@ -97,7 +105,7 @@ void d912pxy_texture_loader::OnThreadInterrupt()
 		}
 	}
 
-	PIXEndEvent(d912pxy_s(GPUcl)->GID(CLG_TEX));
+	PIXEndEvent(d912pxy_s.dx12.cl->GID(CLG_TEX));
 }
 
 void d912pxy_texture_loader::UploadItem(d912pxy_texture_load_item* it)

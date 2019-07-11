@@ -26,7 +26,7 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_SWAPCHAIN
 
-HRESULT WINAPI d912pxy_device::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** pSwapChain)
+HRESULT d912pxy_device::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** pSwapChain)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	//zero is always present
@@ -35,52 +35,52 @@ HRESULT WINAPI d912pxy_device::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS* 
 		if (swapchains[i])
 			continue;
 		
-		swapchains[i] = new d912pxy_swapchain(this, i, pPresentationParameters);
+		swapchains[i] = &d912pxy_swapchain::d912pxy_swapchain_com(i, pPresentationParameters)->swapchain;
 
-		*pSwapChain = swapchains[i];
+		*pSwapChain = PXY_COM_CAST_(IDirect3DSwapChain9, swapchains[i]);
 
 		return D3D_OK;
 	}
 	return D3DERR_OUTOFVIDEOMEMORY;
 }
 
-HRESULT WINAPI d912pxy_device::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** pSwapChain)
+HRESULT d912pxy_device::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** pSwapChain)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	if (iSwapChain >= PXY_INNER_MAX_SWAP_CHAINS)
 		return D3DERR_INVALIDCALL;
 
-	*pSwapChain = swapchains[iSwapChain];
+	*pSwapChain = PXY_COM_CAST_(IDirect3DSwapChain9, swapchains[iSwapChain]);
 
 	return D3D_OK; 
 }
 
-UINT WINAPI d912pxy_device::GetNumberOfSwapChains(void)
+UINT d912pxy_device::GetNumberOfSwapChains(void)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 	//This method returns the number of swap chains created by CreateDevice.
 	return 1; 
 }
 
-HRESULT WINAPI d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
+HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapOpLock.Hold();
 
 	m_dupEmul->OnFrameEnd();
-	d912pxy_s(iframe)->End();
-	d912pxy_s(GPUque)->Flush(0);
+	d912pxy_s.render.iframe.End();
+	d912pxy_s.dx12.que.Flush(0);
 
 	HRESULT ret = swapchains[0]->SetPresentParameters(pPresentationParameters);
 	
-	d912pxy_s(iframe)->Start();
+	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 		
 	return ret; 
 }
@@ -89,18 +89,18 @@ HRESULT d912pxy_device::InnerPresentExecute()
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapOpLock.Hold();
 
 	m_dupEmul->OnFrameEnd();
-	d912pxy_s(iframe)->End();
+	d912pxy_s.render.iframe.End();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 	FRAME_METRIC_PRESENT(0)
 
 	LOG_DBG_DTDM2("Present Exec GPU");
-	return d912pxy_s(GPUque)->ExecuteCommands(1);
+	return d912pxy_s.dx12.que.ExecuteCommands(1);
 }
 
 void d912pxy_device::InnerPresentFinish()
@@ -108,24 +108,24 @@ void d912pxy_device::InnerPresentFinish()
 	LOG_DBG_DTDM(__FUNCTION__);
 
 	FRAME_METRIC_PRESENT(1)
-	API_OVERHEAD_TRACK_START(0)
+	
 
-	d912pxy_s(iframe)->Start();
+	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
 
 	LOG_DBG_DTDM("Present finished");
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
-HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
+HRESULT d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
 { 
 	HRESULT ret = InnerPresentExecute();
 
 #ifdef ENABLE_METRICS
-	d912pxy_s(metrics)->TrackDrawCount(d912pxy_s(iframe)->GetBatchCount());
-	d912pxy_s(metrics)->FlushIFrameValues();	
+	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.iframe.GetBatchCount());
+	d912pxy_s.log.metrics.FlushIFrameValues();	
 #endif 
 	
 	InnerPresentFinish();
@@ -133,84 +133,82 @@ HRESULT WINAPI d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 	return ret;
 }
 
-HRESULT __stdcall d912pxy_device::Present_PG(IDirect3DDevice9 * self, const RECT * pSourceRect, const RECT * pDestRect, HWND hDestWindowOverride, const RGNDATA * pDirtyRegion)
+HRESULT d912pxy_device::Present_PG(const RECT * pSourceRect, const RECT * pDestRect, HWND hDestWindowOverride, const RGNDATA * pDirtyRegion)
 {
-	d912pxy_device* _self = (d912pxy_device*)self;
+	HRESULT ret = InnerPresentExecute();
 
-	HRESULT ret = _self->InnerPresentExecute();
-
-	_self->perfGraph->RecordPresent(d912pxy_s(iframe)->GetBatchCount());
+	perfGraph->RecordPresent(d912pxy_s.render.iframe.GetBatchCount());
 
 #ifdef ENABLE_METRICS
-	d912pxy_s(metrics)->TrackDrawCount(d912pxy_s(iframe)->GetBatchCount());
-	d912pxy_s(metrics)->FlushIFrameValues();
+	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.iframe.GetBatchCount());
+	d912pxy_s.log.metrics.FlushIFrameValues();
 #endif s
 
-	_self->InnerPresentFinish();
+	InnerPresentFinish();
 
 	return ret;
 }
 
-HRESULT WINAPI d912pxy_device::GetBackBuffer(UINT iSwapChain, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
+HRESULT d912pxy_device::GetBackBuffer(UINT iSwapChain, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	HRESULT ret = swapchains[iSwapChain]->GetBackBuffer(iBackBuffer, Type, ppBackBuffer);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return ret;
 }
 
-HRESULT WINAPI d912pxy_device::GetRasterStatus(UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
+HRESULT d912pxy_device::GetRasterStatus(UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	return swapchains[iSwapChain]->GetRasterStatus(pRasterStatus);
+	return PXY_COM_CAST_(IDirect3DSwapChain9, swapchains[iSwapChain])->GetRasterStatus(pRasterStatus);
 }
 
-void WINAPI d912pxy_device::SetGammaRamp(UINT iSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
+void d912pxy_device::SetGammaRamp(UINT iSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapchains[iSwapChain]->SetGammaRamp(Flags, pRamp);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
-void WINAPI d912pxy_device::GetGammaRamp(UINT iSwapChain, D3DGAMMARAMP* pRamp)
+void d912pxy_device::GetGammaRamp(UINT iSwapChain, D3DGAMMARAMP* pRamp)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapchains[iSwapChain]->GetGammaRamp(pRamp);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 }
 
-HRESULT WINAPI d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurface9* pDestSurface) 
+HRESULT d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurface9* pDestSurface) 
 {	
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapchains[iSwapChain]->GetFrontBufferData(pDestSurface);
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return D3D_OK;
 }
 
-HRESULT WINAPI d912pxy_device::TestCooperativeLevel(void)
+HRESULT d912pxy_device::TestCooperativeLevel(void)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	API_OVERHEAD_TRACK_START(0)
+	
 
 	swapOpLock.Hold();
 
@@ -218,7 +216,7 @@ HRESULT WINAPI d912pxy_device::TestCooperativeLevel(void)
 
 	swapOpLock.Release();
 
-	API_OVERHEAD_TRACK_END(0)
+	
 
 	return ret;
 }
