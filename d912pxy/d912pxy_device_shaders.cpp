@@ -30,25 +30,23 @@ HRESULT d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
+	if (pShader)
+	{
+		d912pxy_s.render.db.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
+	}
 	
-
-	d912pxy_s.render.db.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
-
-	
-
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader) 
 {
 	LOG_DBG_DTDM(__FUNCTION__);
-
 	
-
-	d912pxy_s.render.db.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
-
+	if (pShader)
+	{
+		d912pxy_s.render.db.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
+	}
 	
-
 	return D3D_OK;
 }
 
