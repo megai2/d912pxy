@@ -141,7 +141,7 @@ float4 color_s2lin(float4 cs)
 	return ret;
 }
 
-float4 color_lin2s(float4 cs) 
+float4 color_lin2s_thru(float4 cs) 
 {
 	float3 RGB = cs.xyz;
 	float3 S1 = sqrt(RGB);
@@ -152,6 +152,14 @@ float4 color_lin2s(float4 cs)
 	float4 ret = {sRGB.x, sRGB.y, sRGB.z, cs.w};
 	
 	return ret;
+}
+
+float4 color_lin2s_cond(float4 cs, int enable) 
+{
+	if (enable)
+		return color_lin2s_thru(cs);
+	else
+		return cs;
 }
 
 #define dx9_texture_srgb_read_proc(ret, mask) if (texState.texture_s30 & mask) { ret = color_s2lin(ret); }
@@ -167,13 +175,13 @@ float4 color_lin2s(float4 cs)
 
 #define dx9_ps_write_emulation_srgb(color) \
 	{ \
-		color = color_lin2s(color); \
+		color = srgb_write_color_lin2s(color); \
 	}
 
 #define dx9_ps_write_emulation_at_srgb(color) \
 	{ \
 		clip(dx9_alphatest_emulation_proc(texState.texture_s31, color.w)); \
-		color = color_lin2s(color); \
+		color = srgb_write_color_lin2s(color); \
 	}
 
 float4 dx9texldl_tex2d(Texture2DArray tex, sampler spl, float4 uv, float w, uint srgbMask)
