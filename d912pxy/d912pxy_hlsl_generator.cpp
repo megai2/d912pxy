@@ -232,6 +232,7 @@ d912pxy_hlsl_generator_sio_handler d912pxy_hlsl_generator::SIOhandlers[d912pxy_h
 
 UINT d912pxy_hlsl_generator::allowPP_suffix = 0;
 UINT32 d912pxy_hlsl_generator::NaNguard_flag = 0;
+UINT32 d912pxy_hlsl_generator::sRGB_alphatest_bits = 0;
 
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : d912pxy_noncom(L"hlsl generator")
 {
@@ -1163,6 +1164,10 @@ void d912pxy_hlsl_generator::LoadGenProfile()
 	else {
 		ZeroMemory(genProfile, sizeof(UINT)*PXY_INNER_SHDR_BUG_COUNT);
 	}
+
+	genProfile[PXY_INNER_SHDR_BUG_SRGB_READ] = ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBR) != 0);
+	genProfile[PXY_INNER_SHDR_BUG_ALPHA_TEST] = ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_ALPHATEST) != 0);
+	genProfile[PXY_INNER_SHDR_BUG_SRGB_WRITE] = ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBW) != 0);
 }
 
 void d912pxy_hlsl_generator::ProcSIO_DOTX(DWORD * op, UINT sz)
@@ -2163,6 +2168,13 @@ void d912pxy_hlsl_generator::WriteShaderHeadData()
 		HLSL_GEN_WRITE_HEADI(0, "#define dx9_texture_srgb_read(a,b) dx9_texture_srgb_read_proc(a,b)");
 	else
 		HLSL_GEN_WRITE_HEADI(0, "#define dx9_texture_srgb_read(a,b) ");
+
+	if (sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_COND_SRGBW)
+		HLSL_GEN_WRITE_HEADI(0, "#define srgb_write_color_lin2s(color) color_lin2s_cond(color, texState.texture_s31 >> 13)");
+	else
+		HLSL_GEN_WRITE_HEADI(0, "#define srgb_write_color_lin2s(color) color_lin2s_thru(color)");
+		
+
 
 	HLSL_GEN_WRITE_HEADI(0, "#include \"../common.hlsli\"");
 	HLSL_GEN_WRITE_HEADI(0, "	");

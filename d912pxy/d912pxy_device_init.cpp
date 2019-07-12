@@ -156,6 +156,7 @@ void d912pxy_device::InitClassFields()
 	d912pxy_hlsl_generator::FillHandlers();
 	d912pxy_hlsl_generator::allowPP_suffix = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ALLOW_PP_SUFFIX);
 	d912pxy_hlsl_generator::NaNguard_flag = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_NAN_GUARD_FLAG);
+	d912pxy_hlsl_generator::sRGB_alphatest_bits = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_SRGB_ALPHATEST_FLAG);
 
 	d912pxy_vstream::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
 	d912pxy_surface::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);
@@ -289,6 +290,7 @@ void d912pxy_device::InitDescriptorHeaps()
 void d912pxy_device::PrintInfoBanner()
 {
 	LOG_INFO_DTDM("d912pxy(Direct3D9 to Direct3D12 api proxy) loaded");
+	LOG_INFO_DTDM("Original project link: https://github.com/megai2/d912pxy/");
 	LOG_INFO_DTDM(BUILD_VERSION_NAME);
 	LOG_INFO_DTDM("Batch Limit: %u", PXY_INNER_MAX_IFRAME_BATCH_COUNT);
 	LOG_INFO_DTDM("Recreation Limit: %u", PXY_INNER_MAX_IFRAME_CLEANUPS);

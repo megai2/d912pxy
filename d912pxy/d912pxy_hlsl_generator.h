@@ -97,6 +97,11 @@ typedef struct d912pxy_hlsl_generator_memout {
 #define PXY_SDB_HLSL_NAN_GUARD_RET 4
 #define PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT 3
 
+#define PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBW 1
+#define PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBR 2
+#define PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_ALPHATEST 4
+#define PXY_SDB_HLSL_SRGB_ALPHATEST_COND_SRGBW 8
+
 class d912pxy_hlsl_generator : public d912pxy_noncom
 {
 public:
@@ -133,6 +138,7 @@ public:
 	static void FillHandlers();
 	static UINT allowPP_suffix;
 	static UINT32 NaNguard_flag;
+	static UINT32 sRGB_alphatest_bits;
 
 private:
 	//sio handlers
