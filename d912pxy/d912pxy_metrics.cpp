@@ -191,7 +191,11 @@ void d912pxy_metrics::FlushIFrameValues()
 	}
 
 	iframeMetrics->Add(metricOverhead, totalOH);
-	iframeMetrics->Add(metricIFrameAppPrep, (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() - totalOH)*10000 / (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() + 1));
+	iframeMetrics->Add(metricIFrameAppPrep, 
+		(iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() - totalOH 
+			//megai2: we need to add gpu time and d912pxy sync time to correctly represent % of time spend on api calls in app on frame preparation
+			+ iframeTime[PXY_METRICS_IFRAME_EXEC]->GetStopTime() + iframeTime[PXY_METRICS_IFRAME_SYNC]->GetStopTime() + iframeTime[PXY_METRICS_IFRAME_SYNC_WAKE]->GetStopTime()
+		)*10000 / (iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() + 1));
 	iframeMetrics->Add(metricIFramePerBatchPrep, iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() / (lastDraws + 1));
 	iframeMetrics->Add(metricIFramePerBatchOverhead, totalOH / (lastDraws + 1));
 	iframeMetrics->Add(metricMemHeap, d912pxy_s.mem.GetMemoryUsedMB());
