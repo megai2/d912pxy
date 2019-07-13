@@ -32,10 +32,12 @@ public:
 	d912pxy_upload_item(UINT8 icat);
 	~d912pxy_upload_item();
 
+	void UploadBlock(ID3D12Resource * res, UINT64 dst_offset, UINT64 upload_offset, UINT64 sz, void* src, ID3D12GraphicsCommandList* cl);
+
 	void UploadTargetWithOffset(ID3D12Resource * res, UINT64 sofs, UINT64 dofs, UINT64 sz, void* src, ID3D12GraphicsCommandList* cl);
 	void UploadTarget(ID3D12Resource* res, UINT64 dofs, UINT64 sz, void* src, ID3D12GraphicsCommandList* cl);
 	
-	void Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, const D3D12_RANGE* wofs);
+	void Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, UINT64 upload_offset, const D3D12_RANGE* wofs);
 
 	ID3D12Resource* GetResourcePtr() { return mRes; };
 
@@ -47,8 +49,10 @@ public:
 
 	intptr_t GetSize() { return space; };
 
-	intptr_t GetCurrentOffset() { return usedSpace; }
+	intptr_t GetCurrentOffset() { return usedSpace; };
 
+	void AddSpaceUsed(UINT64 amount) { usedSpace += amount; };
+	   
 private:	
 	intptr_t DPtr();
 

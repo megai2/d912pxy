@@ -89,9 +89,7 @@ ULONG d912pxy_comhandler::Release()
 
 			if (FinalReleaseCB())
 				DeAllocateBase();
-
 			
-
 			return 0;
 		}
 	}
@@ -249,6 +247,9 @@ void d912pxy_comhandler::DeAllocateBase()
 		break;
 	case PXY_COM_OBJ_STATIC:
 		;
+		break;
+	case PXY_COM_OBJ_RESOURCE:
+		dtor_call(d912pxy_resource);
 		break;
 	default:
 		LOG_ERR_THROW2(-1, "wrong com object typeid");

@@ -28,7 +28,6 @@ SOFTWARE.
 typedef struct d912pxy_com_object {	
 	union {
 		void* vtable;
-		void* vtable_etst[256];
 		d912pxy_comhandler_non_derived com;
 		d912pxy_vdecl vdecl;
 		d912pxy_resource res;

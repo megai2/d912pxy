@@ -110,7 +110,7 @@ ID3D12Resource * d912pxy_upload_pool::MakeUploadBuffer(UINT maxSize)
 	if (!memPool || (maxSize >= memPoolSize))
 	{
 fallback:
-		d912pxy_resource* dxBuffer = new d912pxy_resource(RTID_UL_BUF, PXY_COM_OBJ_NOVTABLE, L"upload pool data");
+		d912pxy_resource* dxBuffer = new d912pxy_resource(RTID_UL_BUF, PXY_COM_OBJ_RESOURCE, L"upload pool data");
 		dxBuffer->d12res_buffer(maxSize, D3D12_HEAP_TYPE_UPLOAD);
 		dxBuffer->Release();
 
@@ -159,6 +159,12 @@ d912pxy_upload_item::~d912pxy_upload_item()
 
 }
 
+void d912pxy_upload_item::UploadBlock(ID3D12Resource * res, UINT64 block_offset, UINT64 upload_offset, UINT64 sz, void * src, ID3D12GraphicsCommandList * cl)
+{
+	memcpy((void*)DPtrOffset(upload_offset + block_offset), (void*)((intptr_t)src + block_offset), sz);
+	cl->CopyBufferRegion(res, block_offset, mRes, upload_offset + block_offset, sz);
+}
+
 void d912pxy_upload_item::UploadTargetWithOffset(ID3D12Resource * res, UINT64 sofs, UINT64 dofs, UINT64 sz, void* src, ID3D12GraphicsCommandList * cl)
 {
 	memcpy((void*)DPtrOffset(usedSpace), (void*)((intptr_t)src + sofs), sz);
@@ -183,9 +189,9 @@ intptr_t d912pxy_upload_item::DPtrOffset(UINT64 offset)
 	return mappedMemWofs + offset;
 }
 
-void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, const D3D12_RANGE * wofs)
+void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height, UINT64 size, UINT64 upload_offset, const D3D12_RANGE * wofs)
 {
-	intptr_t bufferRef = (intptr_t)DPtrOffset(usedSpace);
+	intptr_t bufferRef = (intptr_t)DPtrOffset(upload_offset);
 	intptr_t srcm = (intptr_t)mem;
 		
 	//megai2: well..
@@ -196,10 +202,6 @@ void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height,
 		bufferRef += rowPitch;
 		srcm = srcm + size;
 	}
-
-	usedSpace += rowPitch * height;
-
-	usedSpace = d912pxy_helper::AlignValueByPow2(usedSpace, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
 }
 
 UINT d912pxy_upload_item::FinalReleaseCB()

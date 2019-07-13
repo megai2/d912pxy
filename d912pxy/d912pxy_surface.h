@@ -25,6 +25,11 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
+typedef struct d912pxy_surface_ul {
+	d912pxy_upload_item* item;
+	UINT64 offset;
+} d912pxy_surface_ul;
+
 class d912pxy_surface : public d912pxy_vtable, public d912pxy_resource
 {
 public:
@@ -104,5 +109,6 @@ private:
 	UINT subresCountCache;	
 
 	UINT ulMarked;
+	d912pxy_surface_ul* ul;
 };
 

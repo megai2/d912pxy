@@ -62,7 +62,7 @@ public:
 	UINT32 PooledAction(UINT32 use);
 	void UploadDataCopy(intptr_t ulMem, UINT32 offset, UINT32 size);
 
-	void ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl, d912pxy_upload_item* ulObj);
+	void ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl);
 
 	void FinishUpload(ID3D12GraphicsCommandList * cl);
 
@@ -74,6 +74,9 @@ public:
 
 private:	
 	d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB);
+
+	d912pxy_upload_item* ul;
+	UINT64 ul_offset;
 
 	union bindData {
 		D3D12_VERTEX_BUFFER_VIEW v;
