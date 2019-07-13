@@ -212,7 +212,7 @@ void d912pxy_comhandler::DeAllocateBase()
 		dtor_call(d912pxy_surface);
 		break;
 	case PXY_COM_OBJ_QUERY:
-		dtor_call(d912pxy_query);
+		dtor_call(d912pxy_query_non_derived);
 		break;
 	case PXY_COM_OBJ_QUERY_OCC:
 		dtor_call(d912pxy_query_occlusion);

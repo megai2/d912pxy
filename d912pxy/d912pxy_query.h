@@ -27,10 +27,13 @@ SOFTWARE.
 
 #define D3DISSUE_FORCED 0x4
 
+class d912pxy_query_non_derived;
+
 class d912pxy_query : public d912pxy_comhandler
 {
 public:	
-	static d912pxy_query* d912pxy_query_com(D3DQUERYTYPE Type);
+	static d912pxy_query_non_derived* d912pxy_query_com(D3DQUERYTYPE Type);
+	d912pxy_query(D3DQUERYTYPE Type);
 	~d912pxy_query();
 
 	D912PXY_METHOD_(D3DQUERYTYPE, GetType)(PXY_THIS);
@@ -53,9 +56,6 @@ public:
 
 	virtual void QueryMark(UINT start, ID3D12GraphicsCommandList* cl);
 
-protected:
-	d912pxy_query(D3DQUERYTYPE Type);
-
 private:		
 
 	D3DQUERYTYPE m_type;
@@ -64,5 +64,6 @@ private:
 
 class d912pxy_query_non_derived : public d912pxy_vtable, public d912pxy_query
 {
-
+public:
+	d912pxy_query_non_derived(D3DQUERYTYPE Type) : d912pxy_query(Type) { ; };
 };
