@@ -59,6 +59,21 @@ static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {
 	L"slots / spl"
 };
 
+class d912pxy_metrics_api_overhead_timer {
+
+public:
+	d912pxy_metrics_api_overhead_timer(UINT str, const char* funName) { id = str; fun = funName; }
+	~d912pxy_metrics_api_overhead_timer();
+
+private:
+	Stopwatch timer;
+	const char* fun;
+	UINT id;
+
+};
+
+#define MAX_OVERHEAD_STR_ID 65535
+
 class d912pxy_metrics : public d912pxy_noncom
 {
 public:
@@ -68,6 +83,8 @@ public:
 	void Init();
 	   
 #ifdef ENABLE_METRICS
+
+	void AddOverheadTime(UINT64 val, UINT id, const char* fun);
 
 	void TrackIFrameTime(UINT start, UINT group);
 	void TrackDHeapSlots(UINT idx, UINT slots);
@@ -80,23 +97,28 @@ public:
 
 private:
 	IP7_Telemetry* iframeMetrics;	
-	tUINT8 metricIFrameTimes[PXY_METRICS_IFRAME_COUNT];	
-	tUINT8 metricIFrameDraws;
-	tUINT8 metricIFrameCleans;	
-	tUINT8 metricIFramePerBatchPrep;
-	tUINT8 metricIFramePerBatchOverhead;
-	tUINT8 metricIFrameAppPrep;	
+	tUINT16 metricIFrameTimes[PXY_METRICS_IFRAME_COUNT];	
+	tUINT16 metricIFrameDraws;
+	tUINT16 metricIFrameCleans;	
+	tUINT16 metricIFramePerBatchPrep;
+	tUINT16 metricIFramePerBatchOverhead;
+	tUINT16 metricIFrameAppPrep;	
 
-	tUINT8 metricMemVA;
-	tUINT8 metricMemHeap;
-	tUINT8 metricMemSurf;
-	tUINT8 metricMemUl;
-	tUINT8 metricMemUlFp[4];
-	tUINT8 metricMemWatched;
-	tUINT8 metricMemVStream;
+	tUINT16 metricMemVA;
+	tUINT16 metricMemHeap;
+	tUINT16 metricMemSurf;
+	tUINT16 metricMemUl;
+	tUINT16 metricMemUlFp[4];
+	tUINT16 metricMemWatched;
+	tUINT16 metricMemVStream;
+	tUINT16 metricOverhead;
+
+	IP7_Telemetry* ohMetrics;
+	UINT64 metricOHval[MAX_OVERHEAD_STR_ID];
+	tUINT16 metricOH[MAX_OVERHEAD_STR_ID];
 
 	IP7_Telemetry* dheapMetrics;
-	tUINT8 metricDHeapSlots[PXY_INNER_MAX_DSC_HEAPS];
+	tUINT16 metricDHeapSlots[PXY_INNER_MAX_DSC_HEAPS];
 	
 	Stopwatch* iframeTime[PXY_METRICS_IFRAME_COUNT];	
 	

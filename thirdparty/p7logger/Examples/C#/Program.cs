@@ -37,17 +37,17 @@ namespace CSharp_Example
 
             ////////////////////////////////////////////////////////////////////
             //initialize P7 telemetry channel, using prev. created client
-            P7.Telemetry l_pTel = new P7.Telemetry(l_pClient, "Telemetry channel");
-            System.Byte  l_bId1 = 0;
-            System.Byte  l_bId2 = 0;
+            P7.Telemetry  l_pTel = new P7.Telemetry(l_pClient, "Telemetry channel");
+            System.UInt16 l_bId1 = 0;
+            System.UInt16 l_bId2 = 0;
 
-            l_pTel.Create("Counter #1", 0, 1000, 900, 1, ref l_bId1);
-            l_pTel.Create("Counter #2", 0, 1000, 900, 1, ref l_bId2);
+            l_pTel.Create("Counter #1", 0.0, -1.0, 1000.0, 900.0, 1, ref l_bId1);
+            l_pTel.Create("Counter #2", 0.0, -1.0, 1000.0, 900.0, 1, ref l_bId2);
 
             for (Int64 l_iI = 0; l_iI < 100000; l_iI++)
             {
-                l_pTel.Add(l_bId1, l_iI % 1000);
-                l_pTel.Add(l_bId2, (l_iI + 500) % 1000);
+                l_pTel.Add(l_bId1, (System.Double)(l_iI % 1000));
+                l_pTel.Add(l_bId2, (System.Double)((l_iI + 500) % 1000));
             }
 
             ////////////////////////////////////////////////////////////////////

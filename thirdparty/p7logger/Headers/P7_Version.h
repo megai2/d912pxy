@@ -16,56 +16,11 @@
 // License along with this library.                                            /
 //                                                                             /
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef LOCK_H
-#define LOCK_H
-
-///////////////////////////////////////////////////////////////////////////////
-#include "PLock.h"
-
-class CLock
-{
-    tLOCK  m_hCS;
-    CLock *m_pLock;
-public:
-    CLock()
-        : m_pLock(NULL)
-    {
-        LOCK_CREATE(m_hCS);
-    }
-
-    CLock(CLock *i_pLock)
-        : m_pLock(i_pLock)
-    {
-        m_pLock->Lock();
-    }
-
-    ~CLock()
-    {
-        if (NULL == m_pLock)
-        {
-            LOCK_DESTROY(m_hCS);
-        }
-        else
-        {
-            m_pLock->Unlock();
-            m_pLock = NULL;
-        }
-    }
-
-    void Lock()
-    {
-        LOCK_ENTER(m_hCS);
-    }
-
-    tBOOL Try()
-    {
-        return LOCK_TRY(m_hCS);
-    }
-
-    void Unlock()
-    {
-        LOCK_EXIT(m_hCS);
-    }
-};
-
-#endif //LOCK_H
+#ifndef P7_VERSION_H
+#define P7_VERSION_H
+//-----------------------------------------
+#define P7_VERSION 00050002
+#define P7_VERSION_MAJOR 5
+#define P7_VERSION_MINOR 2
+//-----------------------------------------
+#endif //P7_VERSION_H

@@ -16,56 +16,26 @@
 // License along with this library.                                            /
 //                                                                             /
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef LOCK_H
-#define LOCK_H
+#ifndef ISIGNAL_H
+#define ISIGNAL_H
 
-///////////////////////////////////////////////////////////////////////////////
-#include "PLock.h"
-
-class CLock
+enum eCrashCode
 {
-    tLOCK  m_hCS;
-    CLock *m_pLock;
-public:
-    CLock()
-        : m_pLock(NULL)
-    {
-        LOCK_CREATE(m_hCS);
-    }
-
-    CLock(CLock *i_pLock)
-        : m_pLock(i_pLock)
-    {
-        m_pLock->Lock();
-    }
-
-    ~CLock()
-    {
-        if (NULL == m_pLock)
-        {
-            LOCK_DESTROY(m_hCS);
-        }
-        else
-        {
-            m_pLock->Unlock();
-            m_pLock = NULL;
-        }
-    }
-
-    void Lock()
-    {
-        LOCK_ENTER(m_hCS);
-    }
-
-    tBOOL Try()
-    {
-        return LOCK_TRY(m_hCS);
-    }
-
-    void Unlock()
-    {
-        LOCK_EXIT(m_hCS);
-    }
+    eCrashException,
+    eCrashPureCall,
+    eCrashMemAlloc,
+    eCrashInvalidParameter,
+    eCrashSignal
 };
 
-#endif //LOCK_H
+typedef void (__cdecl *fnCrashHandler)(eCrashCode i_eCode, const void *i_pCrashContext, void *i_pUserContext);
+
+struct stChContext
+{
+    volatile int      iInstalled;
+    volatile int      iProcessed;
+    void             *pUserContext;
+    fnCrashHandler    pUserHandler;
+};
+
+#endif //ISIGNAL_H

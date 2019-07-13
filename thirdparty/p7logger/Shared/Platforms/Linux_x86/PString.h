@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -27,7 +27,8 @@
     #endif
 #endif
 
-
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include "UTF.h"
@@ -211,7 +212,7 @@ static __attribute__ ((unused)) tXCHAR *PStrChr(tXCHAR * i_pStr, tXCHAR i_cCh)
 
 ///////////////////////////////////////////////////////////////////////////////
 //PStrrChr
-static const __attribute__ ((unused)) tXCHAR *PStrrChr(const tXCHAR * i_pStr, tXCHAR i_cCh)
+static const __attribute__ ((unused)) tXCHAR *PStrrChr(const tXCHAR * i_pStr, const tXCHAR i_cCh)
 {
     return strrchr(i_pStr, i_cCh);
 }//PStrrChr

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -492,6 +492,8 @@ tBOOL CTxtChannel::Format(sP7Trace_Data *i_pData, CClTextSink::sLog &o_rLog)
     tUINT8       *l_pValues   = ((tUINT8*)i_pData) + sizeof(sP7Trace_Data);
     sRbThread    *l_pRbThread = NULL;
     int           l_iCount    = 0;
+    tUINT8       *l_pExt      = (tUINT8*)i_pData + i_pData->sCommon.dwSize - 1;
+    tUINT8        l_bCount    = l_pExt[0];
 
     l_pDesc = m_cDesc[i_pData->wID];
     
@@ -503,7 +505,18 @@ tBOOL CTxtChannel::Format(sP7Trace_Data *i_pData, CClTextSink::sLog &o_rLog)
         goto l_lblExit;
     }
 
+    o_rLog.dwModuleID = 0u;
 
+    while (l_bCount--) //Parse extensions, there is no need to check the presence, it is always here because of using locally
+    {
+        --l_pExt;
+        if (EP7TRACE_EXT_MODULE_ID == l_pExt[0])
+        {
+            l_pExt -= 2;
+            o_rLog.dwModuleID = *(tUINT16*)l_pExt;
+            --l_pExt;
+        }
+    }
 
     while (!l_iCount)
     {
@@ -551,10 +564,10 @@ tBOOL CTxtChannel::Format(sP7Trace_Data *i_pData, CClTextSink::sLog &o_rLog)
         }
     }
 
-    if (m_cModules[l_pDesc->dwModuleID])
+    if (m_cModules[o_rLog.dwModuleID])
     {
-        o_rLog.pModuleName  = m_cModules[l_pDesc->dwModuleID]->pName;
-        o_rLog.szModuleName = m_cModules[l_pDesc->dwModuleID]->szName;
+        o_rLog.pModuleName  = m_cModules[o_rLog.dwModuleID]->pName;
+        o_rLog.szModuleName = m_cModules[o_rLog.dwModuleID]->szName;
     }
     else
     {
@@ -562,17 +575,17 @@ tBOOL CTxtChannel::Format(sP7Trace_Data *i_pData, CClTextSink::sLog &o_rLog)
         o_rLog.szModuleName = 5;
     }
 
-    GetLocalTime(m_qwStreamTime + ((i_pData->qwTimer - m_qwTimer_Value) * TIME_SEC_100NS) / m_qwTimer_Frequency,
-                 o_rLog.dwYear,
-                 o_rLog.dwMonth,
-                 o_rLog.dwDay,
-                 o_rLog.dwHour,
-                 o_rLog.dwMinutes,
-                 o_rLog.dwSeconds,
-                 o_rLog.dwMilliseconds,
-                 o_rLog.dwMicroseconds,
-                 o_rLog.dwNanoseconds
-                );
+    UnpackLocalTime(m_qwStreamTime + ((i_pData->qwTimer - m_qwTimer_Value) * TIME_SEC_100NS) / m_qwTimer_Frequency,
+                    o_rLog.dwYear,
+                    o_rLog.dwMonth,
+                    o_rLog.dwDay,
+                    o_rLog.dwHour,
+                    o_rLog.dwMinutes,
+                    o_rLog.dwSeconds,
+                    o_rLog.dwMilliseconds,
+                    o_rLog.dwMicroseconds,
+                    o_rLog.dwNanoseconds
+                   );
 
 
     o_rLog.qwRawTime       = m_qwStreamTime + ((i_pData->qwTimer - m_qwTimer_Value) * TIME_SEC_100NS) / m_qwTimer_Frequency;
@@ -1122,13 +1135,19 @@ eClient_Status CClText::Sent(tUINT32          i_dwChannel_ID,
     }
 #endif
 
-
     LOCK_ENTER(m_hCS);
 
     if (FALSE == m_bConnected)
     {
         l_eReturn = ECLIENT_STATUS_OFF;
         ATOMIC_INC(&m_lReject_Con);
+        goto l_lExit;
+    }
+
+    if (l_sHeader.dwSize >= (m_dwBuffer_Size * m_dwBuffers_Count))
+    {
+        l_eReturn = ECLIENT_STATUS_NO_FREE_BUFFERS;
+        ATOMIC_INC(&m_lReject_Mem);
         goto l_lExit;
     }
 
@@ -1360,8 +1379,33 @@ eClient_Status CClText::Parse_Buffer(tUINT8 *i_pBuffer, size_t  i_szBuffer)
             {
                 if (((sH_User_Data*)m_pChunk)->dwSize > m_szChunkMax)
                 {
-                    m_szChunkMax = (((sH_User_Data*)m_pChunk)->dwSize + 1023) & (~1023);
-                    m_pChunk     = (tUINT8*)realloc(m_pChunk, m_szChunkMax);
+                    size_t  l_szChunkMax = (((sH_User_Data*)m_pChunk)->dwSize + 1023) & (~1023);
+                    tUINT8 *l_pChunk     = (tUINT8*)realloc(m_pChunk, l_szChunkMax);
+
+                    if (!l_pChunk)
+                    {
+                        l_pChunk = (tUINT8*)malloc(l_szChunkMax);
+
+                        if (    (l_pChunk)
+                             && (m_pChunk)
+                           )
+                        {
+                            memcpy(l_pChunk, m_pChunk, m_szChunkMax);
+                        }
+
+                        if (m_pChunk) { free(m_pChunk); }
+                    }
+
+                    m_pChunk = l_pChunk;
+
+                    if (m_pChunk)
+                    {
+                        m_szChunkMax = l_szChunkMax;
+                    }
+                    else
+                    {
+                        m_szChunkMax = 0;
+                    }
                 }
 
                 if (m_pChunk)
@@ -1418,8 +1462,33 @@ eClient_Status CClText::Parse_Buffer(tUINT8 *i_pBuffer, size_t  i_szBuffer)
         {
             if (l_szTail > m_szChunkMax)
             {
-                m_szChunkMax = (l_szTail + 1023) & (~1023);
-                m_pChunk     = (tUINT8*)realloc(m_pChunk, m_szChunkMax);
+                size_t  l_szChunkMax = (l_szTail + 1023) & (~1023);
+                tUINT8 *l_pChunk     = (tUINT8*)realloc(m_pChunk, l_szChunkMax);
+
+                if (!l_pChunk)
+                {
+                    l_pChunk = (tUINT8*)malloc(l_szChunkMax);
+
+                    if (    (l_pChunk)
+                            && (m_pChunk)
+                        )
+                    {
+                        memcpy(l_pChunk, m_pChunk, m_szChunkMax);
+                    }
+
+                    if (m_pChunk) { free(m_pChunk); }
+                }
+
+                m_pChunk = l_pChunk;
+
+                if (m_pChunk)
+                {
+                    m_szChunkMax = l_szChunkMax;
+                }
+                else
+                {
+                    m_szChunkMax = 0;
+                }
             }
 
             if (m_pChunk)
@@ -1560,7 +1629,8 @@ void CClText::Routine()
     pAList_Cell    l_pEl            = NULL;
     tBOOL          l_bExit          = FALSE;
     tUINT32        l_dwSignal       = MEVENT_TIME_OUT;
-    tUINT32        l_dwIteration    = 0;
+    tUINT32        l_dwRollTime     = GetTickCount();
+    tUINT32        l_dwDumpTime     = GetTickCount();
     sBuffer       *l_pBuffer        = NULL;
     eClient_Status l_eStatus        = ECLIENT_STATUS_OK; 
 
@@ -1576,6 +1646,8 @@ void CClText::Routine()
         }
         else if (THREAD_DATA_SIGNAL == l_dwSignal) //one buffer to write!
         {
+            l_dwDumpTime = GetTickCount();
+
             ////////////////////////////////////////////////////////////////////
             //extract buffer
             LOCK_ENTER(m_hCS);
@@ -1624,13 +1696,19 @@ void CClText::Routine()
             }
         }
 
-        l_dwIteration++;
-
-        if (    (m_pSink)
-             && (0 == (l_dwIteration & 0x3F))
-           )
+        if (m_pSink)
         {
-            m_pSink->TryRoll();
+            if (CTicks::Difference(GetTickCount(), l_dwRollTime) > 60000) //1 minute
+            {
+                m_pSink->TryRoll();
+                l_dwRollTime = GetTickCount();
+            }
+
+            if (CTicks::Difference(GetTickCount(), l_dwDumpTime) > 1000) //1 second
+            {
+                m_pSink->DumpBuffers();
+                l_dwDumpTime = GetTickCount();
+            }
         }
     }
 }//Comm_Routine
@@ -1864,7 +1942,7 @@ void CClText::FormatModuleId(CClText *i_pClient)
     tINT32 l_iRes = PSPrint(i_pClient->m_pMsgCur,
                             i_pClient->m_szMsg - (i_pClient->m_pMsgCur - i_pClient->m_pMsg),
                             TM("%03d"),
-                            i_pClient->m_sLog.pDesc->dwModuleID
+                            i_pClient->m_sLog.dwModuleID
                            );
     if (0 < l_iRes)
     {

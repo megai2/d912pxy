@@ -24,9 +24,9 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-#ifndef ENABLE_METRICS
+#ifdef ENABLE_METRICS
 
-#define D912PXY_ROUTE_IMPL_START 
+#define D912PXY_ROUTE_IMPL_START d912pxy_metrics_api_overhead_timer timer(__LINE__, __FUNCTION__);
 #define D912PXY_ROUTE_IMPL_END
 #define D912PXY_ROUTE_IMPL_STUB(ret) obj->com.ImplStubCall(__FUNCTION__, __LINE__); return ret
 #define D912PXY_ROUTE_IMPL_STUB_(ret) obj->com.ImplStubCall(__FUNCTION__, __LINE__); 
@@ -1038,7 +1038,7 @@ D912PXY_METHOD_IMPL(Lock)(PXY_THIS_ UINT OffsetToLock, UINT SizeToLock, void** p
 {
 	D912PXY_ROUTE_IMPL_START
 		D912PXY_ROUTE_IMPL_PREFIX Lock(OffsetToLock, SizeToLock, ppbData, Flags);
-	D912PXY_ROUTE_IMPL_END	
+	D912PXY_ROUTE_IMPL_END
 }
 
 D912PXY_METHOD_IMPL(Unlock)(PXY_THIS)
@@ -1192,7 +1192,7 @@ D912PXY_METHOD_IMPL(occ_Issue)(PXY_THIS_ DWORD dwIssueFlags)
 D912PXY_METHOD_IMPL(occ_GetData)(PXY_THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags)
 {
 	D912PXY_ROUTE_IMPL_START
-	D912PXY_ROUTE_IMPL_PREFIX occ_GetData(pData, dwSize, dwGetDataFlags);
+		D912PXY_ROUTE_IMPL_PREFIX occ_GetData(pData, dwSize, dwGetDataFlags);
 	D912PXY_ROUTE_IMPL_END
 }
 
@@ -1316,7 +1316,7 @@ D912PXY_METHOD_IMPL(AddDirtyRect)(PXY_THIS_ CONST RECT* pDirtyRect)
 
 #define D912PXY_ROUTE_IMPL_PREFIX return obj->tex_3d.
 
-D912PXY_METHOD_IMPL(GetLevelDesc)(PXY_THIS_ UINT Level, D3DVOLUME_DESC *pDesc) 
+D912PXY_METHOD_IMPL(GetLevelDesc)(PXY_THIS_ UINT Level, D3DVOLUME_DESC *pDesc)
 {
 	D912PXY_ROUTE_IMPL_START
 		D912PXY_ROUTE_IMPL_STUB(D3D_OK);
@@ -1330,14 +1330,14 @@ D912PXY_METHOD_IMPL(GetVolumeLevel)(PXY_THIS_ UINT Level, IDirect3DVolume9** ppV
 	D912PXY_ROUTE_IMPL_END
 }
 
-D912PXY_METHOD_IMPL(LockBox)(PXY_THIS_ UINT Level, D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags) 
+D912PXY_METHOD_IMPL(LockBox)(PXY_THIS_ UINT Level, D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags)
 {
 	D912PXY_ROUTE_IMPL_START
 		D912PXY_ROUTE_IMPL_STUB(D3D_OK);
 	D912PXY_ROUTE_IMPL_END
 }
 
-D912PXY_METHOD_IMPL(UnlockBox)(PXY_THIS_ UINT Level) 
+D912PXY_METHOD_IMPL(UnlockBox)(PXY_THIS_ UINT Level)
 {
 	D912PXY_ROUTE_IMPL_START
 		D912PXY_ROUTE_IMPL_STUB(D3D_OK);
@@ -1864,7 +1864,7 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_RESOURCE_SETPRIORITY, &d912pxy_resource::com_SetPriority);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_resource::com_GetPriority);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_RESOURCE_PRELOAD, &d912pxy_resource::com_PreLoad);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_RESOURCE_GETTYPE, &d912pxy_resource::com_GetType);	
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_RESOURCE_GETTYPE, &d912pxy_resource::com_GetType);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_SURFACE_GETCONTAINER, &d912pxy_surface::com_GetContainer);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_SURFACE_GETDESC, &d912pxy_surface::com_GetDesc);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_SURFACE_LOCKRECT, &d912pxy_surface::com_LockRect);
@@ -2020,13 +2020,13 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_ADDREF, &d912pxy_surface_layer::com_AddRef);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_surface_layer::com_Release);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETDEVICE, &d912pxy_surface_layer::com_GetDevice);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_SETPRIVATEDATA,&d912pxy_surface_layer::com_SetPrivateData);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA,&d912pxy_surface_layer::com_GetPrivateData);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_FREEPRIVATEDATA,&d912pxy_surface_layer::com_FreePrivateData);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_SETPRIORITY,&d912pxy_surface_layer::com_SetPriority);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETPRIORITY,&d912pxy_surface_layer::com_GetPriority);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_PRELOAD,&d912pxy_surface_layer::com_PreLoad);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETTYPE,&d912pxy_surface_layer::com_GetType);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_SETPRIVATEDATA, &d912pxy_surface_layer::com_SetPrivateData);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA, &d912pxy_surface_layer::com_GetPrivateData);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_FREEPRIVATEDATA, &d912pxy_surface_layer::com_FreePrivateData);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_SETPRIORITY, &d912pxy_surface_layer::com_SetPriority);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETPRIORITY, &d912pxy_surface_layer::com_GetPriority);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_PRELOAD, &d912pxy_surface_layer::com_PreLoad);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETTYPE, &d912pxy_surface_layer::com_GetType);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_SURFACE_GETCONTAINER, &d912pxy_surface_layer::com_GetContainer);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_SURFACE_GETDESC, &d912pxy_surface_layer::com_GetDesc);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_SURFACE_LOCKRECT, &d912pxy_surface_layer::com_LockRect);

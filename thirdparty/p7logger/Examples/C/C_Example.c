@@ -17,8 +17,8 @@ static hP7_Telemetry    g_hTel    = NULL;
 
 static hP7_Trace        g_hTrace  = NULL;
 static hP7_Trace_Module g_pModule = NULL;
-static tUINT8           g_bTID1   = 0;
-static tUINT8           g_bTID2   = 0;
+static tUINT16          g_bTID1   = 0;
+static tUINT16          g_bTID2   = 0;
 
 static tUINT64          g_qwI     = 0;
 
@@ -71,13 +71,13 @@ int main(int i_iArgC, char* i_pArgV[])
     P7_Trace_Register_Thread(g_hTrace, TM("Main"), 0);
 
     //adding 2 counters into common group
-    if (!P7_Telemetry_Create_Counter(g_hTel, TM("Group/counter 1"), 0, 1023, 1000, 1, &g_bTID1))
+    if (!P7_Telemetry_Create_Counter(g_hTel, TM("Group/counter 1"), 0, 0, 1023, 1000, 1, &g_bTID1))
     {
         printf("can't create counter\n");
         goto l_lblExit;
     }
 
-    if (!P7_Telemetry_Create_Counter(g_hTel, TM("Group/counter 2"), 0, 1023, 1000, 1, &g_bTID2))
+    if (!P7_Telemetry_Create_Counter(g_hTel, TM("Group/counter 2"), 0, 0, 1023, 1000, 1, &g_bTID2))
     {
         printf("can't create counter\n");
         goto l_lblExit;
@@ -99,8 +99,8 @@ int main(int i_iArgC, char* i_pArgV[])
     //delivering telemetry samples
     for (g_qwI = 0ULL; g_qwI < 100000ULL; g_qwI ++)
     {
-        P7_Telemetry_Put_Value(g_hTel, g_bTID1, (g_qwI & 0x3FFull));
-        P7_Telemetry_Put_Value(g_hTel, g_bTID2, ((g_qwI + 11ull) & 0x3FFull));
+        P7_Telemetry_Put_Value(g_hTel, g_bTID1, (tDOUBLE)(g_qwI & 0x3FFull));
+        P7_Telemetry_Put_Value(g_hTel, g_bTID2, (tDOUBLE)((g_qwI + 11ull) & 0x3FFull));
     }
 
     //unregister current application thread (it is obligatory if thread was registered)

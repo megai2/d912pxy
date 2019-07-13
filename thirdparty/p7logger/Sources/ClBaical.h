@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -39,6 +39,7 @@ class CClBaical:
 
     CBList<CTPacket*>   *m_pData_Wnd;
     pAList_Cell          m_pData_Wnd_Cell;
+    tBOOL                m_bData_Wnd_Fixed;
     tUINT32              m_dwData_Wnd_Max_Count;
     tUINT32              m_dwData_Wnd_Size;
     tUINT32              m_dwData_Wnd_TimeStamp;
@@ -83,6 +84,13 @@ class CClBaical:
 
     tBOOL                m_bLocalHost;
 
+    tBOOL                m_bExtension;
+
+    void                *m_pHdrUsrData;
+    CTPacket            *m_pHdrUsrPacket;
+    tUINT32              m_uHdrUsrSize;
+    tUINT32              m_uHdrUsrChannel;
+
 public:
     CClBaical(tXCHAR **i_pArgs,
               tINT32   i_iCount
@@ -90,55 +98,59 @@ public:
     virtual ~CClBaical();
 
 private:
-    eClient_Status Init_Base(tXCHAR **i_pArgs,
-                             tINT32   i_iCount
-                            );
-    eClient_Status Init_Log(tXCHAR **i_pArgs,
-                            tINT32   i_iCount
-                           );
-    eClient_Status Init_Sockets(tXCHAR **i_pArgs,
-                                tINT32   i_iCount
-                               );
-    eClient_Status Init_Pool(tXCHAR **i_pArgs,
-                             tINT32   i_iCount
-                            );
-    eClient_Status Init_Members(tXCHAR **i_pArgs,
-                                tINT32   i_iCount
-                               );
+    eClient_Status   Init_Base(tXCHAR **i_pArgs,
+                               tINT32   i_iCount
+                              );
+    eClient_Status   Init_Log(tXCHAR **i_pArgs,
+                              tINT32   i_iCount
+                             );
+    eClient_Status   Init_Sockets(tXCHAR **i_pArgs,
+                                  tINT32   i_iCount
+                                 );
+    eClient_Status   Init_Pool(tXCHAR **i_pArgs,
+                               tINT32   i_iCount
+                              );
+    eClient_Status   Init_Members(tXCHAR **i_pArgs,
+                                  tINT32   i_iCount
+                                 );
     //eClient_Status Init_Threads(tXCHAR **i_pArgs,
     //                            tINT32   i_iCount
     //                           );
 
-    void           Inc_Packet_ID(tUINT32 * o_pPacketID);
-
-    tBOOL          Process_Incoming_Packet(CTPacket *i_pPacket);
-    CTPacket      *Get_Delivered_Packet();
-    tBOOL          Is_Ready_To_Exit();
-
-    void           Set_Connected(tBOOL i_bConnected);
-
-    void           Reset_Connetion();
-    CTPacket      *Create_Data_Wnd_Report();
-    CTPacket      *Pull_Firt_Data_Packet();
-    CTPacket      *Pull_Last_Data_Packet();
-    tBOOL          Push_Last_Data_Packet(CTPacket *i_pPacket);
-
-    void           Update_Channels_Status(tBOOL i_bConnected, tUINT32 i_dwResets);
-
-    void           Comm_Routine();
-    void           Chnl_Routine();
-
-public:
-    tBOOL          Connection_Wait(tUINT32 i_dwMilliseconds);
-
-    eClient_Status Sent(tUINT32            i_dwChannel_ID,
-                        sP7C_Data_Chunk   *i_pChunks, 
-                        tUINT32            i_dwCount,
-                        tUINT32            i_dwSize
-                       );
-
-    tBOOL          Get_Info(sP7C_Info *o_pInfo);
-    tBOOL          Flush();
+    void             Inc_Packet_ID(tUINT32 * o_pPacketID);
+                    
+    tBOOL            Process_Incoming_Packet(CTPacket *i_pPacket);
+    CTPacket        *Get_Delivered_Packet();
+    tBOOL            Is_Ready_To_Exit();
+                    
+    void             Set_Connected(tBOOL i_bConnected);
+                    
+    void             Reset_Connetion();
+    CTPacket        *Create_Data_Wnd_Report();
+    inline CTPacket *Pull_Firt_Data_Packet();
+    inline CTPacket *Reuse_Data_Packet(CTPData &i_rData, tUINT32 i_uChannel, tUINT32 i_uSize);
+    inline tBOOL     Push_Last_Data_Packet(CTPacket *i_pPacket);
+                     
+    inline void      Parse_Extensions(tUINT8 *i_pBuffer, size_t i_szBuffer);
+                     
+    inline void      Parse_User_Data(tUINT8 *i_pBuffer, size_t i_szBuffer);
+                     
+    inline void      Update_Channels_Status(tBOOL i_bConnected, tUINT32 i_dwResets);
+                     
+    void             Comm_Routine();
+    void             Chnl_Routine();
+                     
+public:              
+    tBOOL            Connection_Wait(tUINT32 i_dwMilliseconds);
+                     
+    eClient_Status   Sent(tUINT32            i_dwChannel_ID,
+                          sP7C_Data_Chunk   *i_pChunks, 
+                          tUINT32            i_dwCount,
+                          tUINT32            i_dwSize
+                         );
+                     
+    tBOOL            Get_Info(sP7C_Info *o_pInfo);
+    tBOOL            Flush();
 
 private:
     static THSHELL_RET_TYPE THSHELL_CALL_TYPE Static_Comm_Routine(void *i_pContext)

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -34,9 +34,13 @@
 #define P7TRACE_THREAD_NAME_LENGTH                                          (48)
 #define P7TRACE_MODULE_NAME_LENGTH                                          (54)
 #define P7TELEMETRY_NAME_LENGTH                                             (64)
-#define P7TELEMETRY_COUNTER_NAME_LENGTH                                     (64)
-#define P7TELEMETRY_COUNTERS_MAX_COUNT                    ((tUINT8)~((tUINT8)0))
-#define P7TELEMETRY_INVALID_ID              (P7TELEMETRY_COUNTERS_MAX_COUNT - 1)
+
+#define P7TELEMETRY_COUNTER_NAME_LENGTH_V1                                  (64)
+#define P7TELEMETRY_COUNTERS_MAX_COUNT_V1                 ((tUINT8)~((tUINT8)0))
+#define P7TELEMETRY_INVALID_ID_V1        (P7TELEMETRY_COUNTERS_MAX_COUNT_V1 - 1)
+
+#define P7TELEMETRY_INVALID_ID_V2                       ((tUINT16)~((tUINT16)0))
+#define P7TELEMETRY_COUNTERS_MAX_COUNT_V2               ((tUINT16)~((tUINT16)0))
 
 
 #define P7TRACE_INFO_FLAG_BIG_ENDIAN                                    (0x0001)
@@ -82,7 +86,8 @@ enum eTrace_Arg_Type
 enum eP7User_Type
 {
     EP7USER_TYPE_TRACE          =  0, 
-    EP7USER_TYPE_TELEMETRY          , 
+    EP7USER_TYPE_TELEMETRY_V1       , 
+    EP7USER_TYPE_TELEMETRY_V2       , 
 
     EP7USER_TYPE_MAX            = P7_EXTENSION_MAX_TYPES 
 };
@@ -91,14 +96,15 @@ enum eP7User_Type
 ////////////////////////////////////////////////////////////////////////////////
 enum eP7Trace_Type
 {
-    EP7TRACE_TYPE_INFO          =  0, //OUT
-    EP7TRACE_TYPE_DESC              , //OUT
-    EP7TRACE_TYPE_DATA              , //OUT
-    EP7TRACE_TYPE_VERB              , //IN/OUT
-    EP7TRACE_TYPE_CLOSE             , //OUT
-    EP7TRACE_TYPE_THREAD_START      , //OUT
-    EP7TRACE_TYPE_THREAD_STOP       , //OUT
-    EP7TRACE_TYPE_MODULE            , //OUT
+    EP7TRACE_TYPE_INFO          =  0, //Client->Server
+    EP7TRACE_TYPE_DESC              , //Client->Server
+    EP7TRACE_TYPE_DATA              , //Client->Server
+    EP7TRACE_TYPE_VERB              , //Client->Server->Client
+    EP7TRACE_TYPE_CLOSE             , //Client->Server
+    EP7TRACE_TYPE_THREAD_START      , //Client->Server
+    EP7TRACE_TYPE_THREAD_STOP       , //Client->Server
+    EP7TRACE_TYPE_MODULE            , //Client->Server
+    EP7TRACE_TYPE_DELETE            , //Server->Client
 
     EP7TRACE_TYPE_MAX           = 32 
 };
@@ -114,11 +120,12 @@ enum eP7Trace_Ext
 ////////////////////////////////////////////////////////////////////////////////
 enum eP7Tel_Type
 {
-    EP7TEL_TYPE_INFO            =  0, //OUT
-    EP7TEL_TYPE_COUNTER             , //OUT
-    EP7TEL_TYPE_VALUE               , //OUT
-    EP7TEL_TYPE_ENABLE              , //IN
-    EP7TEL_TYPE_CLOSE               , //OUT
+    EP7TEL_TYPE_INFO            =  0, //Client->Server
+    EP7TEL_TYPE_COUNTER             , //Client->Server
+    EP7TEL_TYPE_VALUE               , //Client->Server
+    EP7TEL_TYPE_ENABLE              , //Server->Client
+    EP7TEL_TYPE_CLOSE               , //Client->Server
+    EP7TEL_TYPE_DELETE              , //Server->Client
 
     EP7TEL_TYPE_MAX             = 32 
 };
@@ -357,7 +364,7 @@ struct sP7Tel_Info
 
 
 //Telemetry counter description
-struct sP7Tel_Counter
+struct sP7Tel_Counter_v1
 {
     union
     {
@@ -369,36 +376,81 @@ struct sP7Tel_Counter
     tINT64        llMin;
     tINT64        llMax;
     tINT64        llAlarm;
-    tWCHAR        pName[P7TELEMETRY_COUNTER_NAME_LENGTH];
+    tWCHAR        pName[P7TELEMETRY_COUNTER_NAME_LENGTH_V1];
 } ATTR_PACK(2);
 
-//telemetry counter On/Off verbosity header
-struct sP7Tel_Enable
+
+//Telemetry counter description
+struct sP7Tel_Counter_v2
 {
     union
     {
         sP7Ext_Header sCommon;
         sP7Ext_Raw    sCommonRaw;
     };
-    tUINT8           bID;
-    tUINT8           bOn;
+
+    tUINT16  wID;
+    tUINT16  bOn;
+    tDOUBLE  dbMin;
+    tDOUBLE  dbAlarmMin;
+    tDOUBLE  dbMax;
+    tDOUBLE  dbAlarmMax;
+    tWCHAR   pName[2];
+} ATTR_PACK(2);
+
+//telemetry counter On/Off verbosity header
+struct sP7Tel_Enable_v1
+{
+    union
+    {
+        sP7Ext_Header sCommon;
+        sP7Ext_Raw    sCommonRaw;
+    };
+    tUINT8 bID;
+    tUINT8 bOn;
+} ATTR_PACK(2);
+
+
+//telemetry counter On/Off verbosity header
+struct sP7Tel_Enable_v2
+{
+    union
+    {
+        sP7Ext_Header sCommon;
+        sP7Ext_Raw    sCommonRaw;
+    };
+    tUINT16 wID;
+    tUINT16 bOn;
 } ATTR_PACK(2);
 
 
 //Telemetry counter value
-struct sP7Tel_Value
+struct sP7Tel_Value_v1
 {
     union
     {
         sP7Ext_Header sCommon;
         sP7Ext_Raw    sCommonRaw;
     };
-    tUINT8        bID;
-    tUINT8        bSeqN; 
-    tUINT64       qwTimer;      //High resolution timer value
-    tINT64        llValue;
+    tUINT8  bID;
+    tUINT8  bSeqN; 
+    tUINT64 qwTimer;      //High resolution timer value
+    tINT64  llValue;
 } ATTR_PACK(2);
 
+//Telemetry counter value
+struct sP7Tel_Value_v2
+{
+    union
+    {
+        sP7Ext_Header sCommon;
+        sP7Ext_Raw    sCommonRaw;
+    };
+    tUINT16       wID;
+    tUINT16       wSeqN; 
+    tUINT64       qwTimer;      //High resolution timer value
+    tDOUBLE       dbValue;
+} ATTR_PACK(2);
 
 
 PRAGMA_PACK_EXIT()//2///////////////////////////////////////////////////////////

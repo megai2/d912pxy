@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -221,7 +221,7 @@ public:
         m_pBuffer[i_dwLenght] = 0;
     }
 
-    tINT32 Find(tXCHAR *i_pSub, tBOOL i_bCase_Sens = FALSE)
+    tINT32 Find(const tXCHAR *i_pSub, tBOOL i_bCase_Sens = FALSE)
     {
         if (    (NULL == i_pSub)
              || (NULL == m_pBuffer)

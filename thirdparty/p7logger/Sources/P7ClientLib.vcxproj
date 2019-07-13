@@ -415,7 +415,7 @@
     <ClInclude Include="CommonClient.h" />
     <ClInclude Include="PacketsPool.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Socket.h" />
+    <ClInclude Include="UDP_NB.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="TPackets.h" />

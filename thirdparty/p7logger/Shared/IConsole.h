@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -525,7 +525,7 @@ public:
 
         if (l_szCount < (size_t)m_uH)
         {
-            m_pConsole->Clear(m_uX, m_uY + l_szCount, m_uW, m_uH - l_szCount, m_eWindowBgColor);
+            m_pConsole->Clear(m_uX, m_uY + (tUINT32)l_szCount, m_uW, m_uH - (tUINT32)l_szCount, m_eWindowBgColor);
         }
     }
 
@@ -701,7 +701,7 @@ public:
         
         if (l_szCount < (size_t)m_uH)
         {
-            m_pConsole->Clear(m_uX, m_uY + l_szCount, m_uW, m_uH - l_szCount, m_eWindowBgColor);
+            m_pConsole->Clear(m_uX, m_uY + (tUINT32)l_szCount, m_uW, m_uH - (tUINT32)l_szCount, m_eWindowBgColor);
         }
 
         return l_bReturn;

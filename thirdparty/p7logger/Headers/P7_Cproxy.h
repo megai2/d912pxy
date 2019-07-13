@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -189,7 +189,7 @@ typedef void (__cdecl *fnP7_Exceptional_Flush)();
 
 typedef void* hP7_Telemetry;
 
-typedef void (__cdecl *fnTelemetry_Enable)(void *i_pContext, tUINT8 i_bId, tBOOL i_bEnable);
+typedef void (__cdecl *fnTelemetry_Enable)(void *i_pContext, tUINT16 i_wId, tBOOL i_bEnable);
 
 typedef struct 
 {
@@ -251,21 +251,23 @@ typedef hP7_Telemetry (__cdecl *fnP7_Telemetry_Get_Shared)(const tXCHAR *i_pName
 //See documentation for details.
 extern P7_EXPORT tBOOL __cdecl P7_Telemetry_Create_Counter(hP7_Telemetry i_hTelemetry,
                                                            const tXCHAR *i_pName, 
-                                                           tINT64        i_llMin,
-                                                           tINT64        i_llMax,
-                                                           tINT64        i_llAlarm,
-                                                           tUINT8        i_bOn,
-                                                           tUINT8       *o_pCounter_ID 
+                                                           tDOUBLE       i_dbMin,
+                                                           tDOUBLE       i_dbAlarmMin,
+                                                           tDOUBLE       i_dbMax,
+                                                           tDOUBLE       i_dbAlarmMax,
+                                                           tBOOL         i_bOn,
+                                                           tUINT16      *o_pID 
                                                           );
 
 //dll/so function prototype
 typedef tBOOL (__cdecl *fnP7_Telemetry_Create_Counter)(hP7_Telemetry i_hTelemetry,
                                                        const tXCHAR *i_pName, 
-                                                       tINT64        i_llMin,
-                                                       tINT64        i_llMax,
-                                                       tINT64        i_llAlarm,
-                                                       tUINT8        i_bOn,
-                                                       tUINT8       *o_pCounter_ID 
+                                                       tDOUBLE       i_dbMin,
+                                                       tDOUBLE       i_dbAlarmMin,
+                                                       tDOUBLE       i_dbMax,
+                                                       tDOUBLE       i_dbAlarmMax,
+                                                       tBOOL         i_bOn,
+                                                       tUINT16      *o_pID 
                                                       );
 
 
@@ -273,14 +275,14 @@ typedef tBOOL (__cdecl *fnP7_Telemetry_Create_Counter)(hP7_Telemetry i_hTelemetr
 //P7_Telemetry_Put_Value - add counter smaple value
 //See documentation for details.
 extern P7_EXPORT tBOOL __cdecl P7_Telemetry_Put_Value(hP7_Telemetry i_hTelemetry,
-                                                      tUINT8        i_bCounter_ID,
-                                                      tINT64        i_llValue
+                                                      tUINT16       i_wCounter_ID,
+                                                      tDOUBLE       i_dbValue
                                                       );
 
 //dll/so function prototype
 typedef tBOOL (__cdecl *fnP7_Telemetry_Put_Value)(hP7_Telemetry i_hTelemetry,
-                                                  tUINT8        i_bCounter_ID,
-                                                  tINT64        i_llValue
+                                                  tUINT16       i_wCounter_ID,
+                                                  tDOUBLE       i_dbValue
                                                  );
                                                    
 
@@ -289,13 +291,13 @@ typedef tBOOL (__cdecl *fnP7_Telemetry_Put_Value)(hP7_Telemetry i_hTelemetry,
 //See documentation for details.
 extern P7_EXPORT tBOOL __cdecl P7_Telemetry_Find_Counter(hP7_Telemetry i_hTelemetry,
                                                          const tXCHAR *i_pName,
-                                                         tUINT8       *o_pCounter_ID
+                                                         tUINT16      *o_pCounter_ID
                                                         );
 
 //dll/so function prototype
 typedef tBOOL (__cdecl *fnP7_Telemetry_Find_Counter)(hP7_Telemetry i_hTelemetry,
                                                      const tXCHAR *i_pName,
-                                                     tUINT8       *o_pCounter_ID
+                                                     tUINT16      *o_pCounter_ID
                                                     );
 
 

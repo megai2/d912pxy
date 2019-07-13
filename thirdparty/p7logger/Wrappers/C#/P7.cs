@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -367,68 +367,71 @@ namespace P7
 
         ////////////////////////////////////////////////////////////////////////
         //P7_Telemetry_Create_Counter
-        private delegate System.UInt32 fnP7_Telemetry_Create_Counter(System.IntPtr i_hTelemetry,
-                                                                     String i_sName,
-                                                                     System.Int64 i_llMin,
-                                                                     System.Int64 i_llMax,
-                                                                     System.Int64 i_llAlarm,
-                                                                     System.Byte i_bOn,
-                                                                     ref System.Byte o_rCounter_ID
+        private delegate System.UInt32 fnP7_Telemetry_Create_Counter(System.IntPtr     i_hTelemetry,
+                                                                     String            i_sName,
+                                                                     System.Double     i_dbMin,
+                                                                     System.Double     i_dbAlarmMin,
+                                                                     System.Double     i_dbMax,
+                                                                     System.Double     i_dbAlarmMax,
+                                                                     System.Int32      i_bOn,
+                                                                     ref System.UInt16 o_rCounter_ID
                                                                     );
         [DllImport(Dll.DLL_NAME_32, EntryPoint = "P7_Telemetry_Create_Counter", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         private static extern System.UInt32 P7_Telemetry_Create_Counter32(System.IntPtr i_hTelemetry,
                                                                           [MarshalAs(UnmanagedType.LPWStr)]String i_sName,
-                                                                          System.Int64    i_llMin,
-                                                                          System.Int64    i_llMax,
-                                                                          System.Int64    i_llAlarm,
-                                                                          System.Byte     i_bOn,
-                                                                          ref System.Byte o_rCounter_ID
+                                                                          System.Double     i_dbMin,
+                                                                          System.Double     i_dbAlarmMin,
+                                                                          System.Double     i_dbMax,
+                                                                          System.Double     i_dbAlarmMax,
+                                                                          System.Int32      i_bOn,
+                                                                          ref System.UInt16 o_rCounter_ID
                                                                          );
 
         [DllImport(Dll.DLL_NAME_64, EntryPoint = "P7_Telemetry_Create_Counter", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         private static extern System.UInt32 P7_Telemetry_Create_Counter64(System.IntPtr i_hTelemetry,
                                                                           [MarshalAs(UnmanagedType.LPWStr)]String i_sName,
-                                                                          System.Int64    i_llMin,
-                                                                          System.Int64    i_llMax,
-                                                                          System.Int64    i_llAlarm,
-                                                                          System.Byte     i_bOn,
-                                                                          ref System.Byte o_rCounter_ID
+                                                                          System.Double i_dbMin,
+                                                                          System.Double i_dbAlarmMin,
+                                                                          System.Double i_dbMax,
+                                                                          System.Double i_dbAlarmMax,
+                                                                          System.Int32 i_bOn,
+                                                                          ref System.UInt16 o_rCounter_ID
                                                                          );
 
         ////////////////////////////////////////////////////////////////////////
         //P7_Telemetry_Put_Value
         private delegate System.UInt32 fnP7_Telemetry_Put_Value(System.IntPtr i_hTelemetry,
-                                                                System.Byte i_bCounter_ID,
-                                                                System.Int64 i_llValue
+                                                                System.UInt16 i_wCounter_ID,
+                                                                System.Double i_dbValue
                                                                );
         [DllImport(Dll.DLL_NAME_32, EntryPoint = "P7_Telemetry_Put_Value", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         private static extern System.UInt32 P7_Telemetry_Put_Value32(System.IntPtr i_hTelemetry,
-                                                                     System.Byte   i_bCounter_ID,
-                                                                     System.Int64  i_llValue
+                                                                     System.UInt16 i_wCounter_ID,
+                                                                     System.Double i_dbValue
                                                                     );
 
         [DllImport(Dll.DLL_NAME_64, EntryPoint = "P7_Telemetry_Put_Value", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         private static extern System.UInt32 P7_Telemetry_Put_Value64(System.IntPtr i_hTelemetry,
-                                                                     System.Byte i_bCounter_ID,
-                                                                     System.Int64 i_llValue
+                                                                     System.UInt16 i_wCounter_ID,
+                                                                     System.Double i_dbValue
                                                                     );
 
         ////////////////////////////////////////////////////////////////////////
         //P7_Telemetry_Find_Counter
         private delegate System.UInt32 fnP7_Telemetry_Find_Counter(System.IntPtr i_hTelemetry,
                                                                    [MarshalAs(UnmanagedType.LPWStr)]String i_sName,
-                                                                   ref System.Byte o_rCounter_ID
+                                                                   ref System.UInt16 o_rCounter_ID
                                                                   );
         [DllImport(Dll.DLL_NAME_32, EntryPoint = "P7_Telemetry_Put_Value", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         private static extern System.UInt32 P7_Telemetry_Find_Counter32(System.IntPtr i_hTelemetry,
                                                                         [MarshalAs(UnmanagedType.LPWStr)]String i_sName,
-                                                                        ref System.Byte o_rCounter_ID
+                                                                        ref System.UInt16 o_rCounter_ID
                                                                        );
 
         [DllImport(Dll.DLL_NAME_64, EntryPoint = "P7_Telemetry_Put_Value", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         private static extern System.UInt32 P7_Telemetry_Find_Counter64(System.IntPtr i_hTelemetry,
                                                                         [MarshalAs(UnmanagedType.LPWStr)]String i_sName,
-                                                                        ref System.Byte o_rCounter_ID
+                                                                        ref System.UInt16 o_rCounter_ID
                                                                        );
 
 
@@ -587,23 +590,24 @@ namespace P7
         }
 
         /// <summary>
-        /// creates new telemetry counter, max amount of counters per telemtetry
-        /// instance - 256
+        /// creates new telemetry counter.
         /// See documentation for details.
         /// </summary>
-        public bool Create(String          i_sName,
-                           System.Int64    i_llMin,
-                           System.Int64    i_llMax,
-                           System.Int64    i_llAlarm,
-                           System.Byte     i_bOn,
-                           ref System.Byte o_rCounter_ID
+        public bool Create(String            i_sName,
+                           System.Double     i_dbMin,
+                           System.Double     i_dbAlarmMin,
+                           System.Double     i_dbMax,
+                           System.Double     i_dbAlarmMax,
+                           System.Int32      i_bOn,
+                           ref System.UInt16 o_rCounter_ID
                           )
         {
             System.UInt32 l_dwReturn = P7_Telemetry_Create_Counter(m_hHandle,
                                                                    i_sName,
-                                                                   i_llMin,
-                                                                   i_llMax,
-                                                                   i_llAlarm,
+                                                                   i_dbMin,
+                                                                   i_dbAlarmMin,
+                                                                   i_dbMax,
+                                                                   i_dbAlarmMax,
                                                                    i_bOn,
                                                                    ref o_rCounter_ID
                                                                   );
@@ -615,11 +619,11 @@ namespace P7
         /// add counter value
         /// See documentation for details.
         /// </summary>
-        public bool Add(System.Byte i_bCounter_ID, System.Int64 i_llValue)
+        public bool Add(System.UInt16 i_wCounter_ID, System.Double i_dbValue)
         {
             System.UInt32 l_dwReturn = P7_Telemetry_Put_Value(m_hHandle,
-                                                              i_bCounter_ID,
-                                                              i_llValue
+                                                              i_wCounter_ID,
+                                                              i_dbValue
                                                              );
 
             return (0 != l_dwReturn) ? true : false;
@@ -629,7 +633,7 @@ namespace P7
         /// find counter ID by name
         /// See documentation for details.
         /// </summary>
-        public bool Find_Counter(String i_sName, ref System.Byte o_rCounter_ID)
+        public bool Find_Counter(String i_sName, ref System.UInt16 o_rCounter_ID)
         {
             System.UInt32 l_dwReturn = P7_Telemetry_Find_Counter(m_hHandle,
                                                                  i_sName,

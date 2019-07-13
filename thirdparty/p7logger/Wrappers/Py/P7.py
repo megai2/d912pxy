@@ -90,12 +90,12 @@ Telemetry_Get_Shared.argtypes = [os_charp]
 #loading P7_Telemetry_Create_Counter function
 Telemetry_Create_Counter          = g_hDll.P7_Telemetry_Create_Counter
 Telemetry_Create_Counter.restype  = c_uint
-Telemetry_Create_Counter.argtypes = [c_void_p, os_charp, c_longlong, c_longlong, c_longlong, c_ubyte, c_void_p]
+Telemetry_Create_Counter.argtypes = [c_void_p, os_charp, c_double, c_double, c_double, c_double, c_int, c_void_p]
     
 #loading P7_Telemetry_Create_Counter function
 Telemetry_Put_Value          = g_hDll.P7_Telemetry_Put_Value
 Telemetry_Put_Value.restype  = c_uint
-Telemetry_Put_Value.argtypes = [c_void_p, c_ubyte, c_longlong]
+Telemetry_Put_Value.argtypes = [c_void_p, c_ushort, c_double]
 
 #loading P7_Telemetry_Find_Counter function
 Telemetry_Find_Counter          = g_hDll.P7_Telemetry_Find_Counter
@@ -233,13 +233,14 @@ class Telemetry:
         
     ##--------------------------------------------------------------------------
     #return counter ID, or -1 in case of error
-    def Create(self, i_sName, i_llMin, i_llMax, i_llAlarm, i_bOn):
-        l_bId  = c_ubyte(255);
+    def Create(self, i_sName, i_llMin, i_llAlarmMin, i_llMax, i_llAlarmMax, i_bOn):
+        l_bId  = c_ushort(65535);
         l_iRes = Telemetry_Create_Counter(self.m_hHandle,
                                           i_sName,
                                           i_llMin,
+										  i_llAlarmMin,
                                           i_llMax,
-                                          i_llAlarm,
+                                          i_llAlarmMax,
                                           i_bOn,
                                           byref(l_bId)
                                          );
@@ -263,7 +264,7 @@ class Telemetry:
     ##--------------------------------------------------------------------------
     #return counter ID, or -1 in case of error
     def Find_Counter(self, i_sName):
-        l_bId  = c_ubyte(255);
+        l_bId  = c_ushort(65535);
         l_iRes = Telemetry_Find_Counter(self.m_hHandle,
                                         i_sName,
                                         byref(l_bId)

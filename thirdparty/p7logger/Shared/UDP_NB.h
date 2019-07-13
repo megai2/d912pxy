@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -16,8 +16,8 @@
 // License along with this library.                                            /
 //                                                                             /
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef P7_SOCKET_H
-#define P7_SOCKET_H
+#ifndef UDP_NB_H
+#define UDP_NB_H
 
 #include "PSocket.h"
 
@@ -59,6 +59,9 @@ private:
     sockaddr_storage  m_tAddress;
     tUINT32           m_dwAddress_Size;
     tINT32            m_iFamily;
+
+    tINT32            m_iSndBufSize;
+    tINT32            m_iRcvBufSize;
 public:
     ////////////////////////////////////////////////////////////////////////////
     //CUDP_Socket::CUDP_Socket
@@ -70,8 +73,10 @@ public:
         , m_bServer(i_bServer)
         , m_dwAddress_Size(0)
         , m_iFamily(AF_UNSPEC)
+        , m_iSndBufSize(CLIENT_SEND_BUFFER_SIZE)
+        , m_iRcvBufSize(CLIENT_RECV_BUFFER_SIZE)
     {
-        eSocket_Status l_eStatus   = UDP_SOCKET_OK;
+        eSocket_Status l_eStatus = UDP_SOCKET_OK;
 
         if (m_pLog)
         {
@@ -130,20 +135,8 @@ public:
         {
             if (m_bServer)
             {
-                //tINT32 l_iValue = 1;
-                //setsockopt(m_hSocket, 
-                //           SOL_SOCKET, 
-                //           SO_EXCLUSIVEADDRUSE,
-                //           (char *) &l_iValue, 
-                //           sizeof (l_iValue)
-                //          );
-
-                //setsockopt(m_hSocket, 
-                //           SOL_SOCKET, 
-                //           SO_REUSEADDR,
-                //           (char *) &l_iValue, 
-                //           sizeof (l_iValue)
-                //          );
+                m_iSndBufSize = SERVER_SEND_BUFFER_SIZE;
+                m_iRcvBufSize = SERVER_RECV_BUFFER_SIZE;
 
                 if (0 != bind(m_hSocket, (sockaddr*)&m_tAddress, m_dwAddress_Size))
                 {
@@ -156,21 +149,31 @@ public:
                 }
                 else
                 {
-                    tINT32 l_iFlag = SERVER_RECV_BUFFER_SIZE;
-                    setsockopt(m_hSocket, 
-                               SOL_SOCKET, 
-                               SO_RCVBUF, 
-                               (char*)&l_iFlag, 
-                               sizeof(l_iFlag)
-                              );
+                    tINT32 l_iFlagRcv = SERVER_RECV_BUFFER_SIZE;
+                    tINT32 l_iFlagSnd = SERVER_SEND_BUFFER_SIZE;
 
-                    l_iFlag = SERVER_SEND_BUFFER_SIZE;
-                    setsockopt(m_hSocket, 
-                               SOL_SOCKET, 
-                               SO_SNDBUF, 
-                               (char*)&l_iFlag, 
-                               sizeof(l_iFlag)
-                              );
+                    if (    (0 != setsockopt(m_hSocket, SOL_SOCKET, SO_RCVBUF, (char*)&l_iFlagRcv, sizeof(l_iFlagRcv)))
+                         || (0 != setsockopt(m_hSocket, SOL_SOCKET, SO_SNDBUF, (char*)&l_iFlagSnd, sizeof(l_iFlagSnd)))
+                       )
+                    {
+                        JOURNAL_ERROR(m_pLog, TM("Failed to set socket options, error=%d !"), (tUINT32)GET_SOCKET_ERROR());
+                    }
+
+                    tINT32    l_iFlag  = 0;
+                    socklen_t l_szFlag = (socklen_t)sizeof(l_iFlag);
+
+                    if (0 == getsockopt(m_hSocket, SOL_SOCKET, SO_RCVBUF, (char*)&l_iFlag, &l_szFlag))
+                    {
+                        m_iRcvBufSize = l_iFlag;
+                    }
+
+                    l_iFlag  = 0;
+                    l_szFlag = (socklen_t)sizeof(l_iFlag);
+
+                    if (0 == getsockopt(m_hSocket, SOL_SOCKET, SO_SNDBUF, (char*)&l_iFlag, &l_szFlag))
+                    {
+                        m_iSndBufSize = l_iFlag;
+                    }
                 }
             }
             else //not server
@@ -206,13 +209,17 @@ public:
                                   GET_SOCKET_ERROR()
                                  );
                 }
-                else if (l_iReal < l_iFlag)
+                else
                 {
-                    JOURNAL_WARNING(m_pLog,
-                                    TM("Socket receive buffer size is less than necessary %d/%d"), 
-                                    l_iReal,
-                                    l_iFlag
-                                   );
+                    m_iRcvBufSize = l_iReal;
+                    if (l_iReal != l_iFlag)
+                    {
+                        JOURNAL_WARNING(m_pLog,
+                                        TM("Socket receive buffer != necessary %d/%d"), 
+                                        l_iReal,
+                                        l_iFlag
+                                       );
+                    }
                 }
                 
                 l_iFlag = CLIENT_SEND_BUFFER_SIZE;
@@ -243,26 +250,19 @@ public:
                                   GET_SOCKET_ERROR()
                                  );
                 }
-                else if (l_iReal < l_iFlag)
+                else
                 {
-                    JOURNAL_WARNING(m_pLog,
-                                    TM("Socket send buffer size is less than necessary %d/%d"), 
-                                    l_iReal,
-                                    l_iFlag
-                                   );
-                }
+                    m_iSndBufSize = l_iReal;
 
-//                 if (SOCKET_ERROR == connect(m_hSocket, 
-//                                             (sockaddr*)&m_tAddress, 
-//                                             m_dwAddress_Size
-//                                            )
-//                    )
-//                 {
-//                     JOURNAL_ERROR(m_pLog,
-//                                   TM("connect fail, error=%d !"), 
-//                                   GET_SOCKET_ERROR()
-//                                  );
-//                 }
+                    if (l_iReal != l_iFlag)
+                    {
+                        JOURNAL_WARNING(m_pLog,
+                                        TM("Socket send buffer size is less than necessary %d/%d"), 
+                                        l_iReal,
+                                        l_iFlag
+                                       );
+                    }
+                }
             }//else //not server
         }
 
@@ -320,6 +320,19 @@ public:
         return (INVALID_SOCKET_VAL != m_hSocket);
     }//CUDP_Socket::Initialized
 
+    ////////////////////////////////////////////////////////////////////////////
+    //CUDP_Socket::GetRecvBufferSize
+    tINT32 GetRecvBufferSize()
+    {
+        return m_iRcvBufSize;
+    }//CUDP_Socket::GetRecvBufferSize
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CUDP_Socket::GetSendBufferSize
+    tINT32 GetSendBufferSize()
+    {
+        return m_iSndBufSize;
+    }//CUDP_Socket::GetSendBufferSize
 
     ////////////////////////////////////////////////////////////////////////////
     //CUDP_Socket::Send
@@ -425,7 +438,7 @@ public:
                         tUINT32           i_dwTimeOut
                        )
     {
-        eSocket_Status l_eResult   = UDP_SOCKET_OK;
+        eSocket_Status l_eResult   = UDP_SOCKET_NOT_READY;
         eSocket_Status l_eIs_Ready = Is_Ready(FD_TYPE_READ, i_dwTimeOut);
 
         if (UDP_SOCKET_OK == l_eIs_Ready)
@@ -693,4 +706,4 @@ public:
 };//CUDP_Socket
 
 
-#endif //P7_SOCKET_H
+#endif //UDP_NB

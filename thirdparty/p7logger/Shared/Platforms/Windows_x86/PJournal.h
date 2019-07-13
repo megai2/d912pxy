@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -159,13 +159,13 @@ public:
                            FJOURNAL_FILE_BUFFER_LENGTH, 
                            L"%s\\%04d_%02d_%02d-%02d_%02d_%02d-%d.%s",
                            l_sDirectory.Get(),
-                           l_tTime.wYear, 
-                           l_tTime.wMonth, 
-                           l_tTime.wDay,
-                           l_tTime.wHour, 
-                           l_tTime.wMinute, 
-                           l_tTime.wSecond, 
-                           l_dwIterator++,
+                           (int)l_tTime.wYear, 
+                           (int)l_tTime.wMonth, 
+                           (int)l_tTime.wDay,
+                           (int)l_tTime.wHour, 
+                           (int)l_tTime.wMinute, 
+                           (int)l_tTime.wSecond, 
+                           (int)l_dwIterator++,
                            FJOURNAL_FILE_EXTENSION
                            );
             } while (CFSYS::File_Exists(m_pJournal_Buffer));
@@ -309,7 +309,7 @@ public:
 
             l_iCount = swprintf_s(m_pJournal_Buffer + m_dwBuffer_Used, 
                                   FJOURNAL_FILE_BUFFER_LENGTH - m_dwBuffer_Used,
-                                  L"() Ln %04d : ", i_dwLine
+                                  L"() Ln %04d : ", (int)i_dwLine
                                  );
             if (0 > l_iCount)
             {
@@ -332,8 +332,8 @@ public:
             l_iCount = swprintf_s(m_pJournal_Buffer + m_dwBuffer_Used, 
                                   FJOURNAL_FILE_BUFFER_LENGTH - m_dwBuffer_Used,
                                   L"[%04d.%02d.%02d %02d:%02d:%02d.%03d] %s ",
-                                  m_tTime.wYear, m_tTime.wMonth, m_tTime.wDay,
-                                  m_tTime.wHour, m_tTime.wMinute, m_tTime.wSecond, m_tTime.wMilliseconds,
+                                  (int)m_tTime.wYear, (int)m_tTime.wMonth, (int)m_tTime.wDay,
+                                  (int)m_tTime.wHour, (int)m_tTime.wMinute, (int)m_tTime.wSecond, (int)m_tTime.wMilliseconds,
                                   m_bType ? m_pTypes_Description[i_eType] : L""
                                  );
             if (0 > l_iCount)

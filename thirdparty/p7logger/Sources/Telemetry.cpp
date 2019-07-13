@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -24,9 +24,10 @@
 
 
 #define RESET_UNDEFINED                                           (0xFFFFFFFFUL)
-#define RESET_FLAG_CHANNEL                                        (0x1)
+#define RESET_FLAG_HEADER                                         (0x1)
 #define RESET_FLAG_COUNTER                                        (0x2)
 #define TELEMETRY_SHARED_PREFIX                                   TM("Trc_")
+#define TELEMETRY_ON_CONNECT_EXIT_SIGNAL                          (MEVENT_SIGNAL_0)
 
 extern "C" 
 {
@@ -121,34 +122,44 @@ P7_EXPORT IP7_Telemetry * __cdecl P7_Get_Shared_Telemetry(const tXCHAR *i_pName)
 
 ////////////////////////////////////////////////////////////////////////////////
 // CP7Tel_Counter                                       
-CP7Tel_Counter::CP7Tel_Counter(tUINT8        i_bID,
+CP7Tel_Counter::CP7Tel_Counter(tUINT16       i_wID,
                                tUINT8        i_bOn,
-                               tINT64        i_llMin,
-                               tINT64        i_llMax,
-                               tINT64        i_llAlarm,
-                               const tXCHAR *i_pName
+                               tDOUBLE       i_dbMin,
+                               tDOUBLE       i_dbAlarmMin,
+                               tDOUBLE       i_dbMax,
+                               tDOUBLE       i_dbAlarmMax,
+                               const tXCHAR *i_pName,
+                               tUINT32       i_uHash
                               )
     : m_bInitialized(TRUE)
-    , m_bSeqN(0)
+    , m_pName(PStrDub(i_pName))
+    , m_bDelivered(FALSE)
+    , m_pHeader(NULL)
+    , m_wSeqN(0)
+    , m_uHash(i_uHash)
+    , pTreeNext(NULL)
 {
-    memset(&m_sCounter, 0, sizeof(sP7Tel_Counter));
+    size_t l_szCounter = sizeof(sP7Tel_Counter_v2) - sizeof(sP7Tel_Counter_v2::pName);
+    size_t l_szName    = PStrLen(i_pName) + 1;
+    l_szCounter += l_szName * sizeof(tWCHAR);
 
-    INIT_EXT_HEADER(m_sCounter.sCommonRaw, EP7USER_TYPE_TELEMETRY, EP7TEL_TYPE_COUNTER, sizeof(sP7Tel_Counter));
+    m_pHeader = (sP7Tel_Counter_v2*)malloc(l_szCounter);
+
+    memset(m_pHeader, 0, l_szCounter);
+
+    INIT_EXT_HEADER(m_pHeader->sCommonRaw, EP7USER_TYPE_TELEMETRY_V2, EP7TEL_TYPE_COUNTER, l_szCounter);
     //m_sCounter.sCommon.dwSize     = sizeof(sP7Tel_Counter);
     //m_sCounter.sCommon.dwType     = EP7USER_TYPE_TELEMETRY;
     //m_sCounter.sCommon.dwSubType  = EP7TEL_TYPE_COUNTER;
 
-    m_sCounter.bID     = i_bID;
-    m_sCounter.bOn     = i_bOn;
-    m_sCounter.llAlarm = i_llAlarm;
-    m_sCounter.llMax   = i_llMax;
-    m_sCounter.llMin   = i_llMin;
-    
-    PUStrCpy(m_sCounter.pName,
-             P7TELEMETRY_NAME_LENGTH,
-             i_pName
-            );
-         
+    m_pHeader->wID        = i_wID;
+    m_pHeader->bOn        = i_bOn;
+    m_pHeader->dbMin      = i_dbMin; 
+    m_pHeader->dbAlarmMin = i_dbAlarmMin;
+    m_pHeader->dbMax      = i_dbMax;
+    m_pHeader->dbAlarmMax = i_dbAlarmMax;
+
+    PUStrCpy(m_pHeader->pName, (tUINT32)l_szName, i_pName);
 } // CP7Tel_Counter   
 
 
@@ -156,49 +167,51 @@ CP7Tel_Counter::CP7Tel_Counter(tUINT8        i_bID,
 // ~CP7Tel_Counter                                       
 CP7Tel_Counter::~CP7Tel_Counter()
 {
+    if (m_pHeader)
+    {
+        free(m_pHeader);
+        m_pHeader = NULL;
+    }
+
+    if (m_pName)
+    {
+        PStrFreeDub(m_pName);
+        m_pName = NULL;
+    }
 }// ~CP7Trace_Item                                       
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Has_Name                                       
-tBOOL CP7Tel_Counter::Has_Name(const tWCHAR *i_pName)
+// Get_Hash                                       
+tUINT32 CP7Tel_Counter::Get_Hash(const tXCHAR *i_pName)
 {
-    tBOOL   l_bResult = TRUE;
-    tWCHAR *l_pName   = m_sCounter.pName;
-    tUINT32 l_dwLen   = 0;
+    //Here is RedBlackTree keys are calculated
+    //Hash description: http://isthe.com/chongo/tech/comp/fnv/#FNV-param
+    //Hash parameters investigation (collisions, randomnessification)
+    //http://programmers.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed
+    //Collisions:
+    // - Is collisions are possible ? Yes, FNV-1a produce 4 coll. on list of 
+    //   216,553 English words. 
+    // - If collision happens and even calculated key is not unique - is it
+    //   dangerous ? No, in tree we will have additional list (containing 
+    //   elementS with the same key) where exact item can be found
+    tUINT32 l_uReturn = 2166136261ul;
 
-
-    if (    (FALSE == m_bInitialized)
-         || (NULL == i_pName)
-       )
+    while (*i_pName)
     {
-        return FALSE;
+        l_uReturn = (l_uReturn ^ (tUINT32)*i_pName) * 16777619ul;
+        i_pName++;
     }
 
-    while (    (*i_pName)
-            || (*l_pName)
-          )
-    {
-        if ((*i_pName) != (*l_pName))
-        {
-            l_bResult = FALSE;
-            break;
-        }
-        else
-        {
-            i_pName ++;
-            l_pName ++;
-        }
+    return l_uReturn;
+}
 
-        l_dwLen ++;
 
-        if (P7TELEMETRY_COUNTER_NAME_LENGTH <= l_dwLen)
-        {
-            break;
-        }
-    }
-
-    return l_bResult;
+////////////////////////////////////////////////////////////////////////////////
+// Has_Name                                       
+tBOOL CP7Tel_Counter::Has_Name(const tXCHAR *i_pName)
+{
+    return (0 == PStrCmp(i_pName , m_pName)) ? TRUE : FALSE;
 }// Has_Name
 
 
@@ -212,9 +225,9 @@ tBOOL CP7Tel_Counter::Is_Initialized()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Enable 
-void CP7Tel_Counter::Enable(tUINT8 i_bOn)
+void CP7Tel_Counter::Enable(tUINT16 i_wOn)
 {
-    m_sCounter.bOn = i_bOn;
+    m_pHeader->bOn = i_wOn;
 }// Enable
 
 
@@ -226,13 +239,15 @@ CP7Telemetry::CP7Telemetry(IP7_Client *i_pClient, const tXCHAR *i_pName, const s
     , m_pClient(i_pClient)
     , m_dwChannel_ID(0)
     , m_bInitialized(TRUE)
-    , m_dwUsed(0)
-    , m_dwResets_Channel(RESET_UNDEFINED)
-    , m_dwResets_Counters(RESET_UNDEFINED)
+    , m_bActive(TRUE)
+    , m_pCounters(256)
+    , m_bIsHeaderDelivered(FALSE)
     , m_pChunks(NULL)
-    , m_dwChunks_Max_Count(P7TELEMETRY_COUNTERS_MAX_COUNT + 8)
+    , m_dwChunks_Max_Count(64)
     , m_bIs_Channel(FALSE)
     , m_hShared(NULL)
+    , m_bOnConnect_Thread(FALSE)
+    , m_hOnConnect_Thread(0) //NULL
 {
     if (i_pConf)
     {
@@ -250,7 +265,6 @@ CP7Telemetry::CP7Telemetry(IP7_Client *i_pClient, const tXCHAR *i_pName, const s
     memset(&m_sHeader_Info, 0, sizeof(m_sHeader_Info));
     memset(&m_sValue, 0, sizeof(m_sValue));
 
-    memset(m_pCounters, 0, sizeof(m_pCounters));
     m_pChunks = new sP7C_Data_Chunk[m_dwChunks_Max_Count];  
 
     m_sStatus.bConnected = TRUE;
@@ -265,9 +279,18 @@ CP7Telemetry::CP7Telemetry(IP7_Client *i_pClient, const tXCHAR *i_pName, const s
         m_pClient->Add_Ref();
     }
 
+
     if (m_bInitialized)
     {
-        INIT_EXT_HEADER(m_sHeader_Info.sCommonRaw, EP7USER_TYPE_TELEMETRY, EP7TEL_TYPE_INFO, sizeof(sP7Trace_Info));
+        if (FALSE == m_cOnConnect_Event.Init(1, EMEVENT_SINGLE_MANUAL))
+        {
+            m_bInitialized = FALSE;
+        }
+    }
+
+    if (m_bInitialized)
+    {
+        INIT_EXT_HEADER(m_sHeader_Info.sCommonRaw, EP7USER_TYPE_TELEMETRY_V2, EP7TEL_TYPE_INFO, sizeof(sP7Tel_Info));
         //m_sHeader_Info.sCommon.dwSize    = sizeof(sP7Trace_Info);
         //m_sHeader_Info.sCommon.dwType    = EP7USER_TYPE_TELEMETRY;
         //m_sHeader_Info.sCommon.dwSubType = EP7TEL_TYPE_INFO;
@@ -296,7 +319,7 @@ CP7Telemetry::CP7Telemetry(IP7_Client *i_pClient, const tXCHAR *i_pName, const s
 
         m_sHeader_Info.qwFlags   = 0;
 
-        INIT_EXT_HEADER(m_sValue.sCommonRaw, EP7USER_TYPE_TELEMETRY, EP7TEL_TYPE_VALUE, sizeof(sP7Tel_Value));
+        INIT_EXT_HEADER(m_sValue.sCommonRaw, EP7USER_TYPE_TELEMETRY_V2, EP7TEL_TYPE_VALUE, sizeof(sP7Tel_Value_v2));
         //m_sValue.sCommon.dwSize         = sizeof(sP7Tel_Value); 
         //m_sValue.sCommon.dwType         = EP7USER_TYPE_TELEMETRY;
         //m_sValue.sCommon.dwSubType      = EP7TEL_TYPE_VALUE;
@@ -307,6 +330,9 @@ CP7Telemetry::CP7Telemetry(IP7_Client *i_pClient, const tXCHAR *i_pName, const s
         m_bIs_Channel  = (ECLIENT_STATUS_OK == m_pClient->Register_Channel(this));
         m_bInitialized = m_bIs_Channel;
     }
+
+    m_bActive = m_bInitialized;
+
 }// CP7Telemetry
 
 
@@ -316,6 +342,13 @@ CP7Telemetry::~CP7Telemetry()
 {
     LOCK_ENTER(m_sCS);
     LOCK_EXIT(m_sCS);
+
+    if (m_bOnConnect_Thread)
+    {
+        m_cOnConnect_Event.Set(TELEMETRY_ON_CONNECT_EXIT_SIGNAL);
+        CThShell::Close(m_hOnConnect_Thread, 1000);
+        m_hOnConnect_Thread = 0;
+    }
 
     if (m_hShared)
     {
@@ -330,14 +363,7 @@ CP7Telemetry::~CP7Telemetry()
         m_pClient->Unregister_Channel(m_dwChannel_ID);    
     }
 
-    for (tUINT32 l_dwI = 0; l_dwI < P7TELEMETRY_COUNTERS_MAX_COUNT; l_dwI++)
-    {
-        if (m_pCounters[l_dwI])
-        {
-            delete m_pCounters[l_dwI];
-            m_pCounters[l_dwI] = NULL;
-        }
-    }
+    m_pCounters.Clear(TRUE);
 
     if (m_pClient)
     {
@@ -377,32 +403,39 @@ void CP7Telemetry::On_Init(sP7C_Channel_Info *i_pInfo)
 
 ////////////////////////////////////////////////////////////////////////////////
 // On_Receive                                      
-void CP7Telemetry::On_Receive(tUINT32 i_dwChannel, tUINT8 *i_pBuffer, tUINT32 i_dwSize)
+void CP7Telemetry::On_Receive(tUINT32 i_dwChannel, tUINT8 *i_pBuffer, tUINT32 i_dwSize, tBOOL i_bBigEndian)
 {
     UNUSED_ARG(i_dwChannel);
+    UNUSED_ARG(i_bBigEndian);
 
     LOCK_ENTER(m_sCS);
 
     if (    (i_pBuffer)
-         && (i_dwSize > sizeof(sP7Ext_Header))
+         && (i_dwSize >= sizeof(sP7Ext_Header))
        )
     {
         sP7Ext_Raw l_sHeader = *(sP7Ext_Raw*)i_pBuffer;
 
-        if (    (EP7USER_TYPE_TELEMETRY == GET_EXT_HEADER_TYPE(l_sHeader))
-             && (EP7TEL_TYPE_ENABLE == GET_EXT_HEADER_SUBTYPE(l_sHeader))
-           )
+        if (EP7USER_TYPE_TELEMETRY_V2 == GET_EXT_HEADER_TYPE(l_sHeader))
         {
-            sP7Tel_Enable *l_pEnable = (sP7Tel_Enable*)i_pBuffer;
-
-            if (m_pCounters[l_pEnable->bID])
+            if (EP7TEL_TYPE_ENABLE == GET_EXT_HEADER_SUBTYPE(l_sHeader))
             {
-                m_pCounters[l_pEnable->bID]->Enable(l_pEnable->bOn);
+                sP7Tel_Enable_v2 *l_pEnable = (sP7Tel_Enable_v2*)i_pBuffer;
 
-                if (m_sConf.pEnable_Callback)
+                if (m_pCounters[l_pEnable->wID])
                 {
-                    m_sConf.pEnable_Callback(m_sConf.pContext, l_pEnable->bID, l_pEnable->bOn);
+                    m_pCounters[l_pEnable->wID]->Enable(l_pEnable->bOn);
+
+                    if (m_sConf.pEnable_Callback)
+                    {
+                        m_sConf.pEnable_Callback(m_sConf.pContext, l_pEnable->wID, l_pEnable->bOn);
+                    }
                 }
+            }
+            else if (EP7TEL_TYPE_DELETE == GET_EXT_HEADER_SUBTYPE(l_sHeader))
+            {
+                Flush();
+                m_bActive = FALSE;
             }
         }
     }
@@ -431,28 +464,58 @@ void CP7Telemetry::On_Status(tUINT32 i_dwChannel, const sP7C_Status *i_pStatus)
         //if connection was established - sent counters description
         if (m_sStatus.bConnected)
         {
-            CP7Tel_Counter **l_pIter  = m_pCounters;
-            sP7C_Data_Chunk *l_pChunk = m_pChunks;
-            tUINT32          l_dwSize = 0;
-
-            l_pChunk->dwSize   = sizeof(m_sHeader_Info);
-            l_pChunk->pData    = &m_sHeader_Info;
-            l_dwSize          += l_pChunk->dwSize;
-            l_pChunk ++;
-
-            while (*l_pIter)
+            if (m_bOnConnect_Thread)
             {
-                l_pChunk->pData  = &((*l_pIter)->m_sCounter);
-                l_pChunk->dwSize = GET_EXT_HEADER_SIZE((*l_pIter)->m_sCounter.sCommonRaw);//(*l_pIter)->m_sCounter.sCommon.dwSize;
-                l_dwSize        += l_pChunk->dwSize;
-                l_pChunk ++;
-                l_pIter++;
+                m_cOnConnect_Event.Set(TELEMETRY_ON_CONNECT_EXIT_SIGNAL);
+                CThShell::Close(m_hOnConnect_Thread, 1000);
+                m_hOnConnect_Thread = 0;
+                m_bOnConnect_Thread = FALSE;
             }
 
-            if (ECLIENT_STATUS_OK == m_pClient->Sent(m_dwChannel_ID, m_pChunks, (tUINT32)(l_pChunk - m_pChunks), l_dwSize))
+            m_bIsHeaderDelivered = FALSE;
+
+            pAList_Cell l_pEl = NULL;
+            while ((l_pEl = m_pCounters.Get_Next(l_pEl)))
             {
-                m_dwResets_Counters = m_sStatus.dwResets;
-                m_dwResets_Channel  = m_sStatus.dwResets;
+                CP7Tel_Counter *l_pCounter = m_pCounters.Get_Data(l_pEl);
+                if (l_pCounter)
+                {
+                    l_pCounter->m_bDelivered = FALSE;
+                }
+            }
+
+            m_cOnConnect_Event.Clr(TELEMETRY_ON_CONNECT_EXIT_SIGNAL);
+            if (CThShell::Create(&Static_OnConnect_Routine,
+                                 this,
+                                 &m_hOnConnect_Thread,
+                                 TM("P7:Tel:OnConnect") 
+                                )
+                )
+            {
+                m_bOnConnect_Thread = TRUE;
+            }
+        }
+        else
+        {
+            m_bIsHeaderDelivered = FALSE;
+            if (m_bOnConnect_Thread)
+            {
+                m_cOnConnect_Event.Set(TELEMETRY_ON_CONNECT_EXIT_SIGNAL);
+                CThShell::Close(m_hOnConnect_Thread, 1000);
+                m_hOnConnect_Thread = 0;
+                m_bOnConnect_Thread = FALSE;
+            }
+
+            m_cOnConnect_Event.Clr(TELEMETRY_ON_CONNECT_EXIT_SIGNAL);
+
+            pAList_Cell l_pEl = NULL;
+            while ((l_pEl = m_pCounters.Get_Next(l_pEl)))
+            {
+                CP7Tel_Counter *l_pCounter = m_pCounters.Get_Data(l_pEl);
+                if (l_pCounter)
+                {
+                    l_pCounter->m_bDelivered = FALSE;
+                }
             }
         }
     }
@@ -471,7 +534,7 @@ void CP7Telemetry::On_Flush(tUINT32 i_dwChannel, tBOOL *io_pCrash)
 
     if (    (io_pCrash)
          && (TRUE == *io_pCrash)
-         && (m_bInitialized)
+         && (m_bActive)
        )
     {
         //nothing special for crash event
@@ -485,21 +548,24 @@ void CP7Telemetry::On_Flush(tUINT32 i_dwChannel, tBOOL *io_pCrash)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Create, i_pName is case sensitive and should be unique 
-tBOOL CP7Telemetry::Create(const tXCHAR  *i_pName, 
-                           tINT64         i_llMin,
-                           tINT64         i_llMax,
-                           tINT64         i_llAlarm,
-                           tUINT8         i_bOn,
-                           tUINT8        *o_pID 
+tBOOL CP7Telemetry::Create(const tXCHAR *i_pName, 
+                           tDOUBLE       i_dbMin,
+                           tDOUBLE       i_dbAlarmMin,
+                           tDOUBLE       i_dbMax,
+                           tDOUBLE       i_dbAlarmMax,
+                           tBOOL         i_bOn,
+                           tUINT16      *o_pID 
                           )
 {
-    tBOOL        l_bReturn = FALSE;
-    sCounterMap *l_pMap    = NULL;
+    tBOOL           l_bReturn  = FALSE;
+    sCounterMap    *l_pMap     = NULL;
+    tUINT32         l_uiId     = 0;
+    CP7Tel_Counter *l_pCounter = NULL;
+    tUINT32         l_uHash    = 0;
 
-    if (    (FALSE == m_bInitialized)
+    if (    (FALSE == m_bActive)
          || (NULL == i_pName)
          || (NULL == o_pID)
-         || (PStrLen(i_pName) >= P7TELEMETRY_NAME_LENGTH)
        )
     {
         return FALSE;
@@ -507,98 +573,116 @@ tBOOL CP7Telemetry::Create(const tXCHAR  *i_pName,
 
     LOCK_ENTER(m_sCS);
 
-    *o_pID = P7TELEMETRY_INVALID_ID;
+    *o_pID = P7TELEMETRY_INVALID_ID_V2;
+
+    l_uHash = CP7Tel_Counter::Get_Hash(i_pName);
 
     ////////////////////////////////////////////////////////////////////////////
     //find by name already existing counter
-    l_pMap = m_cCounters_Map.Find(i_pName);
-    if (    (l_pMap)
-         && (m_pCounters[l_pMap->bID])
-       )
-    {   //found, and all parameters are the same ... 
-        if (    (m_pCounters[l_pMap->bID]->m_sCounter.llMin   == i_llMin)
-             && (m_pCounters[l_pMap->bID]->m_sCounter.llMax   == i_llMax)
-             && (m_pCounters[l_pMap->bID]->m_sCounter.llAlarm == i_llAlarm)
-           )
-        {
-            *o_pID    = l_pMap->bID;
-            l_bReturn = TRUE;
-            goto l_lblExit;
-        }
-        else //name is equal, but some additional parameters are different
-        {
-            goto l_lblExit;
-        }
-    }
-
-    if (P7TELEMETRY_INVALID_ID <= m_dwUsed)
+    l_pMap = m_cCounters_Map.Find(l_uHash);
+    if (l_pMap)
     {
-        goto l_lblExit;
-    }
-
-    m_pCounters[m_dwUsed] = new CP7Tel_Counter((tUINT8)m_dwUsed,
-                                               i_bOn,
-                                               i_llMin,
-                                               i_llMax,
-                                               i_llAlarm,
-                                               i_pName
-                                              );
-    if (    (NULL == m_pCounters[m_dwUsed])
-         || (FALSE == m_pCounters[m_dwUsed]->Is_Initialized())
-       )
-    {
-        if (m_pCounters[m_dwUsed])
+        l_pCounter = l_pMap->pCounter;
+        while (l_pCounter)
         {
-            delete m_pCounters[m_dwUsed];
-            m_pCounters[m_dwUsed] = NULL;
-        }
-
-        goto l_lblExit;
-    }
-
-    m_cCounters_Map.Push(new sCounterMap(i_pName, m_dwUsed), i_pName);
-
-    if (m_sStatus.bConnected)
-    {
-        sP7C_Data_Chunk *l_pChunk = m_pChunks;
-        tUINT8           l_bReset = 0;
-        tUINT32          l_dwSize = 0;
-
-        //connection was lost, we need to resend initial data 
-        if (m_dwResets_Channel != m_sStatus.dwResets)
-        {
-            m_dwResets_Channel = m_sStatus.dwResets;
-
-            l_bReset          |= RESET_FLAG_CHANNEL;
-            l_pChunk->dwSize   = sizeof(m_sHeader_Info);
-            l_pChunk->pData    = &m_sHeader_Info;
-            l_dwSize          += l_pChunk->dwSize;
-            l_pChunk ++;
-        }
-
-        l_pChunk->pData  = &(m_pCounters[m_dwUsed]->m_sCounter);
-        l_pChunk->dwSize = GET_EXT_HEADER_SIZE(m_pCounters[m_dwUsed]->m_sCounter.sCommonRaw);//m_pCounters[m_dwUsed]->m_sCounter.sCommon.dwSize;
-        l_dwSize        += l_pChunk->dwSize;
-        l_pChunk ++;
-
-        if (ECLIENT_STATUS_OK != m_pClient->Sent(m_dwChannel_ID, m_pChunks, (tUINT32)(l_pChunk - m_pChunks), l_dwSize))
-        {
-            m_dwResets_Counters = RESET_UNDEFINED;
-
-            if (RESET_FLAG_CHANNEL & l_bReset)
+            if (l_pCounter->Has_Name(i_pName))
             {
-                m_dwResets_Channel = RESET_UNDEFINED;
+                //found, and all parameters are the same ... 
+                if (    (l_pCounter->m_pHeader->dbMin      == i_dbMin)
+                     && (l_pCounter->m_pHeader->dbMax      == i_dbMax)
+                     && (l_pCounter->m_pHeader->dbAlarmMin == i_dbAlarmMin)
+                     && (l_pCounter->m_pHeader->dbAlarmMax == i_dbAlarmMax)
+                   )
+                {
+                    *o_pID    = l_pCounter->m_pHeader->wID;
+                    l_bReturn = TRUE;
+                    goto l_lblExit;
+                }
+                else //name is equal, but some additional parameters are different
+                {
+                    goto l_lblExit;
+                }
             }
+            l_pCounter = l_pCounter->pTreeNext;
         }
+    }
+
+    l_pCounter = NULL;
+
+
+    if (P7TELEMETRY_INVALID_ID_V2 <= m_pCounters.Count())
+    {
+        goto l_lblExit;
+    }
+
+    l_uiId     = m_pCounters.Count();
+    l_pCounter = new CP7Tel_Counter((tUINT16)l_uiId,
+                                    i_bOn,
+                                    i_dbMin,
+                                    i_dbAlarmMin,
+                                    i_dbMax,
+                                    i_dbAlarmMax,
+                                    i_pName,
+                                    l_uHash
+                                   );
+
+    if (    (NULL == l_pCounter)
+         || (FALSE == l_pCounter->Is_Initialized())
+       )
+    {
+        if (l_pCounter)
+        {
+            delete l_pCounter;
+            l_pCounter = NULL;
+        }
+
+        goto l_lblExit;
+    }
+
+    if (l_pMap)
+    {
+        l_pCounter->pTreeNext = l_pMap->pCounter;
+        l_pMap->pCounter = l_pCounter;
     }
     else
     {
-        m_dwResets_Counters = RESET_UNDEFINED;
+        m_cCounters_Map.Push(new sCounterMap(l_pCounter), l_uHash);
+    }
+
+    if (m_sStatus.bConnected)
+    {
+        sP7C_Data_Chunk *l_pChunk  = m_pChunks;
+        tBOOL            l_bHeader = FALSE;
+        tUINT32          l_dwSize  = 0;
+
+        //connection was lost, we need to resend initial data 
+        if (!m_bIsHeaderDelivered)
+        {
+            l_bHeader        = TRUE;
+            l_pChunk->dwSize = sizeof(m_sHeader_Info);
+            l_pChunk->pData  = &m_sHeader_Info;
+            l_dwSize        += l_pChunk->dwSize;
+            l_pChunk ++;
+        }
+
+        l_pChunk->pData  = l_pCounter->m_pHeader;
+        l_pChunk->dwSize = GET_EXT_HEADER_SIZE(l_pCounter->m_pHeader->sCommonRaw);//m_pCounters[m_dwUsed]->m_sCounter.sCommon.dwSize;
+        l_dwSize        += l_pChunk->dwSize;
+        l_pChunk ++;
+
+        if (ECLIENT_STATUS_OK == m_pClient->Sent(m_dwChannel_ID, m_pChunks, (tUINT32)(l_pChunk - m_pChunks), l_dwSize))
+        {
+            l_pCounter->m_bDelivered = TRUE;
+            if (l_bHeader)
+            {
+                m_bIsHeaderDelivered = TRUE;
+            }
+        }
     }
 
     l_bReturn = TRUE;
-    *o_pID    = (tUINT8)m_dwUsed;
-    m_dwUsed ++;
+    *o_pID    = (tUINT16)l_uiId;
+    m_pCounters.Add_After(m_pCounters.Get_Last(), l_pCounter);
 
 l_lblExit:
     LOCK_EXIT(m_sCS);
@@ -609,32 +693,43 @@ l_lblExit:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Find, i_pName is case sensitive
-tBOOL CP7Telemetry::Find(const tXCHAR *i_pName, tUINT8 *o_pID)
+tBOOL CP7Telemetry::Find(const tXCHAR *i_pName, tUINT16 *o_pID)
 {
     sCounterMap *l_pMap    = NULL;
     tBOOL        l_bReturn = FALSE;
-    
-    if (    (FALSE == m_bInitialized)
+
+    if (o_pID)
+    {
+        *o_pID = P7TELEMETRY_INVALID_ID_V2;
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    if (    (FALSE == m_bActive)
          || (NULL == i_pName)
-         || (NULL == o_pID)
        )
     {
         return FALSE;
     }
 
-    *o_pID = P7TELEMETRY_INVALID_ID;
-
     LOCK_ENTER(m_sCS);
-
-    l_pMap = m_cCounters_Map.Find(i_pName);
-    if (    (l_pMap)
-         && (m_pCounters[l_pMap->bID])
-       )
+    l_pMap = m_cCounters_Map.Find(CP7Tel_Counter::Get_Hash(i_pName));
+    if (l_pMap)
     {
-        l_bReturn = TRUE; 
-        *o_pID    = l_pMap->bID;
+        CP7Tel_Counter *l_pCounter = l_pMap->pCounter;
+        while (l_pCounter)
+        {
+            if (l_pCounter->Has_Name(i_pName))
+            {
+                *o_pID = l_pCounter->m_pHeader->wID;
+                l_bReturn = TRUE;
+                break;
+            }
+            l_pCounter = l_pCounter->pTreeNext;
+        }
     }
-
     LOCK_EXIT(m_sCS);
 
     return l_bReturn;
@@ -643,7 +738,7 @@ tBOOL CP7Telemetry::Find(const tXCHAR *i_pName, tUINT8 *o_pID)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Add  
-tBOOL CP7Telemetry::Add(tUINT8 i_bID, tINT64 i_llValue)
+tBOOL CP7Telemetry::Add(tUINT16 i_bID, tDOUBLE i_dbValue)
 {
     tBOOL            l_bReturn  = TRUE;
     tUINT32          l_dwSize   = 0;
@@ -651,34 +746,33 @@ tBOOL CP7Telemetry::Add(tUINT8 i_bID, tINT64 i_llValue)
     CP7Tel_Counter  *l_pCounter; //will be initialized lated
     sP7C_Data_Chunk *l_pChunk;   //will be initialized lated
 
-    if (P7TELEMETRY_INVALID_ID == i_bID)
+    if (P7TELEMETRY_INVALID_ID_V2 == i_bID)
     {
         return FALSE;
     }
 
     LOCK_ENTER(m_sCS);
 
+    l_pCounter = m_pCounters[i_bID];
+
     ////////////////////////////////////////////////////////////////////////////
     //check ID
-    if (    (P7TELEMETRY_COUNTERS_MAX_COUNT <= i_bID)
-         || (NULL  == m_pCounters[i_bID])
-         || (FALSE == m_bInitialized)
+    if (    (NULL  == l_pCounter)
+         || (FALSE == m_bActive)
          || (FALSE == m_sStatus.bConnected)
+         || (!l_pCounter->m_pHeader->bOn)
        )
     {
         l_bReturn = FALSE;
         goto l_lblExit;
     }
 
-    l_pChunk   = m_pChunks;
-    l_pCounter = m_pCounters[i_bID];
+    l_pChunk = m_pChunks;
 
     //connection was lost, we need to resend initial data 
-    if (m_dwResets_Channel != m_sStatus.dwResets)
+    if (!m_bIsHeaderDelivered)
     {
-        m_dwResets_Channel = m_sStatus.dwResets;
-
-        l_bReset          |= RESET_FLAG_CHANNEL;
+        l_bReset          |= RESET_FLAG_HEADER;
         l_pChunk->dwSize   = sizeof(m_sHeader_Info);
         l_pChunk->pData    = &m_sHeader_Info;
         l_dwSize          += l_pChunk->dwSize;
@@ -686,66 +780,52 @@ tBOOL CP7Telemetry::Add(tUINT8 i_bID, tINT64 i_llValue)
     }
 
     //counters descriptions have to send again
-    if (m_dwResets_Counters != m_sStatus.dwResets)
+    if (!l_pCounter->m_bDelivered)
     {
-        CP7Tel_Counter **l_pIter = m_pCounters;
-
-        while (*l_pIter)
-        {
-            l_pChunk->pData  = &((*l_pIter)->m_sCounter);
-            l_pChunk->dwSize = GET_EXT_HEADER_SIZE((*l_pIter)->m_sCounter.sCommonRaw);//(*l_pIter)->m_sCounter.sCommon.dwSize;
-            l_dwSize        += l_pChunk->dwSize;
-            l_pChunk ++;
-            l_pIter++;
-        }
-
-        m_dwResets_Counters = m_sStatus.dwResets;
-        l_bReset           |= RESET_FLAG_COUNTER;
-    }
-
-    if (l_pCounter->m_sCounter.bOn)
-    {
-        m_sValue.bID     = i_bID;
-        m_sValue.llValue = i_llValue;
-        m_sValue.bSeqN   = l_pCounter->m_bSeqN ++;
-
-        if (! m_sConf.pTimestamp_Callback )
-        {
-            m_sValue.qwTimer = GetPerformanceCounter();
-        }
-        else
-        {
-            m_sValue.qwTimer = m_sConf.pTimestamp_Callback(m_sConf.pContext);
-        }
-        
-        l_pChunk->pData  = &m_sValue;
-        l_pChunk->dwSize = GET_EXT_HEADER_SIZE(m_sValue.sCommonRaw);//m_sValue.sCommon.dwSize;
+        l_bReset        |= RESET_FLAG_COUNTER;
+        l_pChunk->pData  = l_pCounter->m_pHeader;
+        l_pChunk->dwSize = GET_EXT_HEADER_SIZE(l_pCounter->m_pHeader->sCommonRaw);//(*l_pIter)->m_sCounter.sCommon.dwSize;
         l_dwSize        += l_pChunk->dwSize;
-
         l_pChunk ++;
     }
-    else if (0 >= l_dwSize)
+
+    m_sValue.wID     = i_bID;
+    m_sValue.dbValue = i_dbValue;
+    m_sValue.wSeqN   = l_pCounter->m_wSeqN ++;
+
+    if (! m_sConf.pTimestamp_Callback )
     {
-        goto l_lblExit;
+        m_sValue.qwTimer = GetPerformanceCounter();
     }
+    else
+    {
+        m_sValue.qwTimer = m_sConf.pTimestamp_Callback(m_sConf.pContext);
+    }
+        
+    l_pChunk->pData  = &m_sValue;
+    l_pChunk->dwSize = GET_EXT_HEADER_SIZE(m_sValue.sCommonRaw);//m_sValue.sCommon.dwSize;
+    l_dwSize        += l_pChunk->dwSize;
 
+    l_pChunk ++;
 
-    if (ECLIENT_STATUS_OK != m_pClient->Sent(m_dwChannel_ID,
+    if (ECLIENT_STATUS_OK == m_pClient->Sent(m_dwChannel_ID,
                                              m_pChunks,
                                              (tUINT32)(l_pChunk - m_pChunks),
                                              l_dwSize
                                             )
        )
     {
-        if (l_bReset & RESET_FLAG_CHANNEL)
+        if (l_bReset & RESET_FLAG_HEADER)
         {
-            m_dwResets_Channel = RESET_UNDEFINED;
+            m_bIsHeaderDelivered = TRUE;
         }
         if (l_bReset & RESET_FLAG_COUNTER)
         {
-            m_dwResets_Counters = RESET_UNDEFINED;
+            l_pCounter->m_bDelivered = TRUE;
         }
-
+    }
+    else
+    {
         l_bReturn = FALSE;
     }
 
@@ -754,6 +834,133 @@ l_lblExit:
 
     return l_bReturn;
 }// Add  
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Set_Enable                                      
+tBOOL CP7Telemetry::Set_Enable(tUINT16 i_wID, tBOOL i_bEnable)
+{
+    tBOOL l_bReturn = FALSE;
+
+    if (!m_bInitialized)
+    {
+        return l_bReturn;
+    }
+
+    LOCK_ENTER(m_sCS);
+    if (m_bActive)
+    {
+        CP7Tel_Counter *l_pCounter = m_pCounters[i_wID];
+        if (l_pCounter)
+        {
+            l_bReturn = TRUE;
+            l_pCounter->m_pHeader->bOn = (tUINT16)i_bEnable;
+        }
+    }
+    LOCK_EXIT(m_sCS);
+    return l_bReturn;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Get_Enable                                      
+tBOOL CP7Telemetry::Get_Enable(tUINT16 i_wID)
+{
+    tBOOL l_bReturn = FALSE;
+    if (!m_bInitialized)
+    {
+        return l_bReturn;
+    }
+
+    LOCK_ENTER(m_sCS);
+    CP7Tel_Counter *l_pCounter = m_pCounters[i_wID];
+    if (l_pCounter)
+    {
+        l_bReturn = (tBOOL)l_pCounter->m_pHeader->bOn;
+    }
+    LOCK_EXIT(m_sCS);
+    return l_bReturn;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Get_Min                                      
+tDOUBLE CP7Telemetry::Get_Min(tUINT16 i_wID)
+{
+    tDOUBLE l_dbReturn = 0.0;
+    if (!m_bInitialized)
+    {
+        return l_dbReturn;
+    }
+
+    LOCK_ENTER(m_sCS);
+    CP7Tel_Counter *l_pCounter = m_pCounters[i_wID];
+    if (l_pCounter)
+    {
+        l_dbReturn = l_pCounter->m_pHeader->dbMin;
+    }
+    LOCK_EXIT(m_sCS);
+    return l_dbReturn;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Get_Max                                      
+tDOUBLE CP7Telemetry::Get_Max(tUINT16 i_wID)
+{
+    tDOUBLE l_dbReturn = 0.0;
+    if (!m_bInitialized)
+    {
+        return l_dbReturn;
+    }
+
+    LOCK_ENTER(m_sCS);
+    CP7Tel_Counter *l_pCounter = m_pCounters[i_wID];
+    if (l_pCounter)
+    {
+        l_dbReturn = l_pCounter->m_pHeader->dbMax;
+    }
+    LOCK_EXIT(m_sCS);
+    return l_dbReturn;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Get_Name                                      
+const tXCHAR *CP7Telemetry::Get_Name(tUINT16 i_wID)
+{
+    const tXCHAR *l_pReturn = NULL;
+    if (!m_bInitialized)
+    {
+        return l_pReturn;
+    }
+
+    LOCK_ENTER(m_sCS);
+    CP7Tel_Counter *l_pCounter = m_pCounters[i_wID];
+    if (l_pCounter)
+    {
+        l_pReturn = l_pCounter->m_pName;
+    }
+    LOCK_EXIT(m_sCS);
+    return l_pReturn;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Get_Count                                      
+tUINT16 CP7Telemetry::Get_Count()
+{
+    tUINT16 l_wReturn = 0;
+    if (!m_bInitialized)
+    {
+        return l_wReturn;
+    }
+
+    LOCK_ENTER(m_sCS);
+    l_wReturn = m_pCounters.Count();
+    LOCK_EXIT(m_sCS);
+    return l_wReturn;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -791,23 +998,106 @@ tBOOL CP7Telemetry::Share(const tXCHAR *i_pName)
 // On_Flush - internal call                                      
 void CP7Telemetry::Flush()
 {
-    if (FALSE == m_bInitialized)
+    if (FALSE == m_bActive)
     {
         return;
     }
 
-    m_bInitialized = FALSE;
+    m_bActive = FALSE;
 
     //inform server about channel closing, I didn't check status, just
     //sending data
-    if (RESET_UNDEFINED != m_dwResets_Counters)
+    if (m_bIsHeaderDelivered)
     {
         sP7Ext_Raw l_sHeader;
-        INIT_EXT_HEADER(l_sHeader, EP7USER_TYPE_TELEMETRY, EP7TEL_TYPE_CLOSE, sizeof(sP7Ext_Raw));
+        INIT_EXT_HEADER(l_sHeader, EP7USER_TYPE_TELEMETRY_V2, EP7TEL_TYPE_CLOSE, sizeof(sP7Ext_Raw));
         sP7C_Data_Chunk l_sChunk = {&l_sHeader, sizeof(sP7Ext_Raw)};
-
         m_pClient->Sent(m_dwChannel_ID, &l_sChunk, 1, l_sChunk.dwSize);
     }
 }// On_Flush                                      
+
+
+////////////////////////////////////////////////////////////////////////////////
+// OnConnect_Routine                                      
+void CP7Telemetry::OnConnect_Routine()
+{
+    tUINT32          l_uTimeOut   = 0;
+    pAList_Cell      l_pCounterEl = NULL;
+    tBOOL            l_bExit      = FALSE;
+    CP7Tel_Counter * l_pCounter   = NULL;
+    sP7C_Data_Chunk  l_stChunk;
+
+    while (FALSE == l_bExit)
+    {
+        if (TELEMETRY_ON_CONNECT_EXIT_SIGNAL == m_cOnConnect_Event.Wait(l_uTimeOut))
+        {
+            break;
+        }
+
+        if (LOCK_TRY(m_sCS))
+        {
+            if (!m_bIsHeaderDelivered)
+            {
+                sP7C_Data_Chunk  l_stChunk;
+                l_stChunk.dwSize = sizeof(m_sHeader_Info);
+                l_stChunk.pData  = &m_sHeader_Info;
+
+                if (ECLIENT_STATUS_OK == m_pClient->Sent(m_dwChannel_ID, &l_stChunk, 1, l_stChunk.dwSize))
+                {
+                    m_bIsHeaderDelivered = TRUE;
+                }
+            }
+
+            if (m_bIsHeaderDelivered)
+            {
+                tBOOL l_bDelivering = TRUE;
+
+                if (!l_pCounterEl)
+                {
+                    l_pCounterEl = m_pCounters.Get_First();
+                }
+
+                while (    (l_pCounterEl)
+                        && (l_bDelivering) 
+                      )
+                {
+                    l_pCounter = m_pCounters.Get_Data(l_pCounterEl);
+                    if (l_pCounter)
+                    {
+                        if (!l_pCounter->m_bDelivered)
+                        {
+                            l_stChunk.pData  = l_pCounter->m_pHeader;
+                            l_stChunk.dwSize = GET_EXT_HEADER_SIZE(l_pCounter->m_pHeader->sCommonRaw);
+
+                            if (ECLIENT_STATUS_OK == m_pClient->Sent(m_dwChannel_ID, &l_stChunk, 1, l_stChunk.dwSize))
+                            {
+                                l_pCounter->m_bDelivered = TRUE;
+                                l_pCounterEl = m_pCounters.Get_Next(l_pCounterEl);
+                                l_uTimeOut   = 0;
+                            }
+                            else
+                            {
+                                l_uTimeOut    = 5;
+                                l_bDelivering = FALSE;
+                            }
+                        }
+                        else
+                        {
+                            l_pCounterEl = m_pCounters.Get_Next(l_pCounterEl);
+                        }
+                    }
+                }
+                
+                if (!l_pCounterEl)
+                {
+                    l_bExit = TRUE;
+                }
+            }
+            LOCK_EXIT(m_sCS);
+        }
+    }
+
+    m_cOnConnect_Event.Clr(TELEMETRY_ON_CONNECT_EXIT_SIGNAL);
+}
 
 

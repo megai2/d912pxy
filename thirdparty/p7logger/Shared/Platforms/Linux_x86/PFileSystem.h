@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -225,6 +225,19 @@ public:
         l_pDir = 0;
     }// Enumerate_Dirs
 	
+    ////////////////////////////////////////////////////////////////////////////
+    //Get_File_Size
+    static tUINT64 Get_File_Size(const tACHAR *i_pFile)
+    {
+        struct stat l_sStat;
+        l_sStat.st_size = 0;
+        if (0 == stat(i_pFile, &l_sStat))
+        {
+            return (tUINT64)l_sStat.st_size;
+        }
+
+        return 0;
+    }//Get_File_Size
 
     ////////////////////////////////////////////////////////////////////////////
     //Get_Version

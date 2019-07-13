@@ -16,56 +16,23 @@
 // License along with this library.                                            /
 //                                                                             /
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef LOCK_H
-#define LOCK_H
+#ifndef QSTRING_HELPER_H
+#define QSTRING_HELPER_H
 
-///////////////////////////////////////////////////////////////////////////////
-#include "PLock.h"
+#if defined(UTF8_ENCODING)
+    #define XCHAR_TO_QSTRING(X) QString::fromUtf8(X)
+#else
+    #define XCHAR_TO_QSTRING(X) QString::fromWCharArray(X)
+#endif
 
-class CLock
-{
-    tLOCK  m_hCS;
-    CLock *m_pLock;
-public:
-    CLock()
-        : m_pLock(NULL)
-    {
-        LOCK_CREATE(m_hCS);
-    }
+#if defined(UTF8_ENCODING)
+    #define QSTRING_TO_XCHAR_TRANSLATE(QbAUniq, QStr, XChar)\
+        QByteArray QbAUniq = QStr.toUtf8();\
+        XChar = (const tXCHAR*)QbAUniq.constData()
+    #define QSTRING_TO_XCHAR(QStr, XChar) QSTRING_TO_XCHAR_TRANSLATE(MAKE_UNIQUE(QbA), QStr, XChar)
+#else
+    #define QSTRING_TO_XCHAR(QStr, XChar) XChar = (const tXCHAR*)QStr.utf16();
+#endif
 
-    CLock(CLock *i_pLock)
-        : m_pLock(i_pLock)
-    {
-        m_pLock->Lock();
-    }
 
-    ~CLock()
-    {
-        if (NULL == m_pLock)
-        {
-            LOCK_DESTROY(m_hCS);
-        }
-        else
-        {
-            m_pLock->Unlock();
-            m_pLock = NULL;
-        }
-    }
-
-    void Lock()
-    {
-        LOCK_ENTER(m_hCS);
-    }
-
-    tBOOL Try()
-    {
-        return LOCK_TRY(m_hCS);
-    }
-
-    void Unlock()
-    {
-        LOCK_EXIT(m_hCS);
-    }
-};
-
-#endif //LOCK_H
+#endif //QSTRING_HELPER_H

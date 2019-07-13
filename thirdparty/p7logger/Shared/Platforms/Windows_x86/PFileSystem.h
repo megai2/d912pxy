@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -17,6 +17,8 @@
 //                                                                             /
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+
+#pragma warning(disable : 4091)
 
 #include "Shlobj.h"
 
@@ -58,13 +60,14 @@ public:
         }
 
         wchar_t *l_pDirectory = _wcsdup(i_pDirectory);
-        size_t   l_szLength   = wcslen(l_pDirectory);
         tBOOL    l_bReturn    = FALSE;
 
         if (NULL == l_pDirectory)
         {
             return FALSE;
         }
+
+        size_t l_szLength = wcslen(l_pDirectory);
 
         for (size_t l_dwI = 3; /*wcslen(L"C:\\")*/ l_dwI < l_szLength; l_dwI++)
         {
@@ -350,10 +353,10 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //Get_TextResource
-    static tBOOL Get_TextResource(const wchar_t *i_pFile,
-                                  const wchar_t *i_pName,
-                                  wchar_t       *o_pBuffer,
-                                  size_t         i_szBuffer
+    static tBOOL Get_TextResource(const tXCHAR *i_pFile,
+                                  const tXCHAR *i_pName,
+                                  tXCHAR       *o_pBuffer,
+                                  size_t        i_szBuffer
                                  )
     {
         tBOOL        l_bReturn        = FALSE;

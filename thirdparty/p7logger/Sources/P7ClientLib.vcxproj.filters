@@ -18,7 +18,7 @@
     <ClInclude Include="Common.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Socket.h">
+    <ClInclude Include="UDP_NB.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">

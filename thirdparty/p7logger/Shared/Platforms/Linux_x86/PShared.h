@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -415,19 +415,7 @@ public:
         //open semaphore
         Create_Name(l_pName, l_szName, ETYPE_MUTEX, i_pName);
 
-        //check is it existing or not
-        l_hSem = sem_open(l_pName, O_CREAT | O_EXCL);
-        if (SEM_FAILED != l_hSem) //it wasn't existing = ERROR
-        {
-            sem_close(l_hSem);
-            sem_unlink(l_pName);
-            l_hSem = SEM_FAILED;
-
-            l_eReturn = CShared::E_NOT_EXISTS;
-            goto l_lblExit;
-        }
-
-        l_hSem = sem_open(l_pName, O_CREAT);
+        l_hSem = sem_open(l_pName, 0);
         if (SEM_FAILED == l_hSem)
         {
             l_eReturn = CShared::E_NOT_EXISTS;
@@ -495,19 +483,7 @@ public:
         //open semaphore
         Create_Name(l_pName, l_szName, ETYPE_MUTEX, i_pName);
 
-        //check is it existing or not
-        l_hSem = sem_open(l_pName, O_CREAT | O_EXCL);
-        if (SEM_FAILED != l_hSem) //it wasn't existing = ERROR
-        {
-            sem_close(l_hSem);
-            sem_unlink(l_pName);
-            l_hSem = SEM_FAILED;
-
-            l_eReturn = CShared::E_NOT_EXISTS;
-            goto l_lblExit;
-        }
-
-        l_hSem = sem_open(l_pName, O_CREAT);
+        l_hSem = sem_open(l_pName, 0);
         if (SEM_FAILED == l_hSem)
         {
             l_eReturn = CShared::E_NOT_EXISTS;

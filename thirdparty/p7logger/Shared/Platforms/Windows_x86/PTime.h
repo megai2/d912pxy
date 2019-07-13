@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -75,20 +75,20 @@ static inline void GetEpochTime(tUINT32 *o_pHi, tUINT32 *o_pLow)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//GetLocalTime
+//UnpackLocalTime
 //convert a 64-bit value of 100-nanosecond intervals since January 1, 1601 (UTC)
 //to readable form
-static inline void GetLocalTime(tUINT64  i_qwTime, 
-                                tUINT32 &o_rYear, 
-                                tUINT32 &o_rMonth,
-                                tUINT32 &o_rDay,
-                                tUINT32 &o_rHour,
-                                tUINT32 &o_rMinutes,
-                                tUINT32 &o_rSeconds,
-                                tUINT32 &o_rMilliseconds,
-                                tUINT32 &o_rMicroseconds,
-                                tUINT32 &o_rNanoseconds
-                               )
+static inline void UnpackLocalTime(tUINT64  i_qwTime, 
+                                   tUINT32 &o_rYear, 
+                                   tUINT32 &o_rMonth,
+                                   tUINT32 &o_rDay,
+                                   tUINT32 &o_rHour,
+                                   tUINT32 &o_rMinutes,
+                                   tUINT32 &o_rSeconds,
+                                   tUINT32 &o_rMilliseconds,
+                                   tUINT32 &o_rMicroseconds,
+                                   tUINT32 &o_rNanoseconds
+                                  )
 {
     tUINT32 l_dwReminder = i_qwTime % TIME_MSC_100NS; //micro & 100xNanoseconds
     tUINT32 l_dwNano     = i_qwTime % 10;
@@ -111,7 +111,44 @@ static inline void GetLocalTime(tUINT64  i_qwTime,
     o_rMilliseconds = l_sTime.wMilliseconds;
     o_rMicroseconds = l_dwMicro;
     o_rNanoseconds  = l_dwNano;
-}//GetEpochTime
+}//UnpackLocalTime
+
+
+////////////////////////////////////////////////////////////////////////////////
+//PackLocalTime
+//convert date & time to 64-bit value of 100-nanosecond intervals since January 1, 1601 (UTC)
+tUINT64 static inline PackLocalTime(tUINT32 i_uiYear, 
+                                    tUINT32 i_uiMonth,
+                                    tUINT32 i_uiDay,
+                                    tUINT32 i_uiHour,
+                                    tUINT32 i_uiMinutes,
+                                    tUINT32 i_uiSeconds,
+                                    tUINT32 i_uiMilliseconds,
+                                    tUINT32 i_uiMicroseconds,
+                                    tUINT32 i_uiNanoseconds
+                                   )
+{
+    FILETIME   l_sLocal   = {0};
+    FILETIME   l_sSystem  = {0};
+    SYSTEMTIME l_sTime    = {0};
+
+    l_sTime.wYear         = (WORD)i_uiYear;
+    l_sTime.wMonth        = (WORD)i_uiMonth;
+    l_sTime.wDay          = (WORD)i_uiDay;
+    l_sTime.wHour         = (WORD)i_uiHour;
+    l_sTime.wMinute       = (WORD)i_uiMinutes;
+    l_sTime.wSecond       = (WORD)i_uiSeconds;
+    l_sTime.wMilliseconds = (WORD)i_uiMilliseconds;
+
+    SystemTimeToFileTime(&l_sTime, &l_sLocal); 
+    LocalFileTimeToFileTime(&l_sLocal, &l_sSystem);
+
+    tUINT64 l_qwReturn = ((tUINT64)(l_sSystem.dwHighDateTime) << 32) + (tUINT64)(l_sSystem.dwLowDateTime);
+
+    l_qwReturn += (i_uiMicroseconds * 10ull) + (i_uiNanoseconds / 100ull);
+
+    return l_qwReturn;
+}//PackLocalTime
 
 
 ////////////////////////////////////////////////////////////////////////////////
