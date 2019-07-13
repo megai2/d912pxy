@@ -604,6 +604,7 @@
     <ClCompile Include="d912pxy_async_upload_thread.cpp" />
     <ClCompile Include="d912pxy_com_mgr.cpp" />
     <ClCompile Include="d912pxy_com_route_default.cpp" />
+    <ClCompile Include="d912pxy_com_route_overhead_tracked.cpp" />
     <ClCompile Include="d912pxy_com_routing.cpp" />
     <ClCompile Include="d912pxy_config.cpp" />
     <ClCompile Include="d912pxy_device_clipping.cpp" />
