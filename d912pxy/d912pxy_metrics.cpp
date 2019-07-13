@@ -126,7 +126,7 @@ void d912pxy_metrics::AddOverheadTime(UINT64 val, UINT id, const char* fun)
 			++i;
 		}
 
-		ohMetrics->Create(buf, 0, 0, 30000, 20000, 1, &metricOH[id]);
+		ohMetrics->Create(buf, 0, 0, 10000, 10000, 1, &metricOH[id]);
 	} 
 
 	metricOHval[id] += val;
