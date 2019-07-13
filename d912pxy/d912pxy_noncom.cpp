@@ -109,7 +109,6 @@ void d912pxy_noncom::NonCom_Init(const wchar_t * logModule)
 	WaitForSingleObject(gLeakMapLock, INFINITE);
 	gLeakTracker[0][lkObjTrace] = logModule;
 	ReleaseMutex(gLeakMapLock);
-
 #endif
 }
 

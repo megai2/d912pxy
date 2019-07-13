@@ -41,7 +41,7 @@ IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* 
 		
 	d912pxy_s.mem.StartTrackingBlocks();
 
-	d912pxy_com_object* d912translator = d912pxy_device::d912pxy_device_com(&d912pxy_s.devComBase, dev, obj);
+	d912pxy_com_object* d912translator = d912pxy_device::d912pxy_device_com(&d912pxy_s.dev, dev, obj);
 	return (IDirect3DDevice9*)d912translator;
 }
 
@@ -54,7 +54,7 @@ void d912pxy_first_init()
 
 	d912pxy_s.running = 1;
 
-	d912pxy_s.devComBase = NULL;
+	d912pxy_s.dev_vtable = NULL;
 
 	d912pxy_s.mem.Init();
 	d912pxy_s.config.Init();

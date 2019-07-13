@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_surface : public d912pxy_resource
+class d912pxy_surface : public d912pxy_vtable, public d912pxy_resource
 {
 public:
 	static d912pxy_surface* d912pxy_surface_com(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback);

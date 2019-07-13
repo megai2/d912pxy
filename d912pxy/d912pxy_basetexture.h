@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_basetexture : public d912pxy_resource
+class d912pxy_basetexture : private d912pxy_vtable, public d912pxy_resource
 {
 public:
 	d912pxy_basetexture();
@@ -53,4 +53,3 @@ protected:
 
 	UINT m_levels;	
 };
-

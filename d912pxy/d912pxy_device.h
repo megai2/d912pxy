@@ -34,13 +34,15 @@ static const D3D12_DESCRIPTOR_HEAP_DESC d912pxy_dx12_heap_config[PXY_INNER_MAX_D
 	{ D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 64, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 0 }
 };
 
-class d912pxy_device: public d912pxy_comhandler
+
+
+class d912pxy_device: public d912pxy_vtable,  public d912pxy_comhandler
 {
 public:
 	static d912pxy_com_object* d912pxy_device_com(void* baseMem, IDirect3DDevice9* dev, void* par);
 
 	d912pxy_device();
-	virtual ~d912pxy_device(void);
+	~d912pxy_device(void);
 
 	void Init(IDirect3DDevice9* dev, void* par);
 

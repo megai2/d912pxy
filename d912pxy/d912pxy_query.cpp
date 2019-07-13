@@ -33,9 +33,9 @@ d912pxy_query::d912pxy_query(D3DQUERYTYPE Type) : d912pxy_comhandler(PXY_COM_OBJ
 d912pxy_query * d912pxy_query::d912pxy_query_com(D3DQUERYTYPE Type)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_QUERY);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY);
-
+	
 	new (&ret->query)d912pxy_query(Type);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY);
 
 	return &ret->query;
 }

@@ -62,3 +62,7 @@ private:
 	DWORD m_state;
 };
 
+class d912pxy_query_non_derived : public d912pxy_vtable, public d912pxy_query
+{
+
+};

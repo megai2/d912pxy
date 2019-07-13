@@ -59,8 +59,6 @@ static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {
 	L"slots / spl"
 };
 
-
-
 class d912pxy_metrics : public d912pxy_noncom
 {
 public:

@@ -59,9 +59,9 @@ d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB
 d912pxy_vstream * d912pxy_vstream::d912pxy_vstream_com(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_VSTREAM);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VBUF);
-
+	
 	new (&ret->vstream)d912pxy_vstream(Length, Usage, fmt, isIB);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VBUF);
 
 	return &ret->vstream;
 }

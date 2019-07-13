@@ -30,14 +30,13 @@ using namespace Microsoft::WRL;
 
 d912pxy_com_object * d912pxy_device::d912pxy_device_com(void* baseMem, IDirect3DDevice9 * dev, void * par)
 {
-	size_t objSz = sizeof(d912pxy_device) + 8;
+	size_t objSz = sizeof(d912pxy_device);
 
 	d912pxy_com_object* ret = (d912pxy_com_object*)baseMem;
 	ZeroMemory(ret, objSz);
 
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_DEVICE);
-
 	new (&ret->device)d912pxy_device();
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_DEVICE);
 
 	ret->device.Init(dev, par);
 	
@@ -62,7 +61,7 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(d912pxy_s.dx12.que.Flush(0),      "Last gpu cmd lists flushed");
 	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(),		 "Swapchain stopped");
 
-	d912pxy_s.devComBase = NULL;
+	d912pxy_s.dev_vtable = NULL;
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
 

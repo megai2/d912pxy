@@ -95,7 +95,8 @@ typedef struct d912pxy_serialized_pso_key {
 
 #pragma pack(pop)
 
-class d912pxy_pso_cache_item : public d912pxy_comhandler {
+class d912pxy_pso_cache_item : public d912pxy_vtable, public d912pxy_comhandler 
+{
 
 public:	
 	static d912pxy_pso_cache_item* d912pxy_pso_cache_item_com(d912pxy_trimmed_dx12_pso* sDsc);

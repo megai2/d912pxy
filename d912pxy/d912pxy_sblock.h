@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_sblock : public d912pxy_comhandler
+class d912pxy_sblock : public d912pxy_vtable, public d912pxy_comhandler
 {
 public:	
 	static d912pxy_sblock* d912pxy_sblock_com(D3DSTATEBLOCKTYPE Type);

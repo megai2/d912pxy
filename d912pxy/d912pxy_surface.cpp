@@ -120,9 +120,9 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 d912pxy_surface * d912pxy_surface::d912pxy_surface_com(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT * levels, UINT arrSz, UINT32 * srvFeedback)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SURFACE);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE);
-
+	
 	new (&ret->surface)d912pxy_surface(Width, Height, Format, Usage, MultiSample, MultisampleQuality, Lockable, levels, arrSz, srvFeedback);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE);
 
 	return &ret->surface;
 }

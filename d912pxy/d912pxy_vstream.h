@@ -33,7 +33,7 @@ typedef struct d912pxy_vstream_lock_data {
 	UINT32 offset;
 } d912pxy_vstream_lock_data;
 
-class d912pxy_vstream : public d912pxy_resource
+class d912pxy_vstream : public d912pxy_vtable, public d912pxy_resource
 {
 public:	
 	static d912pxy_vstream* d912pxy_vstream_com(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB);

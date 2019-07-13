@@ -31,7 +31,7 @@ typedef struct d912pxy_vdecl_elesn {
 	char s[10];
 } d912pxy_vdecl_elesn;
 
-class d912pxy_vdecl : public d912pxy_comhandler
+class d912pxy_vdecl : public d912pxy_vtable, public d912pxy_comhandler
 {
 public:	
 	static d912pxy_vdecl* d912pxy_vdecl_com(const D3DVERTEXELEMENT9* data);

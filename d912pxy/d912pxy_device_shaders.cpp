@@ -30,11 +30,8 @@ HRESULT d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	if (pShader)
-	{
-		d912pxy_s.render.db.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
-	}
-	
+	d912pxy_s.render.db.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
+		
 	return D3D_OK;
 }
 
@@ -42,19 +39,14 @@ HRESULT d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 	
-	if (pShader)
-	{
-		d912pxy_s.render.db.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
-	}
-	
+	d912pxy_s.render.db.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
+		
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
 { 
 	LOG_DBG_DTDM(__FUNCTION__);
-
-	
 
 #ifdef _DEBUG
 	if (PXY_INNER_MAX_SHADER_CONSTS <= ((StartRegister + Vector4fCount) * 4))
@@ -65,8 +57,6 @@ HRESULT d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONST float
 #endif
 
 	d912pxy_s.render.batch.SetShaderConstF(0, StartRegister, Vector4fCount, (float*)pConstantData);
-
-	
 
 	return D3D_OK;
 }
@@ -87,7 +77,6 @@ HRESULT d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST float*
 
 	d912pxy_s.render.batch.SetShaderConstF(1, StartRegister, Vector4fCount, (float*)pConstantData);
 
-	
 
 	return D3D_OK;
 }

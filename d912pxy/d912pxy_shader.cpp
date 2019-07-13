@@ -27,8 +27,7 @@ SOFTWARE.
 d912pxy_shader * d912pxy_shader::d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, const DWORD * origCode, d912pxy_shader_uid uid)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SHADER);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SHADER);
-
+	
 	static const wchar_t* objName[2] = {
 		L"pshader",
 		L"vshader"
@@ -49,6 +48,7 @@ d912pxy_shader * d912pxy_shader::d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, 
 		return 0;
 	}
 
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SHADER);
 
 	return &ret->shader;
 }

@@ -31,9 +31,9 @@ d912pxy_sblock::d912pxy_sblock(D3DSTATEBLOCKTYPE Type) : d912pxy_comhandler(PXY_
 d912pxy_sblock * d912pxy_sblock::d912pxy_sblock_com(D3DSTATEBLOCKTYPE Type)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SBLOCK);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SBLOCK);
-
+	
 	new (&ret->sblock)d912pxy_sblock(Type);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SBLOCK);
 
 	return &ret->sblock;
 }

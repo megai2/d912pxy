@@ -47,9 +47,9 @@ d912pxy_query_occlusion::d912pxy_query_occlusion(D3DQUERYTYPE Type) : d912pxy_qu
 d912pxy_query_occlusion * d912pxy_query_occlusion::d912pxy_query_occlusion_com(D3DQUERYTYPE Type)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_QUERY_OCC);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY_OCC);
-
+	
 	new (&ret->query_occ)d912pxy_query_occlusion(Type);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY_OCC);
 
 	return &ret->query_occ;
 }

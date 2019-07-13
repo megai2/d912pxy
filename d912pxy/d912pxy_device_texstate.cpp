@@ -28,20 +28,16 @@ SOFTWARE.
 
 HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	
-
 	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
 
 	UINT64 srvId = 0;//megai2: make this to avoid memory reading. but we must be assured that mNullTextureSRV is equal to this constant!
 
 	if (pTexture)
 	{
-		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId((intptr_t)pTexture & 0x10000000);
+		srvId = PXY_COM_LOOKUP_(pTexture, basetex).GetSRVHeapId((intptr_t)pTexture & 0x10000000);
 	}
 
 	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
-
-	
 
 	return D3D_OK; 
 }
