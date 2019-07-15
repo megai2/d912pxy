@@ -207,7 +207,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		return;
 
 	dirty |= 1;// (DX9RSvalues[State] != Value);
-//	DX9RSvalues[State] = Value;
+	
 
 	switch (State)
 	{
@@ -467,6 +467,11 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	default:
 		;
 	}
+}
+
+void d912pxy_pso_cache::TrackState(D3DRENDERSTATETYPE State, DWORD Value)
+{
+	DX9RSvalues[State] = Value;
 }
 
 void d912pxy_pso_cache::VShader(d912pxy_shader * vs)

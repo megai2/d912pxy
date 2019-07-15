@@ -141,6 +141,7 @@ public:
 
 	//things that affect pso only
 	void State(D3DRENDERSTATETYPE State, DWORD Value);
+	void TrackState(D3DRENDERSTATETYPE State, DWORD Value);
 	void VShader(d912pxy_shader* vs);
 	void PShader(d912pxy_shader* ps);
 	void IAFormat(d912pxy_vdecl* vertexDcl);
