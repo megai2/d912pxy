@@ -209,7 +209,7 @@ private:
 	UINT8 fileCacheFlags;
 	d912pxy_serialized_pso_key** psoKeyCache;
 	d912pxy_trimmed_dx12_pso cDsc;	
-	DWORD DX9RSvalues[D3DRS_BLENDOPALPHA + 1];
+	DWORD DX9RSvalues[226];
 
 	HANDLE psoCompileThread;
 	d912pxy_ringbuffer<d912pxy_pso_cache_item*>* psoCompileBuffer;
