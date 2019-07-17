@@ -50,6 +50,7 @@ public:
 	d912pxy_vstream* GetIBuf();
 	d912pxy_device_streamsrc GetStreamSource(UINT StreamNumber);
 		
+	UINT CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType);
 	void CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 	void CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 
