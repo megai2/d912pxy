@@ -117,15 +117,11 @@ HRESULT d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 HRESULT d912pxy_device::SetVertexDeclaration(IDirect3DVertexDeclaration9* pDecl)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
-
 	
-
 	if (pDecl)
 	{
 		d912pxy_s.render.db.pso.IAFormat(PXY_COM_LOOKUP(pDecl, vdecl));
 	}
-
-	
 
 	return D3D_OK;
 }

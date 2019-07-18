@@ -141,7 +141,7 @@ float4 color_s2lin(float4 cs)
 	return ret;
 }
 
-float4 color_lin2s(float4 cs) 
+float4 color_lin2s_thru(float4 cs) 
 {
 	float3 RGB = cs.xyz;
 	float3 S1 = sqrt(RGB);
@@ -154,9 +154,20 @@ float4 color_lin2s(float4 cs)
 	return ret;
 }
 
+float4 color_lin2s_cond(float4 cs, int enable) 
+{
+	if (enable)
+		return color_lin2s_thru(cs);
+	else
+		return cs;
+}
+
 #define dx9_texture_srgb_read_proc(ret, mask) if (texState.texture_s30 & mask) { ret = color_s2lin(ret); }
 
 #define vs_clip_plane0_def [clipplanes(texState.clipplane0)]
+
+#define dx9_ps_nan_cull_emulation(a) if (isnan(a.w)) discard
+#define dx9_vs_nan_cull_emulation(a) if (isnan(a.w)) a.w = 1;
 
 #define dx9_ps_write_emulation(color) 
 
@@ -164,13 +175,13 @@ float4 color_lin2s(float4 cs)
 
 #define dx9_ps_write_emulation_srgb(color) \
 	{ \
-		color = color_lin2s(color); \
+		color = srgb_write_color_lin2s(color); \
 	}
 
 #define dx9_ps_write_emulation_at_srgb(color) \
 	{ \
 		clip(dx9_alphatest_emulation_proc(texState.texture_s31, color.w)); \
-		color = color_lin2s(color); \
+		color = srgb_write_color_lin2s(color); \
 	}
 
 float4 dx9texldl_tex2d(Texture2DArray tex, sampler spl, float4 uv, float w, uint srgbMask)
@@ -261,10 +272,11 @@ float4 dx9_fix_halfpixel_offset(float4 inPos)
 #define dx9_exp(a) exp2(a)
 #define dx9_lerp(a,b,c) lerp(a,b,c)
 #define dx9_rcp(a) rcp(a)
-#define dx9_rcp_guarded(a) rcp(a+0.0000001)
+#define dx9_rcp_guarded(a) a != 0 ? rcp(a) : 1e37
 #define dx9_max(a,b) max(a,b) 
 #define dx9_min(a,b) min(a,b)
 #define dx9_rsqrt(a) rsqrt(abs(a))
+#define dx9_rsqrt_guarded(a) a != 0 ? rsqrt(abs(a)) : 1e37
 #define dx9_frac(a) frac(a)
 #define dx9_pow(a,b) pow(abs(a), b)
 #define dx9_normalize(a) normalize(a)

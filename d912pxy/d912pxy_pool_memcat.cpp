@@ -107,7 +107,7 @@ UINT d912pxy_pool_memcat<ElementType, ProcImpl>::MemCatFromSize(UINT sz)
 	{
 		++ret;
 	}
-
+	
 	return ret;
 }
 

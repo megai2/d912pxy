@@ -416,6 +416,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	case D3DRS_SRGBWRITEENABLE:
 		DX9RSvalues[State] = Value;
+		d912pxy_s.render.tex.ModStageBit(31, 13, Value);
 		//d912pxy_s.render.iframe.TST()->SetTexStage(29, Value);
 		break;
 

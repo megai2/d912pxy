@@ -67,6 +67,10 @@ d912pxy_upload_item * d912pxy_upload_pool::GetUploadObject(UINT size)
 {
 	d912pxy_upload_item * ret = NULL;
 	UINT mc = MemCatFromSize(size);
+
+	if (mc >= PXY_INNDER_UPLOAD_POOL_BITCNT)
+		mc = PXY_INNDER_UPLOAD_POOL_BITCNT - 1;
+
 	PoolRW(mc, &ret, 0);
 
 	if (!ret)

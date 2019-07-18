@@ -59,9 +59,7 @@ HRESULT d912pxy_device::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT Start
 HRESULT d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 { 
 	LOG_DBG_DTDM("DrawIndexed PT %u BV %u MV %u NV %u SI %u PC %u", PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
-
 	
-
 	d912pxy_s.render.iframe.CommitBatch(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 
 #ifdef PER_BATCH_FLUSH_DEBUG
@@ -72,8 +70,6 @@ HRESULT d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, INT
 
 	iframe->Start();
 #endif
-
-	
 		
 	return D3D_OK;
 }
