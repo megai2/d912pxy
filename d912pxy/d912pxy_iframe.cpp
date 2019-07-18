@@ -173,7 +173,7 @@ UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
 		return 0;
 	}
 
-	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 1))
+	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
 	{
 		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
@@ -597,10 +597,10 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 		if (vstreamTransfer[i].buffer)
 		{
 			SetVBuf(vstreamTransfer[i].buffer, i, vstreamTransfer[i].offset, vstreamTransfer[i].stride);			
-			SetStreamFreq(i, vstreamTransfer[i].divider);
-
 			vstreamTransfer[i].buffer->ThreadRef(-1);
 		}
+
+		SetStreamFreq(i, vstreamTransfer[i].divider);
 	}
 
 	//megai2: rebind viewport & scissor too
