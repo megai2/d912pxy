@@ -448,14 +448,17 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	{		
 		GPUNameA[i] = (char)pDesc.Description[i];
 	}
-	
+
+	//Alrai: Let's see what happens.
+	gpu->SetVideoMemoryReservation(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, 4096 << 20);	
+
 	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
 	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
 
 	LOG_INFO_DTDM("Adapter local memory: BU %u AR %u CR %u CU %u",
 		vaMem.Budget >> 20, vaMem.AvailableForReservation >> 20, vaMem.CurrentReservation >> 20, vaMem.CurrentUsage >> 20
 	);
-
+		
 	//megai2: create device actually
 
 	ComPtr<ID3D12Device> ret;
