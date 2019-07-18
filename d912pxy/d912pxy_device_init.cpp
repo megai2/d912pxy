@@ -280,7 +280,8 @@ void d912pxy_device::InitNullSRV()
 
 void d912pxy_device::InitDrawUPBuffers()
 {
-	m_dupEmul = new d912pxy_draw_up(this);
+	d912pxy_s.render.draw_up.Init();
+
 	m_clearEmul = new d912pxy_surface_clear(this);
 }
 

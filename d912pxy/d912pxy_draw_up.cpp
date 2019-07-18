@@ -2,15 +2,32 @@
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING_UP
 
-d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(L"draw_up")
+d912pxy_draw_up::d912pxy_draw_up()
 {
+}
+
+
+d912pxy_draw_up::~d912pxy_draw_up()
+{
+	OnFrameEnd();
+
+	for (int i = 0; i != PXY_DUP_COUNT; ++i)
+	{
+		buf[i].vstream->Release();
+	}
+}
+
+void d912pxy_draw_up::Init()
+{
+	NonCom_Init(L"draw_up");
+
 	for (int i = 0; i != PXY_DUP_COUNT; ++i)
 	{
 		UINT32 tmpUPbufSpace = 0xFFFF;
 		if (i == PXY_DUP_DPI)
 		{
 			tmpUPbufSpace = d912pxy_s.config.GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
-		} 
+		}
 
 		AllocateBuffer((d912pxy_draw_up_buffer_name)i, tmpUPbufSpace);
 		LockBuffer((d912pxy_draw_up_buffer_name)i);
@@ -24,17 +41,6 @@ d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(L"draw_up
 
 			buf[i].offset = tmpUPbufSpace;
 		}
-	}
-}
-
-
-d912pxy_draw_up::~d912pxy_draw_up()
-{
-	OnFrameEnd();
-
-	for (int i = 0; i != PXY_DUP_COUNT; ++i)
-	{
-		buf[i].vstream->Release();
 	}
 }
 

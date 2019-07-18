@@ -69,8 +69,7 @@ HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 	
 
 	swapOpLock.Hold();
-
-	m_dupEmul->OnFrameEnd();
+	
 	d912pxy_s.render.iframe.End();
 	d912pxy_s.dx12.que.Flush(0);
 
@@ -93,9 +92,7 @@ HRESULT d912pxy_device::InnerPresentExecute()
 
 	swapOpLock.Hold();
 
-	m_dupEmul->OnFrameEnd();
 	d912pxy_s.render.iframe.End();
-
 	
 	FRAME_METRIC_PRESENT(0)
 

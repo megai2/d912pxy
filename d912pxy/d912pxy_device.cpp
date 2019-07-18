@@ -128,7 +128,7 @@ void d912pxy_device::FreeAdditionalDX9Objects()
 {
 	d912pxy_query_occlusion::DeInitOccQueryEmulation();
 
-	delete m_dupEmul;
+	d912pxy_s.render.draw_up.~d912pxy_draw_up();
 	delete m_clearEmul;
 
 	mNullTexture->Release();
