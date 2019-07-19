@@ -186,6 +186,12 @@ void d912pxy_draw_up::PushVSBinds()
 	oss = d912pxy_s.render.iframe.GetStreamSource(0);
 	ossi = d912pxy_s.render.iframe.GetStreamSource(1);
 
+	if (oi)
+		oi->ThreadRef(1);
+
+	if (oss.buffer)
+		oss.buffer->ThreadRef(1);
+
 	d912pxy_s.render.iframe.SetStreamFreq(0, 1);
 	d912pxy_s.render.iframe.SetStreamFreq(1, 0);
 }
@@ -196,6 +202,12 @@ void d912pxy_draw_up::PopVSBinds()
 	d912pxy_s.render.iframe.SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
 	d912pxy_s.render.iframe.SetStreamFreq(0, oss.divider);
 	d912pxy_s.render.iframe.SetStreamFreq(1, ossi.divider);
+
+	if (oi)
+		oi->ThreadRef(-1);
+
+	if (oss.buffer)
+		oss.buffer->ThreadRef(-1);
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 
