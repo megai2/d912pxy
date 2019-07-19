@@ -34,6 +34,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_POOLING_SURFACE_LIMITS,
 	PXY_CFG_POOLING_LIFETIME,
 	PXY_CFG_POOLING_HOST_VA_RESERVE,
+	PXY_CFG_POOLING_KEEP_RESIDENT,
 	PXY_CFG_SAMPLERS_MIN_LOD,	
 	PXY_CFG_CLEANUP_PERIOD,
 	PXY_CFG_CLEANUP_SUBSLEEP,	
@@ -105,6 +106,7 @@ private:
 		{L"pooling", L"surface_limits",L"00000"},//PXY_CFG_POOLING_SURFACE_LIMITS
 		{L"pooling", L"lifetime",L"10000"},//PXY_CFG_POOLING_LIFETIME
 		{L"pooling", L"host_va_reserve",L"37"},//PXY_CFG_POOLING_HOST_VA_RESERVE
+		{L"pooling", L"keep_resident",L"0"},//PXY_CFG_POOLING_KEEP_RESIDENT
 		{L"samplers", L"min_lod", L"0"},//PXY_CFG_SAMPLERS_MIN_LOD		
 		{L"cleanup", L"period",L"10000"},//PXY_CFG_CLEANUP_PERIOD
 		{L"cleanup", L"subsleep",L"250"},//PXY_CFG_CLEANUP_SUBSLEEP	

@@ -98,6 +98,8 @@ public:
 	intptr_t GetVA_GPU();
 	void GetCopyableFootprints(UINT subres, D3D12_PLACED_SUBRESOURCE_FOOTPRINT* ret);
 
+	static UINT residencyOverride;
+
 private: 
 	d912pxy_resource_typeid m_tid;
 

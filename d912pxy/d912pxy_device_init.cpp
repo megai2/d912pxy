@@ -160,6 +160,8 @@ void d912pxy_device::InitClassFields()
 
 	d912pxy_vstream::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
 	d912pxy_surface::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);
+
+	d912pxy_resource::residencyOverride = (d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_KEEP_RESIDENT) != 0) * 2;
 }
 
 void d912pxy_device::InitThreadSyncObjects()
