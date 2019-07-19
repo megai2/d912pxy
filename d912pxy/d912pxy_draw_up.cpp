@@ -11,7 +11,7 @@ d912pxy_draw_up::~d912pxy_draw_up()
 {
 	OnFrameEnd();
 
-	for (int i = 0; i != PXY_DUP_COUNT; ++i)
+	for (int i = 0; i != PXY_DUP_COUNT*2; ++i)
 	{
 		buf[i].vstream->Release();
 	}
@@ -21,10 +21,10 @@ void d912pxy_draw_up::Init()
 {
 	NonCom_Init(L"draw_up");
 
-	for (int i = 0; i != PXY_DUP_COUNT; ++i)
+	for (int i = 0; i != PXY_DUP_COUNT*2; ++i)
 	{
 		UINT32 tmpUPbufSpace = 0xFFFF;
-		if (i == PXY_DUP_DPI)
+		if ((i % PXY_DUP_COUNT) == PXY_DUP_DPI)
 		{
 			tmpUPbufSpace = d912pxy_s.config.GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
 		}
@@ -32,7 +32,7 @@ void d912pxy_draw_up::Init()
 		AllocateBuffer((d912pxy_draw_up_buffer_name)i, tmpUPbufSpace);
 		LockBuffer((d912pxy_draw_up_buffer_name)i);
 
-		if (i == PXY_DUP_DPI)
+		if ((i % PXY_DUP_COUNT) == PXY_DUP_DPI)
 		{
 			for (int j = 0; j != tmpUPbufSpace >> 2; ++j)
 			{
@@ -96,10 +96,17 @@ void d912pxy_draw_up::OnFrameEnd()
 	for (int i = 0; i != PXY_DUP_COUNT; ++i)
 	{
 		if (buf[i].writePoint)
+		{
 			buf[i].vstream->UnlockRanged(0, buf[i].offset);
+			buf[i].writePoint = 0;
 
-		buf[i].writePoint = 0;
+			d912pxy_draw_up_buffer swp = buf[i+PXY_DUP_COUNT];
+			buf[i + PXY_DUP_COUNT] = buf[i];
+			buf[i] = swp;			
+		}
 	}
+
+	
 }
 
 UINT d912pxy_draw_up::BufferWrite(d912pxy_draw_up_buffer_name bid, UINT size, const void * src)
@@ -150,7 +157,7 @@ void d912pxy_draw_up::AllocateBuffer(d912pxy_draw_up_buffer_name bid, UINT len)
 	UINT nFmt;
 	UINT nIB;
 
-	switch (bid)
+	switch (bid % PXY_DUP_COUNT)
 	{
 	case PXY_DUP_DPV:
 	case PXY_DUP_DIPV:
@@ -165,6 +172,9 @@ void d912pxy_draw_up::AllocateBuffer(d912pxy_draw_up_buffer_name bid, UINT len)
 	case PXY_DUP_DIPI2:
 		nFmt = D3DFMT_INDEX16;
 		nIB = 1;
+		break;
+	default:
+		LOG_ERR_THROW2(-1, "AllocateBuffer bid is wrong");
 	}
 
 	buf[bid].vstream = d912pxy_s.pool.vstream.GetVStreamObject(len, nFmt, nIB);

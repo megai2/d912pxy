@@ -32,7 +32,7 @@ public:
 	void OnFrameEnd();
 
 private:
-	d912pxy_draw_up_buffer buf[PXY_DUP_COUNT];
+	d912pxy_draw_up_buffer buf[PXY_DUP_COUNT*2];
 
 	d912pxy_vstream* oi;
 	d912pxy_device_streamsrc oss;
