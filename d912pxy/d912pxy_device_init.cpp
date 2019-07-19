@@ -452,9 +452,6 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 		GPUNameA[i] = (char)pDesc.Description[i];
 	}
 
-	//Alrai: Let's see what happens.
-	gpu->SetVideoMemoryReservation(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, 4096 << 20);	
-
 	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
 	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
 
