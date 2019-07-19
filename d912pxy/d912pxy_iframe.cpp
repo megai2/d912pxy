@@ -408,6 +408,8 @@ void d912pxy_iframe::Start()
 
 	batchesIssued = 0;
 
+	cuPrimType = D3DPT_TRIANGLELIST;
+
 	d912pxy_query_occlusion::OnIFrameStart();
 
 }
@@ -425,7 +427,7 @@ void d912pxy_iframe::End()
 
 	indexBind = NULL;*/
 
-
+	d912pxy_s.render.draw_up.OnFrameEnd();
 	d912pxy_query_occlusion::OnIFrameEnd();
 
 	if (mSwapChain) 
