@@ -62,7 +62,7 @@ void d912pxy_pool_memcat<ElementType, ProcImpl>::Init(UINT32 iBitIgnore, UINT32 
 	memoryInPool = 0;
 
 	if (limitCfg != PXY_CFG_CNT)	
-		maxMemoryInPool = d912pxy_s.config.GetValueUI32(limitCfg) << 20;			
+		maxMemoryInPool = d912pxy_s.config.GetValueUI64(limitCfg) << 20;			
 
 	PXY_MALLOC(memTable, sizeof(void*)*bitCnt, d912pxy_ringbuffer<ElementType>**);
 	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock)*bitCnt, d912pxy_thread_lock*);
@@ -132,7 +132,7 @@ void d912pxy_pool_memcat<ElementType, ProcImpl>::AddMemoryToPool(INT sz)
 template<class ElementType, class ProcImpl>
 UINT32 d912pxy_pool_memcat<ElementType, ProcImpl>::GetMemoryInPoolMb()
 {
-	return memoryInPool >> 20;
+	return (UINT32)(memoryInPool >> 20);
 }
 
 template<class ElementType, class ProcImpl>

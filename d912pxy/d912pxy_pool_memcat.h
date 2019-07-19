@@ -50,9 +50,9 @@ private:
 	UINT32 bitLimit;
 	UINT32 bitCnt;
 
-	UINT32 maxMemoryInPool;
-	UINT32 memoryInPool;
-	UINT32 peristentUsage;	
+	UINT64 maxMemoryInPool;
+	UINT64 memoryInPool;
+	UINT64 peristentUsage;	
 protected:
 	void CreateMemPool();
 	ID3D12Resource* CreatePlacedResource(UINT32 size, D3D12_RESOURCE_DESC* rsDesc);
