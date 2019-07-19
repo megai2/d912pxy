@@ -46,12 +46,17 @@ void d912pxy_draw_up::Init()
 
 void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	
-
 	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
 	UINT vstreamRegLen = VertexStreamZeroStride * d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
 	UINT vsvOffset = BufferWrite(PXY_DUP_DPV, vstreamRegLen, pVertexStreamZeroData);
+
+	//megai2: this is actual fix for DUP iframe flush buffer trashing
+	//as if we encounter dip limit, we will draw current DUP call in next CL, but current DUP will point to old written range,
+	//that can get overwrited by next CL
+	//but for optimization purposes i keep buffered fix 
+	//if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
+		//return;
 
 	PushVSBinds();
 
@@ -68,13 +73,18 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 
 void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void * pIndexData, D3DFORMAT IndexDataFormat, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	
-
 	UINT hiInd = IndexDataFormat == D3DFMT_INDEX32;
 	d912pxy_draw_up_buffer_name indBuf = hiInd ? PXY_DUP_DIPI4 : PXY_DUP_DIPI2;
 
 	UINT indBufSz = (hiInd * 2 + 2)*d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
 	UINT vertBufSz = VertexStreamZeroStride * (MinVertexIndex + NumVertices);
+	
+	//megai2: this is actual fix for DUP iframe flush buffer trashing
+	//as if we encounter dip limit, we will draw current DUP call in next CL, but current DUP will point to old written range,
+	//that can get overwrited by next CL
+	//but for optimization purposes i keep buffered fix 
+	//if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
+		//return;
 
 	UINT vsiOffset = BufferWrite(indBuf, indBufSz, pIndexData);
 	UINT vsvOffset = BufferWrite(PXY_DUP_DIPV, vertBufSz, pVertexStreamZeroData);
