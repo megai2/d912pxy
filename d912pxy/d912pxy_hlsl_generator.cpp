@@ -1165,9 +1165,9 @@ void d912pxy_hlsl_generator::LoadGenProfile()
 		ZeroMemory(genProfile, sizeof(UINT)*PXY_INNER_SHDR_BUG_COUNT);
 	}
 
-	genProfile[PXY_INNER_SHDR_BUG_SRGB_READ] = ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBR) != 0);
-	genProfile[PXY_INNER_SHDR_BUG_ALPHA_TEST] = ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_ALPHATEST) != 0);
-	genProfile[PXY_INNER_SHDR_BUG_SRGB_WRITE] = ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBW) != 0);
+	genProfile[PXY_INNER_SHDR_BUG_SRGB_READ] |= ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBR) != 0);
+	genProfile[PXY_INNER_SHDR_BUG_ALPHA_TEST] |= ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_ALPHATEST) != 0);
+	genProfile[PXY_INNER_SHDR_BUG_SRGB_WRITE] |= ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBW) != 0);
 }
 
 void d912pxy_hlsl_generator::ProcSIO_DOTX(DWORD * op, UINT sz)
