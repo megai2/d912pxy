@@ -25,10 +25,10 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-typedef struct d912pxy_com_object {
-	void* vtable;
+typedef struct d912pxy_com_object {	
 	union {
-		d912pxy_comhandler com;
+		void* vtable;
+		d912pxy_comhandler_non_derived com;
 		d912pxy_vdecl vdecl;
 		d912pxy_resource res;
 		d912pxy_shader shader;
@@ -40,7 +40,7 @@ typedef struct d912pxy_com_object {
 		d912pxy_texture tex_2d;
 		d912pxy_basetexture basetex;
 		d912pxy_vstream vstream;
-		d912pxy_query query;
+		d912pxy_query_non_derived query;
 		d912pxy_query_occlusion query_occ;
 		d912pxy_swapchain swapchain;
 		d912pxy_sblock sblock;

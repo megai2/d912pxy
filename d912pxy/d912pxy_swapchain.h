@@ -58,11 +58,11 @@ static const char* d912pxy_swapchain_state_names[] = {
 	"SWCS_COUNT"
 };
 
-class d912pxy_swapchain : public d912pxy_comhandler
+class d912pxy_swapchain : public d912pxy_vtable, public d912pxy_comhandler
 {
 public:	
 	static d912pxy_com_object* d912pxy_swapchain_com(int index, D3DPRESENT_PARAMETERS* in_pp);
-	virtual ~d912pxy_swapchain();
+	~d912pxy_swapchain();
 
 	D912PXY_METHOD(Present)(PXY_THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags);
 	D912PXY_METHOD(GetFrontBufferData)(PXY_THIS_ IDirect3DSurface9* pDestSurface);

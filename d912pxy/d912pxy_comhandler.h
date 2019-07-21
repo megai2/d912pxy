@@ -29,8 +29,10 @@ SOFTWARE.
 //megai2: why nuke exist? cuz it do his job
 
 #define PXY_COM_LOOKUP(var, obj) &(PXY_COM_CAST(d912pxy_com_object, var)->obj)
+#define PXY_COM_LOOKUP_(var, obj) PXY_COM_CAST(d912pxy_com_object, var)->obj
+//#define PXY_COM_LOOKUP(var, obj) var != 0 ? (&(PXY_COM_CAST(d912pxy_com_object, var)->obj)) : NULL
 #define PXY_COM_CAST(type, var) ((type*)var)
-#define PXY_COM_CAST_(type, var) ((type*)((void*)((intptr_t)var  - 8)))
+#define PXY_COM_CAST_(type, var) ((type*)((void*)((intptr_t)var)))
 #define PXY_THIS d912pxy_com_object* obj
 #define PXY_THIS_ d912pxy_com_object* obj,
 
@@ -48,12 +50,17 @@ SOFTWARE.
 
 #define D912PXY_IUNK_IMPL 
 
+class d912pxy_vtable {
+public:
+	virtual void __topmost_fake_vfptr() { ; };
+};
+
 class d912pxy_comhandler : public d912pxy_noncom
 {
 public:
 	d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t* moduleText);
 	d912pxy_comhandler();	
-	virtual ~d912pxy_comhandler();
+	~d912pxy_comhandler();
 
 	void Init(d912pxy_com_obj_typeid tid, const wchar_t* moduleText);
 
@@ -68,14 +75,13 @@ public:
 	UINT FinalReleaseTest();
 
 	virtual UINT FinalRelease();
-
 	virtual UINT FinalReleaseCB();
+	virtual UINT32 PooledAction(UINT32 use);
 
 	void ThreadRef(INT ic);
 
 	void NoteDeletion(UINT32 time);
-	UINT CheckExpired(UINT32 nt, UINT32 lifetime);
-	virtual UINT32 PooledAction(UINT32 use);
+	UINT CheckExpired(UINT32 nt, UINT32 lifetime);	
 	void PooledActionExit();
 
 	int Watching(LONG v);
@@ -103,6 +109,7 @@ private:
 	d912pxy_thread_lock poolSync;	
 };
 
+class d912pxy_comhandler_non_derived : public d912pxy_vtable, public d912pxy_comhandler
+{
 
-
-
+};

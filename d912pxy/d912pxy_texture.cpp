@@ -48,9 +48,9 @@ d912pxy_texture::d912pxy_texture(UINT Width, UINT Height, UINT Levels, DWORD Usa
 d912pxy_texture * d912pxy_texture::d912pxy_texture_com(UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(((Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL)) ? PXY_COM_OBJ_TEXTURE_RTDS : PXY_COM_OBJ_TEXTURE);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_TEXTURE_2D);
-
+	
 	new (&ret->tex_2d)d912pxy_texture(Width, Height, Levels, Usage, Format);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_TEXTURE_2D);
 
 	return &ret->tex_2d;
 }

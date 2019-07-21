@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+#ifndef ENABLE_METRICS
+
 #define D912PXY_ROUTE_IMPL_START 
 #define D912PXY_ROUTE_IMPL_END
 #define D912PXY_ROUTE_IMPL_STUB(ret) obj->com.ImplStubCall(__FUNCTION__, __LINE__); return ret
@@ -459,6 +461,13 @@ D912PXY_METHOD_IMPL(SetRenderState)(PXY_THIS_ D3DRENDERSTATETYPE State, DWORD Va
 {
 	D912PXY_ROUTE_IMPL_START
 		D912PXY_ROUTE_IMPL_PREFIX SetRenderState(State, Value);
+	D912PXY_ROUTE_IMPL_END
+}
+
+D912PXY_METHOD_IMPL(SetRenderState_Tracked)(PXY_THIS_ D3DRENDERSTATETYPE State, DWORD Value)
+{
+	D912PXY_ROUTE_IMPL_START
+		D912PXY_ROUTE_IMPL_PREFIX SetRenderState_Tracked(State, Value);
 	D912PXY_ROUTE_IMPL_END
 }
 
@@ -2041,3 +2050,5 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_SBLOCK, PXY_COM_METHOD_SBLOCK_APPLY, &d912pxy_sblock::com_Apply);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SBLOCK, PXY_COM_METHOD_SBLOCK_CAPTURE, &d912pxy_sblock::com_Capture);
 }
+
+#endif

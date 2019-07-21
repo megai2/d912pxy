@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -34,42 +34,59 @@
 
 #define TELEMETRY_DEFAULT_SHARED_NAME                         TM("P7.Telemetry")
 
-//__declspec(novtable)
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////IP7_Telemetry////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 class IP7_Telemetry
+   : public IP7C_Channel
 {
 public:
-    ////////////////////////////////////////////////////////////////////////////
-    //Add_Ref - increase object's reference count
-    //          See documentation for details.
-    virtual tINT32 Add_Ref()                                                = 0;
-
-    ////////////////////////////////////////////////////////////////////////////
-    //Release - decrease object's reference count. If reference count less or
-    //          equal to 0 - object will be destroyed
-    //          See documentation for details.
-    virtual tINT32 Release()                                                = 0;
-
     ////////////////////////////////////////////////////////////////////////////
     //Create - creates  new  telemetry  counter,  max  amount  of  counters  per 
     //         telemetry instance - 256
     //         See documentation for details.
-    virtual tBOOL Create(const tXCHAR  *i_pName, 
-                         tINT64         i_llMin,
-                         tINT64         i_llMax,
-                         tINT64         i_llAlarm,
-                         tUINT8         i_bOn,
-                         tUINT8        *o_pID 
+    virtual tBOOL Create(const tXCHAR *i_pName, 
+                         tDOUBLE       i_dbMin,
+                         tDOUBLE       i_dbAlarmMin,
+                         tDOUBLE       i_dbMax,
+                         tDOUBLE       i_dbAlarmMax,
+                         tBOOL         i_bOn,
+                         tUINT16      *o_pID 
                         )                                                   = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     //Add - add counter sample 
     //      See documentation for details.
-    virtual tBOOL Add(tUINT8 i_bID, tINT64 i_llValue)                       = 0;
+    virtual tBOOL Add(tUINT16 i_bID, tDOUBLE i_llValue)                     = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     //Find - find counter ID by name (case sensitive)
     //       See documentation for details.
-    virtual tBOOL Find(const tXCHAR *i_pName, tUINT8 *o_pID)                = 0;
+    virtual tBOOL Find(const tXCHAR *i_pName, tUINT16 *o_pID)               = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    //Set_Enable - enable or disable counter
+    virtual tBOOL Set_Enable(tUINT16 i_wID, tBOOL i_bEnable)                = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    //Get_Enable - get enable flag
+    virtual tBOOL Get_Enable(tUINT16 i_wID)                                 = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    //Get_Min - get min value
+    virtual tDOUBLE Get_Min(tUINT16 i_wID)                                  = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    //Get_Max - get max value
+    virtual tDOUBLE Get_Max(tUINT16 i_wID)                                  = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    //Get_Name - get name
+    virtual const tXCHAR *Get_Name(tUINT16 i_wID)                           = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    //Get_Count - get amount of counters
+    virtual tUINT16 Get_Count()                                             = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     //Share  - function to share current P7.Telemetry object in address space of

@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_query_occlusion : public d912pxy_query
+class d912pxy_query_occlusion : public d912pxy_vtable, public d912pxy_query
 {
 public:
 	static d912pxy_query_occlusion* d912pxy_query_occlusion_com(D3DQUERYTYPE Type);

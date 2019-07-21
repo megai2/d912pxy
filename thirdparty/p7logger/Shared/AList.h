@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -99,14 +99,14 @@ public:
    
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Get_Initialized
-    tBOOL Get_Initialized()
+    inline tBOOL Get_Initialized()
     {
         return m_bInitialized;
     }//CListBase::Get_Initialized
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Del
-    tBOOL Del(pAList_Cell i_pCell, tBOOL i_bFree_Data)
+    inline tBOOL Del(pAList_Cell i_pCell, tBOOL i_bFree_Data)
     {
         tCell  *l_pCell   = static_cast<tCell*>(i_pCell);
         tBOOL l_bResult = TRUE;
@@ -122,7 +122,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Extract
-    tBOOL Extract(pAList_Cell i_pCell)
+    inline tBOOL Extract(pAList_Cell i_pCell)
     {
         tCell *l_pCell   = static_cast<tCell*>(i_pCell);
         tBOOL  l_bResult = TRUE;
@@ -137,13 +137,44 @@ public:
         return l_bResult;
     }//CListBase::Extract
 
+    ////////////////////////////////////////////////////////////////////////////
+    //CListBase::Pull_First
+    inline tData_Type Pull_First()
+    {
+        tData_Type l_pReturn = m_pFirst->m_pData;
+        Cell_Release(m_pFirst, TRUE, FALSE);
+        return l_pReturn;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CListBase::Pull_Last
+    inline tData_Type Pull_Last()
+    {
+        tData_Type l_pReturn = m_pLast->m_pData;
+        Cell_Release(m_pLast, TRUE, FALSE);
+        return l_pReturn;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CListBase::Push_First
+    inline pAList_Cell Push_First(tData_Type i_pData)
+    {
+        return Add_After(NULL, i_pData);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CListBase::Push_Last
+    inline pAList_Cell Push_Last(tData_Type i_pData)
+    {
+        return Add_After(m_pLast, i_pData);
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Add_After
-    pAList_Cell Add_After(pAList_Cell i_pCell, tData_Type i_pData)
+    inline pAList_Cell Add_After(pAList_Cell i_pCell, tData_Type i_pData)
     {
-        tCell * l_pNew_Cell = NULL;
-        tCell * l_pList_Cell = static_cast<tCell *>(i_pCell);
+        tCell *l_pNew_Cell = NULL;
+        tCell *l_pList_Cell = static_cast<tCell *>(i_pCell);
 
         l_pNew_Cell = Cell_Allocate();
 
@@ -163,7 +194,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Put_After
-    tBOOL Put_After(pAList_Cell i_pList_Cell, pAList_Cell i_pExt_Cell)
+    inline tBOOL Put_After(pAList_Cell i_pList_Cell, pAList_Cell i_pExt_Cell)
     {
         tCell   *l_pList_Cell = static_cast<tCell*>(i_pList_Cell);
         tCell   *l_pExt_Cell  = static_cast<tCell*>(i_pExt_Cell);
@@ -214,7 +245,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Get_Prev
-    pAList_Cell Get_Prev(pAList_Cell i_pCell)
+    inline pAList_Cell Get_Prev(pAList_Cell i_pCell)
     {
         tCell *l_pCell = static_cast<tCell*>(i_pCell);
         pAList_Cell  l_pResult = NULL;
@@ -234,7 +265,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Get_Next
-    pAList_Cell Get_Next(pAList_Cell i_pCell)
+    inline pAList_Cell Get_Next(pAList_Cell i_pCell)
     {
         tCell *l_pCell = static_cast<tCell *>(i_pCell);
         pAList_Cell  l_pResult = NULL;
@@ -253,7 +284,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Get_Data
-    tData_Type Get_Data(pAList_Cell i_pCell)
+    inline tData_Type Get_Data(pAList_Cell i_pCell)
     {
         tCell *l_pCell = static_cast<tCell*>(i_pCell);
         tData_Type   l_pResult = 0;
@@ -268,7 +299,7 @@ public:
     
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Set_Data
-    tBOOL Set_Data(pAList_Cell i_pCell, tBOOL i_bFree_Old_Data, tData_Type i_pData)
+    inline tBOOL Set_Data(pAList_Cell i_pCell, tBOOL i_bFree_Old_Data, tData_Type i_pData)
     {
         tCell      *l_pCell   = static_cast<tCell*>(i_pCell);
         tData_Type  l_pResult = NULL;
@@ -288,7 +319,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Get_ByIndex
-    pAList_Cell Get_ByIndex(tUINT32 i_dwIDX)
+    inline pAList_Cell Get_ByIndex(tUINT32 i_dwIDX)
     {
         tCell *l_pReturn   = NULL;
         tUINT32  l_dwI;
@@ -329,7 +360,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::operator[]
-    tData_Type operator[](tUINT32 i_dwIDX)
+    inline tData_Type operator[](tUINT32 i_dwIDX)
     {
         tCell *l_pReturn = static_cast<tCell*>(Get_ByIndex(i_dwIDX));
 
@@ -339,7 +370,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Put_Data
-    tBOOL Put_Data(pAList_Cell i_pCell, tData_Type i_pData, tBOOL i_bFree_Old_Data)
+    inline tBOOL Put_Data(pAList_Cell i_pCell, tData_Type i_pData, tBOOL i_bFree_Old_Data)
     { 
         tBOOL  l_bResult = TRUE;
         tCell *l_pCell   = static_cast<tCell*>(i_pCell);
@@ -381,7 +412,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Clear
-    void Clear(tBOOL i_bClearData)
+    inline void Clear(tBOOL i_bClearData)
     {
         while (NULL != m_pFirst)
         {
@@ -395,7 +426,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Get_First
-    pAList_Cell Get_First()
+    inline pAList_Cell Get_First()
     {
         return static_cast<pAList_Cell>(m_pFirst);
     }//CListBase::Get_First
@@ -403,7 +434,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Get_Last
-    pAList_Cell Get_Last()
+    inline pAList_Cell Get_Last()
     {
         return static_cast<pAList_Cell>(m_pLast);
     }//CListBase::Get_Last
@@ -411,7 +442,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Count
-    tUINT32 Count()
+    inline tUINT32 Count()
     {
         return m_dwCount;
     }//CListBase::Count
@@ -419,7 +450,7 @@ public:
 private:
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Cell_Release
-    tBOOL Cell_Release(tCell *i_pCell, tBOOL i_bFree_Cell, tBOOL i_bFree_Data)
+    inline tBOOL Cell_Release(tCell *i_pCell, tBOOL i_bFree_Cell, tBOOL i_bFree_Data)
     {
         tBOOL l_bResult = TRUE;
 
@@ -472,7 +503,6 @@ private:
             if (i_bFree_Cell)
             {
                 Cell_Free(i_pCell);
-                i_pCell = NULL;
             }
         }
 
@@ -486,7 +516,7 @@ private:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Index_Build
-    tBOOL Index_Build()
+    inline tBOOL Index_Build()
     {
         tBOOL l_bResult = TRUE;
 
@@ -530,7 +560,7 @@ private:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListBase::Index_Release
-    tBOOL Index_Release()
+    inline tBOOL Index_Release()
     {
         if (m_pIndex)
         {
@@ -668,7 +698,7 @@ public:
 private:
     ////////////////////////////////////////////////////////////////////////////
     //CListPool::Create_Pool_Segment
-    tBOOL Create_Pool_Segment()
+    inline tBOOL Create_Pool_Segment()
     {
         tBOOL l_bReturn = FALSE;
 
@@ -716,7 +746,7 @@ private:
 
     ////////////////////////////////////////////////////////////////////////////
     //CListPool::Free_Pool_Segment
-    void Free_Pool_Segment(tPool_Segment *io_pPool)
+    inline void Free_Pool_Segment(tPool_Segment *io_pPool)
     {
         if (io_pPool)
         {

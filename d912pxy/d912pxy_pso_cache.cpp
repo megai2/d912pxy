@@ -207,7 +207,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		return;
 
 	dirty |= 1;// (DX9RSvalues[State] != Value);
-//	DX9RSvalues[State] = Value;
+	
 
 	switch (State)
 	{
@@ -467,6 +467,11 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	default:
 		;
 	}
+}
+
+void d912pxy_pso_cache::TrackState(D3DRENDERSTATETYPE State, DWORD Value)
+{
+	DX9RSvalues[State] = Value;
 }
 
 void d912pxy_pso_cache::VShader(d912pxy_shader * vs)
@@ -900,9 +905,9 @@ d912pxy_pso_cache_item::d912pxy_pso_cache_item(d912pxy_trimmed_dx12_pso* sDsc) :
 d912pxy_pso_cache_item * d912pxy_pso_cache_item::d912pxy_pso_cache_item_com(d912pxy_trimmed_dx12_pso * sDsc)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_PSO_ITEM);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY);
-
+	
 	new (&ret->pso_item)d912pxy_pso_cache_item(sDsc);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_QUERY);
 
 	return &ret->pso_item;
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -34,6 +34,10 @@
 #else
     #define GTX32  
 #endif
+
+#define CONCATENATE_DETAIL(x, y) x##y
+#define CONCATENATE(x, y) CONCATENATE_DETAIL(x, y)
+#define MAKE_UNIQUE(x) CONCATENATE(x, __COUNTER__)
 
 ////////////////////////////////////////////////////////////////////////////////
 //WINDOWS specific definitions & types
@@ -113,6 +117,7 @@
 #define STR_HELPER(x)        #x
 #define TOSTR(x)             STR_HELPER(x)
 
+#define TMM(i_pStr)          TM(i_pStr)
 
 typedef unsigned long long   tUINT64;
 typedef long long            tINT64;

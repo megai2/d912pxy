@@ -126,9 +126,9 @@ void * d912pxy_surface_layer::SurfacePixel(UINT32 x, UINT32 y)
 d912pxy_surface_layer * d912pxy_surface_layer::d912pxy_surface_layer_com(d912pxy_com_object * iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SURFACE_LAYER);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE_LAYER);
-
+	
 	new (&ret->layer)d912pxy_surface_layer(iBase, iSubres, iBSize, iWPitch, iWidth, imemPerPix);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE_LAYER);
 
 	return &ret->layer;
 }

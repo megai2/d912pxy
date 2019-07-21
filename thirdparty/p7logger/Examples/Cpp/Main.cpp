@@ -4,9 +4,9 @@
 #include "P7_Trace.h"
 #include "P7_Telemetry.h"
 
-void __cdecl Telemetry_Enable(void *i_pContext, tUINT8 i_bId, tBOOL i_bEnable)
+void __cdecl Telemetry_Enable(void *i_pContext, tUINT16 i_wId, tBOOL i_bEnable)
 {
-    printf("Id=%d, Enable=%d\n", (tUINT32)i_bId, (tUINT32)i_bEnable);
+    printf("Id=%d, Enable=%d\n", (tUINT32)i_wId, (tUINT32)i_bEnable);
 }
 
 void __cdecl Connect(void *i_pContext, tBOOL i_bConnect)
@@ -23,8 +23,8 @@ int main(int i_iArgC, char* i_pArgV[])
     IP7_Trace::hModule l_hModule    = NULL;
 
     IP7_Telemetry     *l_pTelemetry = NULL;
-    tUINT8             l_bTID1      = 0;
-    tUINT8             l_bTID2      = 0;
+    tUINT16            l_bTID1      = 0;
+    tUINT16            l_bTID2      = 0;
     tUINT32            l_dwIdx      = 0;
     stTelemetry_Conf   l_stConf     = {};
 
@@ -55,11 +55,11 @@ int main(int i_iArgC, char* i_pArgV[])
     l_pTrace->Register_Module(TM("Main"), &l_hModule);
 
     //send few trace messages
-    for (tUINT64 l_qwI = 0ULL; l_qwI < 10000ULL; l_qwI ++)
+    for (tUINT64 l_qwI = 0ULL; l_qwI < 100000ULL; l_qwI ++)
     {
-        l_pTrace->P7_TRACE(l_hModule, TM("Test trace message #%d, {%I64d}"), l_dwIdx ++, l_qwI);
-        l_pTrace->P7_INFO(l_hModule, TM("Test info message #%d, {%I64d}"), l_dwIdx ++, l_qwI);
-        l_pTrace->P7_DEBUG(l_hModule, TM("Test debug message #%d, {%I64d}"), l_dwIdx ++, l_qwI);
+        l_pTrace->P7_TRACE(l_hModule, TM("Test trace message #%d\n, {%I64d}"), l_dwIdx ++, l_qwI);
+        l_pTrace->P7_INFO(l_hModule, TM("Test info message #%d, {%I64d}\n"), l_dwIdx ++, l_qwI);
+        l_pTrace->P7_DEBUG(l_hModule, TM("Test debug\n message #%d, {%I64d}"), l_dwIdx ++, l_qwI);
 
         if (0xF == (rand() & 0xF))
         {
@@ -85,21 +85,21 @@ int main(int i_iArgC, char* i_pArgV[])
     {
         goto l_lblExit;
     }
-
+    
     //register telemetry counter, it has values in range 0 ... 1023
-    if (FALSE == l_pTelemetry->Create(TM("Group/counter 1"), 0, 1023, 1000, 1, &l_bTID1))
+    if (FALSE == l_pTelemetry->Create(TM("Group/counter 1"), 0, 0, 1023, 1000, 1, &l_bTID1))
     {
         goto l_lblExit;
     }
-    if (FALSE == l_pTelemetry->Create(TM("Group/counter 2"), 0, 1023, 1000, 1, &l_bTID2))
+    if (FALSE == l_pTelemetry->Create(TM("Group/counter 2"), 0, 0, 1023, 1000, 1, &l_bTID2))
     {
         goto l_lblExit;
     }
-
+    
     for (tUINT64 l_qwI = 0ULL; l_qwI < 100000ULL; l_qwI ++)
     {
-        l_pTelemetry->Add(l_bTID1, (l_qwI & 0x3FFull));
-        l_pTelemetry->Add(l_bTID2, ((l_qwI + 11ull) & 0x3FFull));
+        l_pTelemetry->Add(l_bTID1, (tDOUBLE)(l_qwI & 0x3FFull));
+        l_pTelemetry->Add(l_bTID2, (tDOUBLE)((l_qwI + 11ull) & 0x3FFull));
     }
 
 

@@ -34,13 +34,15 @@ static const D3D12_DESCRIPTOR_HEAP_DESC d912pxy_dx12_heap_config[PXY_INNER_MAX_D
 	{ D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 64, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 0 }
 };
 
-class d912pxy_device: public d912pxy_comhandler
+
+
+class d912pxy_device: public d912pxy_vtable,  public d912pxy_comhandler
 {
 public:
 	static d912pxy_com_object* d912pxy_device_com(void* baseMem, IDirect3DDevice9* dev, void* par);
 
 	d912pxy_device();
-	virtual ~d912pxy_device(void);
+	~d912pxy_device(void);
 
 	void Init(IDirect3DDevice9* dev, void* par);
 
@@ -338,6 +340,7 @@ public:
 	HRESULT SetViewport_CAR(CONST D3DVIEWPORT9* pViewport);
 	HRESULT SetScissorRect_CAR(CONST RECT* pRect);
 	HRESULT SetRenderTarget_Compat(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
+	D912PXY_METHOD_NC(SetRenderState_Tracked)(THIS_ D3DRENDERSTATETYPE State, DWORD Value);
 
 	//com routes for them
 	D912PXY_METHOD(DrawIndexedPrimitive_PS)(PXY_THIS_ D3DPRIMITIVETYPE, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
@@ -350,6 +353,7 @@ public:
 	D912PXY_METHOD(SetViewport_CAR)(PXY_THIS_ CONST D3DVIEWPORT9* pViewport);
 	D912PXY_METHOD(SetScissorRect_CAR)(PXY_THIS_ CONST RECT* pRect);
 	D912PXY_METHOD(SetRenderTarget_Compat)(PXY_THIS_ DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
+	D912PXY_METHOD(SetRenderState_Tracked)(PXY_THIS_ D3DRENDERSTATETYPE State, DWORD Value);
 	
 
 	HRESULT InnerPresentExecute();
@@ -367,7 +371,7 @@ private:
 	ComPtr<ID3D12Device> m_d12evice;
 	ID3D12Device* m_d12evice_ptr;
 	
-	d912pxy_draw_up* m_dupEmul;
+	
 	d912pxy_surface_clear* m_clearEmul;
 
 	d912pxy_dheap* m_dheaps[PXY_INNER_MAX_DSC_HEAPS];

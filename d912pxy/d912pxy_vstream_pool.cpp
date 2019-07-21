@@ -97,7 +97,7 @@ ID3D12Resource * d912pxy_vstream_pool::GetPlacedVStream(UINT32 size)
 	if (!memPool || (size >= memPoolSize))
 	{
 	fallback:
-		d912pxy_resource* dxBuffer = new d912pxy_resource(RTID_UL_BUF, PXY_COM_OBJ_NOVTABLE, L"vstream data");
+		d912pxy_resource* dxBuffer = new d912pxy_resource(RTID_UL_BUF, PXY_COM_OBJ_RESOURCE, L"vstream data");
 		dxBuffer->d12res_buffer(size, D3D12_HEAP_TYPE_DEFAULT);
 		dxBuffer->Release();
 

@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_surface_layer 
+class d912pxy_surface_layer : public d912pxy_vtable
 {
 public:	
 	static d912pxy_surface_layer* d912pxy_surface_layer_com(d912pxy_com_object* iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix);

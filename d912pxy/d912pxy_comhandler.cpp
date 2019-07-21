@@ -83,15 +83,13 @@ ULONG d912pxy_comhandler::Release()
 	{
 		LOG_DBG_DTDM("::CRE 0 %016llX", this);
 
-		if (d912pxy_s.devComBase)
+		if (d912pxy_s.dev_vtable)
 			d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		else {
 
 			if (FinalReleaseCB())
 				DeAllocateBase();
-
 			
-
 			return 0;
 		}
 	}
@@ -212,7 +210,7 @@ void d912pxy_comhandler::DeAllocateBase()
 		dtor_call(d912pxy_surface);
 		break;
 	case PXY_COM_OBJ_QUERY:
-		dtor_call(d912pxy_query);
+		dtor_call(d912pxy_query_non_derived);
 		break;
 	case PXY_COM_OBJ_QUERY_OCC:
 		dtor_call(d912pxy_query_occlusion);
@@ -249,6 +247,9 @@ void d912pxy_comhandler::DeAllocateBase()
 		break;
 	case PXY_COM_OBJ_STATIC:
 		;
+		break;
+	case PXY_COM_OBJ_RESOURCE:
+		dtor_call(d912pxy_resource);
 		break;
 	default:
 		LOG_ERR_THROW2(-1, "wrong com object typeid");

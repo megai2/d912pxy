@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -79,6 +79,9 @@ public:
     virtual tBOOL             Share(const tXCHAR *i_pName);
                               
     virtual const tXCHAR     *Get_Argument(const tXCHAR  *i_pName);
+
+    virtual size_t            Get_Channels_Count();
+    virtual IP7C_Channel     *Get_Channel(size_t i_szIndex);
 
     virtual tBOOL             Unshare();
 

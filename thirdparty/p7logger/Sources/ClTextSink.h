@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -34,7 +34,7 @@ struct sTraceDesc
     size_t         szFileName;
     tXCHAR        *pFunction;
     size_t         szFunction;
-    tUINT32        dwModuleID;
+    tUINT32        dwModuleID; //module ID when trace description was created
 
     sTraceDesc()
         : wLine(0)
@@ -72,6 +72,7 @@ public:
         tUINT64        qwRawTime;         //number of 100-nanosecond intervals since 01.01.1601 (UTC)
         tUINT64        qwRawTimeOffset;   //offset of 100-nanosecond intervals since prev. item
         eP7Trace_Level eLevel;            //log item level
+        tUINT32        dwModuleID;        //module ID for current trace item
         const tXCHAR  *pModuleName;       //module name
         size_t         szModuleName;      //module name length
         tUINT32        dwCpuCore;         //current CPU core number
@@ -93,6 +94,7 @@ public:
                               ) = 0;
 
     virtual eClient_Status TryRoll() { return ECLIENT_STATUS_OK; }
+    virtual eClient_Status DumpBuffers() = 0;
 };
 
 

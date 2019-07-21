@@ -33,6 +33,7 @@ UINT32 d912pxy_vstream::threadedCtor = 0;
 d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(isIB ? RTID_IBUF : RTID_VBUF, PXY_COM_OBJ_VSTREAM, isIB ? L"vstream i" : L"vstream v")
 {		
 	lockDepth = 0;
+	ul = NULL;
 
 	inUploadState = 0;
 
@@ -59,9 +60,9 @@ d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB
 d912pxy_vstream * d912pxy_vstream::d912pxy_vstream_com(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_VSTREAM);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VBUF);
-
+	
 	new (&ret->vstream)d912pxy_vstream(Length, Usage, fmt, isIB);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VBUF);
 
 	return &ret->vstream;
 }
@@ -216,8 +217,15 @@ UINT32 d912pxy_vstream::PooledAction(UINT32 use)
 	return 1;
 }
 
-void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl, d912pxy_upload_item* ulObj)
+void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12GraphicsCommandList * cl)
 {			
+	if (!ul)
+	{
+		ul = d912pxy_s.thread.bufld.GetUploadMem(dx9desc.Size);
+		ul_offset = ul->GetCurrentOffset();
+		ul->AddSpaceUsed(dx9desc.Size);
+	}
+
 	if (!m_res)
 		ConstructResource();
 
@@ -228,13 +236,14 @@ void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12Grap
 		d912pxy_s.thread.bufld.AddToFinishList(this);
 	}
 		
-	ulObj->UploadTargetWithOffset(this->GetD12Obj(), linfo->offset, linfo->offset, linfo->size, data, cl);	
+	ul->UploadBlock(this->GetD12Obj(), linfo->offset, ul_offset, linfo->size, data, cl);	
 }
 
 void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
 {
 	BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
 	inUploadState = 0;
+	ul = NULL;
 }
 
 void d912pxy_vstream::ConstructResource()

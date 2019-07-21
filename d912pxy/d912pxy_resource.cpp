@@ -24,10 +24,12 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+UINT d912pxy_resource::residencyOverride = 0;
+
 d912pxy_resource::d912pxy_resource(d912pxy_resource_typeid type, d912pxy_com_obj_typeid tid, const wchar_t * cat) : d912pxy_comhandler(tid, cat)
 {
 	m_tid = type;	
-	evicted = 0;
+	evicted = residencyOverride;
 	m_res = NULL;
 }
 
@@ -128,7 +130,7 @@ void d912pxy_resource::EvictFromGPU()
 
 void d912pxy_resource::MakeGPUResident()
 {
-	if (!evicted || !m_res)
+	if ((evicted != 1) || !m_res)
 		return;
 
 	FRAME_METRIC_RESIDENCY(1)

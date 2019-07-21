@@ -31,10 +31,8 @@ d912pxy_batch::d912pxy_batch()
 
 d912pxy_batch::~d912pxy_batch()
 {
-	
-
-	buffer->Release();
-	stream->Release();
+	delete buffer;
+	delete stream;
 
 	copyPSO->Release();
 	copyRS->Release();

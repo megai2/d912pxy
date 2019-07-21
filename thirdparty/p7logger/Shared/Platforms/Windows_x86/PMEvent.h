@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -66,7 +66,7 @@ public:
             return FALSE;
         }
 
-        va_list l_pVA  = NULL;
+        va_list l_pVA;
         tUINT8  l_bIDX = 0;
 
         m_pEvents = new sMEvent[i_bCount];

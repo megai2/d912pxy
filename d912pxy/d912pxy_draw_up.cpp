@@ -2,20 +2,37 @@
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_DRAWING_UP
 
-d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(L"draw_up")
+d912pxy_draw_up::d912pxy_draw_up()
 {
-	for (int i = 0; i != PXY_DUP_COUNT; ++i)
+}
+
+
+d912pxy_draw_up::~d912pxy_draw_up()
+{
+	OnFrameEnd();
+
+	for (int i = 0; i != PXY_DUP_COUNT*2; ++i)
+	{
+		buf[i].vstream->Release();
+	}
+}
+
+void d912pxy_draw_up::Init()
+{
+	NonCom_Init(L"draw_up");
+
+	for (int i = 0; i != PXY_DUP_COUNT*2; ++i)
 	{
 		UINT32 tmpUPbufSpace = 0xFFFF;
-		if (i == PXY_DUP_DPI)
+		if ((i % PXY_DUP_COUNT) == PXY_DUP_DPI)
 		{
 			tmpUPbufSpace = d912pxy_s.config.GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
-		} 
+		}
 
 		AllocateBuffer((d912pxy_draw_up_buffer_name)i, tmpUPbufSpace);
 		LockBuffer((d912pxy_draw_up_buffer_name)i);
 
-		if (i == PXY_DUP_DPI)
+		if ((i % PXY_DUP_COUNT) == PXY_DUP_DPI)
 		{
 			for (int j = 0; j != tmpUPbufSpace >> 2; ++j)
 			{
@@ -27,25 +44,19 @@ d912pxy_draw_up::d912pxy_draw_up(d912pxy_device* dev) : d912pxy_noncom(L"draw_up
 	}
 }
 
-
-d912pxy_draw_up::~d912pxy_draw_up()
-{
-	OnFrameEnd();
-
-	for (int i = 0; i != PXY_DUP_COUNT; ++i)
-	{
-		buf[i].vstream->Release();
-	}
-}
-
 void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	
-
 	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
 	UINT vstreamRegLen = VertexStreamZeroStride * d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
 	UINT vsvOffset = BufferWrite(PXY_DUP_DPV, vstreamRegLen, pVertexStreamZeroData);
+
+	//megai2: this is actual fix for DUP iframe flush buffer trashing
+	//as if we encounter dip limit, we will draw current DUP call in next CL, but current DUP will point to old written range,
+	//that can get overwrited by next CL
+	//but for optimization purposes i keep buffered fix 
+	//if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
+		//return;
 
 	PushVSBinds();
 
@@ -62,13 +73,18 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 
 void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void * pIndexData, D3DFORMAT IndexDataFormat, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-	
-
 	UINT hiInd = IndexDataFormat == D3DFMT_INDEX32;
 	d912pxy_draw_up_buffer_name indBuf = hiInd ? PXY_DUP_DIPI4 : PXY_DUP_DIPI2;
 
 	UINT indBufSz = (hiInd * 2 + 2)*d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
 	UINT vertBufSz = VertexStreamZeroStride * (MinVertexIndex + NumVertices);
+	
+	//megai2: this is actual fix for DUP iframe flush buffer trashing
+	//as if we encounter dip limit, we will draw current DUP call in next CL, but current DUP will point to old written range,
+	//that can get overwrited by next CL
+	//but for optimization purposes i keep buffered fix 
+	//if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
+		//return;
 
 	UINT vsiOffset = BufferWrite(indBuf, indBufSz, pIndexData);
 	UINT vsvOffset = BufferWrite(PXY_DUP_DIPV, vertBufSz, pVertexStreamZeroData);
@@ -90,10 +106,17 @@ void d912pxy_draw_up::OnFrameEnd()
 	for (int i = 0; i != PXY_DUP_COUNT; ++i)
 	{
 		if (buf[i].writePoint)
+		{
 			buf[i].vstream->UnlockRanged(0, buf[i].offset);
+			buf[i].writePoint = 0;
 
-		buf[i].writePoint = 0;
+			d912pxy_draw_up_buffer swp = buf[i+PXY_DUP_COUNT];
+			buf[i + PXY_DUP_COUNT] = buf[i];
+			buf[i] = swp;			
+		}
 	}
+
+	
 }
 
 UINT d912pxy_draw_up::BufferWrite(d912pxy_draw_up_buffer_name bid, UINT size, const void * src)
@@ -144,7 +167,7 @@ void d912pxy_draw_up::AllocateBuffer(d912pxy_draw_up_buffer_name bid, UINT len)
 	UINT nFmt;
 	UINT nIB;
 
-	switch (bid)
+	switch (bid % PXY_DUP_COUNT)
 	{
 	case PXY_DUP_DPV:
 	case PXY_DUP_DIPV:
@@ -159,6 +182,9 @@ void d912pxy_draw_up::AllocateBuffer(d912pxy_draw_up_buffer_name bid, UINT len)
 	case PXY_DUP_DIPI2:
 		nFmt = D3DFMT_INDEX16;
 		nIB = 1;
+		break;
+	default:
+		LOG_ERR_THROW2(-1, "AllocateBuffer bid is wrong");
 	}
 
 	buf[bid].vstream = d912pxy_s.pool.vstream.GetVStreamObject(len, nFmt, nIB);
@@ -170,6 +196,12 @@ void d912pxy_draw_up::PushVSBinds()
 	oss = d912pxy_s.render.iframe.GetStreamSource(0);
 	ossi = d912pxy_s.render.iframe.GetStreamSource(1);
 
+	if (oi)
+		oi->ThreadRef(1);
+
+	if (oss.buffer)
+		oss.buffer->ThreadRef(1);
+
 	d912pxy_s.render.iframe.SetStreamFreq(0, 1);
 	d912pxy_s.render.iframe.SetStreamFreq(1, 0);
 }
@@ -180,6 +212,12 @@ void d912pxy_draw_up::PopVSBinds()
 	d912pxy_s.render.iframe.SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
 	d912pxy_s.render.iframe.SetStreamFreq(0, oss.divider);
 	d912pxy_s.render.iframe.SetStreamFreq(1, ossi.divider);
+
+	if (oi)
+		oi->ThreadRef(-1);
+
+	if (oss.buffer)
+		oss.buffer->ThreadRef(-1);
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

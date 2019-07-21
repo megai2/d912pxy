@@ -75,15 +75,15 @@ d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) :
 d912pxy_com_object * d912pxy_swapchain::d912pxy_swapchain_com(int index, D3DPRESENT_PARAMETERS * in_pp)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SWAPCHAIN);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SWAPCHAIN);
-
+	
 	new (&ret->swapchain)d912pxy_swapchain(index, in_pp);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SWAPCHAIN);
 
 	return ret;
 }
 
 d912pxy_swapchain::~d912pxy_swapchain()
-{
+{	
 	if (dxgiOWndProc)
 	{
 		//megai2: restore ogirinal wnd proc

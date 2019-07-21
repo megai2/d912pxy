@@ -254,6 +254,9 @@
     <ClCompile Include="d912pxy_replay_base.cpp">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_com_route_overhead_tracked.cpp">
+      <Filter>d3d9_proxy\com\routing\default</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />

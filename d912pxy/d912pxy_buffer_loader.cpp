@@ -43,7 +43,7 @@ void d912pxy_buffer_loader::Init()
 
 void d912pxy_buffer_loader::UploadItem(d912pxy_vstream_lock_data* it)
 {
-	it->dst->ProcessUpload(it, cl, GetUploadMem(it->size));
+	it->dst->ProcessUpload(it, cl);
 	it->dst->ThreadRef(-1);
 }
 

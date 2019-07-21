@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -26,7 +26,8 @@
 
 //256k
 #define CLIENT_RECV_BUFFER_SIZE                                        (0x40000) 
-#define CLIENT_SEND_BUFFER_SIZE                                        (0x40000) 
+//2m
+#define CLIENT_SEND_BUFFER_SIZE                                       (0x200000)
 
 //2m
 #define SERVER_RECV_BUFFER_SIZE                                       (0x200000) 
@@ -39,7 +40,6 @@ typedef SOCKET      tSOCKET;
 typedef int         tADDR_LEN; 
 
 typedef addrinfoW   tADDR_INFO;
-
 
 #define INVALID_SOCKET_VAL                                      (INVALID_SOCKET)
 #define CONNECTION_IN_PROGRESS                                  (WSAEWOULDBLOCK)

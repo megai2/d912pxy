@@ -29,7 +29,8 @@ UINT32 d912pxy_surface::threadedCtor = 0;
 
 d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface texture")
 {
-	isPooled = 0;	
+	isPooled = 0;
+	ul = NULL;
 	layers = NULL;
 	dheapId = -1;
 	dheapIdFeedback = srvFeedback;
@@ -51,7 +52,10 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	{
 
 		PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
-		
+
+		PXY_MALLOC(ul, sizeof(d912pxy_surface_ul), d912pxy_surface_ul*);
+		ZeroMemory(ul, sizeof(d912pxy_surface_ul));
+
 		LOG_DBG_DTDM("w %u h %u u %u FCC NULL", surf_dx9dsc.Width, surf_dx9dsc.Height, surf_dx9dsc.Usage);
 		return;
 	}
@@ -120,9 +124,9 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 d912pxy_surface * d912pxy_surface::d912pxy_surface_com(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT * levels, UINT arrSz, UINT32 * srvFeedback)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_SURFACE);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE);
-
+	
 	new (&ret->surface)d912pxy_surface(Width, Height, Format, Usage, MultiSample, MultisampleQuality, Lockable, levels, arrSz, srvFeedback);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SURFACE);
 
 	return &ret->surface;
 }
@@ -130,6 +134,7 @@ d912pxy_surface * d912pxy_surface::d912pxy_surface_com(UINT Width, UINT Height, 
 d912pxy_surface::~d912pxy_surface()
 {
 	PXY_FREE(subresFootprints);
+	PXY_FREE(ul);
 			
 	if (rtdsHPtr.ptr == 0)
 	{
@@ -297,24 +302,30 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 
 	UINT blockHeight = FixBlockHeight(lv);
 
-	d912pxy_upload_item* ul = d912pxy_s.thread.texld.GetUploadMem(
-		(UINT32)d912pxy_helper::AlignValueByPow2(subresFootprints[lv].Footprint.RowPitch*blockHeight, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT));
-
-	if (!ulMarked)
+	if (!ul[lv].item)
 	{
-		ThreadRef(1);
-		d912pxy_s.thread.texld.AddToFinishList(this);
+		UINT64 ul_memory_space = d912pxy_helper::AlignValueByPow2(subresFootprints[lv].Footprint.RowPitch*blockHeight, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+
+		ul[lv].item = d912pxy_s.thread.texld.GetUploadMem(
+			(UINT32)ul_memory_space);
+		ul[lv].item->AddRef();
+		ul[lv].offset = ul[lv].item->GetCurrentOffset();
+		ul[lv].item->AddSpaceUsed(ul_memory_space);
+		if (!ulMarked)
+		{
+			ThreadRef(1);
+			d912pxy_s.thread.texld.AddToFinishList(this);
+		}
+		ulMarked = 1;
 	}
-	ulMarked = 1;		
-	
+		
 	UINT wPitch = GetWPitchLV(lv);
 	
-
-
-
 	ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(CLG_TEX);
 
-	D3D12_TEXTURE_COPY_LOCATION srcR = { ul->GetResourcePtr(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, 0 };
+	d912pxy_upload_item* ul_obj = ul[lv].item;
+
+	D3D12_TEXTURE_COPY_LOCATION srcR = { ul_obj->GetResourcePtr(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, 0 };
 
 	if (!m_res)
 	{
@@ -324,13 +335,14 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 
 	GetCopyableFootprints(lv, &srcR.PlacedFootprint);
 
-	srcR.PlacedFootprint.Offset = ul->GetCurrentOffset();
+	srcR.PlacedFootprint.Offset = ul[lv].offset;
 
-	ul->Reconstruct(
+	ul_obj->Reconstruct(
 		mem,
 		subresFootprints[lv].Footprint.RowPitch,
 		blockHeight,
 		wPitch,
+		srcR.PlacedFootprint.Offset,
 		0
 	);	
 
@@ -504,7 +516,10 @@ void d912pxy_surface::UpdateDescCache()
 
 	subresCountCache = descCache.DepthOrArraySize * descCache.MipLevels;
 
-	UINT32 ulArrSize = sizeof(d912pxy_upload_item*) * subresCountCache;
+	UINT32 ulArrSize = sizeof(d912pxy_surface_ul) * subresCountCache;
+
+	PXY_MALLOC(ul, ulArrSize, d912pxy_surface_ul*);
+	ZeroMemory(ul, ulArrSize);
 
 	PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)*subresCountCache, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
 	
@@ -647,14 +662,14 @@ void d912pxy_surface::FinishUpload()
 {	
 	UINT subCnt = descCache.DepthOrArraySize*descCache.MipLevels;
 
-	/*for (int i = 0; i != subCnt; ++i)
+	for (int i = 0; i != subCnt; ++i)
 	{
-		if (!ul[i])
+		if (!ul[i].item)
 			continue;
 
-		ul[i]->Release();
-		ul[i] = NULL;
-	}*/
+		ul[i].item->Release();
+		ul[i].item = NULL;
+	}
 
 	ulMarked = 0;
 

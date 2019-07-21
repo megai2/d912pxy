@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -56,6 +56,7 @@
 #define P7_CLIENT_H
 
 #include "GTypes.h"
+#include "P7_Version.h"
 
 #define CLIENT_DEFAULT_SHARED_NAME                             TM("P7.Client")
 
@@ -89,7 +90,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //Values: server address
 //IPV4 address : XXX.XXX.XXX.XXX
-//IPV6 address : not supported yet
+//IPV6 address : ::1, etc.
 //NetBios Name : any name
 #define CLIENT_COMMAND_LINE_BAICAL_ADDRESS                     TM("/P7.Addr=")
 
@@ -101,13 +102,14 @@
 // Min: 512
 // Max: 65535
 // Recommended: your network MTU size
-// default: 512
+// default: 1472
 #define CLIENT_COMMAND_PACKET_BAICAL_SIZE                      TM("/P7.PSize=")
 
 //size of the transmission window in packets. Sometimes is useful to manage it
-//if server aggressively loose incoming packets
+//if server aggressively loose incoming packets, this parameter is for precise
+//tuning, in most of the cases stay untouched and protocol manage it
 //Min = 1
-//max = (2 mb / packet size) or ((pool size / packet size) / 2)
+//max = ((pool size / packet size) / 2)
 #define CLIENT_COMMAND_WINDOW_BAICAL_SIZE                      TM("/P7.Window=")
 
 //specifies exit timeout in seconds, used to deliver last data chunks to server
@@ -136,7 +138,17 @@
 //default : off (0)
 //min     : 1
 //max     : 4096
-#define CLIENT_COMMAND_LINE_FILES_MAX                          TM("/P7.Files=")
+#define CLIENT_COMMAND_LINE_FILES_COUNT_MAX                   TM("/P7.Files=")
+
+
+//Value: define maximum P7 logs files cumulative size in MB at destination 
+//folder /P7.Dir="MyDir" in case if size of files is larger than specified 
+//value - oldest files will be removed
+//default : off (0)
+//min     : 1
+//max     : 4294967296
+#define CLIENT_COMMAND_LINE_FILES_SIZE_MAX                    TM("/P7.FSize=")
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                          general settings                                   /
@@ -380,10 +392,35 @@ PRAGMA_PACK_EXIT()//4///////////////////////////////////////////////////////////
 class /*__declspec(novtable)*/ IP7C_Channel
 {
 public:
+    enum eType
+    {
+        eTrace,
+        eTelemetry,
+        eCount
+    };
+    ////////////////////////////////////////////////////////////////////////////
+    //Get_Type - get channel type, depending on type cast to IP7_Telemetry or
+    //           IP7_Trace is available
+    virtual IP7C_Channel::eType Get_Type()                                  = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    //Add_Ref - increase object's reference count
+    //          See documentation for details.
+    virtual tINT32 Add_Ref()                                                = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    //Release - decrease object's reference count. If reference count less or
+    //          equal to 0 - object will be destroyed
+    //          See documentation for details.
+    virtual tINT32 Release()                                                = 0;
+
+
     virtual void On_Init(sP7C_Channel_Info *i_pInfo)                        = 0;
     virtual void On_Receive(tUINT32 i_dwChannel, 
                             tUINT8 *i_pBuffer, 
-                            tUINT32 i_dwSize)                               = 0;
+                            tUINT32 i_dwSize,
+                            tBOOL   i_bBigEndian
+                            )                                               = 0;
 
     virtual void On_Status(tUINT32            i_dwChannel, 
                            const sP7C_Status *i_pStatus)                    = 0;
@@ -436,6 +473,9 @@ public:
     virtual tBOOL             Share(const tXCHAR *i_pName)                  = 0;
 
     virtual const tXCHAR     *Get_Argument(const tXCHAR  *i_pName)          = 0;
+
+    virtual size_t            Get_Channels_Count()                          = 0;
+    virtual IP7C_Channel     *Get_Channel(size_t i_szIndex)                 = 0;
 };
 
 

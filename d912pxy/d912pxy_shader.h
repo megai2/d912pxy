@@ -27,7 +27,7 @@ SOFTWARE.
 
 #define PXY_INNER_MAX_SHADER_LISTING_LEN 1024 * 1024
 
-class d912pxy_shader : public d912pxy_comhandler
+class d912pxy_shader : public d912pxy_vtable, public d912pxy_comhandler
 {
 public:
 	static d912pxy_shader* d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, const DWORD* origCode, d912pxy_shader_uid uid);

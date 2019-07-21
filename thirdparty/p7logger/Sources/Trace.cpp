@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -236,6 +236,7 @@ CP7Trace_Desc::CP7Trace_Desc(CMemoryManager &i_rMemory,
                              const char     *i_pFile,
                              const char     *i_pFunction,
                              const tXCHAR  **i_pFormat,
+                             tKeyType        i_pKeys[P7TRACE_KEY_LENGTH],
                              tUINT32         i_dwFlags
                             )
     : m_wID(i_wID)
@@ -263,8 +264,8 @@ CP7Trace_Desc::CP7Trace_Desc(CMemoryManager &i_rMemory,
     
     m_bInitialized = (NULL != l_pFormat);
 
-    m_pKey[0] = (tKeyType)i_pFunction;
-    m_pKey[1] = (tKeyType)l_pFormat;
+    m_pKey[0] = i_pKeys[0];
+    m_pKey[1] = i_pKeys[1];
 
     if (m_bInitialized)
     {
@@ -705,6 +706,8 @@ CP7Trace_Desc::CP7Trace_Desc(CMemoryManager &i_rMemory,
 
     , m_pBlocks(NULL)
     , m_dwBlocks_Count(0)
+
+    , m_pArgs(NULL)
     , m_dwArgs_Count(0)
    
     , m_bInitialized(TRUE)
@@ -971,6 +974,7 @@ CP7Trace::CP7Trace(IP7_Client         *i_pClient,
     , m_wDesc_Tree_ID(P7_TRACE_DESC_HARDCODED_COUNT)
     , m_dwLast_ID(0)
     , m_bInitialized(TRUE)
+    , m_bActive(TRUE)
     , m_eVerbosity(EP7TRACE_LEVEL_TRACE)
     , m_pChk_Head(NULL)
     , m_pChk_Tail(NULL)
@@ -1016,7 +1020,7 @@ CP7Trace::CP7Trace(IP7_Client         *i_pClient,
         {
             eP7Trace_Level l_eVerbosity = (eP7Trace_Level)PStrToInt(l_pVerbosiry);
             if (    (l_eVerbosity < EP7TRACE_LEVEL_COUNT)
-                 || (l_eVerbosity >= EP7TRACE_LEVEL_TRACE)
+                 && (l_eVerbosity >= EP7TRACE_LEVEL_TRACE)
                )
             {
                 m_eVerbosity = l_eVerbosity;
@@ -1204,6 +1208,8 @@ CP7Trace::CP7Trace(IP7_Client         *i_pClient,
         }
     }
 #endif
+
+    m_bActive = m_bInitialized;
 }
 
 
@@ -1280,58 +1286,70 @@ void CP7Trace::On_Init(sP7C_Channel_Info *i_pInfo)
 
 ////////////////////////////////////////////////////////////////////////////////
 // On_Receive                                      
-void CP7Trace::On_Receive(tUINT32 i_dwChannel, tUINT8 *i_pBuffer, tUINT32 i_dwSize)
+void CP7Trace::On_Receive(tUINT32 i_dwChannel, tUINT8 *i_pBuffer, tUINT32 i_dwSize, tBOOL i_bBigEndian)
 {
     UNUSED_ARG(i_dwChannel);
 
     LOCK_ENTER(m_sCS);
 
     if (    (i_pBuffer)
-         && (i_dwSize > sizeof(sP7Ext_Header))
+         && (i_dwSize >= sizeof(sP7Ext_Header))
        )
     {
         sP7Ext_Raw l_sHeader = *(sP7Ext_Raw*)i_pBuffer;
 
-        if (    (EP7USER_TYPE_TRACE == GET_EXT_HEADER_TYPE(l_sHeader))
-             && (EP7TRACE_TYPE_VERB == GET_EXT_HEADER_SUBTYPE(l_sHeader))
-           )
+        if (EP7USER_TYPE_TRACE == GET_EXT_HEADER_TYPE(l_sHeader))
         {
-            sP7Trace_Module *l_pModule = NULL;
-
-            //if it is old protocol and field wModuleID isn't included into command
-            //or if module ID is 0
-            if (    (i_dwSize < sizeof(sP7Trace_Verb))
-                 || (!((sP7Trace_Verb*)i_pBuffer)->wModuleID)
-               )
+            if (EP7TRACE_TYPE_VERB == GET_EXT_HEADER_SUBTYPE(l_sHeader))
             {
-                m_eVerbosity = ((sP7Trace_Verb*)i_pBuffer)->eVerbosity;
-            }
-            else //set module verbosity
-            {
-                tUINT16     l_wModuleID = ((sP7Trace_Verb*)i_pBuffer)->wModuleID - 1;
-                pAList_Cell l_pEl       = NULL;
-                sModules   *l_pModules  = NULL; 
+                sP7Trace_Module *l_pModule = NULL;
 
-                l_pEl = NULL;
-                while ((l_pEl = m_cModules.Get_Next(l_pEl)))
+                if (i_bBigEndian)
                 {
-                    l_pModules = m_cModules.Get_Data(l_pEl);
-                    if (l_pModules->dwUsed > l_wModuleID)
-                    {
-                        l_pModules->pData[l_wModuleID].eVerbosity = ((sP7Trace_Verb*)i_pBuffer)->eVerbosity;
-                        l_pModule = &l_pModules->pData[l_wModuleID];
-                        break;
-                    }
-                    else
-                    {
-                        l_wModuleID -= l_pModules->dwUsed;
-                    }
-                }//while (l_pEl = m_cThreadsR.Get_Next(l_pEl))
-            }
+                    ((sP7Trace_Verb*)i_pBuffer)->wModuleID  = htons(((sP7Trace_Verb*)i_pBuffer)->wModuleID);
+                    ((sP7Trace_Verb*)i_pBuffer)->eVerbosity = (eP7Trace_Level)htonl(((sP7Trace_Verb*)i_pBuffer)->eVerbosity);
+                }
 
-            if (m_sConf.pVerbosity_Callback)
+                //if it is old protocol and field wModuleID isn't included into command
+                //or if module ID is 0
+                if (    (i_dwSize < sizeof(sP7Trace_Verb))
+                     || (!((sP7Trace_Verb*)i_pBuffer)->wModuleID)
+                   )
+                {
+                    m_eVerbosity = ((sP7Trace_Verb*)i_pBuffer)->eVerbosity;
+                }
+                else //set module verbosity
+                {
+                    tUINT16     l_wModuleID = ((sP7Trace_Verb*)i_pBuffer)->wModuleID - 1;
+                    pAList_Cell l_pEl       = NULL;
+                    sModules   *l_pModules  = NULL; 
+
+                    l_pEl = NULL;
+                    while ((l_pEl = m_cModules.Get_Next(l_pEl)))
+                    {
+                        l_pModules = m_cModules.Get_Data(l_pEl);
+                        if (l_pModules->dwUsed > l_wModuleID)
+                        {
+                            l_pModules->pData[l_wModuleID].eVerbosity = ((sP7Trace_Verb*)i_pBuffer)->eVerbosity;
+                            l_pModule = &l_pModules->pData[l_wModuleID];
+                            break;
+                        }
+                        else
+                        {
+                            l_wModuleID -= l_pModules->dwUsed;
+                        }
+                    }//while (l_pEl = m_cThreadsR.Get_Next(l_pEl))
+                }
+
+                if (m_sConf.pVerbosity_Callback)
+                {
+                    m_sConf.pVerbosity_Callback(m_sConf.pContext, l_pModule, ((sP7Trace_Verb*)i_pBuffer)->eVerbosity);
+                }
+            }
+            else if (EP7TRACE_TYPE_DELETE == GET_EXT_HEADER_SUBTYPE(l_sHeader))
             {
-                m_sConf.pVerbosity_Callback(m_sConf.pContext, l_pModule, ((sP7Trace_Verb*)i_pBuffer)->eVerbosity);
+                Flush();
+                m_bActive = FALSE;
             }
         }
     }
@@ -1449,7 +1467,7 @@ void CP7Trace::On_Flush(tUINT32 i_dwChannel, tBOOL *io_pCrash)
 
     if (    (io_pCrash)
          && (TRUE == *io_pCrash)
-         && (m_bInitialized)
+         && (m_bActive)
        )
     {
         //nothing special for crash event
@@ -1966,13 +1984,14 @@ tBOOL CP7Trace::Trace(tUINT16            i_wTrace_ID,
 #else
     va_list l_pVl;
     va_start(l_pVl, i_pFormat);
+    tKeyType l_pKey[2] = {(tKeyType)i_pFunction, (tKeyType)i_pFormat};
     tBOOL l_bRet = Trace_Raw(i_wTrace_ID, 
                              i_eLevel, 
                              i_hModule, 
                              i_wLine, 
                              i_pFile, 
                              i_pFunction, 
-                             (tKeyType*)&i_pFunction,
+                             l_pKey,
                              &i_pFormat,
                              &l_pVl
                             );
@@ -2016,12 +2035,12 @@ tBOOL CP7Trace::Share(const tXCHAR *i_pName)
 // On_Flush - internal call                                      
 void CP7Trace::Flush()
 {
-    if (FALSE == m_bInitialized)
+    if (FALSE == m_bActive)
     {
         return;
     }
 
-    m_bInitialized = FALSE;
+    m_bActive = FALSE;
 
     sP7C_Data_Chunk *l_pChunk  = m_pChk_Curs;
     tUINT32          l_dwSize  = m_dwChk_Size;
@@ -2139,6 +2158,7 @@ tBOOL CP7Trace::Trace_Managed(tUINT16            i_wTrace_ID,
     tUINT32          l_dwSize   = 0;
     CP7Trace_Desc   *l_pDesc    = NULL; 
     tBOOL            l_bDesc    = FALSE;
+    size_t           l_szTrace  = 0;
     sP7C_Data_Chunk *l_pChunk; //we do not initialize it here, we do it later
 
     LOCK_ENTER(m_sCS);
@@ -2146,7 +2166,7 @@ tBOOL CP7Trace::Trace_Managed(tUINT16            i_wTrace_ID,
     m_dwSequence ++;
 
     if (    (i_eLevel < m_eVerbosity)
-         || (FALSE == m_bInitialized)
+         || (FALSE == m_bActive)
          || (FALSE == m_sStatus.bConnected)
          || (    (i_hModule)
               && (i_eLevel < ((sP7Trace_Module*)i_hModule)->eVerbosity)
@@ -2271,10 +2291,6 @@ tBOOL CP7Trace::Trace_Managed(tUINT16            i_wTrace_ID,
         l_pChunk ++;
     }
 
-    //adding trace parameters to chunk
-    SET_EXT_HEADER_SIZE(m_sHeader_Data.sCommonRaw, sizeof(m_sHeader_Data));
-    //m_sHeader_Data.sCommon.dwSize = sizeof(m_sHeader_Data); 
-
     m_sHeader_Data.bLevel     = (tUINT8)i_eLevel;
     m_sHeader_Data.bProcessor = (tUINT8)CProc::Get_Processor();
     m_sHeader_Data.dwThreadID = CProc::Get_Thread_Id();
@@ -2293,6 +2309,11 @@ tBOOL CP7Trace::Trace_Managed(tUINT16            i_wTrace_ID,
     l_pChunk->dwSize = sizeof(m_sHeader_Data);
     l_pChunk->pData  = &m_sHeader_Data;
 
+    //we should also add all variable parameters length ... later
+    l_szTrace = sizeof(m_sHeader_Data);
+    //SET_EXT_HEADER_SIZE(m_sHeader_Data.sCommonRaw, );
+    //m_sHeader_Data.sCommon.dwSize = sizeof(m_sHeader_Data); 
+
     l_pChunk ++;
 
     //adding string message to chunk
@@ -2303,12 +2324,37 @@ tBOOL CP7Trace::Trace_Managed(tUINT16            i_wTrace_ID,
 
     l_pChunk->dwSize = (tUINT32)((PStrLen(i_pMessage) + 1) * sizeof(tXCHAR));
     l_pChunk->pData  = (void*)i_pMessage;
+    l_szTrace       += l_pChunk->dwSize;
 
-    SET_EXT_HEADER_SIZE(m_sHeader_Data.sCommonRaw, GET_EXT_HEADER_SIZE(m_sHeader_Data.sCommonRaw) + l_pChunk->dwSize);
-    //m_sHeader_Data.sCommon.dwSize += l_pChunk->dwSize;
     l_pChunk++;
 
-    l_dwSize += GET_EXT_HEADER_SIZE(m_sHeader_Data.sCommonRaw);
+    //Put extensions.../////////////////////////////////////////////////////////////
+    if (i_hModule)
+    {
+    #if defined(__linux__) //fix alignment and GCC warnings
+        memcpy(m_pExtensions, &(((sP7Trace_Module*)i_hModule)->wModuleID), sizeof(tUINT16));
+    #else
+        *(tUINT16*)m_pExtensions = ((sP7Trace_Module*)i_hModule)->wModuleID;
+    #endif
+
+        m_pExtensions[2]         = (tUINT8)EP7TRACE_EXT_MODULE_ID;
+        m_pExtensions[3]         = 1;
+        l_pChunk->pData          = m_pExtensions;
+        l_pChunk->dwSize         = 4u;
+    }
+    else
+    {
+        m_pExtensions[0]         = 0;
+        l_pChunk->pData          = m_pExtensions;
+        l_pChunk->dwSize         = 1u;
+    }
+
+    l_szTrace += l_pChunk->dwSize;
+    SET_EXT_HEADER_SIZE(m_sHeader_Data.sCommonRaw, l_szTrace);
+    l_pChunk ++;
+
+
+    l_dwSize += (tUINT32)l_szTrace;
 
     if (ECLIENT_STATUS_OK != m_pClient->Sent(m_dwChannel_ID,
                                              m_pChk_Head,
@@ -2369,7 +2415,7 @@ __forceinline tBOOL CP7Trace::Trace_Raw(tUINT16            i_wTrace_ID,
 
     m_dwSequence ++;
 
-    if (    (FALSE == m_bInitialized)
+    if (    (FALSE == m_bActive)
          || (FALSE == m_sStatus.bConnected)
          || (    ((i_hModule)  && (i_eLevel < ((sP7Trace_Module*)i_hModule)->eVerbosity))
               || ((!i_hModule) && (i_eLevel < m_eVerbosity))
@@ -2397,6 +2443,7 @@ __forceinline tBOOL CP7Trace::Trace_Raw(tUINT16            i_wTrace_ID,
                                         i_pFile, 
                                         i_pFunction, 
                                         i_ppFormat,
+                                        i_pKey,
                                         m_dwFlags
                                        );
             m_pDesc_Array[i_wTrace_ID] = l_pDesc;
@@ -2435,6 +2482,7 @@ __forceinline tBOOL CP7Trace::Trace_Raw(tUINT16            i_wTrace_ID,
                                         i_pFile, 
                                         i_pFunction, 
                                         i_ppFormat,
+                                        i_pKey,
                                         m_dwFlags
                                        );
             //in stack we have pointer of the function and then format, 2 values

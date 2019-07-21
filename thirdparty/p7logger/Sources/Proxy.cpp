@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -147,11 +147,12 @@ P7_EXPORT hP7_Telemetry __cdecl P7_Telemetry_Get_Shared(const tXCHAR *i_pName)
 //P7_Telemetry_Create_Counter
 P7_EXPORT tBOOL __cdecl P7_Telemetry_Create_Counter(hP7_Telemetry i_hTelemetry,
                                                     const tXCHAR *i_pName, 
-                                                    tINT64        i_llMin,
-                                                    tINT64        i_llMax,
-                                                    tINT64        i_llAlarm,
-                                                    tUINT8        i_bOn,
-                                                    tUINT8       *o_pCounter_ID 
+                                                    tDOUBLE       i_dbMin,
+                                                    tDOUBLE       i_dbAlarmMin,
+                                                    tDOUBLE       i_dbMax,
+                                                    tDOUBLE       i_dbAlarmMax,
+                                                    tBOOL         i_bOn,
+                                                    tUINT16      *o_pID 
                                                    )
 {
     IP7_Telemetry *l_pTel = static_cast<IP7_Telemetry *>(i_hTelemetry);
@@ -161,11 +162,12 @@ P7_EXPORT tBOOL __cdecl P7_Telemetry_Create_Counter(hP7_Telemetry i_hTelemetry,
     }
 
     return l_pTel->Create(i_pName, 
-                          i_llMin,
-                          i_llMax,
-                          i_llAlarm,
+                          i_dbMin,
+                          i_dbAlarmMin,
+                          i_dbMax,
+                          i_dbAlarmMax,
                           i_bOn,
-                          o_pCounter_ID 
+                          o_pID 
                          );
 }//P7_Telemetry_Create_Counter
 
@@ -173,9 +175,8 @@ P7_EXPORT tBOOL __cdecl P7_Telemetry_Create_Counter(hP7_Telemetry i_hTelemetry,
 ////////////////////////////////////////////////////////////////////////////////
 //P7_Telemetry_Put_Value
 P7_EXPORT tBOOL __cdecl P7_Telemetry_Put_Value(hP7_Telemetry i_hTelemetry,
-                                               tUINT8        i_bCounter_ID,
-                                               tINT64        i_llValue
-                                               )
+                                               tUINT16       i_wCounter_ID,
+                                               tDOUBLE       i_dbValue)
 {
     IP7_Telemetry *l_pTel = static_cast<IP7_Telemetry *>(i_hTelemetry);
     if (NULL == l_pTel)
@@ -183,7 +184,7 @@ P7_EXPORT tBOOL __cdecl P7_Telemetry_Put_Value(hP7_Telemetry i_hTelemetry,
         return FALSE;
     }
 
-    return l_pTel->Add(i_bCounter_ID, i_llValue);
+    return l_pTel->Add(i_wCounter_ID, i_dbValue);
 }//P7_Telemetry_Put_Value
 
 
@@ -191,7 +192,7 @@ P7_EXPORT tBOOL __cdecl P7_Telemetry_Put_Value(hP7_Telemetry i_hTelemetry,
 //P7_Telemetry_Find_Counter
 P7_EXPORT tBOOL __cdecl P7_Telemetry_Find_Counter(hP7_Telemetry i_hTelemetry,
                                                   const tXCHAR *i_pName,
-                                                  tUINT8       *o_pCounter_ID
+                                                  tUINT16       *o_pCounter_ID
                                                  )
 {
     IP7_Telemetry *l_pTel = static_cast<IP7_Telemetry *>(i_hTelemetry);

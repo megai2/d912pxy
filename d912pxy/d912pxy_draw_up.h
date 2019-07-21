@@ -21,8 +21,10 @@ class d912pxy_draw_up :
 	public d912pxy_noncom
 {
 public:
-	d912pxy_draw_up(d912pxy_device* dev);
+	d912pxy_draw_up();
 	~d912pxy_draw_up();
+	
+	void Init();
 
 	void DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
 	void DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
@@ -30,7 +32,7 @@ public:
 	void OnFrameEnd();
 
 private:
-	d912pxy_draw_up_buffer buf[PXY_DUP_COUNT];
+	d912pxy_draw_up_buffer buf[PXY_DUP_COUNT*2];
 
 	d912pxy_vstream* oi;
 	d912pxy_device_streamsrc oss;

@@ -291,7 +291,8 @@ static void Test_02_Embedded_Trace(IP7_Trace         *i_pTrace,
 static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
 {
     sTest_02_Thread   *l_pParam     = (sTest_02_Thread*)i_pContext;
-    IP7_Trace::hModule l_hModule    = NULL;
+    const size_t       l_szModules  = 16;
+    IP7_Trace::hModule l_hModules[l_szModules] = {};
     IP7_Trace         *l_pTrace     = NULL;
     tUINT32            l_dwSent     = 0;
     tUINT32            l_dwRejected = 0;
@@ -315,10 +316,13 @@ static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
         return 0;
     }
 
-    SPRINTF(l_pName, TM("Module #%d"), l_pParam->dwIndex);
-    if (!l_pTrace->Register_Module(l_pName, &l_hModule))
+    for (size_t l_szI = 0; l_szI < l_szModules; l_szI++)
     {
-        printf("Thread %d: Error: Register_Module() failed\n", l_pParam->dwIndex);
+        SPRINTF(l_pName, TM("Module #%d:%d"), l_pParam->dwIndex, (int)l_szI);
+        if (!l_pTrace->Register_Module(l_pName, &l_hModules[l_szI]))
+        {
+            printf("Thread %d: Error: Register_Module() failed\n", l_pParam->dwIndex);
+        }
     }
 
     SPRINTF(l_pName, TM("Thread #%d"), l_pParam->dwIndex);
@@ -330,7 +334,7 @@ static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
     l_pTrace->Set_Verbosity(NULL, EP7TRACE_LEVEL_TRACE);
 
     Test_02_Embedded_Trace(l_pTrace,
-                           l_hModule,
+                           l_hModules[0],
                            TM("Create thread %X"), 
                            CProc::Get_Thread_Id()
                           );
@@ -341,7 +345,7 @@ static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
         {
             l_qwIDX++;
             if (l_pTrace->P7_QTRACE(1, 
-                                    l_hModule,
+                                    l_hModules[(size_t)l_qwIDX % l_szModules],
                                     TM("Test 1[%I64d] %d, %d, %s %d"), 
                                     l_qwIDX, 
                                     10, 
@@ -361,7 +365,7 @@ static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
             if (0 == (l_qwIDX % 10))
             {
                 l_qwIDX ++;
-                if (l_pTrace->P7_DEBUG(l_hModule, TM("Debug message(3) %s %d, %I64d"), TM("P7_DEBUG"), l_dwSent, l_qwIDX))
+                if (l_pTrace->P7_DEBUG(l_hModules[(size_t)l_qwIDX % l_szModules], TM("Debug message(3) %s %d, %I64d"), TM("P7_DEBUG"), l_dwSent, l_qwIDX))
                 {
                     l_dwSent ++;
                 }
@@ -374,7 +378,7 @@ static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
             if (0 == (l_qwIDX % 22))
             {
                 l_qwIDX ++;
-                if (l_pTrace->P7_INFO(l_hModule, TM("Info message(1) %s"), TM("P7_INFO")))
+                if (l_pTrace->P7_INFO(l_hModules[(size_t)l_qwIDX % l_szModules], TM("Info message(1) %s"), TM("P7_INFO")))
                 {
                     l_dwSent ++;
                 }
@@ -387,7 +391,7 @@ static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
             if (0 == (l_qwIDX % 153))
             {
                 l_qwIDX ++;
-                if (l_pTrace->P7_WARNING(l_hModule, TM("Warning message(1) %d"), l_dwSent))
+                if (l_pTrace->P7_WARNING(l_hModules[(size_t)l_qwIDX % l_szModules], TM("Warning message(1) %d"), l_dwSent))
                 {
                     l_dwSent ++;
                 }
@@ -401,7 +405,7 @@ static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
             if (0 == (l_qwIDX % 155))
             {
                 l_qwIDX ++;
-                if (l_pTrace->P7_ERROR(l_hModule, TM("ERROR message(2) %I64d, %s"), l_qwIDX, TM("P7_ERROR")))
+                if (l_pTrace->P7_ERROR(l_hModules[(size_t)l_qwIDX % l_szModules], TM("ERROR message(2) %I64d, %s"), l_qwIDX, TM("P7_ERROR")))
                 {
                     l_dwSent ++;
                 }
@@ -428,12 +432,12 @@ static THSHELL_RET_TYPE THSHELL_CALL_TYPE Test_02_Routine(void *i_pContext)
     }//while (WAIT_TIMEOUT == WaitForSingleObject(g_pEvent_Exit, 10))
 
     Test_02_Embedded_Trace(l_pTrace, 
-                           l_hModule,
+                           l_hModules[0],
                            TM("Leave thread %X"), 
                            CProc::Get_Thread_Id()
                           );
 
-    l_pTrace->P7_CRITICAL(l_hModule, TM("All done, bye bye"), 0);
+    l_pTrace->P7_CRITICAL(l_hModules[0], TM("All done, bye bye"), 0);
 
     if (!l_pTrace->Unregister_Thread(0))
     {
@@ -1214,7 +1218,7 @@ int Test_05(int i_iArgC, char* i_pArgV[])
     tBOOL          l_bError     = FALSE;
     tXCHAR         l_pChannel[128];
     tXCHAR         l_pCounter[128];
-    tUINT8         l_pID[TEST_05_COUNTERS_COUNT];
+    tUINT16        l_pID[TEST_05_COUNTERS_COUNT];
 
     for (int l_iI = 0; l_iI < i_iArgC; l_iI++)
     {
@@ -1269,6 +1273,7 @@ int Test_05(int i_iArgC, char* i_pArgV[])
 
                             if (FALSE == l_pTelemetry->Create(l_pCounter, 
                                                               0,
+                                                              0,
                                                               10000,
                                                               9000, 
                                                               1,
@@ -1309,7 +1314,7 @@ int Test_05(int i_iArgC, char* i_pArgV[])
                     {
                         SPRINTF(l_pCounter, TM("Counter"));
 
-                        tUINT8 l_bID = 0;
+                        tUINT16 l_bID = 0;
                         if (TRUE == l_pTelemetry->Find(l_pCounter, &l_bID))
                         {
                             printf("Error: Failed to find counter. Iteration = %d:%d Exit\n",
@@ -1386,7 +1391,7 @@ int Test_06(int i_iArgC, char* i_pArgV[])
     tUINT32        l_dwTime     = 0;
 
     tXCHAR         l_pCounter[128];
-    tUINT8         l_pID[TEST_06_COUNTERS_COUNT];
+    tUINT16        l_pID[TEST_06_COUNTERS_COUNT];
 
     UNUSED_ARG(l_bError);
     UNUSED_ARG(l_pCounter);
@@ -1424,6 +1429,7 @@ int Test_06(int i_iArgC, char* i_pArgV[])
         SPRINTF(l_pCounter, TM("Counter %02d"), l_dwK);
 
         if (FALSE == l_pTelemetry->Create(l_pCounter,
+                                          0, 
                                           0,
                                           10000,
                                           9500,
@@ -1510,12 +1516,12 @@ l_lExit:
 //Test_07
 int Test_07(int i_iArgC, char* i_pArgV[])
 {
-    IP7_Client         *l_pClient   = NULL;
-    IP7_Trace          *l_pTrace    = NULL;
+    IP7_Client        *l_pClient   = NULL;
+    IP7_Trace         *l_pTrace    = NULL;
     IP7_Trace::hModule l_hModule    = NULL;
     IP7_Telemetry     *l_pTelemetry = NULL;
     tBOOL              l_bExit      = FALSE;
-    tUINT8             l_bID        = 0;
+    tUINT16            l_bID        = 0;
     tUINT32            l_dwTime     = GetTickCount();
     tUINT32            l_dwIter     = 0;
     tBOOL              l_bError     = FALSE;
@@ -1567,7 +1573,7 @@ int Test_07(int i_iArgC, char* i_pArgV[])
             printf("Error: Register_Thread() failed\n");
         }
 
-        if (FALSE == l_pTelemetry->Create(TM("Counter"), 0, 1000, 950, 1, &l_bID))
+        if (FALSE == l_pTelemetry->Create(TM("Counter"), 0, 0, 1000, 950, 1, &l_bID))
         {
             printf("Error: Failed to create counter Exit\n");
             goto l_lExit;
@@ -1602,7 +1608,7 @@ int Test_07(int i_iArgC, char* i_pArgV[])
                 for (tUINT32 l_dwJ = 0; l_dwJ < 1000; l_dwJ++)
                 {
                     l_pSTtrace->P7_TRACE(l_hModule, TM("Test:%d"), l_dwJ);
-                    l_pSTelemetry->Add(l_bID, (tINT64)l_dwJ);
+                    l_pSTelemetry->Add(l_bID, (tDOUBLE)l_dwJ);
                 }
             }
             else
@@ -1695,6 +1701,158 @@ l_lExit:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//                                   TEST 8                                   //
+////////////////////////////////////////////////////////////////////////////////
+// Here we create so much telemetry counters as we can                        //
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+//Test_08
+
+#define TEST_08_COUNTERS_COUNT                                           (65534)
+#define TEST_08_COUNTERS_ACTIVE_COUNT                   256 //TEST_08_COUNTERS_COUNT/64
+
+int Test_08(int i_iArgC, char* i_pArgV[])
+{
+    IP7_Client    *l_pClient    = NULL;
+    IP7_Telemetry *l_pTelemetry = NULL;
+
+    tBOOL          l_bError     = FALSE;
+    tBOOL          l_bExit      = FALSE;
+    tUINT32        l_dwSent     = 0;
+    tUINT32        l_dwRejected = 0;
+    tUINT32        l_dwTime     = 0;
+    tDOUBLE        l_dbVal      = 0;
+
+    tXCHAR         l_pCounter[4096];
+    const tXCHAR  *l_pExtraText[] = {TM("You can do anything, but not everything"),
+                                     TM("Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away"), 
+                                     TM("The richest man is not he who has the most, but he who needs the least"), 
+                                     TM("Courage is not the absence of fear, but rather the judgement that something else is more important than fear."), 
+                                     TM("When hungry, eat your rice; when tired, close your eyes. Fools may laugh at me, but wise men will know what I mean.")};
+    tUINT16        l_pID[TEST_08_COUNTERS_COUNT];
+
+    UNUSED_ARG(l_bError);
+    UNUSED_ARG(l_pCounter);
+
+
+    for (int l_iI = 0; l_iI < i_iArgC; l_iI++)
+    {
+        if (0 == STRNICMP(i_pArgV[l_iI], TEST_HELP, LENGTH(TEST_HELP)-1))
+        {
+            printf("This test send telemetry samples with max. possible speed\n");
+            goto l_lExit;
+        }
+    }
+
+    l_pClient = P7_Create_Client(TM("/P7.PSize=1472 /P7.Pool=32768"));
+
+    if (NULL == l_pClient)
+    {
+        printf("Error: P7 engine was not initialized");
+        goto l_lExit;
+    }
+
+    l_pTelemetry = P7_Create_Telemetry(l_pClient, TM("Tel. Speed Test"));
+    if (NULL == l_pTelemetry)
+    {
+        printf("Error: P7 Telemetry was not initialized");
+        goto l_lExit;
+    }
+
+
+    memset(l_pID, 0, sizeof(l_pID));
+
+    for (tUINT32 l_dwK = 0; l_dwK < TEST_08_COUNTERS_COUNT; l_dwK++)
+    {
+        SPRINTF(l_pCounter, TM("Test counter group #%04d/Counter Index #%04d {%s}"), 
+                l_dwK / 256,
+                l_dwK,
+                l_pExtraText[l_dwK % LENGTH(l_pExtraText)]
+               );
+
+        if (FALSE == l_pTelemetry->Create(l_pCounter,
+                                          0.0, 
+                                          0.0,
+                                          10000.0,
+                                          9500.0,
+                                          (l_dwK >= (TEST_08_COUNTERS_COUNT - TEST_08_COUNTERS_ACTIVE_COUNT)) ? TRUE : FALSE,
+                                          &l_pID[l_dwK]
+                                         )
+           )
+        {
+            printf("Error: Failed to create counter %d Exit\n", l_dwK);
+            goto l_lExit;
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    l_dwTime = GetTickCount();
+
+    while (FALSE == l_bExit)
+    {
+        for (tUINT32 l_dwI = 0; l_dwI < TEST_08_COUNTERS_ACTIVE_COUNT; l_dwI ++)
+        {
+            l_dbVal += 0.5;
+            if (l_pTelemetry->Add(l_pID[TEST_08_COUNTERS_COUNT - l_dwI - 1], l_dbVal))
+            {
+                l_dwSent ++;
+            }
+            else
+            {
+                l_dwRejected ++;
+            }
+        }
+
+        if (l_dbVal > 10000.0)
+        {
+            l_dbVal = 0.0;
+            CThShell::Sleep(1);
+        }
+
+        if (CTicks::Difference(GetTickCount(), l_dwTime) >= 1000)
+        {
+            printf("Sent = %d Rejected = (%d) / %d ms\n",
+                    l_dwSent,
+                    l_dwRejected,
+                    CTicks::Difference(GetTickCount(), l_dwTime)
+                   );
+            l_dwTime     = GetTickCount();
+            l_dwSent     = 0;
+            l_dwRejected = 0;
+            
+            if (    (Is_Key_Hit())
+                 && (27 == Get_Char())
+               )
+            {
+                printf("Esc ... exiting\n");
+                l_bExit = TRUE;
+            }
+            
+        }
+    }//while (FALSE == l_bExit)
+
+
+l_lExit:
+    if (l_pTelemetry)
+    {
+        l_pTelemetry->Release();
+        l_pTelemetry = NULL;
+    }
+
+    if (l_pClient)
+    {
+        l_pClient->Release();
+        l_pClient = NULL;
+    }
+
+    return 0;
+}//Test_08
+
+
+////////////////////////////////////////////////////////////////////////////////
 //                                   MAIN                                     //
 ////////////////////////////////////////////////////////////////////////////////
 int main(int i_iArgC, char* i_pArgV[])
@@ -1741,6 +1899,10 @@ int main(int i_iArgC, char* i_pArgV[])
     else if (7 == l_iTest)
     {
         l_iReturn = Test_07(i_iArgC, i_pArgV);
+    }
+    else if (8 == l_iTest)
+    {
+        l_iReturn = Test_08(i_iArgC, i_pArgV);
     }
     else
     {

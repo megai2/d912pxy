@@ -44,8 +44,13 @@ d912pxy_surface_clear::~d912pxy_surface_clear()
 {
 	vBuf->Release();
 	iBuf->Release();
-	ps->Release();
-	vs->Release();
+
+	if (ps)
+		ps->Release();
+
+	if (vs)
+		vs->Release();
+
 	vdcl->Release();
 }
 

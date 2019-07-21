@@ -95,7 +95,8 @@ typedef struct d912pxy_serialized_pso_key {
 
 #pragma pack(pop)
 
-class d912pxy_pso_cache_item : public d912pxy_comhandler {
+class d912pxy_pso_cache_item : public d912pxy_vtable, public d912pxy_comhandler 
+{
 
 public:	
 	static d912pxy_pso_cache_item* d912pxy_pso_cache_item_com(d912pxy_trimmed_dx12_pso* sDsc);
@@ -140,6 +141,7 @@ public:
 
 	//things that affect pso only
 	void State(D3DRENDERSTATETYPE State, DWORD Value);
+	void TrackState(D3DRENDERSTATETYPE State, DWORD Value);
 	void VShader(d912pxy_shader* vs);
 	void PShader(d912pxy_shader* ps);
 	void IAFormat(d912pxy_vdecl* vertexDcl);
@@ -207,7 +209,7 @@ private:
 	UINT8 fileCacheFlags;
 	d912pxy_serialized_pso_key** psoKeyCache;
 	d912pxy_trimmed_dx12_pso cDsc;	
-	DWORD DX9RSvalues[D3DRS_BLENDOPALPHA + 1];
+	DWORD DX9RSvalues[226];
 
 	HANDLE psoCompileThread;
 	d912pxy_ringbuffer<d912pxy_pso_cache_item*>* psoCompileBuffer;

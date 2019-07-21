@@ -40,7 +40,8 @@ typedef enum d912pxy_com_obj_typeid {
 	PXY_COM_OBJ_PSO_ITEM = 11,
 	PXY_COM_OBJ_COUNT = 12,
 	PXY_COM_OBJ_NOVTABLE = 13,
-	PXY_COM_OBJ_STATIC = 14
+	PXY_COM_OBJ_STATIC = 14,
+	PXY_COM_OBJ_RESOURCE = 15,
 } d912pxy_com_obj_typeid;
 
 #define PXY_COM_OBJ_UNMANAGED PXY_COM_OBJ_COUNT

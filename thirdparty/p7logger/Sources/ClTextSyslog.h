@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -55,7 +55,7 @@ public:
         , m_pSocket(NULL)
         , m_dwFacility(1)
         , m_pBuffer(0)
-        , m_szBuffer(512)
+        , m_szBuffer(1472)
         , m_dwProcId(0)
     {
         CSys::Get_Host_Name(m_pHostName, LENGTH(m_pHostName));
@@ -288,6 +288,8 @@ public:
 
         return ECLIENT_STATUS_OK;
     }//Log
+
+    virtual eClient_Status DumpBuffers() { return ECLIENT_STATUS_OK; }
 };
 
 #endif //CLTEXTSYSLOG_H

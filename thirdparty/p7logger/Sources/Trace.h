@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -261,6 +261,7 @@ public:
                   const char     *i_pFile,
                   const char     *i_pFunction,
                   const tXCHAR  **i_pFormat,
+                  tKeyType        i_pKeys[P7TRACE_KEY_LENGTH],
                   tUINT32         i_dwFlags
                  );
 
@@ -394,9 +395,8 @@ protected:
 #define P7_TRACE_DESC_HARDCODED_COUNT                                     (1024)
 
 
-class CP7Trace:
-    public IP7C_Channel
-   ,public IP7_Trace
+class CP7Trace
+    : public IP7_Trace
 {
     struct sStack_Desc
     {
@@ -439,6 +439,7 @@ class CP7Trace:
     tLOCK              m_sCS; 
     tUINT32            m_dwLast_ID;
     tBOOL              m_bInitialized;
+    tBOOL              m_bActive;
     eP7Trace_Level     m_eVerbosity;
                       
     sP7Trace_Info      m_sHeader_Info;
@@ -480,8 +481,9 @@ public:
 
     tBOOL Is_Initialized();
 
+    IP7C_Channel::eType Get_Type() { return IP7C_Channel::eTrace; }
     void  On_Init(sP7C_Channel_Info *i_pInfo);
-    void  On_Receive(tUINT32 i_dwChannel, tUINT8 *i_pBuffer, tUINT32 i_dwSize);
+    void  On_Receive(tUINT32 i_dwChannel, tUINT8 *i_pBuffer, tUINT32 i_dwSize, tBOOL i_bBigEndian);
     void  On_Status(tUINT32 i_dwChannel, const sP7C_Status *i_pStatus);
     void  On_Flush(tUINT32 i_dwChannel, tBOOL *io_pCrash);
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -227,10 +227,11 @@ P7_EXPORT IP7_Client * __cdecl P7_Get_Shared(const tXCHAR *i_pName)
 
 ////////////////////////////////////////////////////////////////////////////////
 //cbCrashHandler
-void __cdecl cbCrashHandler(int i_iType, void *i_pContext)
+void __cdecl cbCrashHandler(eCrashCode i_eCode, const void *i_pCrashContext, void *i_pUserContext)
 {
-    UNUSED_ARG(i_iType);
-    UNUSED_ARG(i_pContext);
+    UNUSED_ARG(i_eCode);
+    UNUSED_ARG(i_pCrashContext);
+    UNUSED_ARG(i_pUserContext);
     P7_Exceptional_Flush();
 }//cbCrashHandler
 
@@ -239,7 +240,8 @@ void __cdecl cbCrashHandler(int i_iType, void *i_pContext)
 //P7_Set_Crash_Handler
 P7_EXPORT void __cdecl P7_Set_Crash_Handler()
 {
-    ChInstall(&cbCrashHandler);
+    ChInstall();
+    ChSetHandler(&cbCrashHandler);
 }//P7_Set_Crash_Handler
 
 
@@ -588,6 +590,57 @@ const tXCHAR *CClient::Get_Argument(const tXCHAR  *i_pName)
     return Get_Argument_Text_Value(m_pArgs, m_iArgsCnt, i_pName);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+//Get_Channels_Count()
+size_t CClient::Get_Channels_Count()
+{
+    size_t l_szReturn = 0;
+
+    LOCK_ENTER(m_hCS_Reg);
+
+    for (tUINT32 l_dwI = 0; l_dwI < USER_PACKET_CHANNEL_ID_MAX_SIZE; l_dwI++)
+    {
+        if (m_pChannels[l_dwI])
+        {
+            l_szReturn ++;
+        }
+    }
+    LOCK_EXIT(m_hCS_Reg);
+
+    return l_szReturn;
+}//Get_Channels_Count()
+
+
+////////////////////////////////////////////////////////////////////////////////
+//Get_Channel()
+IP7C_Channel *CClient::Get_Channel(size_t i_szIndex)
+{
+    IP7C_Channel *l_pReturn = NULL;
+    size_t        l_szCount = 0;
+
+    LOCK_ENTER(m_hCS_Reg);
+
+    for (tUINT32 l_dwI = 0; l_dwI < USER_PACKET_CHANNEL_ID_MAX_SIZE; l_dwI++)
+    {
+        if (m_pChannels[l_dwI])
+        {
+            if (l_szCount == i_szIndex)
+            {
+                l_pReturn = m_pChannels[l_dwI];
+                l_pReturn->Add_Ref();
+                break;
+            }
+            else
+            {
+                l_szCount ++;
+            }
+        }
+    }
+    LOCK_EXIT(m_hCS_Reg);
+
+    return l_pReturn;
+}//Get_Channel()
 
 
 ////////////////////////////////////////////////////////////////////////////////

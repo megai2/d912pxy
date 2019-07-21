@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_noncom
+class d912pxy_noncom 
 {
 public:
 	d912pxy_noncom(const wchar_t* logModule);

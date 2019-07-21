@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -375,17 +375,29 @@ public:
         l_dwReturn = Get_Signal();
         pthread_mutex_unlock(&m_sMutex);
 #else
-        clock_gettime(CLOCK_REALTIME, &l_sTime);
-        
-        l_qwNano       += l_sTime.tv_nsec;
-        l_sTime.tv_sec += static_cast<time_t>(l_qwNano/1000000000ULL);
-        l_sTime.tv_nsec = static_cast<long>(l_qwNano%1000000000ULL);
-
-        if (0 == sem_timedwait(&m_sSem, &l_sTime))
+        if (0 == i_dwMSec)
         {
-            pthread_mutex_lock(&m_sMutex);
-            l_dwReturn = Get_Signal();
-            pthread_mutex_unlock(&m_sMutex);
+            if (0 == sem_trywait(&m_sSem))
+            {
+                pthread_mutex_lock(&m_sMutex);
+                l_dwReturn = Get_Signal();
+                pthread_mutex_unlock(&m_sMutex);
+            }
+        }
+        else
+        {
+            clock_gettime(CLOCK_REALTIME, &l_sTime);
+
+            l_qwNano       += l_sTime.tv_nsec;
+            l_sTime.tv_sec += static_cast<time_t>(l_qwNano/1000000000ULL);
+            l_sTime.tv_nsec = static_cast<long>(l_qwNano%1000000000ULL);
+
+            if (0 == sem_timedwait(&m_sSem, &l_sTime))
+            {
+                pthread_mutex_lock(&m_sMutex);
+                l_dwReturn = Get_Signal();
+                pthread_mutex_unlock(&m_sMutex);
+            }
         }
 #endif        
         

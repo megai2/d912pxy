@@ -26,14 +26,14 @@ SOFTWARE.
 
 IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* obj);
 
-typedef struct d912pxy_instance {	
+typedef struct d912pxy_instance {
 	d912pxy_instance() { running = 0; };
 	~d912pxy_instance() { exit(0); };
 
 	struct pool {
 		d912pxy_vstream_pool vstream;
 		d912pxy_surface_pool surface;
-		d912pxy_upload_pool upload;	
+		d912pxy_upload_pool upload;
 		d912pxy_mem_va_table hostPow2;
 	} pool;
 
@@ -51,13 +51,15 @@ typedef struct d912pxy_instance {
 	struct render {
 
 		d912pxy_iframe iframe;
-		d912pxy_texture_state tex;		
+		d912pxy_texture_state tex;
 		d912pxy_batch batch;
+
+		d912pxy_draw_up draw_up;
 
 #ifdef USE_PASSTHRU_REPLAY
 		d912pxy_replay_passthru replay;
 #else
-		d912pxy_replay replay;		
+		d912pxy_replay replay;
 #endif
 
 		struct db {
@@ -65,15 +67,17 @@ typedef struct d912pxy_instance {
 			d912pxy_shader_db shader;
 		} db;
 	} render;
-		
+
 	struct dx12 {
 		d912pxy_gpu_que que;
 		d912pxy_gpu_cmd_list* cl;
 		ID3D12Device* dev;
 	} dx12;
-	
-	intptr_t devComBase;
-	d912pxy_device dev;	
+
+	union {
+		void* dev_vtable;
+		d912pxy_device dev;
+	};
 	
 	d912pxy_vfs vfs;		
 	d912pxy_config config;	

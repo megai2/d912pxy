@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -52,12 +52,14 @@ class CClTextFile
     tUINT32            m_dwWrite_Tick;
     tUINT64            m_qwFile_Size;
     tUINT32            m_dwFiles_Max_Count;
+    tUINT64            m_qwFiles_Max_Size;
     CBList<CWString*>  m_cFiles;
     tXCHAR            *m_pBuffer;
     size_t             m_szBuffer;
     size_t             m_szBufferOffs;
     CUintList          m_cSecondsList;
     tUINT32            m_uiSecond;
+    tUINT32            m_dwIndex;
 
 
 public:
@@ -70,9 +72,11 @@ public:
         , m_dwWrite_Tick(0ull)
         , m_qwFile_Size(0ull)
         , m_dwFiles_Max_Count(0u)
+        , m_qwFiles_Max_Size(0u)
         , m_pBuffer(NULL)
         , m_szBuffer(0x10000)
         , m_szBufferOffs(0)
+        , m_dwIndex(0)
     {
         m_dwWrite_Tick = GetTickCount();
         m_uiSecond     = GetSecondOfDay(); 
@@ -131,7 +135,7 @@ public:
         ////////////////////////////////////////////////////////////////////////////
         //get maximum count of the log files
         l_pArgV = Get_Argument_Text_Value(i_pArgs, i_iCount,
-                                          (tXCHAR*)CLIENT_COMMAND_LINE_FILES_MAX
+                                          (tXCHAR*)CLIENT_COMMAND_LINE_FILES_COUNT_MAX
                                          );
         if (l_pArgV)
         {
@@ -142,6 +146,16 @@ public:
                 m_dwFiles_Max_Count = TXT_FILE_DEF_FILES_COUNT;
             }
         }
+
+
+        l_pArgV = Get_Argument_Text_Value(i_pArgs, i_iCount,
+                                          (tXCHAR*)CLIENT_COMMAND_LINE_FILES_SIZE_MAX
+                                         );
+        if (l_pArgV)
+        {
+            m_qwFiles_Max_Size = (tUINT64)PStrToInt(l_pArgV) * 1048576ull;
+        }
+
 
         ////////////////////////////////////////////////////////////////////////////
         //get path to storage
@@ -170,7 +184,9 @@ public:
 
         ////////////////////////////////////////////////////////////////////////////
         //enumerate files & sorting ....
-        if (TXT_FILE_DEF_FILES_COUNT != m_dwFiles_Max_Count)
+        if (    (TXT_FILE_DEF_FILES_COUNT != m_dwFiles_Max_Count)
+             || (m_qwFiles_Max_Size)
+           )
         {
             CFSYS::Enumerate_Files(&m_cFiles, &m_pDir, TM("*.") TXT_FILE_EXT, 0);
 
@@ -400,12 +416,16 @@ public:
                 *(m_pBuffer + 1) = TM('\n');
                 m_szBufferOffs  += 2;
 
+                TryRoll();
+
                 return ECLIENT_STATUS_OK;
             }
             else
             {
                 m_cFile.Write((tUINT8*)m_pBuffer, m_szBufferOffs * sizeof(tXCHAR), FALSE);
                 m_szBufferOffs = 0;
+
+                TryRoll();
             }
 
             m_dwWrite_Tick = GetTickCount();
@@ -463,7 +483,7 @@ public:
     // Roll                                      
     void Roll()
     {
-        m_cFile.Write((tUINT8*)m_pBuffer, m_szBufferOffs * sizeof(tXCHAR), FALSE);
+        m_cFile.Write((tUINT8*)m_pBuffer, m_szBufferOffs * sizeof(tXCHAR), TRUE);
         m_cFile.Close(TRUE);
         m_qwFile_Size  = 0ull;
         m_szBufferOffs = 0u;
@@ -501,20 +521,20 @@ public:
         {
             PSPrint(l_pFile_Name, 
                     LENGTH(l_pFile_Name), 
-                    TM("/%04d%02d%02d-%02d%02d%02d%02d.") TXT_FILE_EXT,
+                    TM("/%04d%02d%02d-%02d%02d%02d%03d.") TXT_FILE_EXT,
                     l_dwYear, 
                     l_dwMonth,
                     l_dwDay,
                     l_dwHr,
                     l_dwMin,
                     l_dwSec,
-                    l_dwmSec
+                    m_dwIndex
                    );
 
             l_cFilePath.Set(m_pDir.Get());
             l_cFilePath.Append(1, l_pFile_Name);
 
-            l_dwmSec ++;
+            m_dwIndex ++;
         } while (TRUE == CFSYS::File_Exists(l_cFilePath.Get()));
 
         if (FALSE == m_cFile.Open(l_cFilePath.Get(), 
@@ -525,23 +545,68 @@ public:
             PRINTF(TM("P7:Can't create file: %s"), l_cFilePath.Get());
             l_eReturn = ECLIENT_STATUS_INTERNAL_ERROR;
         }
-        else if (TXT_FILE_DEF_FILES_COUNT != m_dwFiles_Max_Count)
+        else 
         {
             m_cFiles.Add_After(m_cFiles.Get_Last(), new CWString(l_cFilePath.Get()));
 
-            while (m_dwFiles_Max_Count < m_cFiles.Count())
+            if (TXT_FILE_DEF_FILES_COUNT != m_dwFiles_Max_Count)
             {
-                pAList_Cell l_pEl   = m_cFiles.Get_First();
-                CWString   *l_pPath = m_cFiles.Get_Data(l_pEl);
-                if (l_pPath)
+                while (m_dwFiles_Max_Count < m_cFiles.Count())
                 {
-                    if (!CFSYS::Delete_File(l_pPath->Get()))
+                    pAList_Cell l_pEl   = m_cFiles.Get_First();
+                    CWString   *l_pPath = m_cFiles.Get_Data(l_pEl);
+                    if (l_pPath)
                     {
-                        PRINTF(TM("P7:Can't delete file: %s"), l_pPath->Get());
+                        if (!CFSYS::Delete_File(l_pPath->Get()))
+                        {
+                            PRINTF(TM("P7:Can't delete file: %s"), l_pPath->Get());
+                        }
+                    }
+
+                    m_cFiles.Del(l_pEl, TRUE);
+                }
+            }
+
+            if (0 != m_qwFiles_Max_Size)
+            {
+                pAList_Cell l_pEl = NULL;
+                tUINT64     l_qwTotalSize = 0;
+                tUINT64     l_qwFileSize = 0;
+
+                while ((l_pEl = m_cFiles.Get_Next(l_pEl)))
+                {
+                    CWString *l_pPath = m_cFiles.Get_Data(l_pEl);
+                    if (l_pPath)
+                    {
+                        l_qwTotalSize += CFSYS::Get_File_Size(l_pPath->Get());
                     }
                 }
 
-                m_cFiles.Del(l_pEl, TRUE);
+                while (l_qwTotalSize > (m_qwFiles_Max_Size))
+                {
+                    pAList_Cell l_pEl   = m_cFiles.Get_First();
+                    CWString   *l_pPath = m_cFiles.Get_Data(l_pEl);
+                    if (l_pPath)
+                    {
+                        l_qwFileSize = CFSYS::Get_File_Size(l_pPath->Get());
+
+                        if (l_qwFileSize < l_qwTotalSize)
+                        {
+                            l_qwTotalSize -= l_qwFileSize;
+                        }
+                        else
+                        {
+                            l_qwTotalSize = 0ull;
+                        }
+
+                        if (!CFSYS::Delete_File(l_pPath->Get()))
+                        {
+                            PRINTF(TM("Can't delete file: %s"), l_pPath->Get());
+                        }
+                    }
+
+                    m_cFiles.Del(l_pEl, TRUE);
+                }
             }
         }
 
@@ -549,6 +614,18 @@ public:
 
         return l_eReturn;
     }// Create_File
+
+    virtual eClient_Status DumpBuffers()
+    {
+        if (m_szBufferOffs)
+        {
+            m_cFile.Write((tUINT8*)m_pBuffer, m_szBufferOffs * sizeof(tXCHAR), TRUE);
+            m_szBufferOffs = 0;
+        }
+
+        return ECLIENT_STATUS_OK;
+    }
+
 };
 
 #endif //CLTEXTFILE_H

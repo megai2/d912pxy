@@ -179,9 +179,9 @@ d912pxy_vdecl::d912pxy_vdecl(const D3DVERTEXELEMENT9* data) : d912pxy_comhandler
 d912pxy_vdecl * d912pxy_vdecl::d912pxy_vdecl_com(const D3DVERTEXELEMENT9 * data)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_VDECL);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VDECL);
-
+	
 	new (&ret->vdecl)d912pxy_vdecl(data);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_VDECL);
 
 	return &ret->vdecl;
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -55,14 +55,26 @@ enum eTPacket_Endian
     ETP_MAX_ENDIAN
 };
 
+////////////////////////////////////////////////////////////////////////////////
+//Transport Packet extension types
+enum eTPacket_Extension
+{
+    ETPE_SERVER_NETWORK_INFO = 0x0,    //sH_Ext + sH_Ext_Srv_Info
+    ETPE_USER_DATA           = 0x1,    //sH_Ext + sH_User_Data
+
+    ETPE_MAX                 = 0xFFFF
+};
+
+
 #define TPACKET_MIN_SIZE                                                 (0x200) 
+#define TPACKET_DEF_SIZE                                                 (1472u) 
 #define TPACKET_MAX_SIZE                                                (0xFF00) 
 
 ////////////////////////////////////////////////////////////////////////////////
 //Transport Packet flags
 #define TPACKET_FLAG_EXTRA_DATA                                         (0x001u) // 1 << 0
 #define TPACKET_FLAG_ARCH_64                                            (0x002u) // 1 << 1
-#define TPACKET_FLAG_RESERVED_02                                        (0x004u) // 1 << 2
+#define TPACKET_FLAG_EXTENSION                                          (0x004u) // 1 << 2
 #define TPACKET_FLAG_BIG_ENDIAN_SRV                                     (0x008u) // 1 << 3
 #define TPACKET_FLAG_RESERVED_04                                        (0x010u) // 1 << 4
 #define TPACKET_FLAG_RESERVED_05                                        (0x020u) // 1 << 5
@@ -126,6 +138,22 @@ struct sH_Packet_Ack
 } ATTR_PACK(2);
 
 
+struct sH_Ext
+{
+    tUINT16  wType;  //extension type  
+    tUINT16  wSize;  //extension size
+} ATTR_PACK(2);
+
+
+struct sH_Ext_Srv_Info
+{
+    tUINT32  dwServerVersion; //Server version 
+    tUINT16  wProtocolVersion;//Server protocol version
+    tUINT16  wMTU;            //maximum transfer unit (max packet size passed by all network route devices), 0 if unknown
+    tUINT32  dwSocket_Buffer; //size of recv socket buffer in bytes
+} ATTR_PACK(2);
+
+
 struct sH_Data_Window_Report
 {
     tUINT32 dwSource_ID;
@@ -149,6 +177,8 @@ struct sH_Data_Window_Report
 #define INIT_USER_HEADER(iSize, iChannel_Id) (iSize | (iChannel_Id << USER_PACKET_SIZE_BITS_COUNT))
 #define GET_USER_HEADER_SIZE(iBits) (iBits & ((1 << USER_PACKET_SIZE_BITS_COUNT) - 1))
 #define GET_USER_HEADER_CHANNEL_ID(iBits) ((iBits >> USER_PACKET_SIZE_BITS_COUNT) & ((1 << USER_PACKET_CHANNEL_ID_BITS_COUNT) - 1))
+
+#define CHANNEL_PACKETS_UNION_MAX_SIZE (128 * 1024)
 
 struct sH_User_Raw //user data header
 {
@@ -272,7 +302,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Initialized
-    tBOOL Get_Initialized()
+    inline tBOOL Get_Initialized()
     {
         return m_bInitialized;
     } //CTPacket::Get_Initialized
@@ -290,14 +320,14 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Size
-    tUINT16 Get_Size()
+    inline tUINT16 Get_Size()
     {
         return m_pHeader->wSize;
     }//CTPacket::Get_Size
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Client_ID
-    tUINT16 Get_Client_ID()
+    inline tUINT16 Get_Client_ID()
     {
         return m_pHeader->wClient_ID;
     }//CTPacket::Get_Client_ID
@@ -305,7 +335,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Type
-    eTPacket_Type Get_Type()
+    inline eTPacket_Type Get_Type()
     {
         return (eTPacket_Type)(m_pHeader->wBits & TPACKET_TYPE_MASK);
     }//CTPacket::Get_Type
@@ -313,7 +343,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Set_Type
-    void Set_Type(eTPacket_Type i_eType)
+    inline void Set_Type(eTPacket_Type i_eType)
     {
         m_pHeader->wBits &= ~TPACKET_TYPE_MASK; //clear type
         m_pHeader->wBits |= (i_eType & TPACKET_TYPE_MASK); //set new one
@@ -322,7 +352,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_ID
-    tUINT32 Get_ID()
+    inline tUINT32 Get_ID()
     {
         return m_pHeader->dwID;
     }//CTPacket::Get_ID
@@ -330,7 +360,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Is_Damaged
-    tBOOL Is_Damaged()
+    inline tBOOL Is_Damaged()
     {
         return (Calculate_CRC(m_pHeader->wSize) != m_pHeader->dwCRC32);
     }//CTPacket::Is_Damaged
@@ -338,7 +368,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Is_Damaged
-    tBOOL Is_Damaged(tBOOL i_bSwapBytes)
+    inline tBOOL Is_Damaged(tBOOL i_bSwapBytes)
     {
         if (i_bSwapBytes)
         {
@@ -353,7 +383,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Flags
-    tUINT16 Get_Flags()
+    inline tUINT16 Get_Flags()
     {
         return (m_pHeader->wBits & TPACKET_FLAGS_MASK) >> TPACKET_FLAGS_OFFSET; 
     }//CTPacket::Get_Flags
@@ -361,7 +391,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Set_Flag
-    void Set_Flag(tUINT16 i_wFlag)
+    inline void Set_Flag(tUINT16 i_wFlag)
     {
         m_pHeader->wBits |= (i_wFlag << TPACKET_FLAGS_OFFSET) & TPACKET_FLAGS_MASK; 
     }//CTPacket::Get_Flags
@@ -369,7 +399,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Clr_Flag
-    void Clr_Flag(tUINT16 i_wFlag)
+    inline void Clr_Flag(tUINT16 i_wFlag)
     {
         m_pHeader->wBits &= ~((i_wFlag << TPACKET_FLAGS_OFFSET) & TPACKET_FLAGS_MASK); 
     }//CTPacket::Get_Flags
@@ -377,21 +407,21 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Buffer
-    tUINT8 *Get_Buffer()
+    inline tUINT8 *Get_Buffer()
     {
         return m_pBuffer;
     }//CTPacket::Get_Buffer
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Buffer
-    tUINT32 Get_Crc()
+    inline tUINT32 Get_Crc()
     {
         return m_pHeader->dwCRC32;
     }//CTPacket::Get_Buffer
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Buffer_Size
-    tUINT32 Get_Buffer_Size()
+    inline tUINT32 Get_Buffer_Size()
     {
         return m_dwBuffer_Size;
     }//CTPacket::Get_Buffer_Size
@@ -399,7 +429,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Get_Pool_ID
-    tUINT32 Get_Pool_ID()
+    inline tUINT32 Get_Pool_ID()
     {
         return m_dwPool_ID;
     }//CTPacket::Get_Pool_ID
@@ -427,7 +457,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Detach
-    tBOOL Detach()
+    inline tBOOL Detach()
     {
         if (FALSE == m_bShell)
         {
@@ -442,10 +472,48 @@ public:
         return TRUE;
     }//CTPacket::Detach
 
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CTPServer_Response::Add_Extra
+    inline tBOOL Add_Extra(const tUINT8 *i_pData, tUINT16 i_dwSize, tUINT16 i_wFlag)
+    {
+        if (    (FALSE == m_bInitialized)
+             || (TRUE  == m_bShell)
+             || (NULL  == i_pData)
+             || (0     >= i_dwSize)
+             || ((m_dwBuffer_Size - m_pHeader->wSize ) < i_dwSize)
+           )
+        {
+            return FALSE;
+        }
+
+        memcpy(m_pBuffer + m_pHeader->wSize, i_pData, i_dwSize);
+        m_pHeader->wSize = (tUINT16)(m_pHeader->wSize + i_dwSize);
+        CTPacket::Set_Flag(i_wFlag);
+        return TRUE;
+    }//CTPClient_Data_Report::Add_Extra
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CTPServer_Response::Clr_Extra
+    inline void Clr_Extra()
+    {
+        if (    (FALSE == m_bInitialized)
+             || (TRUE  == m_bShell)
+           )
+        {
+            return;
+        }
+
+        CTPacket::Clr_Flag(TPACKET_FLAG_EXTRA_DATA);
+        CTPacket::Clr_Flag(TPACKET_FLAG_EXTENSION);
+    }//CTPClient_Data_Report::Clr_Extra
+
+
 protected:
     ////////////////////////////////////////////////////////////////////////////
     //CTPacket::Calculate_CRC
-    tUINT32 Calculate_CRC(size_t i_szLength)
+    inline tUINT32 Calculate_CRC(size_t i_szLength)
     {
         size_t l_szOffset = offsetof(sH_Common, dwCRC32) + sizeof(m_pHeader->dwCRC32);
 
@@ -529,13 +597,13 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Hello::Fill
-    tBOOL Fill(tUINT16   i_wProtocol_Version,
-               tUINT16   i_wData_Max_Size,
-               tUINT32   i_dwProcess_ID,
-               tUINT32   i_dwProcess_Start_Time_Hi,
-               tUINT32   i_dwProcess_Start_Time_Lo,
-               tWCHAR   *i_pProcess_Name //[TPACKET_PROCESS_NAME_MAX_LEN]
-             ) 
+    inline tBOOL Fill(tUINT16   i_wProtocol_Version,
+                      tUINT16   i_wData_Max_Size,
+                      tUINT32   i_dwProcess_ID,
+                      tUINT32   i_dwProcess_Start_Time_Hi,
+                      tUINT32   i_dwProcess_Start_Time_Lo,
+                      tWCHAR   *i_pProcess_Name //[TPACKET_PROCESS_NAME_MAX_LEN]
+                    ) 
     {
         if (    (FALSE == m_bInitialized)
              || (TRUE  == m_bShell)
@@ -578,7 +646,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Hello::Fill
-    tUINT16 Get_Protocol_Version()
+    inline tUINT16 Get_Protocol_Version()
     {
         if (FALSE == m_bInitialized)
         {
@@ -591,7 +659,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Hello::Get_Data_Max_Size
-    tUINT16 Get_Data_Max_Size()
+    inline tUINT16 Get_Data_Max_Size()
     {
         if (FALSE == m_bInitialized)
         {
@@ -604,7 +672,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Hello::Get_Process_ID
-    tUINT32 Get_Process_ID()
+    inline tUINT32 Get_Process_ID()
     {
         if (FALSE == m_bInitialized)
         {
@@ -617,7 +685,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Hello::Get_Process_Time_Hi
-    tUINT32 Get_Process_Time_Hi()
+    inline tUINT32 Get_Process_Time_Hi()
     {
         if (FALSE == m_bInitialized)
         {
@@ -630,7 +698,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Hello::Get_Process_Time_Low
-    tUINT32 Get_Process_Time_Low()
+    inline tUINT32 Get_Process_Time_Low()
     {
         if (FALSE == m_bInitialized)
            
@@ -644,7 +712,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Hello::Get_Process_Name
-    tWCHAR *Get_Process_Name()
+    inline tWCHAR *Get_Process_Name()
     {
         if (FALSE == m_bInitialized)
         {
@@ -681,7 +749,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data::Attach
-    tBOOL Attach(CTPacket *i_pPacket)
+    inline tBOOL Attach(CTPacket *i_pPacket)
     {
         m_bInitialized = CTPacket::Attach(i_pPacket);
         return m_bInitialized;
@@ -690,7 +758,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data::Initialize
-    void Initialize()
+    inline void Initialize()
     {
         if (m_pHeader)
         {
@@ -701,7 +769,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data::Get_Data
-    tUINT8 *Get_Data()
+    inline tUINT8 *Get_Data()
     {
         if (    (NULL == m_pBuffer)
              || (m_dwBuffer_Size <= sizeof(sH_Common))
@@ -716,7 +784,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data::Get_Data_Size
-    tUINT16 Get_Data_Size()
+    inline tUINT16 Get_Data_Size()
     {
         if (NULL == m_pHeader)
         {
@@ -729,7 +797,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data::Get_Tail
-    tUINT8 *Get_Tail()
+    inline tUINT8 *Get_Tail()
     {
         if (    (NULL == m_pBuffer)
              || (m_pHeader->wSize >= m_dwBuffer_Size)
@@ -744,7 +812,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data::Get_Tail_Size
-    tUINT16 Get_Tail_Size()
+    inline tUINT16 Get_Tail_Size()
     {
         if (NULL == m_pHeader)
         {
@@ -757,7 +825,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data::Append_Size
-    tBOOL Append_Size(tUINT16 i_wSize)
+    inline tBOOL Append_Size(tUINT16 i_wSize)
     {
         if (    (NULL == m_pHeader) 
              || ( i_wSize > Get_Tail_Size() )
@@ -773,7 +841,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data::Finalize
-    void Finalize(tUINT32 i_dwPacket_ID, tUINT16 i_wClient_ID)
+    inline void Finalize(tUINT32 i_dwPacket_ID, tUINT16 i_wClient_ID)
     {
         if (m_pHeader)
         {
@@ -826,7 +894,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data_Report::Fill
-    tBOOL Fill(tUINT32 i_dwData_First_ID, tUINT32 i_dwData_Last_ID)
+    inline tBOOL Fill(tUINT32 i_dwData_First_ID, tUINT32 i_dwData_Last_ID)
     {
         if (    (FALSE == m_bInitialized)
              || (TRUE  == m_bShell)
@@ -853,7 +921,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data_Report::Get_First_ID
-    tUINT32 Get_First_ID()
+    inline tUINT32 Get_First_ID()
     {
         if (FALSE == m_bInitialized)
         {
@@ -866,7 +934,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPClient_Data_Report::Get_Last_ID
-    tUINT32 Get_Last_ID()
+    inline tUINT32 Get_Last_ID()
     {
         if (FALSE == m_bInitialized)
         {
@@ -934,9 +1002,9 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Response::CTPServer_Response
     //stationary packet, it belong to stream
-    CTPAcknowledgment():
-        CTPacket(TPACKET_MIN_SIZE, 0)
-       ,m_pResponse(NULL)
+    CTPAcknowledgment(tUINT32 i_uBufferSize = TPACKET_MIN_SIZE, tUINT32 i_uPoolId = 0)
+       : CTPacket(i_uBufferSize, i_uPoolId)
+       , m_pResponse(NULL)
     {
         if (m_bInitialized)
         {
@@ -963,7 +1031,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Response::Reset
-    void Reset()
+    inline void Reset()
     {
         m_pHeader->dwCRC32    = 0u;
         m_pHeader->dwID       = 0u;
@@ -975,7 +1043,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Response::Fill
-    tBOOL Fill(tUINT32 i_dwSource_ID, tUINT16 i_wResult)
+    inline tBOOL Fill(tUINT32 i_dwSource_ID, tUINT16 i_wResult)
     {
         if (    (FALSE == m_bInitialized)
              || (TRUE  == m_bShell)
@@ -1001,7 +1069,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Response::Get_Source_ID
-    tUINT32 Get_Source_ID()
+    inline tUINT32 Get_Source_ID()
     {
         if (FALSE == m_bInitialized)
         {
@@ -1014,7 +1082,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Response::Get_Result
-    tUINT16 Get_Result()
+    inline tUINT16 Get_Result()
     {
         if (FALSE == m_bInitialized)
         {
@@ -1045,48 +1113,6 @@ public:
             m_pHeader->dwCRC32 = ntohl(Calculate_CRC(ntohs(m_pHeader->wSize)));
         }
     }//CTPServer_Response::Finalize
-
-
-    ////////////////////////////////////////////////////////////////////////////
-    //CTPServer_Response::Set_Extra
-    void Set_Extra(tUINT8 *i_pData, tUINT32 i_dwSize)
-    {
-        if (    (FALSE == m_bInitialized)
-             || (TRUE  == m_bShell)
-             || (NULL  == i_pData)
-             || (0     >= i_dwSize)
-             || ((m_dwBuffer_Size - ACKNOWLEDGMENT_SIZE ) < i_dwSize)
-           )
-        {
-            return;
-        }
-
-        memcpy(m_pBuffer + ACKNOWLEDGMENT_SIZE,
-               //m_dwBuffer_Size - ACKNOWLEDGMENT_SIZE,
-               i_pData, 
-               i_dwSize
-              );
-
-        m_pHeader->wSize = (tUINT16)(ACKNOWLEDGMENT_SIZE + i_dwSize);
-
-        CTPacket::Set_Flag(TPACKET_FLAG_EXTRA_DATA);
-    }//CTPClient_Data_Report::Set_Extra
-
-
-    ////////////////////////////////////////////////////////////////////////////
-    //CTPServer_Response::Clr_Extra
-    void Clr_Extra()
-    {
-        if (    (FALSE == m_bInitialized)
-             || (TRUE  == m_bShell)
-           )
-        {
-            return;
-        }
-
-        m_pHeader->wSize = ACKNOWLEDGMENT_SIZE;
-        CTPacket::Clr_Flag(TPACKET_FLAG_EXTRA_DATA);
-    }//CTPClient_Data_Report::Clr_Extra
 };//CTPServer_Response
 
 
@@ -1106,10 +1132,10 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Report::CTPServer_Report
     //stationary packet, it belong to stream
-    CTPData_Window_Report():
-        CTPacket(SERVER_REPORT_SIZE, 0)
-       ,m_pReport(NULL)
-       ,m_dwCount(0)
+    CTPData_Window_Report()
+       : CTPacket(SERVER_REPORT_SIZE, 0)
+       , m_pReport(NULL)
+       , m_dwCount(0)
     {
         if (m_bInitialized)
         {
@@ -1140,7 +1166,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Report::Reset
-    void Reset()
+    inline void Reset()
     {
         m_pHeader->dwCRC32    = 0u;
         m_pHeader->dwID       = 0u;
@@ -1154,7 +1180,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Report::Is_ID
-    tBOOL Is_ID(tUINT32 i_dwFirst_ID, tUINT32 i_dwCurrent_ID)
+    inline tBOOL Is_ID(tUINT32 i_dwFirst_ID, tUINT32 i_dwCurrent_ID)
     {
         tUINT32 l_dwOffset = ID_Difference(i_dwFirst_ID, i_dwCurrent_ID);
 
@@ -1171,7 +1197,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Report::Clr_IDs
-    tBOOL Clr_IDs()
+    inline tBOOL Clr_IDs()
     {
         if (    (FALSE == m_bInitialized)
              || (TRUE  == m_bShell)
@@ -1187,7 +1213,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Report::Set_ID
-    tBOOL Set_ID(tUINT32 i_dwFirst_ID, tUINT32 i_dwCurrent_ID)
+    inline tBOOL Set_ID(tUINT32 i_dwFirst_ID, tUINT32 i_dwCurrent_ID)
     {
         tUINT32 l_dwOffset = ID_Difference(i_dwFirst_ID, i_dwCurrent_ID);
 
@@ -1205,7 +1231,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Report::Get_Source_ID
-    tUINT32 Get_Source_ID()
+    inline tUINT32 Get_Source_ID()
     {
         if (FALSE == m_bInitialized)
         {
@@ -1218,7 +1244,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Report::Fill
-    tBOOL Fill(tUINT32 i_dw_Source_ID)
+    inline tBOOL Fill(tUINT32 i_dw_Source_ID)
     {
         if (    (FALSE == m_bInitialized)
              || (TRUE  == m_bShell)
@@ -1265,7 +1291,7 @@ public:
 private:
     ////////////////////////////////////////////////////////////////////////////
     //CTPServer_Report::ID_Difference
-    tUINT32 ID_Difference(tUINT32 i_dwFirst_ID, tUINT32 i_dwCurrent_ID)
+    inline tUINT32 ID_Difference(tUINT32 i_dwFirst_ID, tUINT32 i_dwCurrent_ID)
     {
         if (i_dwCurrent_ID < i_dwFirst_ID)
         {
@@ -1276,6 +1302,70 @@ private:
     }//CTPServer_Report::ID_Difference
 
 };//CTPServer_Report
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Class for providing basic functionality over server info ext packet
+#define EXT_SRV_INFO_SIZE  (sizeof(sH_Ext) + sizeof(sH_Ext_Srv_Info))
+class CTPESrv_Info
+{
+    size_t           m_szMax;
+    tUINT8           m_pBuffer[sizeof(sH_Ext) + sizeof(sH_Ext_Srv_Info)];
+    sH_Ext          *m_pExt;
+    sH_Ext_Srv_Info *m_pInfo;
+public:
+    ////////////////////////////////////////////////////////////////////////////
+    //CTPESrv_Info::CTPESrv_Info
+    //stationary packet, it belong to stream
+    CTPESrv_Info()
+       : m_szMax(sizeof(sH_Ext) + sizeof(sH_Ext_Srv_Info))
+       , m_pExt(NULL)
+       , m_pInfo(NULL)
+    {
+        memset(m_pBuffer, 0, m_szMax);
+        m_pExt = (sH_Ext*)m_pBuffer; 
+        m_pInfo = (sH_Ext_Srv_Info*)(m_pBuffer + sizeof(sH_Ext)); 
+        m_pExt->wSize = (tUINT16)m_szMax;
+        m_pExt->wType = ETPE_SERVER_NETWORK_INFO;
+    }//CTPESrv_Info::CTPESrv_Info
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CTPESrv_Info::Fill
+    inline void Fill(tUINT32 i_dwServerV, tUINT16 i_wProtocolV, tUINT16 i_wMTU, tUINT32 i_dwSocketBuffer)
+    {
+        m_pInfo->dwServerVersion  = i_dwServerV;
+        m_pInfo->dwSocket_Buffer  = i_dwSocketBuffer;
+        m_pInfo->wMTU             = i_wMTU;
+        m_pInfo->wProtocolVersion = i_wProtocolV;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CTPESrv_Info::Chage_Endianness
+    virtual void Chage_Endianness()
+    {
+        m_pExt->wSize             = ntohs(m_pExt->wSize);
+        m_pExt->wType             = ntohs(m_pExt->wType);
+        m_pInfo->dwServerVersion  = ntohl(m_pInfo->dwServerVersion); 
+        m_pInfo->dwSocket_Buffer  = ntohl(m_pInfo->dwSocket_Buffer); 
+        m_pInfo->wMTU             = ntohs(m_pInfo->wMTU); 
+        m_pInfo->wProtocolVersion = ntohs(m_pInfo->wProtocolVersion); 
+    }//CTPESrv_Info::Chage_Endianness
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CTPESrv_Info::GetBuffer
+    inline const tUINT8 *GetBuffer()
+    {
+        return m_pBuffer;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //CTPESrv_Info::GetBufferSize
+    inline size_t GetBufferSize()
+    {
+        return m_szMax;
+    }
+};//CTPESrv_Info
 
 
 

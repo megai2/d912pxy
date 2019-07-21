@@ -55,9 +55,9 @@ d912pxy_ctexture::d912pxy_ctexture(UINT edgeLength, UINT Levels, DWORD Usage, D3
 d912pxy_ctexture * d912pxy_ctexture::d912pxy_ctexture_com(UINT edgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_TEXTURE);
-	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_TEXTURE_CUBE);
-
+	
 	new (&ret->tex_cube)d912pxy_ctexture(edgeLength, Levels, Usage, Format);
+	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_TEXTURE_CUBE);
 
 	return &ret->tex_cube;
 }

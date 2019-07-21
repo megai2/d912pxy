@@ -25,7 +25,12 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_surface : public d912pxy_resource
+typedef struct d912pxy_surface_ul {
+	d912pxy_upload_item* item;
+	UINT64 offset;
+} d912pxy_surface_ul;
+
+class d912pxy_surface : public d912pxy_vtable, public d912pxy_resource
 {
 public:
 	static d912pxy_surface* d912pxy_surface_com(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback);
@@ -104,5 +109,6 @@ private:
 	UINT subresCountCache;	
 
 	UINT ulMarked;
+	d912pxy_surface_ul* ul;
 };
 

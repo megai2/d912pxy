@@ -165,22 +165,30 @@ d912pxy_device_streamsrc d912pxy_iframe::GetStreamSource(UINT StreamNumber)
 }
 
 
-//megai2: this CommitBatch is made in assumption that app API stream is clean from dx9 intrisic resets / runtime checks / well hid kittens
-void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
+UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
 {
 	if (PrimitiveType == D3DPT_TRIANGLEFAN)
 	{
 		LOG_DBG_DTDM3("DP TRIFAN skipping");
-		return;
+		return 0;
 	}
 
-	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 1))
+	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
 	{
 		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
 		StateSafeFlush(0);
 	}
 
+	return 1;
+}
+
+//megai2: this CommitBatch is made in assumption that app API stream is clean from dx9 intrisic resets / runtime checks / well hid kittens
+void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
+{
+	if (!CommitBatchPreCheck(PrimitiveType))
+		return;
+	
 	UINT32 batchDF = batchCommisionDF;
 	batchCommisionDF = 0;
 	
@@ -233,19 +241,8 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 //megai2: this CommitBatch is made in assumption that app API stream is garbadge
 void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
-	if (PrimitiveType == D3DPT_TRIANGLEFAN)
-	{
-		LOG_DBG_DTDM3("DP TRIFAN skipping");
+	if (!CommitBatchPreCheck(PrimitiveType))
 		return;
-	}
-
-	//bind vb/ib
-	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 1))
-	{
-		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
-
-		StateSafeFlush(0);
-	}
 
 	UINT32 batchDF = batchCommisionDF;
 	batchCommisionDF = 0;
@@ -411,6 +408,8 @@ void d912pxy_iframe::Start()
 
 	batchesIssued = 0;
 
+	cuPrimType = D3DPT_TRIANGLELIST;
+
 	d912pxy_query_occlusion::OnIFrameStart();
 
 }
@@ -428,7 +427,7 @@ void d912pxy_iframe::End()
 
 	indexBind = NULL;*/
 
-
+	d912pxy_s.render.draw_up.OnFrameEnd();
 	d912pxy_query_occlusion::OnIFrameEnd();
 
 	if (mSwapChain) 
@@ -599,9 +598,11 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 	{
 		if (vstreamTransfer[i].buffer)
 		{
-			SetVBuf(vstreamTransfer[i].buffer, i, vstreamTransfer[i].offset, vstreamTransfer[i].stride);
+			SetVBuf(vstreamTransfer[i].buffer, i, vstreamTransfer[i].offset, vstreamTransfer[i].stride);			
 			vstreamTransfer[i].buffer->ThreadRef(-1);
 		}
+
+		SetStreamFreq(i, vstreamTransfer[i].divider);
 	}
 
 	//megai2: rebind viewport & scissor too
@@ -611,7 +612,7 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 
 	d912pxy_s.dev.SetRenderState(D3DRS_STENCILREF, transSRef);
 	
-	ForceStateRebind();
+	ForceStateRebind();	
 }
 
 void d912pxy_iframe::ForceStateRebind()

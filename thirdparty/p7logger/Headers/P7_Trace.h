@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -140,22 +140,14 @@ enum eP7Trace_Level
                                                                     i_hModule,\
                                                                     __VA_ARGS__)
 
-//__declspec(novtable)
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////IP7_Trace//////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 class IP7_Trace
+    : public IP7C_Channel
 {
 public:
     typedef void* hModule;
-
-    ////////////////////////////////////////////////////////////////////////////
-    //Add_Ref - increase object's reference count
-    //          See documentation for details.
-    virtual tINT32 Add_Ref()                                                = 0;
-
-    ////////////////////////////////////////////////////////////////////////////
-    //Release - decrease object's reference count. If reference count less or
-    //          equal to 0 - object will be destroyed
-    //          See documentation for details.
-    virtual tINT32 Release()                                                = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     //Set_Verbosity - function to set trace verbosity, traces with less priority 
@@ -266,7 +258,7 @@ public:
 //See documentation for details.
 extern "C" P7_EXPORT IP7_Trace * __cdecl P7_Create_Trace(IP7_Client         *i_pClient,
                                                          const tXCHAR       *i_pName,
-                                                         const stTrace_Conf *i_pConf = NULL
+                                                         const stTrace_Conf *i_pConf = 0
                                                         );
 
 

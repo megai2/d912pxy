@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                             /
-// 2012-2017 (c) Baical                                                        /
+// 2012-2019 (c) Baical                                                        /
 //                                                                             /
 // This library is free software; you can redistribute it and/or               /
 // modify it under the terms of the GNU Lesser General Public                  /
@@ -215,6 +215,13 @@ static inline tXCHAR *PStrChr(tXCHAR * i_pStr, tXCHAR i_cCh)
 ///////////////////////////////////////////////////////////////////////////////
 //PStrrChr
 static inline tXCHAR *PStrrChr(tXCHAR * i_pStr, tXCHAR i_cCh)
+{
+    return wcsrchr(i_pStr, i_cCh);
+}//PStrrChr
+
+///////////////////////////////////////////////////////////////////////////////
+//PStrrChr
+static inline const tXCHAR *PStrrChr(const tXCHAR * i_pStr, const tXCHAR i_cCh)
 {
     return wcsrchr(i_pStr, i_cCh);
 }//PStrrChr

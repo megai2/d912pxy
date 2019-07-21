@@ -160,6 +160,8 @@ void d912pxy_device::InitClassFields()
 
 	d912pxy_vstream::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
 	d912pxy_surface::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);
+
+	d912pxy_resource::residencyOverride = (d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_KEEP_RESIDENT) != 0) * 2;
 }
 
 void d912pxy_device::InitThreadSyncObjects()
@@ -192,6 +194,11 @@ void d912pxy_device::InitSingletons()
 
 void d912pxy_device::InitComPatches()
 {
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_TRACK_RS))
+	{
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETRENDERSTATE, &d912pxy_device::com_SetRenderState_Tracked);
+	}
+
 	if (!d912pxy_s.config.GetValueUI64(PXY_CFG_SDB_KEEP_PAIRS))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_SHADER, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_shader::com_ReleaseWithPairRemoval);		
@@ -275,7 +282,8 @@ void d912pxy_device::InitNullSRV()
 
 void d912pxy_device::InitDrawUPBuffers()
 {
-	m_dupEmul = new d912pxy_draw_up(this);
+	d912pxy_s.render.draw_up.Init();
+
 	m_clearEmul = new d912pxy_surface_clear(this);
 }
 
