@@ -1522,8 +1522,8 @@ D912PXY_METHOD_IMPL_(ULONG, ReleaseSwapChain)(PXY_THIS)
 #define D912PXY_METHOD_IMPL_CN d912pxy_surface_layer
 #define D912PXY_ROUTE_IMPL_PREFIX return obj->layer.
 
-#define D912PXY_ROUTE_IMPL_STUB_CUSTOM(ret) obj->layer.GetBaseLayer()->com.ImplStubCall(__FUNCTION__, __LINE__); return ret
-#define D912PXY_ROUTE_IMPL_STUB_CUSTOM_(ret) obj->layer.GetBaseLayer()->com.ImplStubCall(__FUNCTION__, __LINE__); 
+#define D912PXY_ROUTE_IMPL_STUB_CUSTOM(ret) obj->layer.GetBaseSurface()->com.ImplStubCall(__FUNCTION__, __LINE__); return ret
+#define D912PXY_ROUTE_IMPL_STUB_CUSTOM_(ret) obj->layer.GetBaseSurface()->com.ImplStubCall(__FUNCTION__, __LINE__); 
 
 D912PXY_METHOD_IMPL(QueryInterface)(PXY_THIS_ REFIID riid, void** ppvObj)
 {
