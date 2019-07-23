@@ -64,6 +64,8 @@ public:
 
 	d912pxy_com_object* GetComObjectByLowAdr(UINT32 lowAdr);
 
+	d912pxy_com_obj_typeid GetTypeIdFromAdr(d912pxy_com_object* obj);
+
 private:
 	d912pxy_mem_va_table table;
 };

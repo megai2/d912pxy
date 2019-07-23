@@ -40,6 +40,8 @@ public:
 
 	void NonCom_Init(const wchar_t* logModule);
 
+	void TrackCall(const char* function);
+
 	void ImplStubCall(const char* function, UINT line);
 
 protected:

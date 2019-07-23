@@ -89,6 +89,8 @@ public:
 
 	static UINT32 threadedCtor;
 
+	static d912pxy_surface* CorrectLayerRepresent(d912pxy_com_object* obj);
+
 private:
 	d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback);
 

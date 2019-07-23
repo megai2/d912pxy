@@ -85,6 +85,9 @@ void d912pxy_noncom::ThrowErrorDbg(HRESULT hr, const char * msg)
 HRESULT d912pxy_noncom::com_GetDevice(d912pxy_com_object* obj, IDirect3DDevice9 ** ppDevice)
 {
 	*ppDevice = PXY_COM_CAST_(IDirect3DDevice9, &d912pxy_s.dev);
+
+	(*ppDevice)->AddRef();
+
 	return D3D_OK;
 }
 
@@ -109,6 +112,13 @@ void d912pxy_noncom::NonCom_Init(const wchar_t * logModule)
 	WaitForSingleObject(gLeakMapLock, INFINITE);
 	gLeakTracker[0][lkObjTrace] = logModule;
 	ReleaseMutex(gLeakMapLock);
+#endif
+}
+
+void d912pxy_noncom::TrackCall(const char * function)
+{
+#ifndef DISABLE_P7LIB
+	d912pxy_s.log.text.GetP7TrackTrace()->P7_DEBUG(NULL, TM("%016llX %S"), this, function);
 #endif
 }
 

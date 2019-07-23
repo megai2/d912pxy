@@ -27,6 +27,16 @@ SOFTWARE.
 UINT32 d912pxy_surface::threadedCtor = 0;
 
 
+d912pxy_surface * d912pxy_surface::CorrectLayerRepresent(d912pxy_com_object * obj)
+{
+	if (d912pxy_s.com.GetTypeIdFromAdr(obj) == PXY_COM_OBJ_SURFACE_LAYER)
+	{
+		return &(obj->layer.GetBaseSurface()->surface);
+	}
+	else
+		return &(obj->surface);
+}
+
 d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface texture")
 {
 	isPooled = 0;

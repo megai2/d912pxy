@@ -85,3 +85,8 @@ d912pxy_com_object * d912pxy_com_mgr::GetComObjectByLowAdr(UINT32 lowAdr)
 {
 	return (d912pxy_com_object*)((intptr_t)table.GetBaseAdr() | lowAdr);
 }
+
+d912pxy_com_obj_typeid d912pxy_com_mgr::GetTypeIdFromAdr(d912pxy_com_object * obj)
+{
+	return (d912pxy_com_obj_typeid)table.TypeFromAdr(obj);
+}

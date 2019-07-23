@@ -60,7 +60,7 @@ public:
 	void SetDirtyRect(UINT32 left, UINT32 right, UINT32 top, UINT32 bottom);
 	void* SurfacePixel(UINT32 x, UINT32 y);
 
-	d912pxy_com_object* GetBaseLayer() { return base; };
+	d912pxy_com_object* GetBaseSurface() { return base; };
 
 private:
 	d912pxy_surface_layer(d912pxy_com_object* iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix);

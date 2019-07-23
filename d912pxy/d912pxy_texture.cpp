@@ -78,14 +78,12 @@ HRESULT d912pxy_texture::GetSurfaceLevel(UINT Level, IDirect3DSurface9 ** ppSurf
 {
 	LOG_DBG_DTDM(__FUNCTION__);
 
-	
-
-		if (srvIDc[1])
-		{
-			*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface);
-		}
-		else
-			*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface->GetLayer(Level, 0));
+	if (srvIDc[1])
+	{
+		*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface);
+	}
+	else
+		*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface->GetLayer(Level, 0));
 
 	(*ppSurfaceLevel)->AddRef();
 

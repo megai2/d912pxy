@@ -32,13 +32,14 @@ d912pxy_log::d912pxy_log()
 d912pxy_log::~d912pxy_log()
 {
 	
-
 #ifndef DISABLE_P7LIB
-	
 	//megai2: wait a bit for final datas to be processed
 	Sleep(2000);
 
-	p7cli->Release();
+	m_log->Release();
+	m_trackLog->Release();
+
+	p7cli->Release();	
 #else
 	if (logfile)
 		fclose(logfile);
@@ -68,6 +69,9 @@ void d912pxy_log::Init()
 	m_log = P7_Create_Trace(p7cli, TM("d912pxy"));
 	m_log->Register_Thread(TM("main thread"), 0);
 
+	m_trackLog = P7_Create_Trace(p7cli, TM("d912pxy api tracker"));
+	m_trackLog->Register_Thread(TM("main thread"), 0);
+
 	threadNameId = 0;
 #else
 	logfile = fopen(PXY_LOG_FILE_NAME, "w");
@@ -78,6 +82,10 @@ void d912pxy_log::Init()
 IP7_Trace * d912pxy_log::GetP7Trace()
 {
 	return m_log;
+}
+IP7_Trace * d912pxy_log::GetP7TrackTrace()
+{
+	return m_trackLog;
 }
 #endif
 

@@ -97,11 +97,12 @@ HRESULT d912pxy_device::GetDepthStencilSurface(IDirect3DSurface9** ppZStencilSur
 HRESULT d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTarget, IDirect3DSurface9* pDestSurface)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
-
+	
 	d912pxy_surface* src = PXY_COM_LOOKUP(pRenderTarget, surface);
-	d912pxy_surface* dst = PXY_COM_LOOKUP(pDestSurface, surface);
-	src->BCopyTo(dst, 3, d912pxy_s.dx12.cl->GID(CLG_SEQ));
-
+	d912pxy_surface* dst = d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pDestSurface));
+	   
+	d912pxy_s.render.replay.StretchRect(src, dst);
+	
 	dst->CopySurfaceDataToCPU();
 
 	return D3D_OK;

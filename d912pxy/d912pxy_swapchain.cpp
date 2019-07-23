@@ -118,8 +118,9 @@ HRESULT d912pxy_swapchain::GetFrontBufferData(IDirect3DSurface9 * pDestSurface)
 {	
 	//megai2: not actual front buffer data, but should work 
 
-	d912pxy_surface * dst = PXY_COM_LOOKUP(pDestSurface, surface);
-	backBufferSurface->BCopyTo(dst, 3, d912pxy_s.dx12.cl->GID(CLG_SEQ));
+	d912pxy_surface * dst = d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pDestSurface));
+
+	d912pxy_s.render.replay.StretchRect(backBufferSurface, dst);
 
 	dst->CopySurfaceDataToCPU();
 

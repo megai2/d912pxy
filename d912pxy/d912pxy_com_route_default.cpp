@@ -26,7 +26,12 @@ SOFTWARE.
 
 #ifndef ENABLE_METRICS
 
-#define D912PXY_ROUTE_IMPL_START 
+#ifdef ENABLE_DEBUG_LOGGING
+	#define D912PXY_ROUTE_IMPL_START obj->com.TrackCall(__FUNCTION__);
+#else
+	#define D912PXY_ROUTE_IMPL_START 
+#endif
+
 #define D912PXY_ROUTE_IMPL_END
 #define D912PXY_ROUTE_IMPL_STUB(ret) obj->com.ImplStubCall(__FUNCTION__, __LINE__); return ret
 #define D912PXY_ROUTE_IMPL_STUB_(ret) obj->com.ImplStubCall(__FUNCTION__, __LINE__); 
@@ -1522,8 +1527,8 @@ D912PXY_METHOD_IMPL_(ULONG, ReleaseSwapChain)(PXY_THIS)
 #define D912PXY_METHOD_IMPL_CN d912pxy_surface_layer
 #define D912PXY_ROUTE_IMPL_PREFIX return obj->layer.
 
-#define D912PXY_ROUTE_IMPL_STUB_CUSTOM(ret) obj->layer.GetBaseLayer()->com.ImplStubCall(__FUNCTION__, __LINE__); return ret
-#define D912PXY_ROUTE_IMPL_STUB_CUSTOM_(ret) obj->layer.GetBaseLayer()->com.ImplStubCall(__FUNCTION__, __LINE__); 
+#define D912PXY_ROUTE_IMPL_STUB_CUSTOM(ret) obj->layer.GetBaseSurface()->com.ImplStubCall(__FUNCTION__, __LINE__); return ret
+#define D912PXY_ROUTE_IMPL_STUB_CUSTOM_(ret) obj->layer.GetBaseSurface()->com.ImplStubCall(__FUNCTION__, __LINE__); 
 
 D912PXY_METHOD_IMPL(QueryInterface)(PXY_THIS_ REFIID riid, void** ppvObj)
 {
@@ -1691,6 +1696,9 @@ D912PXY_METHOD_IMPL(Apply)(PXY_THIS)
 #endif
 
 */
+
+#endif
+
 
 void d912pxy_com_route_init_default()
 {
@@ -2026,7 +2034,7 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_QUERY_INTERFACE, &d912pxy_surface_layer::com_QueryInterface);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_ADDREF, &d912pxy_surface_layer::com_AddRef);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_surface_layer::com_Release);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETDEVICE, &d912pxy_surface_layer::com_GetDevice);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETDEVICE, &d912pxy_noncom::com_GetDevice);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_SETPRIVATEDATA,&d912pxy_surface_layer::com_SetPrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA,&d912pxy_surface_layer::com_GetPrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE_LAYER, PXY_COM_METHOD_RESOURCE_FREEPRIVATEDATA,&d912pxy_surface_layer::com_FreePrivateData);
@@ -2051,4 +2059,3 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_SBLOCK, PXY_COM_METHOD_SBLOCK_CAPTURE, &d912pxy_sblock::com_Capture);
 }
 
-#endif

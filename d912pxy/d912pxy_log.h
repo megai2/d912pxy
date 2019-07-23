@@ -53,8 +53,9 @@ public:
 
 #ifndef DISABLE_P7LIB
 	IP7_Trace* GetP7Trace();
+	IP7_Trace* GetP7TrackTrace();
 #endif
-		
+
 	void RegisterModule(const wchar_t * mdn, d912pxy_log_module* ret);
 	void SyncCrashWrite(UINT lock);
 	void WriteCrashLogLine(wchar_t* buf);
@@ -66,6 +67,8 @@ public:
 private:
 #ifndef DISABLE_P7LIB
 	IP7_Trace* m_log;
+	IP7_Trace* m_trackLog;
+
 	IP7_Client* p7cli;
 
 	wchar_t threadNames[255][10];

@@ -191,13 +191,9 @@ void d912pxy_device::GetGammaRamp(UINT iSwapChain, D3DGAMMARAMP* pRamp)
 HRESULT d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurface9* pDestSurface) 
 {	
 	LOG_DBG_DTDM(__FUNCTION__);
-
 	
-
 	swapchains[iSwapChain]->GetFrontBufferData(pDestSurface);
-
 	
-
 	return D3D_OK;
 }
 
