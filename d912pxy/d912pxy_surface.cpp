@@ -118,6 +118,14 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 
 		rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));		
 	}
+	else if (Usage == D3DUSAGE_D912PXY_FORCE_RT)
+	{
+		d912pxy_dheap* rtvHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_RTV);
+
+		rtdsHPtr = rtvHeap->GetDHeapHandle(rtvHeap->CreateRTV(m_res, NULL));
+
+		AllocateLayers();
+	} 
 	else {
 
 		if (!threadedCtor)
@@ -171,7 +179,11 @@ d912pxy_surface::~d912pxy_surface()
 
 			if (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 				d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_DSV)->FreeSlotByPtr(rtdsHPtr);
-			else
+			else if (surf_dx9dsc.Usage == D3DUSAGE_D912PXY_FORCE_RT)
+			{
+				FreeLayers();
+				d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
+			} else 
 				d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_RTV)->FreeSlotByPtr(rtdsHPtr);
 		}
 	}
