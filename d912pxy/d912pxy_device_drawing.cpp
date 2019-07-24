@@ -109,7 +109,7 @@ HRESULT d912pxy_device::DrawIndexedPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, 
 #endif
 
 	for (int i = 0; i != 32; ++i)
-		if (stageFormatsTrack[i] == D3DFMT_D24X8)
+		if ((stageFormatsTrack[i] == D3DFMT_D24X8) || (stageFormatsTrack[i] == D3DFMT_D24S8))
 		{
 			if (d912pxy_s.render.db.pso.GetPShader())
 				TrackShaderCodeBugs(PXY_INNER_SHDR_BUG_PCF_SAMPLER, i + 1, d912pxy_s.render.db.pso.GetPShader()->GetID());
