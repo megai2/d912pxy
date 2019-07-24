@@ -77,8 +77,10 @@ HRESULT d912pxy_resource::d12res_zbuf(DXGI_FORMAT fmt, float clearV, UINT width,
 	return D3D_OK;
 }
 
-HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt, UINT16* levels, UINT arrSz)
+ID3D12Resource* d912pxy_resource::d12res_tex2d_target(UINT width, UINT height, DXGI_FORMAT fmt, UINT16* levels, UINT arrSz)
 {
+	ID3D12Resource* ret = 0;
+
 	D3D12_HEAP_PROPERTIES rhCfg = d912pxy_s.dev.GetResourceHeap(D3D12_HEAP_TYPE_DEFAULT);
 	
 	D3D12_RESOURCE_DESC rsDesc = {
@@ -94,7 +96,7 @@ HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt,
 		&rsDesc,
 		D3D12_RESOURCE_STATE_COMMON,
 		NULL,
-		IID_PPV_ARGS(&m_res)
+		IID_PPV_ARGS(&ret)
 	);
 
 	if (hr != S_OK)
@@ -103,15 +105,15 @@ HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt,
 		LOG_ERR_THROW2(hr, "texture object create failed");
 	}
 
-	LOG_DX_SET_NAME(m_res, L"texture obj");
+	LOG_DX_SET_NAME(ret, L"texture obj");
 
 	stateCache = D3D12_RESOURCE_STATE_COMMON;
 
-	LOG_DBG_DTDM("mip levels after miplevels = 0 => %u", m_res->GetDesc().MipLevels);
+	LOG_DBG_DTDM("mip levels after miplevels = 0 => %u", ret->GetDesc().MipLevels);
 
-	*levels = m_res->GetDesc().MipLevels;
+	*levels = ret->GetDesc().MipLevels;
 
-	return D3D_OK;
+	return ret;
 }
 
 void d912pxy_resource::EvictFromGPU()
@@ -310,6 +312,13 @@ HRESULT d912pxy_resource::d12res_uav_buffer(size_t size, D3D12_HEAP_TYPE heap)
 	return D3D_OK;
 }
 
+HRESULT d912pxy_resource::d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt, UINT16 * levels, UINT arrSz)
+{
+	m_res = d12res_tex2d_target(width, height, fmt, levels, arrSz);
+
+	return D3D_OK;
+}
+
 void d912pxy_resource::ACopyTo(d912pxy_resource * dst, ID3D12GraphicsCommandList * cl)
 {
 	cl->CopyResource(dst->GetD12Obj(), m_res);
@@ -318,20 +327,30 @@ void d912pxy_resource::ACopyTo(d912pxy_resource * dst, ID3D12GraphicsCommandList
 void d912pxy_resource::BCopyTo(d912pxy_resource * dst, UINT barriers, ID3D12GraphicsCommandList * cl)
 {
 	D3D12_RESOURCE_STATES dstStateCache = dst->GetCurrentState();
+	D3D12_RESOURCE_STATES srcStateCache = GetCurrentState();
 
-	if (barriers & 1)	
-		BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_SOURCE, stateCache, cl);
+	BCopyToWStates(dst, barriers, cl, dstStateCache, srcStateCache);
+}
 
-	if (barriers & 2)
-		dst->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, dstStateCache, cl);	
+void d912pxy_resource::BCopyToWStates(d912pxy_resource * dst, UINT barriers, ID3D12GraphicsCommandList * cl, D3D12_RESOURCE_STATES dstStateCache, D3D12_RESOURCE_STATES srcStateCache)
+{
+	if ((barriers & 1) && (srcStateCache != D3D12_RESOURCE_STATE_COPY_SOURCE))
+		BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_SOURCE, srcStateCache, cl);
+	else
+		barriers &= 0x2;
+
+	if ((barriers & 2) && (dstStateCache != D3D12_RESOURCE_STATE_COPY_DEST))
+		dst->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_COPY_DEST, dstStateCache, cl);
+	else
+		barriers &= 0x1;
 
 	ACopyTo(dst, cl);
 
-	if (barriers & 1)	
-		BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, stateCache, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
+	if (barriers & 1)
+		BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, srcStateCache, D3D12_RESOURCE_STATE_COPY_SOURCE, cl);
 
 	if (barriers & 2)
-		dst->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, dstStateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);	
+		dst->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, dstStateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);
 }
 
 intptr_t d912pxy_resource::GetVA_GPU()

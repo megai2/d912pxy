@@ -91,8 +91,5 @@ private:
 
 	d912pxy_vstream_lock_data lockInfo[PXY_INNER_MAX_LOCK_DEPTH];
 	LONG lockDepth;	
-
-	d912pxy_thread_lock ctorSync;
-
 };
 

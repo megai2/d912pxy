@@ -237,24 +237,14 @@ void d912pxy_replay::IBbind(d912pxy_vstream * buf)
 
 void d912pxy_replay::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
 {
-	if (!src->GetD12Obj() || !dst->GetD12Obj())
-		return;
-
-	D3D12_RESOURCE_STATES prevS = src->GetCurrentState();
-	D3D12_RESOURCE_STATES prevD = dst->GetCurrentState();
-
-	StateTransit(src, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	StateTransit(dst, D3D12_RESOURCE_STATE_COPY_DEST);
-
 	REPLAY_STACK_GET(DRPL_RECT);
 
 	it->srect.src = src;
 	it->srect.dst = dst;
-
-	REPLAY_STACK_INCREMENT;
-
-	StateTransit(src, prevS);
-	StateTransit(dst, prevD);
+	it->srect.prevS = src->GetCurrentState();
+	it->srect.prevD = dst->GetCurrentState();
+	
+	REPLAY_STACK_INCREMENT;	
 }
 
 void d912pxy_replay::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
@@ -805,17 +795,23 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 
 	dSrc = sSrc->GetDX9DescAtLevel(0);
 	dDst = sDst->GetDX9DescAtLevel(0);
-
+	
 	if (
 		(dSrc.Height == dDst.Height) &&
 		(dSrc.Width == dDst.Width) &&
 		(dSrc.Format == dDst.Format)
 		)
 	{
-		sSrc->ACopyTo(sDst, cl);
+		if (!sSrc->GetD12Obj())
+			sSrc->ConstructResource();
+
+		if (!sDst->GetD12Obj())
+			sDst->ConstructResource();
+
+		sSrc->BCopyToWStates(sDst, 0x3, cl, it->prevD, it->prevS);
 	} else {
 		//megai2: TODO allow non similar texture copy via custom pass
-		;
+		LOG_ERR_DTDM("rha rect with different textures");
 	}
 }
 

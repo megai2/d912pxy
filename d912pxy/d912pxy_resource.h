@@ -75,6 +75,7 @@ public:
 	HRESULT	d12res_readback_buffer(size_t size);
 	HRESULT	d12res_uav_buffer(size_t size, D3D12_HEAP_TYPE heap);
 	HRESULT d12res_tex2d(UINT width, UINT height, DXGI_FORMAT fmt, UINT16* levels, UINT arrSz);
+	ID3D12Resource*	d12res_tex2d_target(UINT width, UINT height, DXGI_FORMAT fmt, UINT16* levels, UINT arrSz);
 
 	void EvictFromGPU();
 	void MakeGPUResident();
@@ -94,6 +95,7 @@ public:
 	
 	void ACopyTo(d912pxy_resource* dst, ID3D12GraphicsCommandList* cl);
 	void BCopyTo(d912pxy_resource* dst, UINT barriers, ID3D12GraphicsCommandList* cq);
+	void BCopyToWStates(d912pxy_resource* dst, UINT barriers, ID3D12GraphicsCommandList* cq, D3D12_RESOURCE_STATES dstStateCache, D3D12_RESOURCE_STATES srcStateCache);
 		
 	intptr_t GetVA_GPU();
 	void GetCopyableFootprints(UINT subres, D3D12_PLACED_SUBRESOURCE_FOOTPRINT* ret);
@@ -111,5 +113,7 @@ protected:
 	D3D12_RESOURCE_STATES stateCache;	
 
 	UINT8 evicted;
+
+	d912pxy_thread_lock ctorSync;
 };
 

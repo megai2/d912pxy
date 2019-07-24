@@ -110,7 +110,10 @@ HRESULT d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTarget, ID
 
 HRESULT d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
 {	
-	d912pxy_s.render.replay.StretchRect(PXY_COM_LOOKUP(pSourceSurface, surface), PXY_COM_LOOKUP(pDestSurface, surface));
+	d912pxy_s.render.replay.StretchRect(
+		d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pSourceSurface)),
+		d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pDestSurface))				
+	);
 
 	return D3D_OK;
 }

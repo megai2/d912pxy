@@ -80,12 +80,14 @@ public:
 	
 	void initInternalBuf();
 	void UpdateDescCache();
-	UINT32 AllocateSRV();
+	UINT32 AllocateSRV(ID3D12Resource* resPtr);
 	void AllocateLayers();
 	void FreeLayers();
 	void FreeObjAndSlot();
 
 	void FinishUpload();
+
+	void ConstructResource();
 
 	static UINT32 threadedCtor;
 

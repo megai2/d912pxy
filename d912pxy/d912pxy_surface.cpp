@@ -29,7 +29,7 @@ UINT32 d912pxy_surface::threadedCtor = 0;
 
 d912pxy_surface * d912pxy_surface::CorrectLayerRepresent(d912pxy_com_object * obj)
 {
-	if (d912pxy_s.com.GetTypeIdFromAdr(obj) == PXY_COM_OBJ_SURFACE_LAYER)
+	if ((intptr_t)obj & PXY_COM_OBJ_SIGNATURE_SURFACE_LAYER)
 	{
 		return &(obj->layer.GetBaseSurface()->surface);
 	}
@@ -37,7 +37,7 @@ d912pxy_surface * d912pxy_surface::CorrectLayerRepresent(d912pxy_com_object * ob
 		return &(obj->surface);
 }
 
-d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface texture")
+d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface")
 {
 	isPooled = 0;
 	ul = NULL;
@@ -57,6 +57,8 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	
 	m_fmt = d912pxy_helper::DXGIFormatFromDX9FMT(Format);
 	LOG_DBG_DTDM("fmt %u => %u", Format, m_fmt);
+
+	stateCache = D3D12_RESOURCE_STATE_COMMON;
 
 	if (Format == D3DFMT_NULL)//FOURCC NULL DX9 no rendertarget trick
 	{
@@ -119,7 +121,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	else {
 
 		if (!threadedCtor)
-			dheapId = AllocateSRV();
+			dheapId = AllocateSRV(m_res);
 		else
 			dheapId = 0;
 
@@ -338,10 +340,7 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 	D3D12_TEXTURE_COPY_LOCATION srcR = { ul_obj->GetResourcePtr(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, 0 };
 
 	if (!m_res)
-	{
-		d12res_tex2d(surf_dx9dsc.Width, surf_dx9dsc.Height, m_fmt, &descCache.MipLevels, descCache.DepthOrArraySize);
-		dheapId = AllocateSRV();
-	}
+		ConstructResource();
 
 	GetCopyableFootprints(lv, &srcR.PlacedFootprint);
 
@@ -395,7 +394,7 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 		return 0;
 	}
 
-	if ((surf_dx9dsc.Usage != D3DUSAGE_DEPTHSTENCIL) && (surf_dx9dsc.Usage != D3DUSAGE_RENDERTARGET))
+	if ((surf_dx9dsc.Usage != D3DUSAGE_DEPTHSTENCIL) && (surf_dx9dsc.Usage != D3DUSAGE_RENDERTARGET) && (surf_dx9dsc.Usage != D3DUSAGE_D912PXY_FORCE_RT))
 	{
 #ifdef ENABLE_METRICS
 		d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz() * (use ? 1 : -1));
@@ -406,16 +405,18 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 			if (!threadedCtor)
 			{
 				d12res_tex2d(surf_dx9dsc.Width, surf_dx9dsc.Height, m_fmt, &descCache.MipLevels, descCache.DepthOrArraySize);
-				dheapId = AllocateSRV();
+				dheapId = AllocateSRV(m_res);
 			}
-			else
+			else 
 				dheapId = 0;
+
+			stateCache = D3D12_RESOURCE_STATE_COMMON;
 
 			AllocateLayers();
 		}
 		else {
 			FreeObjAndSlot();
-			FreeLayers();
+			FreeLayers();			
 		}
 	}
 	else {
@@ -484,6 +485,8 @@ d912pxy_surface_layer * d912pxy_surface::GetLayer(UINT32 mip, UINT32 ar)
 
 void d912pxy_surface::CopySurfaceDataToCPU()
 {
+	d912pxy_s.render.iframe.StateSafeFlush(0);
+
 	d912pxy_resource* readbackBuffer = new d912pxy_resource(RTID_RB_BUF, PXY_COM_OBJ_NOVTABLE, L"readback buffer");
 	readbackBuffer->d12res_readback_buffer(subresFootprints[0].Footprint.RowPitch*subresFootprints[0].Footprint.Height);
 		
@@ -545,7 +548,7 @@ void d912pxy_surface::UpdateDescCache()
 	);	
 }
 
-UINT32 d912pxy_surface::AllocateSRV()
+UINT32 d912pxy_surface::AllocateSRV(ID3D12Resource* resPtr)
 {
 	UINT32 ret = 0;
 	if (descCache.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL))
@@ -563,7 +566,7 @@ UINT32 d912pxy_surface::AllocateSRV()
 		newSrv.Texture2D.MostDetailedMip = 0;
 		newSrv.Texture2D.ResourceMinLODClamp = 0;
 
-		ret = dHeap->CreateSRV(m_res, &newSrv);
+		ret = dHeap->CreateSRV(resPtr, &newSrv);
 	}
 	else {
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDsc;
@@ -608,7 +611,7 @@ UINT32 d912pxy_surface::AllocateSRV()
 			srvDsc.TextureCube.ResourceMinLODClamp = 0;
 		}
 
-		ret = dHeap->CreateSRV(m_res, &srvDsc);
+		ret = dHeap->CreateSRV(resPtr, &srvDsc);
 
 		if (dheapIdFeedback)
 			*dheapIdFeedback = ret;
@@ -686,6 +689,26 @@ void d912pxy_surface::FinishUpload()
 	ThreadRef(-1);
 }
 
+void d912pxy_surface::ConstructResource()
+{
+	ctorSync.Hold();
+
+	if (m_res)
+	{
+		ctorSync.Release();
+		return;
+	}
+
+	//megai2: tmp location is needed to drop into ConstructResource from other threads when we are in ConstructResource
+
+	ID3D12Resource* tmpLocation = d12res_tex2d_target(surf_dx9dsc.Width, surf_dx9dsc.Height, m_fmt, &descCache.MipLevels, descCache.DepthOrArraySize);
+	dheapId = AllocateSRV(tmpLocation);
+
+	m_res = tmpLocation;
+
+	ctorSync.Release();
+}
+
 UINT d912pxy_surface::GetSRVHeapId()
 {
 	if (descCache.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL))
@@ -702,7 +725,7 @@ UINT d912pxy_surface::GetSRVHeapIdRTDS()
 		return 0;
 
 	if (dheapId == -1)
-		dheapId = AllocateSRV();
+		dheapId = AllocateSRV(m_res);
 
 	//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but some drivers handle this bad
 	if (d912pxy_s.render.replay.StateTransit(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))

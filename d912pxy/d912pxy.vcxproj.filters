@@ -230,9 +230,6 @@
     <ClCompile Include="d912pxy_com_routing.cpp">
       <Filter>d3d9_proxy\com\routing</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_com_route_default.cpp">
-      <Filter>d3d9_proxy\com\routing\default</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_surface.cpp">
       <Filter>d3d9_impl\resource\textures\surface</Filter>
     </ClCompile>
@@ -254,8 +251,11 @@
     <ClCompile Include="d912pxy_replay_base.cpp">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_com_route_default.cpp">
+      <Filter>d3d9_proxy\com\routing</Filter>
+    </ClCompile>
     <ClCompile Include="d912pxy_com_route_overhead_tracked.cpp">
-      <Filter>d3d9_proxy\com\routing\default</Filter>
+      <Filter>d3d9_proxy\com\routing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -556,9 +556,6 @@
     </Filter>
     <Filter Include="d3d9_proxy\com\routing">
       <UniqueIdentifier>{081b5650-7082-4302-80cb-f4a00ca6243e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="d3d9_proxy\com\routing\default">
-      <UniqueIdentifier>{14fe973d-a09f-4061-bf42-4f2e4e673d28}</UniqueIdentifier>
     </Filter>
     <Filter Include="base\logging">
       <UniqueIdentifier>{c9ffa063-fa99-473e-805f-7160f1e9678a}</UniqueIdentifier>

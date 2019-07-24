@@ -142,6 +142,8 @@ typedef struct d912pxy_replay_pso_raw_feedback {
 typedef struct d912pxy_replay_rect {
 	d912pxy_surface* src;
 	d912pxy_surface* dst;
+	D3D12_RESOURCE_STATES prevS;
+	D3D12_RESOURCE_STATES prevD;
 } d912pxy_replay_rect;
 
 typedef struct d912pxy_replay_pso_compiled {
