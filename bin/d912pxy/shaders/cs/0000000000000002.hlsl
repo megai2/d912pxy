@@ -30,16 +30,22 @@ void main(uint3 groupId : SV_GroupID, uint groupIndex : SV_GroupIndex)
 	uint4 data = srcBuffer.Load4(index);		
 	
 	uint orgCtl = control.x;
+	
 	control.x *= 16;		
 	control.x += control.y * dstBufferStride;
 	
-	index += 16;
+	index += 16 * control.z;
 		
 	uint4 ctlLookup = srcBuffer.Load4(index+PXY_INNER_MAX_IFRAME_BATCH_COUNT*dstBufferStride);
 		
-	while (ctlLookup.x != orgCtl)
+	while (ctlLookup.z != 0)
 	{
-		index += 16;
+		
+		if ((ctlLookup.x <= orgCtl) && ((ctlLookup.x + ctlLookup.z) > orgCtl))
+			break;
+			
+		index += 16 * ctlLookup.z;
+		
 		ctlLookup = srcBuffer.Load4(index+PXY_INNER_MAX_IFRAME_BATCH_COUNT*dstBufferStride);						
 	}
 	

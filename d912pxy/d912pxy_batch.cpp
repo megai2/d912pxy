@@ -199,14 +199,16 @@ void d912pxy_batch::GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)
 void d912pxy_batch::GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)
 {
 	UINT64 i = of;
+	UINT64 endDlt = cnt;
 	while (i != (of + cnt))
 	{
 		d912pxy_batch_stream_control_entry* ctl = &streamControl[si];
 
 		ctl->dstOffset = (UINT32)i;
 		ctl->startBatch = (UINT32)bn;
-		ctl->endBatch = 1;
+		ctl->endBatch = endDlt;
 
+		--endDlt;
 		++si;
 		++i;
 	}
