@@ -530,6 +530,11 @@ void d912pxy_iframe::SetRSigOnList(d912pxy_gpu_cmd_list_group lstID)
 	cl->SetGraphicsRootDescriptorTable(2, mHeaps[PXY_INNER_HEAP_SPL]->GetGPUDHeapHandle(0));
 	cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	//megai2: keep this commented out 
+	/*static const float white[4] = { 1,1,1,1 };
+	
+	cl->OMSetBlendFactor(white);*/
+
 }
 
 void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
