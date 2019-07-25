@@ -1345,7 +1345,7 @@ void d912pxy_hlsl_generator::ProcSIO_DEF(DWORD * op)
 			fv4[3] = *((float*)&op[1 + 4]);
 
 			HLSL_GEN_WRITE_PROC(
-				"float4 %s%u = { %f , %f , %f , %f };",
+				"float4 %s%u = { %.9f , %.9f , %.9f , %.9f };",
 				d912pxy_hlsl_generator_reg_names[reg],
 				num,
 				fv4[0], fv4[1], fv4[2], fv4[3]
