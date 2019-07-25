@@ -193,8 +193,8 @@ void d912pxy_texture_state::UpdateFullSplDsc(UINT from)
 
 		UINT minF = ((0x2 & dx9FilterName) != 0);
 		UINT magF = ((0x10 & dx9FilterName) != 0);
-		UINT mipF = (((0x40 & dx9FilterName) != 0));
-
+		UINT mipF = (((0x80 & dx9FilterName) != 0));
+		
 		//special hack for PCF filter
 		if ((0x7 & dx9FilterName) == 0)
 		{
