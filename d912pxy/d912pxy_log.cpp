@@ -36,8 +36,8 @@ d912pxy_log::~d912pxy_log()
 	//megai2: wait a bit for final datas to be processed
 	Sleep(2000);
 
-	m_log->Release();
-	m_trackLog->Release();
+	//m_log->Release();
+	//m_trackLog->Release();
 
 	p7cli->Release();	
 #else
