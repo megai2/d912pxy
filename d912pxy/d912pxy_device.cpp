@@ -99,6 +99,8 @@ d912pxy_device::~d912pxy_device(void)
 	d912pxy_s.pool.hostPow2.~d912pxy_mem_va_table();
 
 	d912pxy_s.com.DeInit();
+
+	d912pxy_s.dx12.dev->Release();
 	
 	LOG_INFO_DTDM("d912pxy exited");
 
