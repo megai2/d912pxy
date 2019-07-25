@@ -318,9 +318,6 @@ private:
 	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS_MAX];
 	LONG stopMarker;
 
-	d912pxy_thread_lock gpuw_sync;
-	d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>* gpuw_que;
-
 #ifdef _DEBUG
 	d912pxy_thread_lock simThreadAcc;
 #endif

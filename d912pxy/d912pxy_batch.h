@@ -84,6 +84,7 @@ public:
 	void SetShaderConstF(UINT type, UINT start, UINT cnt4, float* data);
 	void GPUWrite(void* src, UINT size, UINT offset);
 	void GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);
+	void GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);
 	
 	void FrameStart();
 	void FrameEnd();
@@ -99,6 +100,7 @@ private:
 	ID3D12GraphicsCommandList* topCl;
 	ID3D12PipelineState* copyPSO;
 	ID3D12RootSignature* copyRS;
+	UINT copyPSOtype;
 		
 	d912pxy_cbuffer* buffer;
 	d912pxy_cbuffer* stream;

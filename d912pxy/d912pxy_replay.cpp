@@ -42,8 +42,6 @@ d912pxy_replay::d912pxy_replay()
 
 d912pxy_replay::~d912pxy_replay()
 {	
-	if (numThreads > 1)
-		delete gpuw_que;
 }
 
 void d912pxy_replay::Init()
@@ -101,14 +99,9 @@ void d912pxy_replay::Init()
 	replay_handlers[DRPL_QUMA] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_QUMA;
 
 	if (numThreads > 1)
-	{
-		gpuw_que = new d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>(maxReplayItems, 0);
 		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW_MT;
-	}
-	else {
-		gpuw_que = NULL;
-		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;
-	}
+	else
+		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;	
 }
 
 UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
@@ -255,11 +248,6 @@ void d912pxy_replay::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 	it->gpuw_ctl.size = cnt;
 	it->gpuw_ctl.offset = of;
 	it->gpuw_ctl.streamIdx = si;
-
-	if (gpuw_que)
-	{
-		gpuw_que->WriteElementFast(&it->gpuw_ctl);
-	}
 
 	REPLAY_STACK_INCREMENT;
 }
@@ -822,9 +810,7 @@ void d912pxy_replay::RHA_GPUW(d912pxy_replay_gpu_write_control * it, ID3D12Graph
 
 void d912pxy_replay::RHA_GPUW_MT(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void ** unused)
 {
-	gpuw_sync.Hold();
-	RHA_GPUW(gpuw_que->PopElementFast(), cl, unused);
-	gpuw_sync.Release();
+	d912pxy_s.render.batch.GPUWriteControlMT(it->streamIdx, it->offset, it->size, it->bn);
 }
 
 void d912pxy_replay::RHA_PRMT(d912pxy_replay_primitive_topology * it, ID3D12GraphicsCommandList * cl, void ** unused)
