@@ -35,7 +35,7 @@ d912pxy_buffer_loader::~d912pxy_buffer_loader()
 
 void d912pxy_buffer_loader::Init()
 {	
-	d912pxy_async_upload_thread::Init(PXY_INNER_MAX_ASYNC_BUFFERLOADS, PXY_INNER_THREADID_BUF_LOADER, 10, L"buffer upload thread", "d912pxy bufld");
+	d912pxy_async_upload_thread::Init(PXY_INNER_MAX_ASYNC_BUFFERLOADS, PXY_INNER_THREADID_BUF_LOADER, PXY_WAKE_FACTOR_BUFFER, L"buffer upload thread", "d912pxy bufld");
 
 	d912pxy_s.dx12.que.EnableGID(CLG_BUF, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
 	Resume();

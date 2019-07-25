@@ -448,7 +448,7 @@ void d912pxy_replay::IssueWork(UINT batch)
 		threads[cWorker]->SignalWork();
 		
 	}
-	else if ((batch % 100) == 0) {
+	else if ((batch % PXY_WAKE_FACTOR_REPLAY) == 0) {
 		SyncStackTop();
 		threads[cWorker]->SignalWork();
 	}

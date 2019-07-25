@@ -50,7 +50,7 @@ d912pxy_texture_loader::~d912pxy_texture_loader()
 
 void d912pxy_texture_loader::Init()
 {
-	d912pxy_async_upload_thread::Init(PXY_INNER_MAX_ASYNC_TEXLOADS, PXY_INNER_THREADID_TEX_LOADER, 1, L"texture upload thread", "d912pxy texld");
+	d912pxy_async_upload_thread::Init(PXY_INNER_MAX_ASYNC_TEXLOADS, PXY_INNER_THREADID_TEX_LOADER, PXY_WAKE_FACTOR_TEXTURE, L"texture upload thread", "d912pxy texld");
 
 	d912pxy_s.dx12.que.EnableGID(CLG_TEX, PXY_INNER_CLG_PRIO_ASYNC_LOAD);
 
