@@ -260,6 +260,22 @@ size_t d912pxy_surface::GetFootprintMemSz()
 	return ret;
 }
 
+size_t d912pxy_surface::GetFootprintMemSzRaw()
+{
+	size_t ret = 0;
+
+	for (int i = 0; i != descCache.DepthOrArraySize; ++i)
+	{
+		for (int j = 0; j != descCache.MipLevels; ++j)
+		{
+			UINT subresId = i * descCache.MipLevels + j;
+			ret += subresFootprints[subresId].Footprint.RowPitch*subresFootprints[subresId].Footprint.Height;
+		}
+	}
+
+	return ret;
+}
+
 DXGI_FORMAT d912pxy_surface::GetDSVFormat()
 {
 	DXGI_FORMAT ret = m_fmt;
@@ -409,7 +425,7 @@ UINT32 d912pxy_surface::PooledAction(UINT32 use)
 	if ((surf_dx9dsc.Usage != D3DUSAGE_DEPTHSTENCIL) && (surf_dx9dsc.Usage != D3DUSAGE_RENDERTARGET) && (surf_dx9dsc.Usage != D3DUSAGE_D912PXY_FORCE_RT))
 	{
 #ifdef ENABLE_METRICS
-		d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz() * (use ? 1 : -1));
+		d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSzRaw() * (use ? 1 : -1));
 #endif
 
 		if (use)
@@ -486,7 +502,7 @@ void d912pxy_surface::MarkPooled(UINT uid)
 	isPooled = uid;
 #ifdef ENABLE_METRICS
 	if ((surf_dx9dsc.Usage != D3DUSAGE_DEPTHSTENCIL) && (surf_dx9dsc.Usage != D3DUSAGE_RENDERTARGET))
-		d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSz());
+		d912pxy_s.pool.surface.ChangePoolSize((INT)GetFootprintMemSzRaw());
 #endif
 }
 

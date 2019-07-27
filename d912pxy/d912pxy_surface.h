@@ -68,6 +68,7 @@ public:
 	void DelayedLoad(void* mem, UINT lv);
 	
 	size_t GetFootprintMemSz();
+	size_t GetFootprintMemSzRaw();
 	size_t GetFootprintMemSzDX9();
 	UINT GetWPitchDX9(UINT lv);
 	UINT GetWPitchLV(UINT lv);

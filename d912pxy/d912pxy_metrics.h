@@ -113,6 +113,9 @@ private:
 	tUINT16 metricMemVStream;
 	tUINT16 metricOverhead;
 
+	tUINT16 metricVRAM;
+	tUINT16 metricVRAMShared;
+
 	IP7_Telemetry* ohMetrics;
 	UINT64 metricOHval[MAX_OVERHEAD_STR_ID];
 	tUINT16 metricOH[MAX_OVERHEAD_STR_ID];
