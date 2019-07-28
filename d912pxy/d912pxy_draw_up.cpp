@@ -128,9 +128,13 @@ UINT d912pxy_draw_up::BufferWrite(d912pxy_draw_up_buffer_name bid, UINT size, co
 	if ((tmpWP + size) >= buf[bid].endPoint)
 	{
 		UINT32 len = buf[bid].vstream->GetLength();
-		len = (len * 2) > 0x7FFFFFF ? 0x7FFFFFF : (len * 2);
+		len *= 2;
 
-		buf[bid].vstream->Unlock();		
+		len = size > len ? size * 2 : len;
+
+		len = len >= 0x7FFFFFF ? 0x7FFFFFF : len;
+
+		buf[bid].vstream->UnlockRanged(0, buf[bid].offset);
 		buf[bid].vstream->Release();
 
 		AllocateBuffer(bid, len);
