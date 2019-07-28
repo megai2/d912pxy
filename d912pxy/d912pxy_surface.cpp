@@ -128,7 +128,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	} 
 	else {
 
-		if (!threadedCtor)
+		if (!threadedCtor || (dheapId == 0))
 			dheapId = AllocateSRV(m_res);
 		else
 			dheapId = 0;
