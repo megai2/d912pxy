@@ -128,7 +128,7 @@ UINT d912pxy_draw_up::BufferWrite(d912pxy_draw_up_buffer_name bid, UINT size, co
 	if ((tmpWP + size) >= buf[bid].endPoint)
 	{
 		UINT32 len = buf[bid].vstream->GetLength();
-		len = (len * 2) & 0x7FFFFFF;
+		len = (len * 2) > 0x7FFFFFF ? 0x7FFFFFF : (len * 2);
 
 		buf[bid].vstream->Unlock();		
 		buf[bid].vstream->Release();
@@ -140,8 +140,8 @@ UINT d912pxy_draw_up::BufferWrite(d912pxy_draw_up_buffer_name bid, UINT size, co
 
 		if ((tmpWP + size) >= buf[bid].endPoint)
 		{
-			LOG_DBG_DTDM3("App asked %lX ibytes to draw, TOO BIG, skipping", size);
-			return 0;
+			LOG_ERR_DTDM("App asked %lX ibytes to draw, TOO BIG, skipping", size);
+			return -1;
 		}
 	} 
 
