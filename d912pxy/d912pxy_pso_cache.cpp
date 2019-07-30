@@ -202,15 +202,23 @@ void d912pxy_pso_cache::Init()
 }
 
 void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
-{
-	if (State > D3DRS_BLENDOPALPHA)	
-		return;
-
-	dirty |= 1;// (DX9RSvalues[State] != Value);
-	
-
+{		
 	switch (State)
 	{
+	case D3DRS_BLENDFACTOR:
+	{
+		DWORD Color = Value;
+
+		float fvClra[4];
+
+		for (int i = 0; i != 4; ++i)
+		{
+			fvClra[i] = ((Color >> (i << 3)) & 0xFF) / 255.0f;
+		}
+
+		d912pxy_s.render.replay.OMBlendFac(fvClra);
+	}
+	break; //193,   /* D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR */
 	case D3DRS_STENCILREF:
 		d912pxy_s.render.replay.OMStencilRef(Value);
 		DX9RSvalues[State] = Value;
@@ -469,9 +477,20 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	}
 }
 
-void d912pxy_pso_cache::TrackState(D3DRENDERSTATETYPE State, DWORD Value)
+void d912pxy_pso_cache::SetState(D3DRENDERSTATETYPE State, DWORD Value)
 {
-	DX9RSvalues[State] = Value;
+	this->State(State, Value);
+
+	dirty |= 1;
+}
+
+void d912pxy_pso_cache::SetStateTracked(D3DRENDERSTATETYPE State, DWORD Value)
+{
+	if (DX9RSvalues[State] != Value)
+	{
+		SetState(State, Value);
+		DX9RSvalues[State] = Value;
+	}
 }
 
 void d912pxy_pso_cache::VShader(d912pxy_shader * vs)

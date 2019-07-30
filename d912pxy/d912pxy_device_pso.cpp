@@ -28,8 +28,8 @@ SOFTWARE.
 
 HRESULT d912pxy_device::SetRenderState_Tracked(D3DRENDERSTATETYPE State, DWORD Value)
 {
-	d912pxy_s.render.db.pso.TrackState(State, Value);
-	return SetRenderState(State, Value);
+	d912pxy_s.render.db.pso.SetStateTracked(State, Value);
+	return D3D_OK;
 }
 
 
@@ -60,24 +60,9 @@ HRESULT d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
 			else {
 				d912pxy_s.render.tex.AddDirtyFlag(Value);
 			}
-		break;
-		case D3DRS_BLENDFACTOR:
-		{
-			DWORD Color = Value;
-
-			float fvClra[4];
-
-			for (int i = 0; i != 4; ++i)
-			{
-				fvClra[i] = ((Color >> (i << 3)) & 0xFF) / 255.0f;
-			}
-
-			d912pxy_s.render.replay.OMBlendFac(fvClra);
-		}
-		break; //193,   /* D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR */
-					
+		break;					
 		default:
-			d912pxy_s.render.db.pso.State(State,Value);
+			d912pxy_s.render.db.pso.SetState(State,Value);
 	}
 	
 	return D3D_OK; 
