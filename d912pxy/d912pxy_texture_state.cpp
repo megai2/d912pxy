@@ -2,13 +2,11 @@
 
 d912pxy_texture_state::d912pxy_texture_state() 
 {
-
+	memset(DX9SSTValues, 7, sizeof(DWORD)*(D3DSAMP_DMAPOFFSET+1));
 }
 
 d912pxy_texture_state::~d912pxy_texture_state()
 {
-	
-
 	splLookup->Begin();
 
 	while (!splLookup->IterEnd())
@@ -70,8 +68,19 @@ void d912pxy_texture_state::ModStageBit(UINT stage, UINT bit, UINT set)
 	current.texHeapID[stage] = val;
 }
 
+void d912pxy_texture_state::ModSamplerTracked(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value)
+{
+	if (DX9SSTValues[state] != value)
+	{
+		ModSampler(stage, state, value);
+		DX9SSTValues[state] = value;
+	}
+}
+
 void d912pxy_texture_state::ModSampler(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value)
 {
+	LOG_DBG_DTDM("Sampler[%u][%u] = %u", Sampler, Type, Value);
+
 	d912pxy_trimmed_sampler_dsc* cDesc = &trimmedSpl[stage];
 	current.dirty |= 1ULL << (stage + 8);		
 

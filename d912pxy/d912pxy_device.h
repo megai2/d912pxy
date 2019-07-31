@@ -341,6 +341,7 @@ public:
 	HRESULT SetScissorRect_CAR(CONST RECT* pRect);
 	HRESULT SetRenderTarget_Compat(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
 	D912PXY_METHOD_NC(SetRenderState_Tracked)(THIS_ D3DRENDERSTATETYPE State, DWORD Value);
+	D912PXY_METHOD_NC(SetSamplerState_Tracked)(THIS_ DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value);
 
 	//com routes for them
 	D912PXY_METHOD(DrawIndexedPrimitive_PS)(PXY_THIS_ D3DPRIMITIVETYPE, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
@@ -354,6 +355,8 @@ public:
 	D912PXY_METHOD(SetScissorRect_CAR)(PXY_THIS_ CONST RECT* pRect);
 	D912PXY_METHOD(SetRenderTarget_Compat)(PXY_THIS_ DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
 	D912PXY_METHOD(SetRenderState_Tracked)(PXY_THIS_ D3DRENDERSTATETYPE State, DWORD Value);
+	D912PXY_METHOD(SetSamplerState_Tracked)(PXY_THIS_ DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value);
+	
 	
 
 	HRESULT InnerPresentExecute();

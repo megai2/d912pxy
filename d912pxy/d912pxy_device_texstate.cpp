@@ -72,16 +72,19 @@ HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTextu
 }
 
 HRESULT d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
-{ 
-	
-
-	LOG_DBG_DTDM("Sampler[%u][%u] = %u", Sampler, Type, Value);
-
+{ 	
 	Sampler = (Sampler & 0xF) + 16 * (Sampler >= D3DDMAPSAMPLER);
 
 	d912pxy_s.render.tex.ModSampler(Sampler, Type, Value);
-
 	
+	return D3D_OK;
+}
+
+HRESULT d912pxy_device::SetSamplerState_Tracked(DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
+{
+	Sampler = (Sampler & 0xF) + 16 * (Sampler >= D3DDMAPSAMPLER);
+
+	d912pxy_s.render.tex.ModSampler(Sampler, Type, Value);
 
 	return D3D_OK;
 }

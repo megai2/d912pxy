@@ -551,8 +551,8 @@ void d912pxy_replay::SaveCLState(UINT thread)
 {
 	d912pxy_replay_thread_transit_data* trd = &transitData[thread];
 
-	trd->bfacStk = lastBFactorStk;
-	trd->srefStk = lastSRefStk;
+	trd->bfacVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
+	trd->srefVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
 	trd->surfBind[0] = d912pxy_s.render.iframe.GetBindedSurface(0);
 	trd->surfBind[1] = d912pxy_s.render.iframe.GetBindedSurface(1);
@@ -632,11 +632,20 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 	streamBind.ib.buf = trd->indexBuf;
 	PlayId(&streamBind, cl, context);
 
-	if (trd->srefStk != -1)	
-		PlayId(&stack[trd->srefStk], cl, context);
 
-	if (trd->bfacStk != -1)
-		PlayId(&stack[trd->bfacStk], cl, context);
+	d912pxy_replay_item sbVal;
+
+	sbVal.type = DRPL_OMSR;
+	sbVal.omsr.dRef = trd->srefVal;
+
+	PlayId(&sbVal, cl, context);
+
+	sbVal.type = DRPL_OMBF;
+
+	fv4Color bfColor = d912pxy_s.render.db.pso.TransformBlendFactor(trd->bfacVal);
+	memcpy(sbVal.ombf.color, bfColor.val, 16);
+
+	PlayId(&sbVal, cl, context);
 
 	d912pxy_replay_item psoSet;
 

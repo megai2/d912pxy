@@ -197,6 +197,7 @@ void d912pxy_device::InitComPatches()
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_TRACK_RS))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETRENDERSTATE, &d912pxy_device::com_SetRenderState_Tracked);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETSAMPLERSTATE, &d912pxy_device::com_SetSamplerState_Tracked);
 	}
 
 	if (!d912pxy_s.config.GetValueUI64(PXY_CFG_SDB_KEEP_PAIRS))

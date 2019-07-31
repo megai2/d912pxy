@@ -86,115 +86,118 @@ void d912pxy_pso_cache::Init()
 	d912pxy_pso_cache::cDscBase.DS.pShaderBytecode = NULL;
 	d912pxy_pso_cache::cDscBase.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
-	State(D3DRS_ZENABLE, 1);
-	State(D3DRS_FILLMODE, D3DFILL_SOLID);
-	State(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
-	State(D3DRS_ZWRITEENABLE, 1);
-	State(D3DRS_ALPHATESTENABLE, 0);
-	State(D3DRS_LASTPIXEL, 1);
-	State(D3DRS_SRCBLEND, D3DBLEND_ONE);
-	State(D3DRS_DESTBLEND, D3DBLEND_ZERO);
-	State(D3DRS_CULLMODE, D3DCULL_CCW);
-	State(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
-	State(D3DRS_ALPHAREF, 0);
-	State(D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);
-	State(D3DRS_DITHERENABLE, 0);
-	State(D3DRS_ALPHABLENDENABLE, 0);
-	State(D3DRS_FOGENABLE, 0);
-	State(D3DRS_SPECULARENABLE, 0);
-	State(D3DRS_FOGCOLOR, 0);
-	State(D3DRS_FOGTABLEMODE, D3DFOG_NONE);
-	State(D3DRS_FOGSTART, 0);
+	for (int i = 0; i!= 226;++i)
+		DX9RSvalues[i] = 7;
+
+	SetStateTracked(D3DRS_ZENABLE, 1);
+	SetStateTracked(D3DRS_FILLMODE, D3DFILL_SOLID);
+	SetStateTracked(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+	SetStateTracked(D3DRS_ZWRITEENABLE, 1);
+	SetStateTracked(D3DRS_ALPHATESTENABLE, 0);
+	SetStateTracked(D3DRS_LASTPIXEL, 1);
+	SetStateTracked(D3DRS_SRCBLEND, D3DBLEND_ONE);
+	SetStateTracked(D3DRS_DESTBLEND, D3DBLEND_ZERO);
+	SetStateTracked(D3DRS_CULLMODE, D3DCULL_CCW);
+	SetStateTracked(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+	SetStateTracked(D3DRS_ALPHAREF, 0);
+	SetStateTracked(D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);
+	SetStateTracked(D3DRS_DITHERENABLE, 0);
+	SetStateTracked(D3DRS_ALPHABLENDENABLE, 0);
+	SetStateTracked(D3DRS_FOGENABLE, 0);
+	SetStateTracked(D3DRS_SPECULARENABLE, 0);
+	SetStateTracked(D3DRS_FOGCOLOR, 0);
+	SetStateTracked(D3DRS_FOGTABLEMODE, D3DFOG_NONE);
+	SetStateTracked(D3DRS_FOGSTART, 0);
 
 	float fValue = 1.0f;
-	State(D3DRS_FOGEND, *((DWORD*)(&fValue)));
-	State(D3DRS_FOGDENSITY, *((DWORD*)(&fValue)));
-	State(D3DRS_RANGEFOGENABLE, 0);
-	State(D3DRS_STENCILENABLE, 0);
-	State(D3DRS_STENCILFAIL, D3DSTENCILOP_KEEP);
-	State(D3DRS_STENCILZFAIL, D3DSTENCILOP_KEEP);
-	State(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
-	State(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-	State(D3DRS_STENCILREF, 0);
-	State(D3DRS_STENCILMASK, 0xFFFFFFFF);
-	State(D3DRS_STENCILWRITEMASK, 0xFFFFFFFF);
-	State(D3DRS_TEXTUREFACTOR, 0xFFFFFFFF);
-	State(D3DRS_WRAP0, 0);
-	State(D3DRS_WRAP1, 0);
-	State(D3DRS_WRAP2, 0);
-	State(D3DRS_WRAP3, 0);
-	State(D3DRS_WRAP4, 0);
-	State(D3DRS_WRAP5, 0);
-	State(D3DRS_WRAP6, 0);
-	State(D3DRS_WRAP7, 0);
-	State(D3DRS_WRAP8, 0);
-	State(D3DRS_WRAP9, 0);
-	State(D3DRS_WRAP10, 0);
-	State(D3DRS_WRAP11, 0);
-	State(D3DRS_WRAP12, 0);
-	State(D3DRS_WRAP13, 0);
-	State(D3DRS_WRAP14, 0);
-	State(D3DRS_WRAP15, 0);
-	State(D3DRS_CLIPPING, 1);
-	State(D3DRS_LIGHTING, 1);
-	State(D3DRS_AMBIENT, 0);
-	State(D3DRS_FOGVERTEXMODE, D3DFOG_NONE);
-	State(D3DRS_COLORVERTEX, 1);
-	State(D3DRS_LOCALVIEWER, 1);
-	State(D3DRS_NORMALIZENORMALS, 0);
-	State(D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1);
-	State(D3DRS_SPECULARMATERIALSOURCE, D3DMCS_COLOR2);
-	State(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_MATERIAL);
-	State(D3DRS_EMISSIVEMATERIALSOURCE, D3DMCS_MATERIAL);
-	State(D3DRS_VERTEXBLEND, D3DVBF_DISABLE);
-	State(D3DRS_CLIPPLANEENABLE, 0);
-	State(D3DRS_POINTSIZE, 0);
-	State(D3DRS_POINTSIZE_MIN, *((DWORD*)(&fValue)));
-	State(D3DRS_POINTSPRITEENABLE, 0);
-	State(D3DRS_POINTSCALEENABLE, 0);
-	State(D3DRS_POINTSCALE_A, *((DWORD*)(&fValue)));
-	State(D3DRS_POINTSCALE_B, 0);
-	State(D3DRS_POINTSCALE_C, 0);
-	State(D3DRS_MULTISAMPLEANTIALIAS, 1);
-	State(D3DRS_MULTISAMPLEMASK, 0xFFFFFFFF);
-	State(D3DRS_PATCHEDGESTYLE, D3DPATCHEDGE_DISCRETE);
-	State(D3DRS_DEBUGMONITORTOKEN, D3DDMT_ENABLE);
+	SetStateTracked(D3DRS_FOGEND, *((DWORD*)(&fValue)));
+	SetStateTracked(D3DRS_FOGDENSITY, *((DWORD*)(&fValue)));
+	SetStateTracked(D3DRS_RANGEFOGENABLE, 0);
+	SetStateTracked(D3DRS_STENCILENABLE, 0);
+	SetStateTracked(D3DRS_STENCILFAIL, D3DSTENCILOP_KEEP);
+	SetStateTracked(D3DRS_STENCILZFAIL, D3DSTENCILOP_KEEP);
+	SetStateTracked(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
+	SetStateTracked(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
+	SetStateTracked(D3DRS_STENCILREF, 0);
+	SetStateTracked(D3DRS_STENCILMASK, 0xFFFFFFFF);
+	SetStateTracked(D3DRS_STENCILWRITEMASK, 0xFFFFFFFF);
+	SetStateTracked(D3DRS_TEXTUREFACTOR, 0xFFFFFFFF);
+	SetStateTracked(D3DRS_WRAP0, 0);
+	SetStateTracked(D3DRS_WRAP1, 0);
+	SetStateTracked(D3DRS_WRAP2, 0);
+	SetStateTracked(D3DRS_WRAP3, 0);
+	SetStateTracked(D3DRS_WRAP4, 0);
+	SetStateTracked(D3DRS_WRAP5, 0);
+	SetStateTracked(D3DRS_WRAP6, 0);
+	SetStateTracked(D3DRS_WRAP7, 0);
+	SetStateTracked(D3DRS_WRAP8, 0);
+	SetStateTracked(D3DRS_WRAP9, 0);
+	SetStateTracked(D3DRS_WRAP10, 0);
+	SetStateTracked(D3DRS_WRAP11, 0);
+	SetStateTracked(D3DRS_WRAP12, 0);
+	SetStateTracked(D3DRS_WRAP13, 0);
+	SetStateTracked(D3DRS_WRAP14, 0);
+	SetStateTracked(D3DRS_WRAP15, 0);
+	SetStateTracked(D3DRS_CLIPPING, 1);
+	SetStateTracked(D3DRS_LIGHTING, 1);
+	SetStateTracked(D3DRS_AMBIENT, 0);
+	SetStateTracked(D3DRS_FOGVERTEXMODE, D3DFOG_NONE);
+	SetStateTracked(D3DRS_COLORVERTEX, 1);
+	SetStateTracked(D3DRS_LOCALVIEWER, 1);
+	SetStateTracked(D3DRS_NORMALIZENORMALS, 0);
+	SetStateTracked(D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1);
+	SetStateTracked(D3DRS_SPECULARMATERIALSOURCE, D3DMCS_COLOR2);
+	SetStateTracked(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_MATERIAL);
+	SetStateTracked(D3DRS_EMISSIVEMATERIALSOURCE, D3DMCS_MATERIAL);
+	SetStateTracked(D3DRS_VERTEXBLEND, D3DVBF_DISABLE);
+	SetStateTracked(D3DRS_CLIPPLANEENABLE, 0);
+	SetStateTracked(D3DRS_POINTSIZE, 0);
+	SetStateTracked(D3DRS_POINTSIZE_MIN, *((DWORD*)(&fValue)));
+	SetStateTracked(D3DRS_POINTSPRITEENABLE, 0);
+	SetStateTracked(D3DRS_POINTSCALEENABLE, 0);
+	SetStateTracked(D3DRS_POINTSCALE_A, *((DWORD*)(&fValue)));
+	SetStateTracked(D3DRS_POINTSCALE_B, 0);
+	SetStateTracked(D3DRS_POINTSCALE_C, 0);
+	SetStateTracked(D3DRS_MULTISAMPLEANTIALIAS, 1);
+	SetStateTracked(D3DRS_MULTISAMPLEMASK, 0xFFFFFFFF);
+	SetStateTracked(D3DRS_PATCHEDGESTYLE, D3DPATCHEDGE_DISCRETE);
+	SetStateTracked(D3DRS_DEBUGMONITORTOKEN, D3DDMT_ENABLE);
 
 	fValue = 64.0f;
-	State(D3DRS_POINTSIZE_MAX, *((DWORD*)(&fValue)));
-	State(D3DRS_INDEXEDVERTEXBLENDENABLE, 0);
-	State(D3DRS_COLORWRITEENABLE, 0xF);
-	State(D3DRS_TWEENFACTOR, 0);
-	State(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-	State(D3DRS_POSITIONDEGREE, D3DDEGREE_CUBIC);
-	State(D3DRS_NORMALDEGREE, D3DDEGREE_LINEAR);
-	State(D3DRS_SCISSORTESTENABLE, 0);
-	State(D3DRS_SLOPESCALEDEPTHBIAS, 0);
-	State(D3DRS_ANTIALIASEDLINEENABLE, 0);
+	SetStateTracked(D3DRS_POINTSIZE_MAX, *((DWORD*)(&fValue)));
+	SetStateTracked(D3DRS_INDEXEDVERTEXBLENDENABLE, 0);
+	SetStateTracked(D3DRS_COLORWRITEENABLE, 0xF);
+	SetStateTracked(D3DRS_TWEENFACTOR, 0);
+	SetStateTracked(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+	SetStateTracked(D3DRS_POSITIONDEGREE, D3DDEGREE_CUBIC);
+	SetStateTracked(D3DRS_NORMALDEGREE, D3DDEGREE_LINEAR);
+	SetStateTracked(D3DRS_SCISSORTESTENABLE, 0);
+	SetStateTracked(D3DRS_SLOPESCALEDEPTHBIAS, 0);
+	SetStateTracked(D3DRS_ANTIALIASEDLINEENABLE, 0);
 
 	fValue = 1.0f;
-	State(D3DRS_MINTESSELLATIONLEVEL, *((DWORD*)(&fValue)));
-	State(D3DRS_MAXTESSELLATIONLEVEL, *((DWORD*)(&fValue)));
-	State(D3DRS_ADAPTIVETESS_X, 0);
-	State(D3DRS_ADAPTIVETESS_Y, 0);
-	State(D3DRS_ADAPTIVETESS_Z, *((DWORD*)(&fValue)));
-	State(D3DRS_ADAPTIVETESS_W, 0);
-	State(D3DRS_ENABLEADAPTIVETESSELLATION, 0);
-	State(D3DRS_TWOSIDEDSTENCILMODE, 0);
-	State(D3DRS_CCW_STENCILFAIL, D3DSTENCILOP_KEEP);
-	State(D3DRS_CCW_STENCILZFAIL, D3DSTENCILOP_KEEP);
-	State(D3DRS_CCW_STENCILPASS, D3DSTENCILOP_KEEP);
-	State(D3DRS_CCW_STENCILFUNC, D3DCMP_NEVER);
-	State(D3DRS_COLORWRITEENABLE1, 0xF);
-	State(D3DRS_COLORWRITEENABLE2, 0xF);
-	State(D3DRS_COLORWRITEENABLE3, 0xF);
-	State(D3DRS_BLENDFACTOR, 0xffffffff);
-	State(D3DRS_SRGBWRITEENABLE, 0);
-	State(D3DRS_DEPTHBIAS, 0);
-	State(D3DRS_SEPARATEALPHABLENDENABLE, 0);
-	State(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
-	State(D3DRS_DESTBLENDALPHA, D3DBLEND_ZERO);
-	State(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
+	SetStateTracked(D3DRS_MINTESSELLATIONLEVEL, *((DWORD*)(&fValue)));
+	SetStateTracked(D3DRS_MAXTESSELLATIONLEVEL, *((DWORD*)(&fValue)));
+	SetStateTracked(D3DRS_ADAPTIVETESS_X, 0);
+	SetStateTracked(D3DRS_ADAPTIVETESS_Y, 0);
+	SetStateTracked(D3DRS_ADAPTIVETESS_Z, *((DWORD*)(&fValue)));
+	SetStateTracked(D3DRS_ADAPTIVETESS_W, 0);
+	SetStateTracked(D3DRS_ENABLEADAPTIVETESSELLATION, 0);
+	SetStateTracked(D3DRS_TWOSIDEDSTENCILMODE, 0);
+	SetStateTracked(D3DRS_CCW_STENCILFAIL, D3DSTENCILOP_KEEP);
+	SetStateTracked(D3DRS_CCW_STENCILZFAIL, D3DSTENCILOP_KEEP);
+	SetStateTracked(D3DRS_CCW_STENCILPASS, D3DSTENCILOP_KEEP);
+	SetStateTracked(D3DRS_CCW_STENCILFUNC, D3DCMP_NEVER);
+	SetStateTracked(D3DRS_COLORWRITEENABLE1, 0xF);
+	SetStateTracked(D3DRS_COLORWRITEENABLE2, 0xF);
+	SetStateTracked(D3DRS_COLORWRITEENABLE3, 0xF);
+	SetStateTracked(D3DRS_BLENDFACTOR, 0xffffffff);
+	SetStateTracked(D3DRS_SRGBWRITEENABLE, 0);
+	SetStateTracked(D3DRS_DEPTHBIAS, 0);
+	SetStateTracked(D3DRS_SEPARATEALPHABLENDENABLE, 0);
+	SetStateTracked(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
+	SetStateTracked(D3DRS_DESTBLENDALPHA, D3DBLEND_ZERO);
+	SetStateTracked(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
 
 	dirty = 1;
 
@@ -207,16 +210,8 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	{
 	case D3DRS_BLENDFACTOR:
 	{
-		DWORD Color = Value;
-
-		float fvClra[4];
-
-		for (int i = 0; i != 4; ++i)
-		{
-			fvClra[i] = ((Color >> (i << 3)) & 0xFF) / 255.0f;
-		}
-
-		d912pxy_s.render.replay.OMBlendFac(fvClra);
+		d912pxy_s.render.replay.OMBlendFac(TransformBlendFactor(Value).val);		
+		DX9RSvalues[State] = Value;
 	}
 	break; //193,   /* D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR */
 	case D3DRS_STENCILREF:
@@ -253,48 +248,20 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		break; //14,   /* TRUE to enable z writes */
 
 	case D3DRS_SRCBLEND:
+		DX9RSvalues[State] = Value;
 		cDsc.BlendStateRT0.SrcBlend = (D3D12_BLEND)Value;
-		switch (Value)
-		{
-		case D3DBLEND_SRCCOLOR:
-			Value = D3DBLEND_SRCALPHA;
-			break;
-		case D3DBLEND_INVSRCCOLOR:
-			Value = D3DBLEND_INVSRCALPHA;
-			break;
-		case D3DBLEND_DESTCOLOR:
-			Value = D3DBLEND_DESTALPHA;
-			break;
-		case D3DBLEND_INVDESTCOLOR:
-			Value = D3DBLEND_INVDESTALPHA;
-			break;
-		default:
-			;
-		}
-		cDsc.BlendStateRT0.SrcBlendAlpha = (D3D12_BLEND)Value;
+
+		if (!DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
+			cDsc.BlendStateRT0.SrcBlendAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(Value);
 
 		break; //19,   /* D3DBLEND */
 
 	case D3DRS_DESTBLEND:
+		DX9RSvalues[State] = Value;
 		cDsc.BlendStateRT0.DestBlend = (D3D12_BLEND)Value;
-		switch (Value)
-		{
-		case D3DBLEND_SRCCOLOR:
-			Value = D3DBLEND_SRCALPHA;
-			break;
-		case D3DBLEND_INVSRCCOLOR:
-			Value = D3DBLEND_INVSRCALPHA;
-			break;
-		case D3DBLEND_DESTCOLOR:
-			Value = D3DBLEND_DESTALPHA;
-			break;
-		case D3DBLEND_INVDESTCOLOR:
-			Value = D3DBLEND_INVDESTALPHA;
-			break;
-		default:
-			;
-		}
-		cDsc.BlendStateRT0.DestBlendAlpha = (D3D12_BLEND)Value;
+		
+		if (!DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
+			cDsc.BlendStateRT0.DestBlendAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(Value);
 
 		break; //20,   /* D3DBLEND */
 
@@ -324,8 +291,11 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 		break;
 
 	case D3DRS_BLENDOP:
+		DX9RSvalues[State] = Value;
 		cDsc.BlendStateRT0.BlendOp = (D3D12_BLEND_OP)Value;
-		cDsc.BlendStateRT0.BlendOpAlpha = (D3D12_BLEND_OP)Value;
+
+		if (!DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
+			cDsc.BlendStateRT0.BlendOpAlpha = (D3D12_BLEND_OP)Value;
 		break; //171,   // D3DBLENDOP setting
 
 	case D3DRS_SLOPESCALEDEPTHBIAS:
@@ -440,18 +410,42 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	case D3DRS_SEPARATEALPHABLENDENABLE:
 		//LOG_DBG_DTDM("RS sep ablend %u / %u", cDsc.BlendState.RenderTarget[0].BlendEnable, Value); //megai2: same as with stencil. only one bool for blends, not twho. tricky!
+		DX9RSvalues[State] = Value;
+
+		if (Value)
+		{
+			cDsc.BlendStateRT0.SrcBlendAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_SRCBLENDALPHA];
+			cDsc.BlendStateRT0.DestBlendAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_DESTBLENDALPHA];
+			cDsc.BlendStateRT0.BlendOpAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_BLENDOPALPHA];
+		}
+		else {
+			cDsc.BlendStateRT0.SrcBlendAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(DX9RSvalues[D3DRS_SRCBLEND]);
+			cDsc.BlendStateRT0.DestBlendAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(DX9RSvalues[D3DRS_DESTBLEND]);
+			cDsc.BlendStateRT0.BlendOpAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_BLENDOP];
+		}
+
 		break; //206,  /* TRUE to enable a separate blending function for the alpha channel */
 
 	case D3DRS_SRCBLENDALPHA:
-		cDsc.BlendStateRT0.SrcBlendAlpha = (D3D12_BLEND)Value;
+		DX9RSvalues[State] = Value;
+
+		if (DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
+			cDsc.BlendStateRT0.SrcBlendAlpha = (D3D12_BLEND)Value;
 		break; //207,  /* SRC blend factor for the alpha channel when case D3DRS_SEPARATEDESTALPHAENABLE is TRUE */
 
 	case D3DRS_DESTBLENDALPHA:
-		cDsc.BlendStateRT0.DestBlendAlpha = (D3D12_BLEND)Value;
+		DX9RSvalues[State] = Value;
+
+		if (DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
+			cDsc.BlendStateRT0.DestBlendAlpha = (D3D12_BLEND)Value;
 		break; //208,  /* DST blend factor for the alpha channel when case D3DRS_SEPARATEDESTALPHAENABLE is TRUE */
 
 	case D3DRS_BLENDOPALPHA:
-		cDsc.BlendStateRT0.BlendOpAlpha = (D3D12_BLEND_OP)Value;
+		DX9RSvalues[State] = Value;
+		
+		if (DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
+			cDsc.BlendStateRT0.BlendOpAlpha = (D3D12_BLEND_OP)Value;
+
 		break; //209,  /* Blending operation for the alpha channel when case D3DRS_SEPARATEDESTALPHAENABLE is TRUE */
 
 	case D3DRS_ALPHATESTENABLE:
@@ -891,6 +885,43 @@ void d912pxy_pso_cache::SaveKeyToCache(UINT64 id, d912pxy_trimmed_dx12_pso * dsc
 UINT32 d912pxy_pso_cache::GetHashedKey(d912pxy_trimmed_dx12_pso * dsc)
 {
 	return cacheIndexes->memHash32((void*)((intptr_t)dsc + d912pxy_trimmed_dx12_pso_hash_offset));
+}
+
+fv4Color d912pxy_pso_cache::TransformBlendFactor(DWORD val)
+{
+	fv4Color ret;
+	
+	for (int i = 0; i != 4; ++i)
+	{
+		ret.val[i] = ((val >> (i << 3)) & 0xFF) / 255.0f;
+	}
+
+	return ret;
+}
+
+DWORD d912pxy_pso_cache::TransformBlend2AlphaBlend(DWORD val)
+{
+	DWORD ret = val;
+
+	switch (ret)
+	{
+	case D3DBLEND_SRCCOLOR:
+		ret = D3DBLEND_SRCALPHA;
+		break;
+	case D3DBLEND_INVSRCCOLOR:
+		ret = D3DBLEND_INVSRCALPHA;
+		break;
+	case D3DBLEND_DESTCOLOR:
+		ret = D3DBLEND_DESTALPHA;
+		break;
+	case D3DBLEND_INVDESTCOLOR:
+		ret = D3DBLEND_INVDESTALPHA;
+		break;
+	default:
+		;
+	}
+
+	return ret;
 }
 
 void d912pxy_pso_cache::CheckExternalLock()

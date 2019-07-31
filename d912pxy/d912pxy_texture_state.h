@@ -53,6 +53,7 @@ public:
 
 	void SetTexture(UINT stage, UINT srv);
 	void ModStageBit(UINT stage, UINT bit, UINT set);
+	void ModSamplerTracked(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value);
 	void ModSampler(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value);
 
 	UINT Use();
@@ -77,5 +78,7 @@ private:
 
 	D3D12_SAMPLER_DESC splDsc;
 	d912pxy_trimmed_sampler_dsc trimmedSpl[PXY_INNER_MAX_TEXTURE_STAGES];
+	
+	DWORD DX9SSTValues[D3DSAMP_DMAPOFFSET+1];
 };
 

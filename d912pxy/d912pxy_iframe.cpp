@@ -388,6 +388,10 @@ void d912pxy_iframe::Start()
 	SetViewport(&main_viewport);
 	//SetScissors(&main_scissor);
 
+	//megai2: restore RS & blendfactor on replay thread command list
+	d912pxy_s.render.db.pso.State(D3DRS_STENCILREF, d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF));
+	d912pxy_s.render.db.pso.State(D3DRS_BLENDFACTOR, d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_BLENDFACTOR));
+
 	SetRSigOnList(CLG_TOP);
 	SetRSigOnList(CLG_SEQ);
 
