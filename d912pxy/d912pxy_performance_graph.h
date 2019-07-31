@@ -37,6 +37,9 @@ public:
 	d912pxy_performance_graph(UINT isDX9);
 	~d912pxy_performance_graph();
 	void RecordPresent(int batchCount);
+	void DumpData();
+	void ResetTime();
+
 
 private:
 

@@ -36,6 +36,39 @@ d912pxy_performance_graph::d912pxy_performance_graph(UINT isDX9)
 
 d912pxy_performance_graph::~d912pxy_performance_graph()
 {
+	DumpData();
+}
+
+
+void d912pxy_performance_graph::RecordPresent(int batchCount)
+{
+	UINT64 r = frameTime.Elapsed();
+
+	if (r > 0)
+	{
+		if (r < PXY_PERFGRPH_FRAMETIME_MIN)
+			r = 0;
+		else
+			r = r - PXY_PERFGRPH_FRAMETIME_MIN;
+
+		r = r / ((PXY_PERFGRPH_FRAMETIME_MAX - PXY_PERFGRPH_FRAMETIME_MIN) / PXY_PERFGRPH_FRAMETIME_PTS);
+
+		if (r >= PXY_PERFGRPH_FRAMETIME_PTS)
+			r = PXY_PERFGRPH_FRAMETIME_PTS - 1;
+	}
+
+	batchCount = batchCount / PXY_PERFGRPH_BATCH_DIV;
+
+	if (batchCount >= PXY_PERFGRPH_BATCH_PTS)
+		batchCount = PXY_PERFGRPH_BATCH_PTS - 1;
+
+	++dataAcm[r * PXY_PERFGRPH_BATCH_PTS + batchCount];
+
+	frameTime.Reset();
+}
+
+void d912pxy_performance_graph::DumpData()
+{
 	FILE* of = NULL;
 
 	char* stringAcm[4] = { 0 };
@@ -44,7 +77,8 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 	if (dx9)
 	{
 		of = fopen(d912pxy_perf_graph_dx9_outfile, "wb");
-	} else 
+	}
+	else
 		of = fopen(d912pxy_perf_graph_outfile, "wb");
 
 	{
@@ -54,9 +88,9 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 			"		<!--Plotly.js-->\n",
 			"		<script src = \"https://cdn.plot.ly/plotly-latest.min.js\"></script>\n",
 			"	</head>\n",
-			"   <body>\n",				
+			"   <body>\n",
 			"		<div id = \"myDiv\" style=\"width: 100%; height: 100% \"><!--Plotly chart will be drawn inside this DIV--></div>\n",
-			"		<script>\n"			
+			"		<script>\n"
 		};
 
 		for (int i = 0; i != 8; ++i)
@@ -73,8 +107,8 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 	}
 
 	for (UINT32 j = 0; j != PXY_PERFGRPH_BATCH_PTS; ++j)
-	{	
-		UINT32 maxValue2 = 1;		
+	{
+		UINT32 maxValue2 = 1;
 		for (int k = 0; k != PXY_PERFGRPH_FRAMETIME_PTS; ++k)
 		{
 			UINT32 tmp = dataAcm[k*PXY_PERFGRPH_BATCH_PTS + j];
@@ -95,12 +129,12 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 				static char ysBuf[255];
 				static char xsBuf[255];
 				static char pvBuf[255];
-			
-				UINT64 ftime = (PXY_PERFGRPH_FRAMETIME_MIN + k * ((PXY_PERFGRPH_FRAMETIME_MAX - PXY_PERFGRPH_FRAMETIME_MIN) / PXY_PERFGRPH_FRAMETIME_PTS));				
+
+				UINT64 ftime = (PXY_PERFGRPH_FRAMETIME_MIN + k * ((PXY_PERFGRPH_FRAMETIME_MAX - PXY_PERFGRPH_FRAMETIME_MIN) / PXY_PERFGRPH_FRAMETIME_PTS));
 
 				sprintf(ysBuf, ", %f", 1000000.0f / ftime);
 				sprintf(xsBuf, ", %u", j * PXY_PERFGRPH_BATCH_DIV);
-				sprintf(pvBuf, ", %f", pv*255);
+				sprintf(pvBuf, ", %f", pv * 255);
 
 				strcat(stringAcm[0], ysBuf);
 				strcat(stringAcm[1], xsBuf);
@@ -115,7 +149,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 
 	{
 		static const char* emts[] = {
-			"			var trace1 = {\n",			
+			"			var trace1 = {\n",
 			"				x: [0",
 			"				y: [0",
 			"				mode: 'markers',\n",
@@ -132,7 +166,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 			"',\n"
 		};
 
-		static const char* footer[] = {			
+		static const char* footer[] = {
 			"				xaxis: {\n",
 			"					title: {\n",
 			"						text: \"Draw calls per frame\"\n",
@@ -176,7 +210,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 		if (!dx9)
 			gpun = d912pxy_s.dev.GetCurrentGPUName();
 
-		fwrite(cpub, 1, strlen(cpub), of);		
+		fwrite(cpub, 1, strlen(cpub), of);
 		fwrite(emts[12], 1, strlen(emts[12]), of);
 		fwrite(gpun, 1, strlen(gpun), of);
 		fwrite(emts[13], 1, strlen(emts[13]), of);
@@ -196,30 +230,7 @@ d912pxy_performance_graph::~d912pxy_performance_graph()
 		PXY_FREE(stringAcm[i]);
 }
 
-
-void d912pxy_performance_graph::RecordPresent(int batchCount)
+void d912pxy_performance_graph::ResetTime()
 {
-	UINT64 r = frameTime.Elapsed();
-
-	if (r > 0)
-	{
-		if (r < PXY_PERFGRPH_FRAMETIME_MIN)
-			r = 0;
-		else
-			r = r - PXY_PERFGRPH_FRAMETIME_MIN;
-
-		r = r / ((PXY_PERFGRPH_FRAMETIME_MAX - PXY_PERFGRPH_FRAMETIME_MIN) / PXY_PERFGRPH_FRAMETIME_PTS);
-
-		if (r >= PXY_PERFGRPH_FRAMETIME_PTS)
-			r = PXY_PERFGRPH_FRAMETIME_PTS - 1;
-	}
-
-	batchCount = batchCount / PXY_PERFGRPH_BATCH_DIV;
-
-	if (batchCount >= PXY_PERFGRPH_BATCH_PTS)
-		batchCount = PXY_PERFGRPH_BATCH_PTS - 1;
-
-	++dataAcm[r * PXY_PERFGRPH_BATCH_PTS + batchCount];
-
 	frameTime.Reset();
 }

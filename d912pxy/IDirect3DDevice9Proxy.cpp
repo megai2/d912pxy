@@ -55,6 +55,8 @@ IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3D9* pOriginal, Direct3DDevi
 	cp.pPresentationParameters = &origPP;
 
 	perfGraph = NULL;
+
+	startTime = GetTickCount();
 }
 
 IDirect3DDevice9Proxy::~IDirect3DDevice9Proxy(void){
@@ -161,7 +163,16 @@ HRESULT IDirect3DDevice9Proxy::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 	HRESULT res = (origIDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion));
 
 	if (perfGraph)
+	{
 		perfGraph->RecordPresent(batchCnt);
+		if ((GetTickCount() - startTime) > (60 * 1000 * 5))
+		{
+			perfGraph->DumpData();
+			startTime = GetTickCount();
+			//megai2: cut dump data time from time
+			perfGraph->ResetTime();
+		}		
+	}
 
 	batchCnt = 0;
 
