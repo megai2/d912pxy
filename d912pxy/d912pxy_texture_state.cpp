@@ -79,7 +79,7 @@ void d912pxy_texture_state::ModSamplerTracked(UINT stage, D3DSAMPLERSTATETYPE st
 
 void d912pxy_texture_state::ModSampler(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value)
 {
-	LOG_DBG_DTDM("Sampler[%u][%u] = %u", Sampler, Type, Value);
+	LOG_DBG_DTDM("Sampler[%u][%u] = %u", stage, state, value);
 
 	d912pxy_trimmed_sampler_dsc* cDesc = &trimmedSpl[stage];
 	current.dirty |= 1ULL << (stage + 8);		
