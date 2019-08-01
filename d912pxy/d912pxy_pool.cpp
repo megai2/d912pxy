@@ -126,7 +126,7 @@ void d912pxy_pool<ElementType, ProcImpl>::CreateMemPool()
 
 	memPoolOffset = 0;
 
-	const D3D12_HEAP_DESC heapDsc = {
+	D3D12_HEAP_DESC heapDsc = {
 		memPoolSize,
 		d912pxy_s.dev.GetResourceHeap(memPoolHeapType),
 		0,
