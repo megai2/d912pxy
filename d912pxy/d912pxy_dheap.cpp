@@ -62,11 +62,17 @@ UINT d912pxy_dheap::OccupySlot()
 {		
 	FRAME_METRIC_DHEAP(selfIID, stacks[PXY_DHEAP_STACK_FREE]->Count());
 	
-	return stacks[PXY_DHEAP_STACK_FREE]->Pop();
+	UINT ret = stacks[PXY_DHEAP_STACK_FREE]->Pop();
+
+	LOG_DBG_DTDM("dheap[%u] used slot %u", selfIID, ret);
+
+	return ret;
 }
 
 void d912pxy_dheap::FreeSlot(UINT slot)
 {
+	LOG_DBG_DTDM("dheap[%u] freed slot %u", selfIID, slot);
+
 	stacks[PXY_DHEAP_STACK_CLEANUP]->Push(slot);
 }
 
