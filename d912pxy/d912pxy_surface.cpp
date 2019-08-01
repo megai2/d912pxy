@@ -193,8 +193,6 @@ d912pxy_surface::~d912pxy_surface()
 
 D912PXY_METHOD_IMPL_NC(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	*pDesc = surf_dx9dsc;
 	return D3D_OK; 
 }
@@ -244,8 +242,6 @@ void d912pxy_surface::initInternalBuf()
 
 size_t d912pxy_surface::GetFootprintMemSz()
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	size_t ret = 0;
 
 	for (int i = 0; i != descCache.DepthOrArraySize; ++i)
@@ -262,18 +258,9 @@ size_t d912pxy_surface::GetFootprintMemSz()
 
 size_t d912pxy_surface::GetFootprintMemSzRaw()
 {
-	size_t ret = 0;
+	D3D12_RESOURCE_ALLOCATION_INFO allocInfo = d912pxy_s.dx12.dev->GetResourceAllocationInfo(0, 1, &descCache);
 
-	for (int i = 0; i != descCache.DepthOrArraySize; ++i)
-	{
-		for (int j = 0; j != descCache.MipLevels; ++j)
-		{
-			UINT subresId = i * descCache.MipLevels + j;
-			ret += subresFootprints[subresId].Footprint.RowPitch*subresFootprints[subresId].Footprint.Height;
-		}
-	}
-
-	return ret;
+	return allocInfo.SizeInBytes;
 }
 
 DXGI_FORMAT d912pxy_surface::GetDSVFormat()

@@ -51,6 +51,8 @@ void d912pxy_texture_state::SetTexture(UINT stage, UINT srv)
 {
 	current.dirty |= 1ULL << (stage >> 2);
 	current.texHeapID[stage] = srv;
+
+	LOG_DBG_DTDM("tex[%u] = %u", stage, srv);
 }
 
 void d912pxy_texture_state::ModStageBit(UINT stage, UINT bit, UINT set)
@@ -66,6 +68,8 @@ void d912pxy_texture_state::ModStageBit(UINT stage, UINT bit, UINT set)
 	current.dirty |= 1ULL << (stage >> 2);
 
 	current.texHeapID[stage] = val;
+
+	LOG_DBG_DTDM("tex[%u] = %u", stage, val);
 }
 
 void d912pxy_texture_state::ModSamplerTracked(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value)

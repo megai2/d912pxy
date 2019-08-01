@@ -28,8 +28,6 @@ SOFTWARE.
 
 HRESULT d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	d912pxy_s.render.db.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
 		
 	return D3D_OK;
@@ -37,8 +35,6 @@ HRESULT d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
 
 HRESULT d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader) 
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-	
 	d912pxy_s.render.db.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
 		
 	return D3D_OK;
@@ -46,8 +42,6 @@ HRESULT d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader)
 
 HRESULT d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
 #ifdef _DEBUG
 	if (PXY_INNER_MAX_SHADER_CONSTS <= ((StartRegister + Vector4fCount) * 4))
 	{
@@ -63,9 +57,6 @@ HRESULT d912pxy_device::SetVertexShaderConstantF(UINT StartRegister, CONST float
 
 HRESULT d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount) 
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
 
 #ifdef _DEBUG
 	if (PXY_INNER_MAX_SHADER_CONSTS <= ((StartRegister + Vector4fCount) * 4))

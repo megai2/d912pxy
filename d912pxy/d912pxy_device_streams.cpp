@@ -30,10 +30,6 @@ SOFTWARE.
 
 HRESULT d912pxy_device::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	LOG_DBG_DTDM("bind @%u with %u : %u", StreamNumber, OffsetInBytes, Stride);
-
 	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
 		return D3DERR_INVALIDCALL;
 
@@ -61,9 +57,6 @@ HRESULT d912pxy_device::SetIndices_CAR(IDirect3DIndexBuffer9 * pIndexData)
 
 HRESULT d912pxy_device::SetStreamSourceFreq(UINT StreamNumber, UINT Divider)
 { 
-	
-	LOG_DBG_DTDM("stream %u div %u", StreamNumber, Divider);
-
 	if (StreamNumber >= PXY_INNER_MAX_VBUF_STREAMS)
 		return D3DERR_INVALIDCALL;
 
@@ -74,8 +67,6 @@ HRESULT d912pxy_device::SetStreamSourceFreq(UINT StreamNumber, UINT Divider)
 
 HRESULT d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	d912pxy_s.render.iframe.SetIBuf(PXY_COM_LOOKUP(pIndexData, vstream));
 
 	return D3D_OK; 
@@ -85,8 +76,6 @@ HRESULT d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 
 HRESULT d912pxy_device::SetVertexDeclaration(IDirect3DVertexDeclaration9* pDecl)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	d912pxy_s.render.db.pso.IAFormat(PXY_COM_LOOKUP(pDecl, vdecl));
 
 	return D3D_OK;

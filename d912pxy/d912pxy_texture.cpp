@@ -63,10 +63,6 @@ d912pxy_texture::~d912pxy_texture()
 
 HRESULT d912pxy_texture::GetLevelDesc(UINT Level, D3DSURFACE_DESC * pDesc)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	*pDesc = baseSurface->GetDX9DescAtLevel(Level);
 
 	
@@ -76,8 +72,6 @@ HRESULT d912pxy_texture::GetLevelDesc(UINT Level, D3DSURFACE_DESC * pDesc)
 
 HRESULT d912pxy_texture::GetSurfaceLevel(UINT Level, IDirect3DSurface9 ** ppSurfaceLevel)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	if (srvIDc[1])
 	{
 		*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface);
@@ -86,8 +80,6 @@ HRESULT d912pxy_texture::GetSurfaceLevel(UINT Level, IDirect3DSurface9 ** ppSurf
 		*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface->GetLayer(Level, 0));
 
 	(*ppSurfaceLevel)->AddRef();
-
-	
 
 	return D3D_OK;
 }
@@ -103,8 +95,6 @@ HRESULT d912pxy_texture::LockRect(UINT Level, D3DLOCKED_RECT * pLockedRect, cons
 
 HRESULT d912pxy_texture::UnlockRect(UINT Level)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	HRESULT ret = baseSurface->GetLayer(Level, 0)->UnlockRect();
 
 	return ret;
@@ -112,14 +102,9 @@ HRESULT d912pxy_texture::UnlockRect(UINT Level)
 
 HRESULT d912pxy_texture::AddDirtyRect(const RECT * pDirtyRect)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	if (m_levels == 1)
 		baseSurface->GetLayer(0, 0)->SetDirtyRect(pDirtyRect->left, pDirtyRect->right, pDirtyRect->top, pDirtyRect->bottom);
 
-	
 
 	return D3D_OK;
 }

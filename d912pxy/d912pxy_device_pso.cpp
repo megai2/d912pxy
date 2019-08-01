@@ -34,12 +34,7 @@ HRESULT d912pxy_device::SetRenderState_Tracked(D3DRENDERSTATETYPE State, DWORD V
 
 
 HRESULT d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
-{ 
-	LOG_DBG_DTDM("RS %u = %u", State, Value);
-	
-	/*if (State > D3DRS_BLENDOPALPHA)
-		return D3DERR_INVALIDCALL;*/
-
+{ 			
 	switch (State)
 	{
 		case D3DRS_ENABLE_D912PXY_API_HACKS:
@@ -69,9 +64,7 @@ HRESULT d912pxy_device::SetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
 }
 
 HRESULT d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
-		
+{ 		
 	switch (State)
 	{
 	case D3DRS_D912PXY_ENQUEUE_PSO_COMPILE:
@@ -96,20 +89,12 @@ HRESULT d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 
 HRESULT d912pxy_device::BeginStateBlock(void) 
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
 	return D3D_OK; 
 }
 
 HRESULT d912pxy_device::EndStateBlock(IDirect3DStateBlock9** ppSB) 
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-			
+{ 			
 	*ppSB = PXY_COM_CAST_(IDirect3DStateBlock9, d912pxy_sblock::d912pxy_sblock_com(D3DSBT_ALL));
-
-	
-
 	return D3D_OK; 
 }
 

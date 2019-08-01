@@ -44,8 +44,6 @@ HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 
 HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	
-
 	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
 
 	UINT64 srvId = 0;//megai2: make this to avoid memory reading. but we must be assured that mNullTextureSRV is equal to this constant!
@@ -65,8 +63,6 @@ HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTextu
 	}
 	else
 		stageFormatsTrack[Stage] = D3DFMT_UNKNOWN;
-
-	
 
 	return D3D_OK;
 }

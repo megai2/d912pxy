@@ -27,8 +27,7 @@ SOFTWARE.
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_SWAPCHAIN
 
 HRESULT d912pxy_device::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** pSwapChain)
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
+{ 	
 	//zero is always present
 	for (int i = 1; i != PXY_INNER_MAX_SWAP_CHAINS; ++i)
 	{
@@ -45,8 +44,7 @@ HRESULT d912pxy_device::CreateAdditionalSwapChain(D3DPRESENT_PARAMETERS* pPresen
 }
 
 HRESULT d912pxy_device::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** pSwapChain)
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
+{ 	
 	if (iSwapChain >= PXY_INNER_MAX_SWAP_CHAINS)
 		return D3DERR_INVALIDCALL;
 
@@ -56,18 +54,13 @@ HRESULT d912pxy_device::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** pSwa
 }
 
 UINT d912pxy_device::GetNumberOfSwapChains(void)
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
+{ 	
 	//This method returns the number of swap chains created by CreateDevice.
 	return 1; 
 }
 
 HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
-{ 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
+{ 		
 	swapOpLock.Hold();
 	
 	d912pxy_s.render.iframe.End();
@@ -78,18 +71,12 @@ HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
-
-	
 		
 	return ret; 
 }
 
 HRESULT d912pxy_device::InnerPresentExecute()
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	swapOpLock.Hold();
 
 	d912pxy_s.render.iframe.End();
@@ -102,8 +89,6 @@ HRESULT d912pxy_device::InnerPresentExecute()
 
 void d912pxy_device::InnerPresentFinish()
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	FRAME_METRIC_PRESENT(1)
 	
 
@@ -111,9 +96,7 @@ void d912pxy_device::InnerPresentFinish()
 
 	swapOpLock.Release();
 
-	LOG_DBG_DTDM("Present finished");
-
-	
+	LOG_DBG_DTDM("Present finished");	
 }
 
 HRESULT d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
@@ -148,68 +131,39 @@ HRESULT d912pxy_device::Present_PG(const RECT * pSourceRect, const RECT * pDestR
 
 HRESULT d912pxy_device::GetBackBuffer(UINT iSwapChain, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	HRESULT ret = swapchains[iSwapChain]->GetBackBuffer(iBackBuffer, Type, ppBackBuffer);
-
-	
 
 	return ret;
 }
 
 HRESULT d912pxy_device::GetRasterStatus(UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
 	return PXY_COM_CAST_(IDirect3DSwapChain9, swapchains[iSwapChain])->GetRasterStatus(pRasterStatus);
 }
 
 void d912pxy_device::SetGammaRamp(UINT iSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	swapchains[iSwapChain]->SetGammaRamp(Flags, pRamp);
-
-	
 }
 
 void d912pxy_device::GetGammaRamp(UINT iSwapChain, D3DGAMMARAMP* pRamp)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	swapchains[iSwapChain]->GetGammaRamp(pRamp);
-
-	
 }
 
 HRESULT d912pxy_device::GetFrontBufferData(UINT iSwapChain, IDirect3DSurface9* pDestSurface) 
 {	
-	LOG_DBG_DTDM(__FUNCTION__);
-	
 	swapchains[iSwapChain]->GetFrontBufferData(pDestSurface);
-	
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::TestCooperativeLevel(void)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	swapOpLock.Hold();
 
 	HRESULT ret = swapchains[0]->TestCoopLevel();
 
 	swapOpLock.Release();
-
-	
 
 	return ret;
 }

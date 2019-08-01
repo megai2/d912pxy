@@ -27,148 +27,78 @@ SOFTWARE.
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_CONSTRUCTORS
 
 HRESULT d912pxy_device::CreateTexture(UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle)
-{
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-		
+{		
 	*ppTexture = PXY_COM_CAST_(IDirect3DTexture9, d912pxy_texture::d912pxy_texture_com(Width, Height, Levels, Usage, Format));
-
-	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::CreateVolumeTexture(UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture9** ppVolumeTexture, HANDLE* pSharedHandle)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	*ppVolumeTexture = PXY_COM_CAST_(IDirect3DVolumeTexture9, new d912pxy_vtexture(this, Width, Height, Depth, Levels, Usage, Format));
-
-	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::CreateCubeTexture(UINT EdgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DCubeTexture9** ppCubeTexture, HANDLE* pSharedHandle)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	*ppCubeTexture = PXY_COM_CAST_(IDirect3DCubeTexture9, d912pxy_ctexture::d912pxy_ctexture_com(EdgeLength, Levels, Usage, Format));
-
-	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::CreateVertexBuffer(UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9** ppVertexBuffer, HANDLE* pSharedHandle)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
-	
-
 	*ppVertexBuffer = PXY_COM_CAST_(IDirect3DVertexBuffer9, d912pxy_s.pool.vstream.GetVStreamObject(Length, FVF, 0));
-
-	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::CreateIndexBuffer(UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	*ppIndexBuffer = PXY_COM_CAST_(IDirect3DIndexBuffer9, d912pxy_s.pool.vstream.GetVStreamObject(Length, Format, 1));
-
-	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::CreateRenderTarget(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	LOG_DBG_DTDM("new RT FMT: %u", Format);
-
-	
-	
 	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s.pool.surface.GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_RENDERTARGET, NULL));
-
-	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::CreateDepthStencilSurface(UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	*ppSurface = PXY_COM_CAST_(IDirect3DSurface9, d912pxy_s.pool.surface.GetSurface(Width, Height, Format, 1, 1, D3DUSAGE_DEPTHSTENCIL, NULL));
-
-	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::CreateStateBlock(D3DSTATEBLOCKTYPE Type, IDirect3DStateBlock9** ppSB)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-	
 	*ppSB = PXY_COM_CAST_(IDirect3DStateBlock9, d912pxy_sblock::d912pxy_sblock_com(Type));
-
-	
 
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::CreateVertexDeclaration(CONST D3DVERTEXELEMENT9* pVertexElements, IDirect3DVertexDeclaration9** ppDecl)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	*ppDecl = PXY_COM_CAST_(IDirect3DVertexDeclaration9, d912pxy_vdecl::d912pxy_vdecl_com(pVertexElements));
-
-	
 
 	return D3D_OK; 
 }
 
 HRESULT d912pxy_device::CreateVertexShader(CONST DWORD* pFunction, IDirect3DVertexShader9** ppShader)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	*ppShader = PXY_COM_CAST_(IDirect3DVertexShader9, d912pxy_shader::d912pxy_shader_com(1, pFunction, 0));
-
-	
 	
 	return D3D_OK; 
 }
 
 HRESULT d912pxy_device::CreatePixelShader(CONST DWORD* pFunction, IDirect3DPixelShader9** ppShader)
 {
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	*ppShader = PXY_COM_CAST_(IDirect3DPixelShader9, d912pxy_shader::d912pxy_shader_com(0, pFunction, 0));
-
-	
 
 	return D3D_OK;
 }
@@ -177,10 +107,6 @@ HRESULT d912pxy_device::CreatePixelShader(CONST DWORD* pFunction, IDirect3DPixel
 
 HRESULT d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery)
 { 
-	LOG_DBG_DTDM(__FUNCTION__);
-
-	
-
 	switch (Type)
 	{
 		case D3DQUERYTYPE_OCCLUSION:
@@ -190,17 +116,11 @@ HRESULT d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery
 			*ppQuery = PXY_COM_CAST_(IDirect3DQuery9, d912pxy_query::d912pxy_query_com(Type));
 	}
 
-	
-
 	return 0; 
 }
 
 HRESULT d912pxy_device::CreateOffscreenPlainSurface(UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
-	LOG_DBG_DTDM3(__FUNCTION__);
-
-	
-
 	//megai2: hacky way to fix dxgi backbuffer format change
 	switch (Format)
 	{

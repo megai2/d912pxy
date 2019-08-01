@@ -206,6 +206,8 @@ void d912pxy_pso_cache::Init()
 
 void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 {		
+	LOG_DBG_DTDM("RS[%u]=%u");
+
 	switch (State)
 	{
 	case D3DRS_BLENDFACTOR:
