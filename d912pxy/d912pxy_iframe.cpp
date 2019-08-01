@@ -173,12 +173,17 @@ UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
 		return 0;
 	}
 
+#ifdef PER_DRAW_FLUSH
+	if (batchesIssued >= 1)
+		StateSafeFlush(0);
+#else
 	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
 	{
 		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
 		StateSafeFlush(0);
 	}
+#endif
 
 	return 1;
 }
