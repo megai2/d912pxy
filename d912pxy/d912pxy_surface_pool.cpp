@@ -199,6 +199,8 @@ void d912pxy_surface_pool::ChangePoolSize(INT dlt)
 	poolSize += dlt;
 }
 
+#endif
+
 ID3D12Resource * d912pxy_surface_pool::GetPlacedSurface(D3D12_RESOURCE_DESC* dsc, D3D12_RESOURCE_STATES initialState)
 {
 	ID3D12Resource* ret = NULL;
@@ -223,5 +225,3 @@ ID3D12Resource * d912pxy_surface_pool::GetPlacedSurface(D3D12_RESOURCE_DESC* dsc
 
 	return ret;
 }
-
-#endif
