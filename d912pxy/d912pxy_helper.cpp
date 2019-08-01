@@ -43,6 +43,7 @@ LONG NTAPI d912pxy_helper::VexHandler(PEXCEPTION_POINTERS ExceptionInfo)
 	case EXCEPTION_INT_DIVIDE_BY_ZERO:
 	case EXCEPTION_FLT_DIVIDE_BY_ZERO:
 	case EXCEPTION_STACK_OVERFLOW:		
+	case EXCEPTION_PRIV_INSTRUCTION:
 	{
 		d912pxy_StackWalker sw(0x3F,0);		
 		sw.ShowCallstack();
