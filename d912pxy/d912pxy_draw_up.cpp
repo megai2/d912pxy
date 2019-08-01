@@ -23,11 +23,8 @@ void d912pxy_draw_up::Init()
 
 	for (int i = 0; i != PXY_DUP_COUNT*2; ++i)
 	{
+		//megai2: use 64kb buffers at start
 		UINT32 tmpUPbufSpace = 0xFFFF;
-		if ((i % PXY_DUP_COUNT) == PXY_DUP_DPI)
-		{
-			tmpUPbufSpace = d912pxy_s.config.GetValueXI64(PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH) & 0xFFFFFFFF;
-		}
 
 		AllocateBuffer((d912pxy_draw_up_buffer_name)i, tmpUPbufSpace);
 		LockBuffer((d912pxy_draw_up_buffer_name)i);
@@ -48,7 +45,45 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 {
 	LOG_DBG_DTDM2("DPUP %u %u %016llX %u", PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
-	UINT vstreamRegLen = VertexStreamZeroStride * d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
+	UINT indexCount = d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
+
+	UINT32 len = buf[PXY_DUP_DPI].vstream->GetLength();
+
+	//megai2: make a bigger index buffer if current is to small
+	if (indexCount >= (len >> 2))
+	{		
+		len *= 2;
+
+		UINT32 indxCntLen = indexCount * 2 * 4;
+
+		len = indxCntLen > len ? indxCntLen : len;
+
+		len = len >= 0x7FFFFFF ? 0x7FFFFFF : len;
+
+		if (indexCount >= (len >> 2))
+		{
+			LOG_ERR_DTDM("DPUP Index Count = %lX is too much, skipping!", indexCount);
+			return;
+		}
+
+		if (buf[PXY_DUP_DPI].writePoint)
+		{
+			buf[PXY_DUP_DPI].vstream->UnlockRanged(0, buf[PXY_DUP_DPI].offset);
+			buf[PXY_DUP_DPI].vstream->Release();
+		}
+
+		AllocateBuffer(PXY_DUP_DPI, len);
+		LockBuffer(PXY_DUP_DPI);
+
+		for (int j = 0; j != len >> 2; ++j)
+		{
+			((UINT32*)buf[PXY_DUP_DPI].writePoint)[j] = j;
+		}
+
+		buf[PXY_DUP_DPI].offset = len;
+	}
+
+	UINT vstreamRegLen = VertexStreamZeroStride * indexCount;
 	UINT vsvOffset = BufferWrite(PXY_DUP_DPV, vstreamRegLen, pVertexStreamZeroData);
 
 	//megai2: this is actual fix for DUP iframe flush buffer trashing
