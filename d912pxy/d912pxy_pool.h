@@ -47,4 +47,14 @@ protected:
 	d912pxy_thread_lock* rwMutex;
 
 	UINT pRunning;
+
+	void CreateMemPool();
+	ID3D12Resource* CreatePlacedResource(UINT64 size, D3D12_RESOURCE_DESC* rsDesc, D3D12_RESOURCE_STATES initialState);
+
+	ID3D12Heap* memPool;
+	UINT64 memPoolOffset;
+	UINT64 memPoolSize;
+	D3D12_HEAP_TYPE memPoolHeapType;
+	D3D12_HEAP_FLAGS memPoolHeapFlags;
+	d912pxy_thread_lock* memPoolLock;
 };

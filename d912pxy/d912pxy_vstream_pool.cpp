@@ -54,6 +54,7 @@ void d912pxy_vstream_pool::Init()
 {
 	memPoolSize = d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_VSTREAM_ALLOC_STEP);
 	memPoolHeapType = D3D12_HEAP_TYPE_DEFAULT;
+	memPoolHeapFlags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
 
 	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>::Init(
 		PXY_INNDER_VSTREAM_POOL_BITIGNORE,
@@ -119,7 +120,7 @@ ID3D12Resource * d912pxy_vstream_pool::GetPlacedVStream(UINT32 size)
 			D3D12_RESOURCE_FLAG_NONE
 		};
 
-		ret = CreatePlacedResource(size, &rsDesc);
+		ret = CreatePlacedResource(size, &rsDesc, D3D12_RESOURCE_STATE_GENERIC_READ);
 
 		if (!ret)
 		{

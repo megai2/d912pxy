@@ -188,7 +188,8 @@ void d912pxy_device::InitSingletons()
 	d912pxy_s.thread.bufld.Init();
 	d912pxy_s.pool.upload.Init();
 	d912pxy_s.pool.vstream.Init();
-	d912pxy_s.pool.surface.Init();
+	d912pxy_s.pool.surface.Init(D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES);
+	d912pxy_s.pool.rtds.Init(D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES);
 	d912pxy_s.thread.cleanup.Init();	
 }
 

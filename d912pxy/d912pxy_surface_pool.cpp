@@ -61,11 +61,15 @@ d912pxy_surface_pool::~d912pxy_surface_pool()
 	PXY_FREE(this->rwMutex);
 }
 
-void d912pxy_surface_pool::Init()
+void d912pxy_surface_pool::Init(D3D12_HEAP_FLAGS memPoolFlag)
 {
 #ifdef ENABLE_METRICS
 	poolSize = 0;
 #endif
+
+	memPoolSize = d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_SURFACE_ALLOC_STEP);
+	memPoolHeapType = D3D12_HEAP_TYPE_DEFAULT;
+	memPoolHeapFlags = memPoolFlag;
 
 	d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>::Init();
 
@@ -193,6 +197,31 @@ void d912pxy_surface_pool::PoolUnloadProc(d912pxy_surface * val, d912pxy_ringbuf
 void d912pxy_surface_pool::ChangePoolSize(INT dlt)
 {
 	poolSize += dlt;
+}
+
+ID3D12Resource * d912pxy_surface_pool::GetPlacedSurface(D3D12_RESOURCE_DESC* dsc, D3D12_RESOURCE_STATES initialState)
+{
+	ID3D12Resource* ret = NULL;
+
+	UINT64 size = d912pxy_s.dx12.dev->GetResourceAllocationInfo(0, 1, dsc).SizeInBytes;
+
+	if (!memPool || (size >= memPoolSize))
+	{
+	fallback:
+		return 0;
+	}
+	else {
+		ret = CreatePlacedResource(size, dsc, initialState);
+
+		if (!ret)
+		{
+			LOG_ERR_DTDM("CreatePlacedResource failed with po %llX ps %llX", memPoolOffset, memPoolSize);
+			goto fallback;
+		}
+
+	}
+
+	return ret;
 }
 
 #endif

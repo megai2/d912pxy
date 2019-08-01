@@ -31,7 +31,7 @@ public:
 	d912pxy_surface_pool();
 	~d912pxy_surface_pool();
 
-	void Init();
+	void Init(D3D12_HEAP_FLAGS memPoolFlag);
 
 	d912pxy_surface* GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback);
 
@@ -48,6 +48,8 @@ public:
 	UINT64 GetPoolSizeMB() { return poolSize >> 20; };
 	void ChangePoolSize(INT dlt);
 #endif
+
+	ID3D12Resource* GetPlacedSurface(D3D12_RESOURCE_DESC* dsc, D3D12_RESOURCE_STATES initialState);
 	   
 private:
 	d912pxy_memtree2* table;
@@ -58,6 +60,6 @@ private:
 
 #ifdef ENABLE_METRICS
 	UINT64 poolSize;
-#endif
+#endif	
 };
 

@@ -53,8 +53,9 @@ d912pxy_upload_pool::~d912pxy_upload_pool()
 
 void d912pxy_upload_pool::Init()
 {
-	memPoolSize = d912pxy_s.config.GetValueUI64(PXY_CFG_POOLING_UPLOAD_ALLOC_STEP) << 20;
+	memPoolSize = d912pxy_s.config.GetValueUI64(PXY_CFG_POOLING_UPLOAD_ALLOC_STEP);
 	memPoolHeapType = D3D12_HEAP_TYPE_UPLOAD;
+	memPoolHeapFlags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
 
 	d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>::Init(		
 		PXY_INNDER_UPLOAD_POOL_BITIGNORE,
@@ -132,7 +133,7 @@ fallback:
 			D3D12_RESOURCE_FLAG_NONE
 		};
 
-		ret = CreatePlacedResource(maxSize, &rsDesc);
+		ret = CreatePlacedResource(maxSize, &rsDesc, D3D12_RESOURCE_STATE_GENERIC_READ);
 
 		if (!ret)
 		{

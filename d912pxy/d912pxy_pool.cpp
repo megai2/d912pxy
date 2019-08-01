@@ -33,7 +33,10 @@ d912pxy_pool<ElementType, ProcImpl>::d912pxy_pool()
 template<class ElementType, class ProcImpl>
 d912pxy_pool<ElementType, ProcImpl>::~d912pxy_pool()
 {
-	
+	if (memPool)
+		memPool->Release();
+
+	delete memPoolLock;
 }
 
 template<class ElementType, class ProcImpl>
@@ -44,6 +47,14 @@ void d912pxy_pool<ElementType, ProcImpl>::Init()
 	NonCom_Init(L"obj pool");
 
 	static_cast<ProcImpl>(this)->EarlyInitProc();
+
+	memPoolSize = memPoolSize << 20;//megai2: convert from Mb to bytes
+	memPoolLock = new d912pxy_thread_lock();
+
+	memPool = NULL;
+
+	if (memPoolSize)
+		CreateMemPool();
 }
 
 template<class ElementType, class ProcImpl>
@@ -105,6 +116,65 @@ void d912pxy_pool<ElementType, ProcImpl>::WarmUp(UINT cat)
 	ElementType v = static_cast<ProcImpl>(this)->AllocProc(cat);
 	PoolRW(cat, &v, 1);	
 	v->Release();
+}
+
+template<class ElementType, class ProcImpl>
+void d912pxy_pool<ElementType, ProcImpl>::CreateMemPool()
+{
+	if (memPool)
+		memPool->Release();
+
+	memPoolOffset = 0;
+
+	const D3D12_HEAP_DESC heapDsc = {
+		memPoolSize,
+		d912pxy_s.dev.GetResourceHeap(memPoolHeapType),
+		0,
+		memPoolHeapFlags
+	};
+
+	HRESULT hr = d912pxy_s.dx12.dev->CreateHeap(
+		&heapDsc,
+		IID_PPV_ARGS(&memPool)
+	);
+
+	LOG_DBG_DTDM3("mempool create hr = %08X", hr);
+}
+
+template<class ElementType, class ProcImpl>
+ID3D12Resource * d912pxy_pool<ElementType, ProcImpl>::CreatePlacedResource(UINT64 size, D3D12_RESOURCE_DESC * rsDesc, D3D12_RESOURCE_STATES initialState)
+{
+	ID3D12Resource * ret = NULL;
+
+	memPoolLock->Hold();
+
+	if (memPoolOffset + size >= memPoolSize)
+	{
+		CreateMemPool();
+
+		memPoolOffset = 0;
+	}
+
+	HRESULT cprHR = d912pxy_s.dx12.dev->CreatePlacedResource(
+		memPool,
+		memPoolOffset,
+		rsDesc,
+		initialState,
+		0,
+		IID_PPV_ARGS(&ret)
+	);
+
+	if (FAILED(cprHR))
+	{
+		memPoolLock->Release();
+		return NULL;
+	}
+
+	memPoolOffset += size;
+
+	memPoolLock->Release();
+
+	return ret;
 }
 
 template class d912pxy_pool<d912pxy_vstream*, d912pxy_vstream_pool*>;

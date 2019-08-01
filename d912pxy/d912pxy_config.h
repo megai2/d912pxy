@@ -31,6 +31,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_POOLING_UPLOAD_LIMITS = 1,
 	PXY_CFG_POOLING_VSTREAM_ALLOC_STEP,
 	PXY_CFG_POOLING_VSTREAM_LIMITS,
+	PXY_CFG_POOLING_SURFACE_ALLOC_STEP,
 	PXY_CFG_POOLING_SURFACE_LIMITS,
 	PXY_CFG_POOLING_LIFETIME,
 	PXY_CFG_POOLING_HOST_VA_RESERVE,
@@ -103,6 +104,7 @@ private:
 		{L"pooling", L"upload_limit", L"128"},//PXY_CFG_POOLING_UPLOAD_LIMITS		
 		{L"pooling", L"vstream_alloc_step", L"16"},//PXY_CFG_POOLING_VSTREAM_ALLOC_STEP
 		{L"pooling", L"vstream_limit", L"256"},//PXY_CFG_POOLING_VSTREAM_LIMITS
+		{L"pooling", L"surface_alloc_step",L"16"},//PXY_CFG_POOLING_SURFACE_ALLOC_STEP
 		{L"pooling", L"surface_limits",L"00000"},//PXY_CFG_POOLING_SURFACE_LIMITS
 		{L"pooling", L"lifetime",L"10000"},//PXY_CFG_POOLING_LIFETIME
 		{L"pooling", L"host_va_reserve",L"37"},//PXY_CFG_POOLING_HOST_VA_RESERVE

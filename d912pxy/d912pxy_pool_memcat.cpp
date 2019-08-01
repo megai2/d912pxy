@@ -33,11 +33,6 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat() : d912pxy_pool
 template<class ElementType, class ProcImpl>
 d912pxy_pool_memcat<ElementType, ProcImpl>::~d912pxy_pool_memcat()
 {
-	if (memPool)
-		memPool->Release();
-
-	delete memPoolLock;
-
 	PXY_FREE(memTable);
 	PXY_FREE(this->rwMutex);
 }
@@ -46,13 +41,6 @@ template<class ElementType, class ProcImpl>
 void d912pxy_pool_memcat<ElementType, ProcImpl>::Init(UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg)
 {
 	d912pxy_pool<ElementType, ProcImpl>::Init();
-
-	memPoolLock = new d912pxy_thread_lock();
-
-	memPool = NULL;
-
-	if (memPoolSize)
-		CreateMemPool();
 
 	bitIgnore = iBitIgnore;
 	bitLimit = iBitLimit;
@@ -135,62 +123,6 @@ UINT32 d912pxy_pool_memcat<ElementType, ProcImpl>::GetMemoryInPoolMb()
 	return (UINT32)(memoryInPool >> 20);
 }
 
-template<class ElementType, class ProcImpl>
-void d912pxy_pool_memcat<ElementType, ProcImpl>::CreateMemPool()
-{
-	if (memPool)
-		memPool->Release();
-
-	memPoolOffset = 0;
-
-	const D3D12_HEAP_DESC heapDsc = {
-		memPoolSize,
-		d912pxy_s.dev.GetResourceHeap(memPoolHeapType),
-		0,
-		D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS
-	};
-
-	d912pxy_s.dx12.dev->CreateHeap(
-		&heapDsc,
-		IID_PPV_ARGS(&memPool)
-	);
-}
-
-template<class ElementType, class ProcImpl>
-ID3D12Resource * d912pxy_pool_memcat<ElementType, ProcImpl>::CreatePlacedResource(UINT32 size, D3D12_RESOURCE_DESC* rsDesc)
-{
-	ID3D12Resource * ret = NULL;
-
-	memPoolLock->Hold();
-
-	if (memPoolOffset + size >= memPoolSize)
-	{
-		CreateMemPool();
-
-		memPoolOffset = 0;
-	}
-
-	HRESULT cprHR = d912pxy_s.dx12.dev->CreatePlacedResource(
-		memPool,
-		memPoolOffset,
-		rsDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		0,
-		IID_PPV_ARGS(&ret)
-	);
-
-	if (FAILED(cprHR))
-	{		
-		memPoolLock->Release();
-		return NULL;
-	}
-
-	memPoolOffset += size;
-
-	memPoolLock->Release();
-
-	return ret;
-}
 
 template class d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>;
 template class d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>;
