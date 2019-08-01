@@ -137,8 +137,12 @@ void d912pxy_pool<ElementType, ProcImpl>::CreateMemPool()
 		&heapDsc,
 		IID_PPV_ARGS(&memPool)
 	);
-
-	LOG_DBG_DTDM3("mempool create hr = %08X", hr);
+	
+	if (hr != S_OK)
+	{
+		LOG_ERR_DTDM("mempool create error = %08X", hr);
+		memPool = NULL;
+	}
 }
 
 template<class ElementType, class ProcImpl>
@@ -151,6 +155,12 @@ ID3D12Resource * d912pxy_pool<ElementType, ProcImpl>::CreatePlacedResource(UINT6
 	if (memPoolOffset + size >= memPoolSize)
 	{
 		CreateMemPool();
+
+		if (!memPool)
+		{
+			memPoolLock->Release();
+			return NULL;
+		}
 
 		memPoolOffset = 0;
 	}
