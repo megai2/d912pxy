@@ -114,7 +114,7 @@ void d912pxy_gpu_cmd_list::WaitNoCleanup()
 	UINT64 gpuTimeSpent = gpuTime.Elapsed();
 
 	if (gpuTimeSpent > 1000 * 1000 * 2)
-		LOG_ERR_DTDM("GPU cl execution took %lu ms time! Probably TDR crash", gpuTimeSpent);
+		LOG_ERR_DTDM("GPU cl execution took %lu ms time! Probably TDR crash", gpuTimeSpent / 1000);
 
 #ifdef ENABLE_METRICS
 	d912pxy_s.log.metrics.TrackGPUTime(gpuTimeSpent);
