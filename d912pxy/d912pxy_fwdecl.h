@@ -48,15 +48,18 @@ SOFTWARE.
 
 #define UPLOAD_POOL_USE_AND_DISCARD 
 //#define ENABLE_METRICS
-//#define PER_BATCH_FLUSH_DEBUG 1
+//#define PER_DRAW_FLUSH 
 //#define USE_PIX_EVENT_ANNOTATIONS
 
 //#define THREAD_FAST_WAKE
 #define THREAD_MODEST_WAKE
 
-#ifdef _DEBUG
-	#define ENABLE_METRICS
+#ifdef _DEBUG	
 	#define ENABLE_DEBUG_LOGGING
+#endif
+
+#ifdef ENABLE_DEBUG_LOGGING
+	#define ENABLE_METRICS
 #endif
 
 //inner max/structure defenitions =======================

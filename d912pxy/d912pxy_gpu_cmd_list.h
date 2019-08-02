@@ -67,4 +67,6 @@ private:
 	UINT64 fenceId;
 
 	d912pxy_gpu_cleanup_thread* mCleanupThread;
+	Stopwatch gpuTime;
+
 };

@@ -89,6 +89,8 @@ void d912pxy_metrics::Init()
 	iframeMetrics->Create(TM("derived / overhead per batch"), 0, 0, 3000, 2000, 1, &metricIFramePerBatchOverhead);
 	iframeMetrics->Create(TM("derived / app prep"), 0, 0, 10000, 10000, 1, &metricIFrameAppPrep);
 
+	iframeMetrics->Create(TM("thread / gpu"), 0, 0, 10000, 10000, 1, &metricGPUTime);
+
 	for (int i = 0; i != MAX_OVERHEAD_STR_ID; ++i)
 	{
 		metricOH[i] = 65535;
@@ -146,6 +148,11 @@ void d912pxy_metrics::TrackIFrameTime(UINT start, UINT group)
 void d912pxy_metrics::TrackDHeapSlots(UINT idx, UINT slots)
 {
 	dheapMetrics->Add(metricDHeapSlots[idx], slots);
+}
+
+void d912pxy_metrics::TrackGPUTime(UINT64 usTime)
+{
+	iframeMetrics->Add(metricGPUTime, usTime);
 }
 
 void d912pxy_metrics::TrackDrawCount(UINT draws)

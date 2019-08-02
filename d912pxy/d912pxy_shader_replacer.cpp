@@ -218,7 +218,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 
 		if (eret != NULL)
 		{
-			LOG_DBG_DTDM3("shd compile warning = %S", eret->GetBufferPointer());
+			LOG_DBG_DTDM("shd compile warning = %S", eret->GetBufferPointer());
 		}
 
 		d912pxy_shader_code ret2;

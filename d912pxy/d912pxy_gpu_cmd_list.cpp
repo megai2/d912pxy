@@ -86,6 +86,8 @@ void d912pxy_gpu_cmd_list::Execute()
 		execArr[i] = ccl;
 	}
 
+	gpuTime.Reset();
+
 	mDXQue->ExecuteCommandLists(totalActCLs, (ID3D12CommandList* const*)execArr);
 }
 
@@ -101,12 +103,22 @@ void d912pxy_gpu_cmd_list::WaitNoCleanup()
 {
 	LOG_DBG_DTDM("wait %016llX", this);
 
+
 	if (fence->GetCompletedValue() < fenceId)
 	{
 		LOG_ERR_THROW2(fence->SetEventOnCompletion(fenceId, fenceEvent), "can't set wait event on fence");
 		::WaitForSingleObject(fenceEvent, INFINITE);
 	}
 	++fenceId;
+
+	UINT64 gpuTimeSpent = gpuTime.Elapsed();
+
+	if (gpuTimeSpent > 1000 * 1000 * 2)
+		LOG_ERR_DTDM("GPU cl execution took %lu ms time! Probably TDR crash", gpuTimeSpent);
+
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.TrackGPUTime(gpuTimeSpent);
+#endif
 
 	LOG_DBG_DTDM("GPU wait finished");
 

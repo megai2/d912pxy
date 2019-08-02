@@ -49,7 +49,7 @@ static const wchar_t* PXY_METRICS_IFRAME_TIME_NAMES [] = {
 	L"thread / rp2",
 	L"thread / rp3",
 	L"total / sync wake",
-	L"total / residency"
+	L"total / residency"	
 };
 
 static const wchar_t* PXY_METRICS_DHEAP_NAMES[] = {
@@ -89,6 +89,7 @@ public:
 	void TrackIFrameTime(UINT start, UINT group);
 	void TrackDHeapSlots(UINT idx, UINT slots);
 
+	void TrackGPUTime(UINT64 usTime);
 	void TrackDrawCount(UINT draws);
 	void TrackCleanupCount(UINT cleanups);
 	void TrackUploadMemUsage();
@@ -115,6 +116,7 @@ private:
 
 	tUINT16 metricVRAM;
 	tUINT16 metricVRAMShared;
+	tUINT16 metricGPUTime;
 
 	IP7_Telemetry* ohMetrics;
 	UINT64 metricOHval[MAX_OVERHEAD_STR_ID];

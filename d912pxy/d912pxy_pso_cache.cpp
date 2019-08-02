@@ -1099,7 +1099,7 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	UINT32 psoKey = d912pxy_s.render.db.pso.GetHashedKey(desc);
 	UINT64 derivedAlias = pairUID ^ (UINT64)psoKey;
 
-	LOG_DBG_DTDM3("DX9 PSO realtime check emulation for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
+	LOG_DBG_DTDM("DX9 PSO realtime check emulation for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
 
 	//megai2: both derived cso files are present, just load them to pso and compile on dx12 side
 	if (d912pxy_s.vfs.IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_PS) && d912pxy_s.vfs.IsPresentH(derivedAlias, PXY_VFS_BID_DERIVED_CSO_VS))
@@ -1127,7 +1127,7 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	fclose(tf);*/
 
 	//megai2: pass 0 - vdecl to vs input signature typecheck
-	LOG_DBG_DTDM3("PSO RCE P0");	
+	LOG_DBG_DTDM("PSO RCE P0");	
 
 	for (int i = 0; i != d912pxy_pso_cache::cDscBase.InputLayout.NumElements; ++i)
 	{
@@ -1172,7 +1172,7 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	}
 
 	//megai2: pass 1 - vs output to ps input signature ordering check
-	LOG_DBG_DTDM3("PSO RCE P1");
+	LOG_DBG_DTDM("PSO RCE P1");
 
 	char* vsOut[256] = { NULL };
 	char* psIn[256] = { NULL };
