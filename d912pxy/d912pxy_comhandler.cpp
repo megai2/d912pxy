@@ -40,7 +40,7 @@ d912pxy_comhandler::d912pxy_comhandler()
 }
 
 d912pxy_comhandler::~d912pxy_comhandler()
-{
+{	
 
 }
 
@@ -75,8 +75,6 @@ ULONG d912pxy_comhandler::AddRef()
 
 ULONG d912pxy_comhandler::Release()
 {
-	
-
 	LONG decR = InterlockedAdd(&refc, -1);
 
 	if (decR == 0)
@@ -205,39 +203,50 @@ void d912pxy_comhandler::DeAllocateBase()
 	{
 	case PXY_COM_OBJ_VSTREAM:
 		dtor_call(d912pxy_vstream);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_SURFACE:
 		dtor_call(d912pxy_surface);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_QUERY:
 		dtor_call(d912pxy_query_non_derived);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_QUERY_OCC:
 		dtor_call(d912pxy_query_occlusion);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_TEXTURE:
 		(&comBase->basetex)->~d912pxy_basetexture();
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_TEXTURE_RTDS:
 		(&comBase->basetex)->~d912pxy_basetexture();
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_VDECL:
 		dtor_call(d912pxy_vdecl);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_SHADER:
 		dtor_call(d912pxy_shader);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_SWAPCHAIN:
 		dtor_call(d912pxy_swapchain);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_SURFACE_LAYER:
 		LOG_ERR_THROW2(-1, "surface_layer comhandler dtor");
 		break;
 	case PXY_COM_OBJ_SBLOCK:
 		dtor_call(d912pxy_sblock);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_PSO_ITEM:
 		dtor_call(d912pxy_pso_cache_item);
+		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_NOVTABLE:
 		delete this;
@@ -249,7 +258,7 @@ void d912pxy_comhandler::DeAllocateBase()
 		;
 		break;
 	case PXY_COM_OBJ_RESOURCE:
-		dtor_call(d912pxy_resource);
+		dtor_call(d912pxy_resource);		
 		break;
 	default:
 		LOG_ERR_THROW2(-1, "wrong com object typeid");

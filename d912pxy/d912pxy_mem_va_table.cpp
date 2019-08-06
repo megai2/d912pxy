@@ -31,6 +31,7 @@ d912pxy_mem_va_table::d912pxy_mem_va_table() : d912pxy_noncom()
 
 d912pxy_mem_va_table::~d912pxy_mem_va_table()
 {
+	
 }
 
 void d912pxy_mem_va_table::Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 entryCount)
@@ -71,10 +72,10 @@ void d912pxy_mem_va_table::Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 en
 
 		manageRegionSz += table[i].refCount * (pageSz * sizeof(d912pxy_mem_va_table_obj_id) + sizeof(d912pxy_mem_va_table_ref_counter));		
 
-		LOG_DBG_DTDM3("table[%u] allocGrain = %X Kb | refCount = %X | totalObjects = %X ", i, table[i].allocGrain >> 10, table[i].refCount, entryBase / table[i].itemSize);
+		LOG_DBG_DTDM3("table[%u] allocGrain = %X Kb | refCount = %X | totalObjects = %X (%X ref aligned)", i, table[i].allocGrain >> 10, table[i].refCount, entryBase / table[i].itemSize, table[i].refCount * table[i].allocGrain / table[i].itemSize);
 	}
 
-	LOG_INFO_DTDM("reserving %u mb VA space (%u mb managment)", ((1ULL << allocBitSize) + manageRegionSz) >> 20, manageRegionSz >> 20);
+	LOG_INFO_DTDM("%016llX reserving %u mb VA space (%u mb managment)", this, ((1ULL << allocBitSize) + manageRegionSz) >> 20, manageRegionSz >> 20);
 
 	baseAdr = d912pxy_s.mem.ReserveVARangeAligned(allocBitSize, manageRegionSz);
 
@@ -108,6 +109,12 @@ void d912pxy_mem_va_table::Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 en
 
 void d912pxy_mem_va_table::DeInit()
 {
+	for (int i = 0; i != 4; ++i)
+	{
+		if (table[i].stackPtr != table[i].stackBase)
+			LOG_ERR_DTDM("mem leaked in VA table %016llX type %u, objects leaked = %u", i, this, ((intptr_t)(table[i].stackPtr)-(intptr_t)(table[i].stackBase))/4);
+	}
+
 	d912pxy_s.mem.ReleaseReservedVARange(baseAdr);
 }
 
@@ -160,7 +167,7 @@ void * d912pxy_mem_va_table::AllocateObj(UINT64 type)
 
 	if (table[type].stackPtr == table[type].stackLimit)
 	{
-		LOG_ERR_DTDM("Type %u is full (%u items max)", type, table[type].refCount * table[type].allocGrain / table[type].itemSize);
+		LOG_ERR_DTDM("Type %u is full (%u items max) in VA %016llX", type, table[type].refCount * table[type].allocGrain / table[type].itemSize, this);
 		LOG_ERR_THROW2(-1, "Can't allocate VA table based object");
 	}
 
