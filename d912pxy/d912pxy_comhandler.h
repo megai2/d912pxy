@@ -100,6 +100,7 @@ protected:
 
 private:
 	LONG thrdRefc;
+	LONG thrdRefcFlag;
 	LONG refc;
 	UINT32 timestamp;	
 	LONG beingWatched;	

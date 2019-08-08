@@ -29,6 +29,7 @@ d912pxy_comhandler::d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t
 	objType = tid;
 	refc = 1;
 	thrdRefc = 0;
+	thrdRefcFlag = 0;
 	beingWatched = 0;
 	poolSync.LockedSet(1);
 	persistentlyPooled = 0;
@@ -119,6 +120,14 @@ UINT d912pxy_comhandler::FinalRelease()
 		return 2;
 	}
 	else {		
+
+		if (InterlockedAdd(&thrdRefcFlag, 0))
+		{
+			InterlockedAdd(&thrdRefcFlag, -1);
+			d912pxy_s.dev.IFrameCleanupEnqeue(this);
+			return 2;
+		}
+
 		if (FinalReleaseCB())
 		{
 			DeAllocateBase();
@@ -134,6 +143,13 @@ UINT d912pxy_comhandler::FinalReleaseCB()
 
 void d912pxy_comhandler::ThreadRef(INT ic)
 {
+	//megai2: we must be sure that object referenced by some internal threads/logic are not deleted before gpu processed current submitted command list
+	//example: interframe flush, currently used vs objects will be holded on, but can be deleted after flushed cl are executed before next cl that have reference to that objects are executed
+	//			making GPU crash possible	
+	if (!InterlockedAdd(&refc, 0) && !InterlockedAdd(&thrdRefc, 0))
+		//this will make object persist one cleanup cycle
+		InterlockedAdd(&thrdRefcFlag, 1);
+
 	if (ic > 0)
 		InterlockedAdd(&thrdRefc, 1);
 	else
