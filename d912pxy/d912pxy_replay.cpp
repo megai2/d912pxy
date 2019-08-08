@@ -808,7 +808,7 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 		sSrc->BCopyToWStates(sDst, 0x3, cl, it->prevD, it->prevS);
 	} else {
 		//megai2: TODO allow non similar texture copy via custom pass
-		LOG_ERR_DTDM("rha rect with different textures");
+		LOG_DBG_DTDM3("rha rect with different textures");
 	}
 }
 
