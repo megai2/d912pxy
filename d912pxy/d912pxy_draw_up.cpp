@@ -86,20 +86,16 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 	UINT vstreamRegLen = VertexStreamZeroStride * indexCount;
 	UINT vsvOffset = BufferWrite(PXY_DUP_DPV, vstreamRegLen, pVertexStreamZeroData);
 
-	//megai2: this is actual fix for DUP iframe flush buffer trashing
-	//as if we encounter dip limit, we will draw current DUP call in next CL, but current DUP will point to old written range,
-	//that can get overwrited by next CL
-	//but for optimization purposes i keep buffered fix 
-	//if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
-		//return;
+	if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
+		return;
 
 	PushVSBinds();
 
 	d912pxy_s.render.iframe.SetIBuf(buf[PXY_DUP_DPI].vstream);
 	d912pxy_s.render.iframe.SetVBuf(buf[PXY_DUP_DPV].vstream, 0, vsvOffset, VertexStreamZeroStride);
 
-	//megai2: FIXME forced CommitBatch2 here for now, need to properly reflect config file
-	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);	
+	((IDirect3DDevice9*)&d912pxy_s.dev)->DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);
+	//d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);	
 
 	PopVSBinds();
 
@@ -113,13 +109,9 @@ void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UIN
 
 	UINT indBufSz = (hiInd * 2 + 2)*d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
 	UINT vertBufSz = VertexStreamZeroStride * (MinVertexIndex + NumVertices);
-	
-	//megai2: this is actual fix for DUP iframe flush buffer trashing
-	//as if we encounter dip limit, we will draw current DUP call in next CL, but current DUP will point to old written range,
-	//that can get overwrited by next CL
-	//but for optimization purposes i keep buffered fix 
-	//if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
-		//return;
+		
+	if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
+		return;
 
 	UINT vsiOffset = BufferWrite(indBuf, indBufSz, pIndexData);
 	UINT vsvOffset = BufferWrite(PXY_DUP_DIPV, vertBufSz, pVertexStreamZeroData);
@@ -128,8 +120,9 @@ void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UIN
 
 	d912pxy_s.render.iframe.SetIBuf(buf[indBuf].vstream);
 	d912pxy_s.render.iframe.SetVBuf(buf[PXY_DUP_DIPV].vstream, 0, vsvOffset, VertexStreamZeroStride);	
-	//megai2: FIXME forced CommitBatch2 here for now, need to properly reflect config file
-	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);		
+	
+	((IDirect3DDevice9*)&d912pxy_s.dev)->DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);
+	//d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);		
 
 	PopVSBinds();
 
