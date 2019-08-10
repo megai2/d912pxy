@@ -45,11 +45,6 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 	d912pxy_s.render.batch.Init();
 	d912pxy_s.render.db.pso.Init();
 
-	//mBatches->WriteElement(new d912pxy_batch(d912pxy_s(dev), mGPUque));
-
-	mRBarrierStkPointer = 0;
-	batchesIssued = 0;
-
 	streamsActive = 0;
 	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 		streamBinds[i].buffer = 0;
@@ -78,26 +73,6 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 	d912pxy_s.render.db.pso.LoadCachedData();
 
 	zeroWriteRT = NULL;
-}
-
-void d912pxy_iframe::RBarrierImm(D3D12_RESOURCE_BARRIER * bar)
-{
-	d912pxy_s.dx12.cl->GID(CLG_SEQ)->ResourceBarrier(0, bar);
-}
-
-void d912pxy_iframe::RBarrierStk(UINT cnt, D3D12_RESOURCE_BARRIER * bar)
-{	
-	d912pxy_s.dx12.cl->GID(CLG_TOP)->ResourceBarrier(cnt, bar);
-	//wait, we need 3 stacks for prep-copy-done, so just pass this to top list for now
-	/*
-	for (int i = 0; i != cnt; ++i)
-	{
-		mRBarrierStkData[mRBarrierStkPointer] = bar[i];
-		++mRBarrierStkPointer;
-
-		if (mRBarrierStkPointer >= PXY_INNER_RBSTACK_SIZE)
-			LOG_ERR_THROW2(-1, "(mRBarrierStkPointer > PXY_INNER_RBSTACK_SIZE)");
-	}*/	
 }
 
 void d912pxy_iframe::SetStreamFreq(UINT StreamNumber, UINT Divider)
@@ -177,7 +152,7 @@ UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
 	if (batchesIssued >= 1)
 		StateSafeFlush(0);
 #else
-	if (batchesIssued >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
+	if (d912pxy_s.render.batch.GetBatchNum() >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
 	{
 		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
@@ -232,9 +207,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	instanceCount = 1;
 
-	++batchesIssued;
-
-	d912pxy_s.render.replay.IssueWork(batchesIssued);
+	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchNum());
 
 	if (batchDF & 8)
 	{
@@ -314,9 +287,7 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 
 	instanceCount = 1;
 
-	++batchesIssued;
-
-	d912pxy_s.render.replay.IssueWork(batchesIssued);
+	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchNum());
 
 	if (batchDF & 8)
 	{
@@ -415,8 +386,6 @@ void d912pxy_iframe::Start()
 
 	streamsActive = 0;
 
-	batchesIssued = 0;
-
 	cuPrimType = D3DPT_TRIANGLELIST;
 
 	d912pxy_query_occlusion::OnIFrameStart();
@@ -425,17 +394,6 @@ void d912pxy_iframe::Start()
 
 void d912pxy_iframe::End()
 {
-	//d912pxy_s.render.replay.Finish();
-
-	/*if (mRBarrierStkPointer)
-		d912pxy_s.dx12.cl->GID(CLG_TOP)->ResourceBarrier(mRBarrierStkPointer, mRBarrierStkData);
-	mRBarrierStkPointer = 0;*/
-
-	/*for (int i = 0; i != streamsActive; ++i)
-		streamBinds[i].buffer = NULL;
-
-	indexBind = NULL;*/
-
 	d912pxy_s.render.draw_up.OnFrameEnd();
 	d912pxy_query_occlusion::OnIFrameEnd();
 
@@ -448,8 +406,7 @@ void d912pxy_iframe::End()
 
 void d912pxy_iframe::EndSceneReset()
 {
-	//d912pxy_s.render.batch.ClearShaderVars();
-	//SetViewport(&main_viewport);
+
 }
 
 void d912pxy_iframe::SetViewport(D3D12_VIEWPORT * pViewport)
@@ -619,12 +576,8 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 		SetStreamFreq(i, vstreamTransfer[i].divider);
 	}
 
-	//megai2: rebind viewport & scissor too
-
-	SetViewport(&transVW);
+	//megai2: rebind scissor 
 	SetScissors(&transSR);
-
-	d912pxy_s.dev.SetRenderState(D3DRS_STENCILREF, transSRef);
 	
 	ForceStateRebind();	
 }

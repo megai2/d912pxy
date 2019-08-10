@@ -80,6 +80,7 @@ public:
 	void Init();
 
 	UINT NextBatch();
+	UINT GetBatchNum();
 
 	void SetShaderConstF(UINT type, UINT start, UINT cnt4, float* data);
 	void GPUWrite(void* src, UINT size, UINT offset);
@@ -93,6 +94,8 @@ public:
 	void PreDIP(ID3D12GraphicsCommandList* cl, UINT bid);
 
 	void ClearShaderVars();
+
+
 
 private:
 	void InitCopyCS();

@@ -68,6 +68,11 @@ UINT d912pxy_batch::NextBatch()
 	return batchNum++;
 }
 
+UINT d912pxy_batch::GetBatchNum()
+{
+	return batchNum;
+}
+
 void d912pxy_batch::SetShaderConstF(UINT type, UINT start, UINT cnt4, float * data)
 {
 	GPUWrite(data, cnt4, start + ((type != 0) ? PXY_BATCH_GPU_ELEMENT_OFFSET_SHADER_VARS_PIXEL : PXY_BATCH_GPU_ELEMENT_OFFSET_SHADER_VARS_VERTEX));

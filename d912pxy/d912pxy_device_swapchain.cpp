@@ -104,7 +104,7 @@ HRESULT d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, 
 	HRESULT ret = InnerPresentExecute();
 
 #ifdef ENABLE_METRICS
-	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.iframe.GetBatchCount());
+	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.batch.GetBatchNum());
 	d912pxy_s.log.metrics.FlushIFrameValues();	
 #endif 
 	
@@ -117,10 +117,10 @@ HRESULT d912pxy_device::Present_PG(const RECT * pSourceRect, const RECT * pDestR
 {
 	HRESULT ret = InnerPresentExecute();
 
-	perfGraph->RecordPresent(d912pxy_s.render.iframe.GetBatchCount());
+	perfGraph->RecordPresent(d912pxy_s.render.batch.GetBatchNum());
 
 #ifdef ENABLE_METRICS
-	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.iframe.GetBatchCount());
+	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.batch.GetBatchNum());
 	d912pxy_s.log.metrics.FlushIFrameValues();
 #endif s
 

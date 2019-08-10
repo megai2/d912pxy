@@ -35,9 +35,6 @@ public:
 
 	void Init(d912pxy_dheap** heaps);
 
-	void RBarrierImm(D3D12_RESOURCE_BARRIER* bar);
-	void RBarrierStk(UINT cnt, D3D12_RESOURCE_BARRIER* bar);
-
 	void SetStreamFreq(UINT StreamNumber, UINT Divider);
 	void SetVBuf(d912pxy_vstream* vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride);
 	void SetIBuf(d912pxy_vstream* ib);
@@ -79,8 +76,6 @@ public:
 	void RestoreScissor();
 	void IgnoreScissor();
 
-	UINT GetBatchCount() { return batchesIssued; };
-
 	void SetSwapper(d912pxy_swapchain* iSwp);
 
 	void SetRSigOnList(d912pxy_gpu_cmd_list_group lstID);
@@ -100,15 +95,7 @@ public:
 	void ProcessSurfaceBinds(UINT psoOnly);
 
 private:	
-
 	void InitRootSignature();
-
-	/*d912pxy_gpu_que* mGPUque;
-	d912pxy_gpu_cmd_list* mGPUcl;
-
-	d912pxy_pso_cache* mPSOcache;
-	d912pxy_texstage_cache* mTSTcache;
-	d912pxy_sampler_cache* mSSTcache;*/
 
 	d912pxy_dheap** mHeaps;
 	ID3D12DescriptorHeap* mSetHeapArr[PXY_INNER_MAX_DSC_HEAPS];
@@ -116,11 +103,7 @@ private:
 	d912pxy_swapchain* mSwapChain;
 	
 	ComPtr<ID3D12RootSignature> mRootSignature;
-	UINT batchesIssued;
 	
-	UINT mRBarrierStkPointer;
-	D3D12_RESOURCE_BARRIER mRBarrierStkData[PXY_INNER_RBSTACK_SIZE];
-
 	d912pxy_surface* bindedSurfaces[1+PXY_INNER_MAX_RENDER_TARGETS];
 	d912pxy_surface* zeroWriteRT;
 	
