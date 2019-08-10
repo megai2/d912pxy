@@ -81,8 +81,6 @@ HRESULT d912pxy_device::GetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer
 HRESULT d912pxy_device::GetStreamSourceFreq(UINT StreamNumber, UINT* Divider) { D912PXY_ROUTE_IMPL_STUB(D3D_OK); }
 HRESULT d912pxy_device::GetIndices(IDirect3DIndexBuffer9** ppIndexData) { D912PXY_ROUTE_IMPL_STUB(D3D_OK); }
 
-HRESULT d912pxy_device::UpdateSurface(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, CONST POINT* pDestPoint) { D912PXY_ROUTE_IMPL_STUB(D3D_OK); }
-HRESULT d912pxy_device::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture) { D912PXY_ROUTE_IMPL_STUB(D3D_OK); }
 HRESULT d912pxy_device::ColorFill(IDirect3DSurface9* pSurface, CONST RECT* pRect, D3DCOLOR color) { D912PXY_ROUTE_IMPL_STUB(D3D_OK); }
 
 //clipping
@@ -160,7 +158,6 @@ BOOL d912pxy_device::GetSoftwareVertexProcessing(void)
 {
 	D912PXY_ROUTE_IMPL_STUB(D3D_OK);
 }
-
 
 HRESULT d912pxy_device::ProcessVertices(UINT SrcStartIndex, UINT DestIndex, UINT VertexCount, IDirect3DVertexBuffer9* pDestBuffer, IDirect3DVertexDeclaration9* pVertexDecl, DWORD Flags)
 {

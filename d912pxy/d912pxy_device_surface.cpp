@@ -146,4 +146,27 @@ HRESULT d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D
 	return D3D_OK;
 }
 
+HRESULT d912pxy_device::UpdateSurface(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, CONST POINT* pDestPoint)
+{ 
+	if (pSourceRect || pDestPoint)
+		return D3D_OK;
+
+	d912pxy_surface* src = d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pSourceSurface));
+	d912pxy_surface* dst = d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pDestinationSurface));
+
+	d912pxy_s.render.replay.StretchRect(src, dst);
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_device::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture) 
+{ 
+	d912pxy_surface* src = PXY_COM_CAST(d912pxy_com_object, pSourceTexture)->basetex.GetBaseSurface();
+	d912pxy_surface* dst = PXY_COM_CAST(d912pxy_com_object, pDestinationTexture)->basetex.GetBaseSurface();
+
+	d912pxy_s.render.replay.StretchRect(src, dst);
+
+	return D3D_OK;
+}
+
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 
