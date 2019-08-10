@@ -282,7 +282,8 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 
 	case D3DRS_COLORWRITEENABLE:
 		{
-			d912pxy_s.render.iframe.OptimizeZeroWriteRT(Value);
+			//megai2: zero write RT optimization can break PS depth write, so disable this for now
+			//d912pxy_s.render.iframe.OptimizeZeroWriteRT(Value);
 			cDsc.BlendStateRT0.RenderTargetWriteMask = Value & 0xF;
 		}		
 		break; //168,  // per-channel write enable
@@ -1140,9 +1141,9 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 		}
 
 		char* defLine = d912pxy_helper::StrGetCurrentLineStart(semDefPlace);
-		char* replPos = strstr(defLine, "4") - 5;
+		char* replPos = strstr(defLine, "4") - 20;
 
-		const char* newType = "float4";
+		const char* newType = "/*default*/    float4";
 
 		switch (d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].Format)
 		{
@@ -1150,24 +1151,35 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 			case DXGI_FORMAT_R32G32_FLOAT:
 			case DXGI_FORMAT_R32G32B32_FLOAT:
 			case DXGI_FORMAT_R32G32B32A32_FLOAT:
+				break;
+			case DXGI_FORMAT_R8G8B8A8_UNORM:
 			case DXGI_FORMAT_B8G8R8A8_UNORM:	
-			case DXGI_FORMAT_R16G16_SNORM:
-			case DXGI_FORMAT_R16G16B16A16_SNORM:
 			case DXGI_FORMAT_R16G16_UNORM:
-			case DXGI_FORMAT_R16G16B16A16_UNORM:
+			case DXGI_FORMAT_R16G16B16A16_UNORM:						  
+				newType = "/*RCE*/  unorm float4";
+				break;
+			case DXGI_FORMAT_R16G16_SNORM:
+			case DXGI_FORMAT_R16G16B16A16_SNORM:									  
+				newType = "/*RCE*/  snorm float4";
+				break;
 			case DXGI_FORMAT_R16G16_FLOAT:
-			case DXGI_FORMAT_R16G16B16A16_FLOAT:
+			case DXGI_FORMAT_R16G16B16A16_FLOAT:						  
+				newType = "/*RCE*/         half4";
 				break;
 			case DXGI_FORMAT_R16G16_SINT:				
-			case DXGI_FORMAT_R16G16B16A16_SINT:				
-				newType = "  int4";
+			case DXGI_FORMAT_R16G16B16A16_SINT:										  
+				newType = "/*RCE*/          int4";
 				break;
-			case DXGI_FORMAT_R8G8B8A8_UINT:
-				newType = " uint4";
+			case DXGI_FORMAT_R8G8B8A8_UINT:						  
+				newType = "/*RCE*/         uint4";
+				break;
+			default:
+				LOG_DBG_DTDM3("PSO RCE for pair %llX key %lX alias %llX have unk vdecl element type %u", pairUID, psoKey, derivedAlias, d912pxy_pso_cache::cDscBase.InputLayout.pInputElementDescs[i].Format);						  
+				newType = "/*RCE unk*/    float4";
 				break;
 		}
 
-		memcpy(replPos, newType, 6);
+		memcpy(replPos, newType, 21);
 
 	}
 

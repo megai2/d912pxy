@@ -195,6 +195,7 @@ private:
 	//extra conditional flags
 	UINT8 PSpositionUsed;
 	UINT8 relLookupDefined;
+	UINT8 isDepthOutUsed;
 	
 	//sm block data
 	UINT8 minVer;

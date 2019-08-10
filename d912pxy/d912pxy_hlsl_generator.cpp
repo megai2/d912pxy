@@ -257,6 +257,7 @@ d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * 
 	ZeroMemory(regDefined, 8 * ((D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN));
 	ZeroMemory(regDefinedAsC, 8 * ((D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN));
 	relLookupDefined = 0;
+	isDepthOutUsed = 0;
 }
 
 d912pxy_hlsl_generator::~d912pxy_hlsl_generator()
@@ -1082,6 +1083,14 @@ void d912pxy_hlsl_generator::CheckRegDefinition(DWORD op, UINT isDst)
 				}
 				break;
 			}
+			case D3DSPR_DEPTHOUT:
+			{
+				lines[mainFunctionDeclStrIdx][strlen(lines[mainFunctionDeclStrIdx]) - 1] = 0;
+				strcat(lines[mainFunctionDeclStrIdx], ", out float glob_depthOut: SV_Depth)");
+
+				isDepthOutUsed = 1;
+				//megai2: drop to default case from here
+			}
 			default:
 				if (isDst)
 				{
@@ -1454,7 +1463,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					UINT usageType = op[1] & 0x1F;
 					HLSL_GEN_WRITE_HEADI(
 						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId),
-						"	float4 %s%u: %s%u;",
+						"/*default*/    float4 %s%u: %s%u;",
 						d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(usageType,1), dclId
 					);
 					
@@ -1470,7 +1479,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 							{
 								HLSL_GEN_WRITE_HEADI(
 									itr - headerOffsetI,
-									"	float4 %s%u_s%u: %s%u;",
+									"/*default*/    float4 %s%u_s%u: %s%u;",
 									"unused_ireg_", regNum, dclId, GetUsageString(op[1] & 0x1F, 1), dclId
 								);
 							}							
@@ -1484,7 +1493,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					{
 						HLSL_GEN_WRITE_HEADI(
 							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
-							"	float4 %s%u: SV_POSITION;",
+							"/*default*/    float4 %s%u: SV_POSITION;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum
 						);
 
@@ -1584,7 +1593,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 				{
 					HLSL_GEN_WRITE_HEADI(
 						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_NC, regNum),
-						"	float4 %s%u: INPUT_REG%u;",
+						"/*default*/    float4 %s%u: INPUT_REG%u;",
 						d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
 					);
 				}
@@ -1593,7 +1602,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 				{
 					HLSL_GEN_WRITE_HEADI(
 						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_TEXC, regNum),
-						"	float4 %s%u: TEXCOORD%u;",
+						"/*default*/    float4 %s%u: TEXCOORD%u;",
 						d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
 					);
 				}
@@ -1604,7 +1613,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					{
 						HLSL_GEN_WRITE_HEADI(
 							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
-							"	float4 %s%u: SV_POSITION;",
+							"/*default*/    float4 %s%u: SV_POSITION;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum
 						);
 
@@ -1741,13 +1750,13 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					{
 						HLSL_GEN_WRITE_HEADI(
 							0,
-							"	    uint4 %s%u: %s%uE;",
+							"/*default*/    uint4 %s%u: %s%uE;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(op[1] & 0x1F, 0), (op[1] >> 16) & 0xF
 						);
 					} else {
 						HLSL_GEN_WRITE_HEADI(
 							0,
-							"	float4 %s%u: %s%uE;",
+							"/*default*/    float4 %s%u: %s%uE;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(op[1] & 0x1F, 0), (op[1] >> 16) & 0xF
 						);
 					}
@@ -1770,7 +1779,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 				{
 					HLSL_GEN_WRITE_HEADI(
 						0,
-						"	float4 %s%u: %s%uE;",
+						"/*default*/    float4 %s%u: %s%uE;",
 						d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(op[1] & 0x1F, 0), (op[1] >> 16) & 0xF
 					);
 				}
@@ -2224,7 +2233,7 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 	{
 		if (!PSpositionUsed)
 		{
-			HLSL_GEN_WRITE_HEADI(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "	float4 unusedPos: SV_POSITION;");
+			HLSL_GEN_WRITE_HEADI(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "/*default*/    float4 unusedPos: SV_POSITION;");
 		}
 	}
 
@@ -2233,11 +2242,16 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 	HLSL_GEN_WRITE_HEADI(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_END, 0), "};");
 	HLSL_GEN_WRITE_HEADI(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_END, 1), "	");
 
+	HLSL_GEN_WRITE_PROC("");
+
+	if (isDepthOutUsed)
+	{		
+		HLSL_GEN_WRITE_PROC("glob_depthOut = reg_depth_out0.x;");
+	}
+
 	if (isPS)
 	{
 		//		HLSL_GEN_WRITE_PROC("*/");
-		HLSL_GEN_WRITE_PROC("");
-
 		if ((NaNguard_flag >> PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT) & PXY_SDB_HLSL_NAN_GUARD_RET)
 		{
 			HLSL_GEN_WRITE_PROC("dx9_ps_nan_cull_emulation(dx9_ret_color_reg_ac);");
@@ -2268,7 +2282,6 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 		}*/
 	}
 	else {
-		HLSL_GEN_WRITE_PROC("");
 		HLSL_GEN_WRITE_PROC("dx9_halfpixel_pos_reg_ac = dx9_fix_halfpixel_offset(dx9_halfpixel_pos_reg_ac);");
 
 		if (NaNguard_flag & PXY_SDB_HLSL_NAN_GUARD_RET)
@@ -2304,7 +2317,7 @@ void d912pxy_hlsl_generator::WriteExtraUnusedRegs()
 				{
 					HLSL_GEN_WRITE_HEADI(
 						itr - headerOffsetI,
-						"	float4 %s%u_s%u: %s%u;",
+						"/*default*/    float4 %s%u_s%u: %s%u;",
 						"unused_ireg_", 0, dclId, GetUsageString(D3DDECLUSAGE_TEXCOORD, 1), dclId
 					);
 				}
