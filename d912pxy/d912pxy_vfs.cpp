@@ -110,7 +110,8 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name, UINT memCache)
 
 	if (sz < PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START)
 	{					
-		fwrite(signature, 8, 2, m_vfsBlocks[id]);
+		if (fwrite(signature, 8, 2, m_vfsBlocks[id]) != 2)
+			return NULL;
 		
 		fwrite(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, m_vfsBlocks[id]);
 		fwrite(&sz, 1, 4, m_vfsBlocks[id]);
@@ -121,12 +122,19 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name, UINT memCache)
 
 		UINT64 readedSignature[2] = { 0,0 };
 
-		fread(readedSignature, 8, 2, m_vfsBlocks[id]);
+		if (fread(readedSignature, 8, 2, m_vfsBlocks[id]) != 2)
+			return NULL;
 
 		if (memcmp(signature, readedSignature, 16))
 		{
 			return NULL;
 		}
+
+		fseek(m_vfsBlocks[id], 0, SEEK_SET);
+
+		if (fwrite(signature, 8, 2, m_vfsBlocks[id]) != 2)
+			return NULL;
+
 
 		fread(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, m_vfsBlocks[id]);
 		
