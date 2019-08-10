@@ -1005,7 +1005,10 @@ void d912pxy_pso_cache_item::Compile()
 //	d912pxy_pso_cache::cDscBase.RasterizerState. = desc->RasterizerState.;
 
 	d912pxy_pso_cache::cDscBase.RasterizerState.FillMode = (D3D12_FILL_MODE)desc->RasterizerState.FillMode;
-	d912pxy_pso_cache::cDscBase.RasterizerState.CullMode = (D3D12_CULL_MODE)desc->RasterizerState.CullMode;
+
+	d912pxy_pso_cache::cDscBase.RasterizerState.FrontCounterClockwise = desc->RasterizerState.CullMode == D3DCULL_CW;
+	d912pxy_pso_cache::cDscBase.RasterizerState.CullMode = desc->RasterizerState.CullMode != D3DCULL_NONE ? D3D12_CULL_MODE_BACK : D3D12_CULL_MODE_NONE;
+
 	d912pxy_pso_cache::cDscBase.RasterizerState.SlopeScaledDepthBias = desc->RasterizerState.SlopeScaledDepthBias;
 	d912pxy_pso_cache::cDscBase.RasterizerState.AntialiasedLineEnable = desc->RasterizerState.AntialiasedLineEnable;
 	d912pxy_pso_cache::cDscBase.RasterizerState.DepthBias = desc->RasterizerState.DepthBias;
