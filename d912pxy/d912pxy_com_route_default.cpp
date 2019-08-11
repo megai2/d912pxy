@@ -1086,6 +1086,13 @@ D912PXY_METHOD_IMPL(GetDesc)(PXY_THIS_ D3DVERTEXBUFFER_DESC *pDesc)
 
 #define D912PXY_ROUTE_IMPL_PREFIX return obj->surface.
 
+D912PXY_METHOD_IMPL_(ULONG, Release_Surface)(PXY_THIS)
+{
+	D912PXY_ROUTE_IMPL_START
+		D912PXY_ROUTE_IMPL_PREFIX Release_Surface();
+	D912PXY_ROUTE_IMPL_END
+}
+
 D912PXY_METHOD_IMPL(GetContainer)(PXY_THIS_ REFIID riid, void** ppContainer)
 {
 	D912PXY_ROUTE_IMPL_START
@@ -1878,7 +1885,7 @@ void d912pxy_com_route_init_default()
 	//surface
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_UNK_QUERY_INTERFACE, &d912pxy_comhandler::com_QueryInterface);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_UNK_ADDREF, &d912pxy_comhandler::com_AddRef);
-	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_comhandler::com_Release);
+	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_surface::com_Release_Surface);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_RESOURCE_GETDEVICE, &d912pxy_noncom::com_GetDevice);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_RESOURCE_SETPRIVATEDATA, &d912pxy_resource::com_SetPrivateData);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SURFACE, PXY_COM_METHOD_RESOURCE_GETPRIVATEDATA, &d912pxy_resource::com_GetPrivateData);

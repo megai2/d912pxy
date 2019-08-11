@@ -71,15 +71,16 @@ d912pxy_ctexture::~d912pxy_ctexture()
 D912PXY_METHOD_IMPL_NC(GetLevelDesc)(THIS_ UINT Level, D3DSURFACE_DESC *pDesc)
 { 
 	*pDesc = baseSurface->GetDX9DescAtLevel(Level);
-
 	
-
 	return D3D_OK;
 }
 
 D912PXY_METHOD_IMPL_NC(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface)
 { 
+	baseSurface->AddRefFromTexture(this);
+
 	*ppCubeMapSurface = PXY_COM_CAST_(IDirect3DSurface9, baseSurface->GetLayer(Level, FaceType));
+
 	(*ppCubeMapSurface)->AddRef();
 
 	return D3D_OK; 

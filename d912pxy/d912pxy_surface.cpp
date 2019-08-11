@@ -43,6 +43,8 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	ul = NULL;
 	layers = NULL;
 	dheapId = -1;
+	refTextureLinks = 0;
+	refTexture = NULL;
 	dheapIdFeedback = srvFeedback;
 	dHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_SRV);	
 
@@ -207,7 +209,29 @@ D912PXY_METHOD_IMPL_NC(UnlockRect)(THIS)
 	return GetLayer(0, 0)->UnlockRect();
 }
 
+D912PXY_METHOD_IMPL_NC_(ULONG, Release_Surface)(THIS)
+{
+	if (refTexture && GetCOMRefCount() == 2)
+	{
+		while (refTextureLinks)
+		{
+			refTexture->Release();
+			--refTextureLinks;
+		}
+		refTexture = NULL;
+	}
+
+	return Release();
+}
+
 #undef D912PXY_METHOD_IMPL_CN
+
+void d912pxy_surface::AddRefFromTexture(d912pxy_basetexture * texture)
+{
+	refTexture = texture;
+	refTexture->AddRef();
+	++refTextureLinks;	
+}
 
 void d912pxy_surface::ClearAsRTV(FLOAT * color4f, ID3D12GraphicsCommandList * cl, D3D12_RECT* clearRect)
 {

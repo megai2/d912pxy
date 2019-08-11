@@ -34,7 +34,7 @@ d912pxy_basetexture::d912pxy_basetexture() : d912pxy_resource(RTID_TEX, PXY_COM_
 
 d912pxy_basetexture::~d912pxy_basetexture()
 {
-	baseSurface->Release();
+	baseSurface->Release_Surface();
 }
 
 D912PXY_METHOD_IMPL_NC_(DWORD, GetPriority_SRVhack)(THIS)
