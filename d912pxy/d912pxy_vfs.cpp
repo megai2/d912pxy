@@ -135,6 +135,7 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name, UINT memCache)
 		if (fwrite(signature, 8, 2, m_vfsBlocks[id]) != 2)
 			return NULL;
 
+		fseek(m_vfsBlocks[id], 16, SEEK_SET);
 
 		fread(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, m_vfsBlocks[id]);
 		
