@@ -119,7 +119,7 @@ void d912pxy_thread::SignalWork()
 {	
 	if (!workEventSync.TryHold())
 	{
-		if (!workEventSync.GetValue())
+		if (!workEventSync.GetValue())			
 			SetEvent(workEvent);
 	}
 	else {
@@ -184,8 +184,8 @@ UINT d912pxy_thread::WaitForIssuedWorkCompletionTimeout(DWORD timeout)
 	workIssued.Hold();
 
 	if (workIssued.GetValue())
-	{
-		if (WaitForSingleObject(workCompleteEvent, timeout) == ERROR_TIMEOUT)
+	{		
+		if (WaitForSingleObject(workCompleteEvent, timeout) != WAIT_OBJECT_0)
 		{
 			workIssued.Release();
 			return 0;
