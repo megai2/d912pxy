@@ -66,6 +66,10 @@ HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 	d912pxy_s.render.iframe.End();
 	d912pxy_s.dx12.que.Flush(0);
 
+	cached_dx9displaymode.Width = pPresentationParameters->BackBufferWidth;
+	cached_dx9displaymode.Height = pPresentationParameters->BackBufferHeight;
+
+
 	HRESULT ret = swapchains[0]->SetPresentParameters(pPresentationParameters);
 	
 	d912pxy_s.render.iframe.Start();
@@ -101,10 +105,14 @@ void d912pxy_device::InnerPresentFinish()
 
 HRESULT d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
 { 
-	HRESULT ret = InnerPresentExecute();
 
 #ifdef ENABLE_METRICS
 	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.batch.GetBatchNum());
+#endif 
+
+	HRESULT ret = InnerPresentExecute();
+
+#ifdef ENABLE_METRICS	
 	d912pxy_s.log.metrics.FlushIFrameValues();	
 #endif 
 	
@@ -115,12 +123,15 @@ HRESULT d912pxy_device::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, 
 
 HRESULT d912pxy_device::Present_PG(const RECT * pSourceRect, const RECT * pDestRect, HWND hDestWindowOverride, const RGNDATA * pDirtyRegion)
 {
-	HRESULT ret = InnerPresentExecute();
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.batch.GetBatchNum());
+#endif 
 
 	perfGraph->RecordPresent(d912pxy_s.render.batch.GetBatchNum());
 
+	HRESULT ret = InnerPresentExecute();
+
 #ifdef ENABLE_METRICS
-	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.batch.GetBatchNum());
 	d912pxy_s.log.metrics.FlushIFrameValues();
 #endif s
 
