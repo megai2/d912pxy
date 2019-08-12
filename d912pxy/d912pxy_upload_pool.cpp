@@ -160,9 +160,14 @@ d912pxy_upload_item::~d912pxy_upload_item()
 
 }
 
+void d912pxy_upload_item::UploadBlockWrite(UINT64 dst_offset, UINT64 upload_offset, UINT64 sz, void * src)
+{
+	memcpy((void*)DPtrOffset(upload_offset + dst_offset), (void*)((intptr_t)src + dst_offset), sz);
+}
+
 void d912pxy_upload_item::UploadBlock(ID3D12Resource * res, UINT64 block_offset, UINT64 upload_offset, UINT64 sz, void * src, ID3D12GraphicsCommandList * cl)
 {
-	memcpy((void*)DPtrOffset(upload_offset + block_offset), (void*)((intptr_t)src + block_offset), sz);
+	UploadBlockWrite(block_offset, upload_offset, sz, src);
 	cl->CopyBufferRegion(res, block_offset, mRes, upload_offset + block_offset, sz);
 }
 

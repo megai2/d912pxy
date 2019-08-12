@@ -33,9 +33,9 @@ UINT32 d912pxy_vstream::threadedCtor = 0;
 d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) : d912pxy_resource(isIB ? RTID_IBUF : RTID_VBUF, PXY_COM_OBJ_VSTREAM, isIB ? L"vstream i" : L"vstream v")
 {		
 	lockDepth = 0;
-	ul = NULL;
-
-	inUploadState = 0;
+	ul = NULL;	
+	gpu_copy_end = 0;
+	gpu_copy_start = 0;
 
 	PXY_MALLOC_GPU_HOST_COPY(data, Length, void*);
 
@@ -224,25 +224,59 @@ void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12Grap
 		ul = d912pxy_s.thread.bufld.GetUploadMem(dx9desc.Size);
 		ul_offset = ul->GetCurrentOffset();
 		ul->AddSpaceUsed(dx9desc.Size);
+
+		if (!m_res)
+			ConstructResource();
+				
+		d912pxy_s.thread.bufld.AddToFinishList(this);		
 	}
+	
+	UINT64 blockStart = linfo->offset;
+	UINT64 blockSize = linfo->size;
+	UINT64 blockEnd = blockStart + blockSize;
 
-	if (!m_res)
-		ConstructResource();
-
-	if (!inUploadState)
+	if (blockStart < gpu_copy_start)
 	{
-		BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
-		inUploadState = 1;
-		d912pxy_s.thread.bufld.AddToFinishList(this);
+		if (blockEnd > gpu_copy_end)
+		{	
+			BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
+			ul->UploadBlock(this->GetD12Obj(), gpu_copy_end, ul_offset, blockEnd - gpu_copy_end, data, cl);
+			BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
+
+			gpu_copy_end = blockEnd;
+		} 
+
+		blockSize = gpu_copy_start - blockStart;		
+		gpu_copy_start = blockStart;
 	}
+	else if (blockStart > gpu_copy_end)
+	{
+		blockStart = gpu_copy_end;
+		blockSize = blockEnd - blockStart;
+		gpu_copy_end = blockEnd;
+	} 
+	else if (blockEnd > gpu_copy_end)
+	{
+		blockStart = gpu_copy_end;
+		gpu_copy_end = blockEnd;
+		blockSize = blockEnd - blockStart;
+	}
+	else
+	{	
+		ul->UploadBlockWrite(blockStart, ul_offset, blockSize, data);
+		return;
+	}
+
 		
-	ul->UploadBlock(this->GetD12Obj(), linfo->offset, ul_offset, linfo->size, data, cl);	
+	BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
+	ul->UploadBlock(this->GetD12Obj(), blockStart, ul_offset, blockSize, data, cl);	
+	BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
 }
 
 void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
-{
-	BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
-	inUploadState = 0;
+{	
+	gpu_copy_end = 0;
+	gpu_copy_start = 0;
 	ul = NULL;
 }
 

@@ -78,6 +78,9 @@ private:
 	d912pxy_upload_item* ul;
 	UINT64 ul_offset;
 
+	UINT64 gpu_copy_start;
+	UINT64 gpu_copy_end;
+
 	union bindData {
 		D3D12_VERTEX_BUFFER_VIEW v;
 		D3D12_INDEX_BUFFER_VIEW i;
@@ -87,9 +90,7 @@ private:
 	
 	void* data;
 
-	UINT inUploadState;
-
 	d912pxy_vstream_lock_data lockInfo[PXY_INNER_MAX_LOCK_DEPTH];
-	LONG lockDepth;	
+	LONG lockDepth;		
 };
 

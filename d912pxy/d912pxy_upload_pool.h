@@ -32,6 +32,7 @@ public:
 	d912pxy_upload_item(UINT8 icat);
 	~d912pxy_upload_item();
 
+	void UploadBlockWrite(UINT64 dst_offset, UINT64 upload_offset, UINT64 sz, void* src);
 	void UploadBlock(ID3D12Resource * res, UINT64 dst_offset, UINT64 upload_offset, UINT64 sz, void* src, ID3D12GraphicsCommandList* cl);
 
 	void UploadTargetWithOffset(ID3D12Resource * res, UINT64 sofs, UINT64 dofs, UINT64 sz, void* src, ID3D12GraphicsCommandList* cl);
