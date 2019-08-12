@@ -3,6 +3,8 @@
 #include <windows.h>
 #include <sys/stat.h>
 
+int install_next_to_d912pxy_folder = 0;
+
 int IsFileExist(const char *name)
 {
 	struct stat   buffer;
@@ -24,7 +26,7 @@ int read_user_integer(int defv)
 	std::cout << "\n";
 
 	if (str.length() == 0)
-		ret = 1;
+		ret = defv;
 	else {
 		try {
 			ret = std::stoi(str);
@@ -66,19 +68,54 @@ bool ReadUserYN(bool defaultY)
 
 int action_install()
 {
-	std::cout << "Install in bin64? ";
-
 	std::string installPath = "..\\bin64\\";
 	std::string installSource = "release\\";
 	std::string installFile = "d3d9.dll";
 
-	if (!ReadUserYN(1))
+	if (!install_next_to_d912pxy_folder)
 	{
-		std::cout << "Installing in game root folder. \n";
-		std::cout << "Please note that this typically is not needed! \n";
-		std::cout << "You will probably have to troubleshoot this configuration yourself. \n";
-		std::cout << "Report on this issue here: https://github.com/megai2/d912pxy/issues/64 \n\n";
+		std::cout << "Install in bin64? ";
+
+		if (!ReadUserYN(1))
+		{
+			std::cout << "Installing in game root folder. \n";
+			std::cout << "Please note that this typically is not needed! \n";
+			std::cout << "You will probably have to troubleshoot this configuration yourself. \n";
+			std::cout << "Report on this issue here: https://github.com/megai2/d912pxy/issues/64 \n\n";
+			installPath = "..\\";
+		}
+	}
+	else {
 		installPath = "..\\";
+
+		std::cout << "Use special config? \n"
+			<< "1. No \n"
+			<< "2. Default config for BnS \n"
+			<< "3. Exit \n";
+
+		std::cout << "\n[default: 2, config for BnS ]: ";
+
+		int mode = read_user_integer(2);
+
+		switch (mode)
+		{
+		case 1:
+			break;
+		case 2:
+			if (system("copy config.ini backup_config.ini") != 0)
+				std::cout << "failed to backup config \n";
+
+			if (system("copy bns_config.ini config.ini") != 0)
+				std::cout << "failed to copy config \n";
+
+			break;
+		default:
+			std::cout << "exiting";
+			system("pause");
+			return 0;
+
+			break;
+		}
 	}
 
 	std::cout << "Use standard release? ";
@@ -159,8 +196,8 @@ int action_install()
 	fBkp += "copy ";
 	fBkp += fIfn;
 	fBkp += " ";
-	fBkp += fIfn;
-	fBkp += "_backup";
+	fBkp += installPath;
+	fBkp += "d912pxy_installer_backup._ll";
 
 	if (IsFileExist(fIfn.c_str()))
 	{
@@ -252,7 +289,7 @@ int action_remove()
 	}
 
 	std::string fIfn = installPath + installFile;
-	std::string fBkp = fIfn + "_backup";
+	std::string fBkp = installPath + "d912pxy_installer_backup._ll";
 
 	if (IsFileExist(fBkp.c_str()))
 	{
@@ -291,6 +328,29 @@ int action_remove()
 
 int action_clear_shader_cache()
 {
+	std::cout << "Clear pck_bns (all but profiles) ? ";
+
+	if (ReadUserYN(0))
+	{
+		system("del /Q pck_bns\\derived_cso_ps.pck");
+		system("del /Q pck_bns\\derived_cso_vs.pck");
+		system("del /Q pck_bns\\pso_cache.pck");
+		system("del /Q pck_bns\\pso_precompile.pck");
+		system("del /Q pck_bns\\shader_sources.pck");
+		system("del /Q pck_bns\\shader_cso.pck");		
+	}
+
+	std::cout << "Clear derived cso, sources and PSO precompile cache? ";
+
+	if (ReadUserYN(0))
+	{
+		system("del /Q pck\\derived_cso_ps.pck");
+		system("del /Q pck\\derived_cso_vs.pck");
+		system("del /Q pck\\pso_cache.pck");
+		system("del /Q pck\\pso_precompile.pck");
+		system("del /Q pck\\shader_sources.pck");
+	}
+
 	std::cout << "Remove profiles too? ";
 
 	if (ReadUserYN(0))
@@ -364,11 +424,9 @@ int main()
 	if (!CheckLocation())
 	{
 		std::cout << "\n=============================================\n";
-		std::cout << "Wrong install dir! \n\n";
+		std::cout << "No Gw2-64.exe found, install next to d912pxy folder? \n\n";
 
-		std::cout << "Ignore dir checks? ";
-
-		if (!ReadUserYN(0))
+		if (!ReadUserYN(1))
 		{
 
 			std::cout << "You should put the d912pxy folder into the game's root directory. \n";
@@ -384,6 +442,9 @@ int main()
 
 			return -1;
 		}
+		else {
+			install_next_to_d912pxy_folder = 1;
+		}
 	}
 
 	std::cout << "Choose an action: \n"
@@ -392,7 +453,7 @@ int main()
 		<< "3. Clear shader cache \n"
 		<< "4. Exit \n";
 
-	std::cout << "\n[default: Install]: ";
+	std::cout << "\n[default: 1, Install]: ";
 
 	int mode = read_user_integer(1);
 
