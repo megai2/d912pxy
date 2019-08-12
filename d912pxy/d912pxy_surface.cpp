@@ -53,7 +53,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	surf_dx9dsc.Height = Height;
 	surf_dx9dsc.MultiSampleType = MultiSample;
 	surf_dx9dsc.MultiSampleQuality = MultisampleQuality;
-	surf_dx9dsc.Pool = D3DPOOL_DEFAULT;
+	surf_dx9dsc.Pool = D3DPOOL_MANAGED;
 	surf_dx9dsc.Type = D3DRTYPE_SURFACE;
 	surf_dx9dsc.Usage = Usage;
 	
@@ -356,6 +356,8 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 
 	UINT blockHeight = FixBlockHeight(lv);
 
+	UINT copyNeeded = 0;
+
 	if (!ul[lv].item)
 	{
 		UINT64 ul_memory_space = d912pxy_helper::AlignValueByPow2(subresFootprints[lv].Footprint.RowPitch*blockHeight, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
@@ -371,6 +373,7 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 			d912pxy_s.thread.texld.AddToFinishList(this);
 		}
 		ulMarked = 1;
+		copyNeeded = 1;
 	}
 		
 	UINT wPitch = GetWPitchLV(lv);
@@ -397,12 +400,16 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 		0
 	);	
 
-	D3D12_TEXTURE_COPY_LOCATION dstR = { m_res, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, lv };
+	//megai2: actually as we upload whole texture from same upload memory area, we don't need to copy it more then 1 time
+	if (copyNeeded)
+	{
+		D3D12_TEXTURE_COPY_LOCATION dstR = { m_res, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, lv };
 
-	BTransit(lv, D3D12_RESOURCE_STATE_COPY_DEST, stateCache, cl);
-	cl->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
-	BTransit(lv, stateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);
-	
+		BTransit(lv, D3D12_RESOURCE_STATE_COPY_DEST, stateCache, cl);
+		cl->CopyTextureRegion(&dstR, 0, 0, 0, &srcR, NULL);
+		BTransit(lv, stateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);
+	}
+
 	ThreadRef(-1);
 }
 

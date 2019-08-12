@@ -64,9 +64,7 @@ d912pxy_texture::~d912pxy_texture()
 HRESULT d912pxy_texture::GetLevelDesc(UINT Level, D3DSURFACE_DESC * pDesc)
 {
 	*pDesc = baseSurface->GetDX9DescAtLevel(Level);
-
 	
-
 	return D3D_OK;
 }
 

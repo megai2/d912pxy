@@ -79,7 +79,7 @@ D912PXY_METHOD_IMPL_NC(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* 
 
 	if (pRect)
 	{
-		pLockedRect->pBits = (void*)((intptr_t)surfMemRef + (intptr_t)((pRect->left + pRect->top*width)*memPerPix));
+		pLockedRect->pBits = (void*)((intptr_t)surfMemRef + (intptr_t)(pRect->left*memPerPix + pRect->top*wPitch));
 	}
 	else {
 		pLockedRect->pBits = (void*)((intptr_t)surfMemRef);
