@@ -87,6 +87,11 @@ D912PXY_METHOD_IMPL_NC(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* 
 
 	pLockedRect->Pitch = wPitch;
 
+	if (!(Flags & D3DLOCK_READONLY))
+	{
+		lockWrite |= 1;
+	}
+
 	++lockDepth;
 
 	return D3D_OK;
@@ -96,8 +101,9 @@ D912PXY_METHOD_IMPL_NC(UnlockRect)(THIS)
 {
 	--lockDepth;
 
-	if (!lockDepth)
+	if (!lockDepth && lockWrite)
 	{
+		lockWrite = 0;
 		d912pxy_s.thread.texld.IssueUpload(&base->surface, surfMem, subres);
 	}
 

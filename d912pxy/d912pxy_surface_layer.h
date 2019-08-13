@@ -73,6 +73,7 @@ private:
 	UINT32 subres;
 	
 	UINT32 lockDepth;
+	UINT32 lockWrite;
 
 	void* surfMem;
 	

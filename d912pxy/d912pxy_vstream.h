@@ -78,9 +78,6 @@ private:
 	d912pxy_upload_item* ul;
 	UINT64 ul_offset;
 
-	UINT64 gpu_copy_start;
-	UINT64 gpu_copy_end;
-
 	union bindData {
 		D3D12_VERTEX_BUFFER_VIEW v;
 		D3D12_INDEX_BUFFER_VIEW i;

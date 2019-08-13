@@ -34,8 +34,6 @@ d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB
 {		
 	lockDepth = 0;
 	ul = NULL;	
-	gpu_copy_end = 0;
-	gpu_copy_start = 0;
 
 	PXY_MALLOC_GPU_HOST_COPY(data, Length, void*);
 
@@ -76,28 +74,26 @@ d912pxy_vstream::~d912pxy_vstream()
 
 D912PXY_METHOD_IMPL_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 {
-	
+	//megai2: TODO probably thread safety guard
+	d912pxy_vstream_lock_data* linfo = &lockInfo[lockDepth];
+	++lockDepth;
 
-	d912pxy_vstream_lock_data linfo;
-	linfo.dst = this;
+	linfo->dst = this;
 
 	if (!SizeToLock)
 	{
-		linfo.offset = 0;
-		linfo.size = dx9desc.Size - OffsetToLock;
+		linfo->offset = 0;
+		linfo->size = dx9desc.Size - OffsetToLock;
 	}
 	else {
-		linfo.offset = OffsetToLock;
-		linfo.size = SizeToLock;
+		linfo->offset = OffsetToLock;
+		linfo->size = SizeToLock;
 	}
 
-	//megai2: TODO probably thread safety guard
-	lockInfo[lockDepth] = linfo;
-	++lockDepth;
-	
-	*ppbData = (void*)((intptr_t)(data) + OffsetToLock);
+	if (Flags & D3DLOCK_READONLY)
+		linfo->size = 0;
 
-	
+	*ppbData = (void*)((intptr_t)(data)+OffsetToLock);
 
 	return D3D_OK;
 }
@@ -105,7 +101,9 @@ D912PXY_METHOD_IMPL_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** pp
 D912PXY_METHOD_IMPL_NC(Unlock)(THIS)
 {			
 	--lockDepth;
-	d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
+
+	if (lockInfo[lockDepth].size)
+		d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
 	
 	return D3D_OK;
 }
@@ -233,41 +231,8 @@ void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12Grap
 	
 	UINT64 blockStart = linfo->offset;
 	UINT64 blockSize = linfo->size;
-	UINT64 blockEnd = blockStart + blockSize;
-
-	if (blockStart < gpu_copy_start)
-	{
-		if (blockEnd > gpu_copy_end)
-		{	
-			BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
-			ul->UploadBlock(this->GetD12Obj(), gpu_copy_end, ul_offset, blockEnd - gpu_copy_end, data, cl);
-			BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
-
-			gpu_copy_end = blockEnd;
-		} 
-
-		blockSize = gpu_copy_start - blockStart;		
-		gpu_copy_start = blockStart;
-	}
-	else if (blockStart > gpu_copy_end)
-	{
-		blockStart = gpu_copy_end;
-		blockSize = blockEnd - blockStart;
-		gpu_copy_end = blockEnd;
-	} 
-	else if (blockEnd > gpu_copy_end)
-	{
-		blockStart = gpu_copy_end;
-		gpu_copy_end = blockEnd;
-		blockSize = blockEnd - blockStart;
-	}
-	else
-	{	
-		ul->UploadBlockWrite(blockStart, ul_offset, blockSize, data);
-		return;
-	}
-
-		
+			
+	//megai2: keep barriers here to prevent GPU side copy collision on double writed areas
 	BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, cl);
 	ul->UploadBlock(this->GetD12Obj(), blockStart, ul_offset, blockSize, data, cl);	
 	BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, cl);
@@ -275,8 +240,6 @@ void d912pxy_vstream::ProcessUpload(d912pxy_vstream_lock_data* linfo, ID3D12Grap
 
 void d912pxy_vstream::FinishUpload(ID3D12GraphicsCommandList * cl)
 {	
-	gpu_copy_end = 0;
-	gpu_copy_start = 0;
 	ul = NULL;
 }
 
