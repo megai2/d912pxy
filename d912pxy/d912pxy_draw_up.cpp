@@ -89,17 +89,11 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 	if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
 		return;
 
-	PushVSBinds();
-
 	d912pxy_s.render.iframe.SetIBuf(buf[PXY_DUP_DPI].vstream);
 	d912pxy_s.render.iframe.SetVBuf(buf[PXY_DUP_DPV].vstream, 0, vsvOffset, VertexStreamZeroStride);
 
 	((IDirect3DDevice9*)&d912pxy_s.dev)->DrawIndexedPrimitive(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);
-	//d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);	
-
-	PopVSBinds();
-
-	
+	//d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, 0, 0, 0, PrimitiveCount);		
 }
 
 void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void * pIndexData, D3DFORMAT IndexDataFormat, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)
@@ -115,18 +109,12 @@ void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UIN
 
 	UINT vsiOffset = BufferWrite(indBuf, indBufSz, pIndexData);
 	UINT vsvOffset = BufferWrite(PXY_DUP_DIPV, vertBufSz, pVertexStreamZeroData);
-
-	PushVSBinds();
-
+	
 	d912pxy_s.render.iframe.SetIBuf(buf[indBuf].vstream);
 	d912pxy_s.render.iframe.SetVBuf(buf[PXY_DUP_DIPV].vstream, 0, vsvOffset, VertexStreamZeroStride);	
 	
 	((IDirect3DDevice9*)&d912pxy_s.dev)->DrawIndexedPrimitive(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);
-	//d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);		
-
-	PopVSBinds();
-
-	
+	//d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, 0, MinVertexIndex, NumVertices, vsiOffset >> (1 + hiInd), PrimitiveCount);			
 }
 
 void d912pxy_draw_up::OnFrameEnd()
@@ -156,7 +144,9 @@ UINT d912pxy_draw_up::BufferWrite(d912pxy_draw_up_buffer_name bid, UINT size, co
 	if ((tmpWP + size) >= buf[bid].endPoint)
 	{
 		UINT32 len = buf[bid].vstream->GetLength();
-		len *= 2;
+		//megai2: growing buffer size too big will end up in long buffer upload wait on frame end
+		//len *= 2;
+		
 
 		len = size > len ? size * 2 : len;
 

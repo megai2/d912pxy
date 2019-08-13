@@ -29,6 +29,9 @@ public:
 	void DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
 	void DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
 
+	void PushVSBinds();
+	void PopVSBinds();
+
 	void OnFrameEnd();
 
 private:
@@ -42,8 +45,5 @@ private:
 	void LockBuffer(d912pxy_draw_up_buffer_name bid);
 
 	void AllocateBuffer(d912pxy_draw_up_buffer_name bid, UINT len);
-
-	void PushVSBinds();
-	void PopVSBinds();
 };
 

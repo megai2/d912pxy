@@ -69,6 +69,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_COMPAT_BATCH_COMMIT,
 	PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET,
 	PXY_CFG_COMPAT_TRACK_RS,
+	PXY_CFG_COMPAT_DUP_UNSAFE,
 	PXY_CFG_VFS_ROOT,
 	PXY_CFG_VFS_MEMCACHE_MASK,
 	PXY_CFG_CNT
@@ -142,6 +143,7 @@ private:
 		{L"compat",L"batch_commit",L"0"},//PXY_CFG_COMPAT_BATCH_COMMIT
 		{L"compat",L"omrt_viewport_reset",L"0"},//PXY_CFG_COMPAT_OMRT_VIEWPORT_RESET
 		{L"compat",L"track_rs",L"0"},//PXY_CFG_COMPAT_TRACK_RS
+		{L"compat",L"unsafe_dup",L"0"},//PXY_CFG_COMPAT_DUP_UNSAFE
 		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
 		{L"vfs", L"memcache_mask", L"6F"}//PXY_CFG_VFS_MEMCACHE_MASK
 	};

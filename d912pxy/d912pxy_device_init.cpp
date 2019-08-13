@@ -257,6 +257,12 @@ void d912pxy_device::InitComPatches()
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_Compat);
 	}
 
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_DUP_UNSAFE))
+	{
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVEUP, &d912pxy_device::com_DrawIndexedPrimitiveUP_StateUnsafe);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWPRIMITIVEUP, &d912pxy_device::com_DrawPrimitiveUP_StateUnsafe);
+	}
+
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_PRESENT, &d912pxy_device::com_Present_PG);

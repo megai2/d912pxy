@@ -660,10 +660,24 @@ D912PXY_METHOD_IMPL(DrawPrimitiveUP)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, U
 	D912PXY_ROUTE_IMPL_END
 }
 
+D912PXY_METHOD_IMPL(DrawPrimitiveUP_StateUnsafe)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
+{
+	D912PXY_ROUTE_IMPL_START
+		D912PXY_ROUTE_IMPL_PREFIX DrawPrimitiveUP_StateUnsafe(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	D912PXY_ROUTE_IMPL_END
+}
+
 D912PXY_METHOD_IMPL(DrawIndexedPrimitiveUP)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
 	D912PXY_ROUTE_IMPL_START
 		D912PXY_ROUTE_IMPL_PREFIX DrawIndexedPrimitiveUP(PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
+	D912PXY_ROUTE_IMPL_END
+}
+
+D912PXY_METHOD_IMPL(DrawIndexedPrimitiveUP_StateUnsafe)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
+{
+	D912PXY_ROUTE_IMPL_START
+		D912PXY_ROUTE_IMPL_PREFIX DrawIndexedPrimitiveUP_StateUnsafe(PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
 	D912PXY_ROUTE_IMPL_END
 }
 
