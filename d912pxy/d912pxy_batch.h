@@ -120,4 +120,6 @@ private:
 
 	UINT32 mDataDltRef[PXY_BATCH_GPU_ELEMENT_COUNT];
 	BYTE stateTransfer[PXY_BATCH_GPU_DRAW_BUFFER_SIZE];	
+
+	BYTE doNewBatch;
 };
