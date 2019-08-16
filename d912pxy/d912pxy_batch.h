@@ -84,9 +84,11 @@ public:
 
 	void SetShaderConstF(UINT type, UINT start, UINT cnt4, float* data);
 	void GPUWrite(void* src, UINT size, UINT offset);
-	void GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);
-	void GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);
-	
+	void GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);	
+	void GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn, UINT tid);
+	void GPUWriteFinalize(UINT tid, UINT endBatch);	
+	void GPUWriteStart(UINT tid, UINT fromReplay);
+
 	void FrameStart();
 	void FrameEnd();
 	void GPUCSCpy();
@@ -103,8 +105,8 @@ private:
 	ID3D12GraphicsCommandList* topCl;
 	ID3D12PipelineState* copyPSO;
 	ID3D12RootSignature* copyRS;
-	UINT copyPSOtype;
-		
+	UINT mtCopyEnabled;
+			
 	d912pxy_cbuffer* buffer;
 	d912pxy_cbuffer* stream;
 
@@ -119,6 +121,8 @@ private:
 	UINT32 lastBatchCount;
 
 	UINT32 mDataDltRef[PXY_BATCH_GPU_ELEMENT_COUNT];
+	UINT32 mDataDltRefMT[PXY_BATCH_GPU_ELEMENT_COUNT*PXY_INNER_REPLAY_THREADS_MAX];
+	UINT32 mDataDltRefMTTransfer[PXY_BATCH_GPU_ELEMENT_COUNT*PXY_INNER_REPLAY_THREADS_MAX];
 	BYTE stateTransfer[PXY_BATCH_GPU_DRAW_BUFFER_SIZE];	
 
 	BYTE doNewBatch;

@@ -85,8 +85,7 @@ void d912pxy_batch::FrameStart()
 	doNewBatch = 1;
 	topCl = d912pxy_s.dx12.cl->GID(CLG_TOP);
 
-	memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
-	GPUWrite(stateTransfer, PXY_BATCH_GPU_ELEMENT_COUNT, 0);
+	GPUWriteStart(0, 0);
 
 	topCl->SetComputeRootSignature(copyRS);
 	topCl->SetComputeRootUnorderedAccessView(0, buffer->DevPtr());
@@ -112,20 +111,14 @@ void d912pxy_batch::GPUCSCpy()
 {	
 	PIXBeginEvent(topCl, 0xAA00AA, "CSCpy");
 
-	if (copyPSOtype)
+	if (!mtCopyEnabled)
 	{
-		for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
-			streamControl[mDataDltRef[i]].endBatch = batchNum;
-	} else {
-		for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
-		{
-			streamControl[streamIdx].startBatch = batchNum;
-			streamControl[streamIdx].endBatch = 0;
-			streamControl[streamIdx].dstOffset = i;
-			++streamIdx;
-		}
+		GPUWriteFinalize(0, batchNum);
 	}
-	
+	else {
+		for (int i = 0; i != d912pxy_s.render.replay.GetThreadCount(); ++i)
+			GPUWriteFinalize(i, batchNum);
+	}
 
 	if (streamIdx & PXY_BATCH_GPU_THREAD_BLOCK_MASK)
 	{
@@ -160,6 +153,71 @@ void d912pxy_batch::GPUCSCpy()
 	PIXEndEvent(topCl);
 
 	streamIdx = 0;
+}
+
+void d912pxy_batch::GPUWriteFinalize(UINT tid, UINT endBatch)
+{
+	if (mtCopyEnabled)
+	{
+		UINT dltRefOfs = tid * PXY_BATCH_GPU_ELEMENT_COUNT;
+
+		if (tid == (d912pxy_s.render.replay.GetThreadCount()-1))
+		{
+			for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
+				streamControl[mDataDltRefMT[dltRefOfs + i]].endBatch = endBatch;
+
+			return;
+		}
+
+		UINT dltRefOfsNext = (tid+1) * PXY_BATCH_GPU_ELEMENT_COUNT;
+		
+		for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
+		{
+			//megai2: if next thread writed to this element, we know where current thread write ends
+			//otherwise transfer this write to next thread
+			if (mDataDltRefMT[dltRefOfsNext + i] != -1)
+				streamControl[mDataDltRefMT[dltRefOfs + i]].endBatch = mDataDltRefMTTransfer[dltRefOfsNext + i];
+			else
+				mDataDltRefMT[dltRefOfsNext + i] = mDataDltRefMT[dltRefOfs + i];
+		}
+
+	}
+	else 
+		for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
+			streamControl[mDataDltRef[i]].endBatch = endBatch;
+}
+
+void d912pxy_batch::GPUWriteStart(UINT tid, UINT fromReplay)
+{
+	if (!fromReplay)
+	{
+		if (tid == 0)
+			streamIdx += PXY_BATCH_GPU_ELEMENT_COUNT;
+		return;
+	}
+
+	if (mtCopyEnabled)
+	{
+
+		if (!tid)
+		{
+			memset(mDataDltRefMT, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
+			GPUWriteControlMT(0, 0, PXY_BATCH_GPU_ELEMENT_COUNT, 0, 0);
+			return;
+		}
+
+		UINT dltRefOfs = tid*PXY_BATCH_GPU_ELEMENT_COUNT;
+
+		for (int i = 0; i != PXY_BATCH_GPU_ELEMENT_COUNT; ++i)
+		{
+			mDataDltRefMT[dltRefOfs + i] = -1;
+			mDataDltRefMTTransfer[dltRefOfs + i] = 0;
+		}
+	}
+	else {
+		memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
+		GPUWriteControl(0, 0, PXY_BATCH_GPU_ELEMENT_COUNT, 0);		
+	}		
 }
 
 void d912pxy_batch::PreDIP(ID3D12GraphicsCommandList* cl, UINT bid)
@@ -210,19 +268,26 @@ void d912pxy_batch::GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)
 	}
 }
 
-void d912pxy_batch::GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)
+void d912pxy_batch::GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn, UINT tid)
 {
+	UINT32 tidOffset = tid * PXY_BATCH_GPU_ELEMENT_COUNT;
+
 	UINT64 i = of;
-	UINT64 endDlt = cnt;
 	while (i != (of + cnt))
 	{
 		d912pxy_batch_stream_control_entry* ctl = &streamControl[si];
 
 		ctl->dstOffset = (UINT32)i;
 		ctl->startBatch = (UINT32)bn;
-		ctl->endBatch = (UINT32)endDlt;
 
-		--endDlt;
+		UINT32 dltRef = mDataDltRefMT[tidOffset + i];
+		if (dltRef != -1)
+			streamControl[dltRef].endBatch = (UINT32)bn;
+		else
+			mDataDltRefMTTransfer[tidOffset + i] = bn;
+
+		mDataDltRefMT[tidOffset+i] = (UINT32)si;
+
 		++si;
 		++i;
 	}
@@ -244,10 +309,10 @@ void d912pxy_batch::InitCopyCS()
 
 	copyRS = d912pxy_s.dev.ConstructRootSignature(&rootSignatureDesc);
 
-	copyPSOtype = (d912pxy_s.config.GetValueUI64(PXY_CFG_REPLAY_THREADS) == 1);
+	mtCopyEnabled = (d912pxy_s.config.GetValueUI64(PXY_CFG_REPLAY_THREADS) != 1);
 	
 	//copy cs hlsl code
-	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 2 + copyPSOtype, 0);
+	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 3, 0);
 	d912pxy_shader_code CScode = CScodec->GetCodeCS();
 	delete CScodec;
 

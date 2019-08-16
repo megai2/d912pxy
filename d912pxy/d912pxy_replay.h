@@ -208,9 +208,14 @@ typedef struct d912pxy_replay_thread_transit_data {
 	
 } d912pxy_replay_thread_transit_data;
 
+typedef struct d912pxy_replay_thread_context {
+	ID3D12PipelineState* pso;
+	UINT tid;
+} d912pxy_replay_thread_context;
+
 class d912pxy_replay;
 
-typedef void (d912pxy_replay::*d912pxy_replay_handler_func)(void*, ID3D12GraphicsCommandList* cl, void**);
+typedef void (d912pxy_replay::*d912pxy_replay_handler_func)(void*, ID3D12GraphicsCommandList* cl, d912pxy_replay_thread_context*);
 
 class d912pxy_replay : public d912pxy_replay_base	
 {
@@ -246,7 +251,7 @@ public:
 
 	//actual execute code and thread managment
 
-	void PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList* cl, void** context);
+	void PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList* cl, d912pxy_replay_thread_context* context);
 	void Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd);
 	UINT WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_thread* thrd);
 
@@ -264,9 +269,9 @@ public:
 	d912pxy_replay_item* GetItem(UINT id) { return &stack[id]; };
 	d912pxy_replay_item* BacktraceItemType(d912pxy_replay_item_type type, UINT depth, UINT base);
 
-	void TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base, void** context);
+	void TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base, d912pxy_replay_thread_context* context);
 
-	void TransitCLState(ID3D12GraphicsCommandList* cl, UINT base, UINT thread, void** context);
+	void TransitCLState(ID3D12GraphicsCommandList* cl, UINT base, UINT thread, d912pxy_replay_thread_context* context);
 	void SaveCLState(UINT thread);
 
 #ifdef _DEBUG
@@ -275,28 +280,30 @@ public:
 	UINT DbgStackIgnore();
 #endif
 	
+	UINT GetThreadCount() { return numThreads;  };
+
 private:
 	d912pxy_replay_handler_func replay_handlers[DRPL_COUNT];
 
-	void RHA_TRAN(d912pxy_replay_state_transit* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_OMSR(d912pxy_replay_om_sr* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_OMBF(d912pxy_replay_om_bf* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_RSVP(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_RSSR(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context);
-	void RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context);
-	void RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCommandList * cl, ID3D12PipelineState** context);
-	void RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_GPUW(d912pxy_replay_gpu_write_control* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_GPUW_MT(d912pxy_replay_gpu_write_control* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_PRMT(d912pxy_replay_primitive_topology* it, ID3D12GraphicsCommandList * cl, void** unused);
-	void RHA_QUMA(d912pxy_replay_query_mark* it, ID3D12GraphicsCommandList * cl, void** unused);
+	void RHA_TRAN(d912pxy_replay_state_transit* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_OMSR(d912pxy_replay_om_sr* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_OMBF(d912pxy_replay_om_bf* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_RSVP(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_RSSR(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context);
+	void RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context);
+	void RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context);
+	void RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_GPUW(d912pxy_replay_gpu_write_control* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_GPUW_MT(d912pxy_replay_gpu_write_control* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context);
+	void RHA_PRMT(d912pxy_replay_primitive_topology* it, ID3D12GraphicsCommandList * cl, void* unused);
+	void RHA_QUMA(d912pxy_replay_query_mark* it, ID3D12GraphicsCommandList * cl, void* unused);
 	
 	d912pxy_replay_item* stack;
 
