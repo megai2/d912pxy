@@ -46,6 +46,8 @@ public:
 
 	d912pxy_surface* GetBaseSurface() { return baseSurface; };
 
+	UINT FinalRelease();
+
 protected:
 	UINT32 srvIDc[2];
 

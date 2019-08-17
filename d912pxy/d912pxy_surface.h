@@ -53,8 +53,6 @@ public:
 	D912PXY_METHOD_NC(UnlockRect)(THIS);
 	D912PXY_METHOD_NC_(ULONG, Release_Surface)(THIS);
 
-	void AddRefFromTexture(d912pxy_basetexture* texture);
-
 	void ClearAsRTV(FLOAT* color4f, ID3D12GraphicsCommandList* cl, D3D12_RECT* clearRect);
 	void ClearAsDSV(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList* cl, D3D12_RECT* clearRect);
 
@@ -120,8 +118,5 @@ private:
 
 	UINT ulMarked;
 	d912pxy_surface_ul* ul;
-
-	d912pxy_basetexture* refTexture;
-	d912pxy_thread_lock refTextureLinks;
 };
 

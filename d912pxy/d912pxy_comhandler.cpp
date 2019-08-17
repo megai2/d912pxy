@@ -117,7 +117,7 @@ UINT d912pxy_comhandler::FinalRelease()
 	if (InterlockedAdd(&thrdRefc, 0))
 	{
 		d912pxy_s.dev.IFrameCleanupEnqeue(this);
-		return 2;
+		return 3;
 	}
 	else {		
 

@@ -29,12 +29,11 @@ SOFTWARE.
 
 d912pxy_basetexture::d912pxy_basetexture() : d912pxy_resource(RTID_TEX, PXY_COM_OBJ_TEXTURE, L"texture")
 {
-
+	ThreadRef(1);
 }
 
 d912pxy_basetexture::~d912pxy_basetexture()
-{
-	baseSurface->Release_Surface();
+{	
 }
 
 D912PXY_METHOD_IMPL_NC_(DWORD, GetPriority_SRVhack)(THIS)
@@ -52,4 +51,20 @@ UINT d912pxy_basetexture::GetSRVHeapId(UINT mode)
 	}
 	else
 		return srvIDc[0];
+}
+
+UINT d912pxy_basetexture::FinalRelease()
+{
+	UINT ret = d912pxy_comhandler::FinalRelease();
+	if (ret == 3)
+	{
+		//megai2: keep threadRef if surface is still in use, otherwise free surface and remove threadRef
+		if (baseSurface->GetCOMRefCount() == 1)
+		{
+			baseSurface->Release_Surface();
+			ThreadRef(-1);
+		}
+	}
+
+	return ret;
 }

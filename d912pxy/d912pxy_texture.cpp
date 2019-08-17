@@ -70,8 +70,6 @@ HRESULT d912pxy_texture::GetLevelDesc(UINT Level, D3DSURFACE_DESC * pDesc)
 
 HRESULT d912pxy_texture::GetSurfaceLevel(UINT Level, IDirect3DSurface9 ** ppSurfaceLevel)
 {
-	baseSurface->AddRefFromTexture(this);
-
 	if (srvIDc[1])
 	{
 		*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface);
