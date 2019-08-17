@@ -284,7 +284,7 @@ void d912pxy_batch::GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 b
 		if (dltRef != -1)
 			streamControl[dltRef].endBatch = (UINT32)bn;
 		else
-			mDataDltRefMTTransfer[tidOffset + i] = bn;
+			mDataDltRefMTTransfer[tidOffset + i] = (UINT32)bn;
 
 		mDataDltRefMT[tidOffset+i] = (UINT32)si;
 

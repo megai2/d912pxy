@@ -122,6 +122,6 @@ private:
 	d912pxy_surface_ul* ul;
 
 	d912pxy_basetexture* refTexture;
-	UINT refTextureLinks;
+	d912pxy_thread_lock refTextureLinks;
 };
 
