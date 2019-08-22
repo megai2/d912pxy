@@ -66,6 +66,7 @@ void d912pxy_batch::Init()
 
 UINT d912pxy_batch::NextBatch()
 {
+	++batchCount;
 	doNewBatch = 1;
 	return batchNum;	
 }
@@ -73,6 +74,11 @@ UINT d912pxy_batch::NextBatch()
 UINT d912pxy_batch::GetBatchNum()
 {
 	return batchNum;
+}
+
+UINT d912pxy_batch::GetBatchCount()
+{
+	return batchCount;
 }
 
 void d912pxy_batch::SetShaderConstF(UINT type, UINT start, UINT cnt4, float * data)
@@ -105,6 +111,7 @@ void d912pxy_batch::FrameEnd()
 	
 	lastBatchCount = batchNum - 1;
 	batchNum = 0;
+	batchCount = 0;
 }
 
 void d912pxy_batch::GPUCSCpy()

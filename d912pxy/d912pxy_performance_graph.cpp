@@ -71,9 +71,6 @@ void d912pxy_performance_graph::DumpData()
 {
 	FILE* of = NULL;
 
-	char* stringAcm[4] = { 0 };
-	size_t acmEndpoint[4];
-
 	if (dx9)
 	{
 		of = fopen(d912pxy_perf_graph_dx9_outfile, "wb");
@@ -81,28 +78,20 @@ void d912pxy_performance_graph::DumpData()
 	else
 		of = fopen(d912pxy_perf_graph_outfile, "wb");
 
+	UINT8* imgData = NULL;
+	PXY_MALLOC(imgData, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 4, UINT8*);
+
 	{
 		static const char* header[] = {
 			"<html>\n",
-			"	<head>\n",
-			"		<!--Plotly.js-->\n",
-			"		<script src = \"https://cdn.plot.ly/plotly-latest.min.js\"></script>\n",
+			"	<head><title>d912pxy performance graph</title>\n",
 			"	</head>\n",
-			"   <body>\n",
-			"		<div id = \"myDiv\" style=\"width: 100%; height: 100% \"><!--Plotly chart will be drawn inside this DIV--></div>\n",
-			"		<script>\n"
+			"   <body>\n<div style=\"width:100 % ; font - size: 20px; padding : 0; margin : 0; \">\n"
 		};
-
-		for (int i = 0; i != 8; ++i)
-		{
-			fwrite(header[i], 1, strlen(header[i]), of);
-		}
 
 		for (int i = 0; i != 4; ++i)
 		{
-			PXY_MALLOC(stringAcm[i], 1024 * 1024 * 20, char*);
-			stringAcm[i][0] = 0;
-			acmEndpoint[i] = 0;
+			fwrite(header[i], 1, strlen(header[i]), of);
 		}
 	}
 
@@ -121,103 +110,56 @@ void d912pxy_performance_graph::DumpData()
 			int i = j + k * PXY_PERFGRPH_BATCH_PTS;
 
 			double pv = (double)dataAcm[i] / ((double)maxValue2);
+			pv *= 255;
 
+			UINT32 pvi = (UINT32)pv;
+
+			if (pvi > 1)
+				pvi -= 1;
+
+			if (pvi > 256 * 0)
 			{
-				if (pv <= 0)
-					continue;
-
-				static char ysBuf[255];
-				static char xsBuf[255];
-				static char pvBuf[255];
-
-				UINT64 ftime = (PXY_PERFGRPH_FRAMETIME_MIN + k * ((PXY_PERFGRPH_FRAMETIME_MAX - PXY_PERFGRPH_FRAMETIME_MIN) / PXY_PERFGRPH_FRAMETIME_PTS));
-
-				sprintf(ysBuf, ", %f", 1000000.0f / ftime);
-				sprintf(xsBuf, ", %u", j * PXY_PERFGRPH_BATCH_DIV);
-				sprintf(pvBuf, ", %f", pv * 255);
-
-				strcat(stringAcm[0], ysBuf);
-				strcat(stringAcm[1], xsBuf);
-				strcat(stringAcm[2], pvBuf);
-
-				acmEndpoint[0] += strlen(ysBuf);
-				acmEndpoint[1] += strlen(xsBuf);
-				acmEndpoint[2] += strlen(pvBuf);
+				imgData[i * 4 + 0] = pvi *  dx9;
+				imgData[i * 4 + 1] = pvi * !dx9;
+				imgData[i * 4 + 2] = 0;
+				imgData[i * 4 + 3] = 128;
+			}
+			else {
+				imgData[i * 4 + 0] = 0;
+				imgData[i * 4 + 1] = 0;
+				imgData[i * 4 + 2] = 0;
+				imgData[i * 4 + 3] = 0;
 			}
 		}
 	}
 
 	{
-		static const char* emts[] = {
-			"			var trace1 = {\n",
-			"				x: [0",
-			"				y: [0",
-			"				mode: 'markers',\n",
-			"				marker: {\n",
-			"					size: 5,\n",
-			"					color: [0",
-			"				}\n",
-			"			};\n\n",
-			"			var data = [trace1];\n\n",
-			"			var layout = {\n",
-			"				title: 'Performance statistics<br><b>CPU</b>: ",
-			"; <b>GPU</b>: ",
-			"; ",
-			"',\n"
-		};
-
 		static const char* footer[] = {
-			"				xaxis: {\n",
-			"					title: {\n",
-			"						text: \"Draw calls per frame\"\n",
-			"					}\n",
-			"				},\n",
-			"				yaxis : {\n",
-			"					title: {\n",
-			"						text: \"FPS\"\n",
-			"					}\n",
-			"				}\n",
-			"			};\n\n",
-			"			Plotly.newPlot('myDiv', data, layout);\n",
-			"		</script>\n",
+			"     </div>\n",
+			"	  <div style=\"width:100 % ; padding : 0; margin : 0; position:relative\">\n",
+			"		<img src=\"dx12_perf_graph.png\" style=\"position: absolute; top: 0; left: 0; z-index: 1; border: 1px solid\" / >\n",
+			"		<img src=\"dx9_perf_graph.png\" style=\"position: absolute; top: 0; left: 0; z-index: 1; border: 1px solid\" / >\n",
+			"     </div>\n",
 			"	</body>\n",
-			"</html>\n",
+			"</html>\n"
 		};
 
-		strcat(stringAcm[0], "],\n");
-		strcat(stringAcm[1], "],\n");
-		strcat(stringAcm[2], "]\n");
 
-		fwrite(emts[0], 1, strlen(emts[0]), of);
-		fwrite(emts[1], 1, strlen(emts[1]), of);
-		fwrite(stringAcm[1], 1, acmEndpoint[1] + 3, of);
-		fwrite(emts[2], 1, strlen(emts[2]), of);
-		fwrite(stringAcm[0], 1, acmEndpoint[0] + 3, of);
-		fwrite(emts[3], 1, strlen(emts[3]), of);
-		fwrite(emts[4], 1, strlen(emts[4]), of);
-		fwrite(emts[5], 1, strlen(emts[5]), of);
-		fwrite(emts[6], 1, strlen(emts[6]), of);
-		fwrite(stringAcm[2], 1, acmEndpoint[2] + 2, of);
-		fwrite(emts[7], 1, strlen(emts[7]), of);
-		fwrite(emts[8], 1, strlen(emts[8]), of);
-		fwrite(emts[9], 1, strlen(emts[9]), of);
-		fwrite(emts[10], 1, strlen(emts[10]), of);
-		fwrite(emts[11], 1, strlen(emts[11]), of);
 
 		char* cpub = d912pxy_helper::GetCPUBrandString();
 		const char* gpun = "DX9";
+		const char* br = "<br>\n";
 
 		if (!dx9)
 			gpun = d912pxy_s.dev.GetCurrentGPUName();
 
-		fwrite(cpub, 1, strlen(cpub), of);
-		fwrite(emts[12], 1, strlen(emts[12]), of);
-		fwrite(gpun, 1, strlen(gpun), of);
-		fwrite(emts[13], 1, strlen(emts[13]), of);
-		fwrite(BUILD_VERSION_NAME, 1, strlen(BUILD_VERSION_NAME), of);
-		fwrite(emts[14], 1, strlen(emts[14]), of);
-
-		for (int i = 0; i != 15; ++i)
+		fwrite(cpub, 1, strlen(cpub), of);		
+		fwrite(br, 1, strlen(br), of);
+		fwrite(gpun, 1, strlen(gpun), of);		
+		fwrite(br, 1, strlen(br), of);
+		fwrite(BUILD_VERSION_NAME, 1, strlen(BUILD_VERSION_NAME), of);			
+		
+		for (int i = 0; i != 7; ++i)
 		{
 			fwrite(footer[i], 1, strlen(footer[i]), of);
 		}
@@ -226,8 +168,12 @@ void d912pxy_performance_graph::DumpData()
 	fflush(of);
 	fclose(of);
 
-	for (int i = 0; i != 4; ++i)
-		PXY_FREE(stringAcm[i]);
+	if (dx9)
+		stbi_write_png(d912pxy_perf_graph_dx9_outfile_png, PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 4, imgData, PXY_PERFGRPH_BATCH_PTS * 4);
+	else
+		stbi_write_png(d912pxy_perf_graph_outfile_png, PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 4, imgData, PXY_PERFGRPH_BATCH_PTS * 4);
+
+	PXY_FREE(imgData);
 }
 
 void d912pxy_performance_graph::ResetTime()

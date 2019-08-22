@@ -81,6 +81,7 @@ public:
 
 	UINT NextBatch();
 	UINT GetBatchNum();
+	UINT GetBatchCount();
 
 	void SetShaderConstF(UINT type, UINT start, UINT cnt4, float* data);
 	void GPUWrite(void* src, UINT size, UINT offset);
@@ -118,6 +119,7 @@ private:
 		
 	UINT32 streamIdx;
 	UINT32 batchNum;
+	UINT32 batchCount;
 	UINT32 lastBatchCount;
 
 	UINT32 mDataDltRef[PXY_BATCH_GPU_ELEMENT_COUNT];
