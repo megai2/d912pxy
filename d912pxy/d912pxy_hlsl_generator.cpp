@@ -1152,6 +1152,11 @@ int d912pxy_hlsl_generator::IsRegDefined(DWORD op, UINT numOffset)
 	return ((regDefined[ai] & rm) != 0) * (1 + ((regDefinedAsC[ai] & rm) != 0));
 }
 
+UINT d912pxy_hlsl_generator::IsNaNGuardEnabled(UINT bit)
+{
+	return ((NaNguard_flag >> (isPS * PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT)) & bit) > 0;	
+}
+
 void d912pxy_hlsl_generator::LoadGenProfile()
 {
 	UINT32 sz;
@@ -1911,7 +1916,7 @@ void d912pxy_hlsl_generator::ProcSIO_MIN(DWORD * op)
 
 void d912pxy_hlsl_generator::ProcSIO_RCP(DWORD * op)
 {
-	if ((NaNguard_flag >> (isPS * PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT)) & PXY_SDB_HLSL_NAN_GUARD_RCP)
+	if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_RCP))	
 		ProcSIO_1OP(op, "dx9_rcp_guarded(", ")");
 	else
 		ProcSIO_1OP(op, "dx9_rcp(", ")");
@@ -1988,7 +1993,7 @@ void d912pxy_hlsl_generator::ProcSIO_POW(DWORD * op)
 
 void d912pxy_hlsl_generator::ProcSIO_RSQ(DWORD * op)
 {
-	if ((NaNguard_flag >> (isPS * PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT)) & PXY_SDB_HLSL_NAN_GUARD_RSQ)
+	if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_RSQ))	
 		ProcSIO_1OP(op, "dx9_rsqrt_guarded(", ")");
 	else
 		ProcSIO_1OP(op, "dx9_rsqrt(", ")");
@@ -1998,7 +2003,10 @@ void d912pxy_hlsl_generator::ProcSIO_RSQ(DWORD * op)
 
 void d912pxy_hlsl_generator::ProcSIO_NRM(DWORD * op)
 {
-	ProcSIO_1OP(op, "dx9_normalize(", ")");
+	if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_NRM))
+		ProcSIO_1OP(op, "dx9_normalize_guarded(", ")");
+	else 
+		ProcSIO_1OP(op, "dx9_normalize(", ")");
 }
 
 void d912pxy_hlsl_generator::ProcSIO_LOG(DWORD * op)
@@ -2252,7 +2260,7 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 	if (isPS)
 	{
 		//		HLSL_GEN_WRITE_PROC("*/");
-		if ((NaNguard_flag >> PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT) & PXY_SDB_HLSL_NAN_GUARD_RET)
+		if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_RET))
 		{
 			HLSL_GEN_WRITE_PROC("dx9_ps_nan_cull_emulation(dx9_ret_color_reg_ac);");
 		}
@@ -2284,7 +2292,7 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 	else {
 		HLSL_GEN_WRITE_PROC("dx9_halfpixel_pos_reg_ac = dx9_fix_halfpixel_offset(dx9_halfpixel_pos_reg_ac);");
 
-		if (NaNguard_flag & PXY_SDB_HLSL_NAN_GUARD_RET)
+		if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_RET))
 		{
 			HLSL_GEN_WRITE_PROC("dx9_vs_nan_cull_emulation(dx9_halfpixel_pos_reg_ac);");
 		}

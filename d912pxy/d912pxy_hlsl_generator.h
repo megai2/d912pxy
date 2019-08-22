@@ -95,7 +95,8 @@ typedef struct d912pxy_hlsl_generator_memout {
 #define PXY_SDB_HLSL_NAN_GUARD_RCP 1
 #define PXY_SDB_HLSL_NAN_GUARD_RSQ 2
 #define PXY_SDB_HLSL_NAN_GUARD_RET 4
-#define PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT 3
+#define PXY_SDB_HLSL_NAN_GUARD_NRM 8
+#define PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT 4
 
 #define PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBW 1
 #define PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBR 2
@@ -196,7 +197,7 @@ private:
 	UINT8 PSpositionUsed;
 	UINT8 relLookupDefined;
 	UINT8 isDepthOutUsed;
-	
+		
 	//sm block data
 	UINT8 minVer;
 	UINT8 majVer;
@@ -230,7 +231,6 @@ private:
 
 	//megai2: shader profile managing 
 	UINT genProfile[PXY_INNER_SHDR_BUG_COUNT];
-
 	void LoadGenProfile();
 
 	//megai2: register definition and tracking
@@ -241,6 +241,12 @@ private:
 	void DefineIOReg(DWORD op, UINT asConstant);
 	int IsRegDefined(DWORD op, UINT numOffset);
 	
+	//misc
+
+	UINT IsNaNGuardEnabled(UINT bit);
+
+	//SIO handlers array for different sm types
+
 	static d912pxy_hlsl_generator_sio_handler SIOhandlers[d912pxy_hlsl_generator_op_handler_group_size*d912pxy_hlsl_generator_op_handler_cnt];		
 };
 

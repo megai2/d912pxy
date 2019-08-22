@@ -172,6 +172,7 @@ float4 dx9_fix_halfpixel_offset(float4 inPos)
 #define dx9_frac(a) frac(a)
 #define dx9_pow(a,b) pow(abs(a), b)
 #define dx9_normalize(a) normalize(a)
+#define dx9_normalize_guarded(a) any(a) ? normalize(a) : 0
 #define dx9texldl(dt, srgb, to, so, uv, w) dx9texldl_ ## dt(to,so,uv,w, srgb)
 #define dx9texld(dt, srgb, to, so, uv)  dx9texld_ ## dt(to,so,uv, srgb)
 
