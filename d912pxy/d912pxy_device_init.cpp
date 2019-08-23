@@ -227,6 +227,12 @@ void d912pxy_device::InitComPatches()
 	{		
 		UINT64 occCfgValue = d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_OCCLUSION);
 
+		if ((d912pxy_s.config.GetValueUI32(PXY_CFG_REPLAY_THREADS) > 1) && (occCfgValue > 1))
+		{
+			LOG_ERR_DTDM("Occlusion query emulation forced to 0 instead of %u due to replay_threads > 1", occCfgValue);
+			occCfgValue = 0;
+		}
+
 		switch (occCfgValue)
 		{
 			case 2:
