@@ -569,7 +569,7 @@ void d912pxy_replay::SaveCLState(UINT thread)
 
 	trd->indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
-	for (int i = 0; i!= PXY_INNER_REPLAY_THREADS_MAX;++i)
+	for (int i = 0; i!= PXY_INNER_MAX_VBUF_STREAMS;++i)
 		trd->streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
 
 	trd->pso = *d912pxy_s.render.db.pso.GetCurrentDsc();
@@ -625,7 +625,7 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 	d912pxy_replay_item streamBind;
 	streamBind.type = DRPL_IFVB;
 
-	for (int i = 0; i != PXY_INNER_REPLAY_THREADS_MAX; ++i)
+	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 	{		
 		if (!trd->streams[i].buffer)
 			continue;
@@ -634,7 +634,7 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 		streamBind.vb.offset = trd->streams[i].offset;
 		streamBind.vb.slot = i;
 		streamBind.vb.stride = trd->streams[i].stride;
-
+		
 		PlayId(&streamBind, cl, context);
 	}
 
