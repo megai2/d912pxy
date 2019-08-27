@@ -258,18 +258,26 @@ void d912pxy_device::InitComPatches()
 			case 3:
 				d912pxy_query_occlusion::InitOccQueryEmulation();				
 				break;
-			case 1:
+			case 1:				
 				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_ISSUE, &d912pxy_query::com_IssueNOP);
 				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETDATA, &d912pxy_query::com_GetDataOneOverride);
 				break;
-			case 0:
+			case 0:				
 				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_ISSUE, &d912pxy_query::com_IssueNOP);
 				d912pxy_com_route_set(PXY_COM_ROUTE_QUERY_OCC, PXY_COM_METHOD_QUERY_GETDATA, &d912pxy_query::com_GetDataZeroOverride);
 				break;
 			default:
 				LOG_ERR_THROW2(-1, "PXY_CFG_COMPAT_OCCLUSION config entry is bad");
 				break;
-		}				
+		}			
+
+		if ((occCfgValue < 2) && d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_OCCLUSION_OPT_CONSTRUCTOR))
+		{
+			d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_CREATEQUERY, &d912pxy_device::com_CreateQuery_Optimized);
+			CreateQuery(D3DQUERYTYPE_OCCLUSION, &mFakeOccQuery);
+		}
+		else
+			mFakeOccQuery = NULL;
 	}
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))

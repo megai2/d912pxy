@@ -105,6 +105,21 @@ HRESULT d912pxy_device::CreatePixelShader(CONST DWORD* pFunction, IDirect3DPixel
 
 //query!
 
+HRESULT d912pxy_device::CreateQuery_Optimized(D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery)
+{
+	switch (Type)
+	{
+	case D3DQUERYTYPE_OCCLUSION:
+		mFakeOccQuery->AddRef();
+		*ppQuery = mFakeOccQuery;
+		break;
+	default:
+		*ppQuery = PXY_COM_CAST_(IDirect3DQuery9, d912pxy_query::d912pxy_query_com(Type));
+	}
+
+	return 0;
+}
+
 HRESULT d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery)
 { 
 	switch (Type)

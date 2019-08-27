@@ -61,9 +61,7 @@ d912pxy_query_occlusion::~d912pxy_query_occlusion()
 #define D912PXY_METHOD_IMPL_CN d912pxy_query_occlusion
 
 D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
-{
-	
-
+{	
 	if (dwIssueFlags & D3DISSUE_BEGIN)
 	{
 		if (g_gpuStack[g_writeStack].count >= PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME)
@@ -88,25 +86,19 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 		queryOpened = 0;
 		d912pxy_s.render.replay.QueryMark(this, 0);			
 	}
-
 	
-
 	return D3D_OK;
 }
 
 D912PXY_METHOD_IMPL_NC(occ_GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
-
 	
-
 	if(queryFinished)		
 		FlushQueryStack();
 
 	((DWORD*)pData)[0] = queryResult;				
-
 	
-
 	return !queryFinished ? S_OK : S_FALSE;
 
 }

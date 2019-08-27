@@ -345,6 +345,7 @@ public:
 	HRESULT SetRenderTarget_Compat(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
 	D912PXY_METHOD_NC(SetRenderState_Tracked)(THIS_ D3DRENDERSTATETYPE State, DWORD Value);
 	D912PXY_METHOD_NC(SetSamplerState_Tracked)(THIS_ DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value);
+	D912PXY_METHOD_NC(CreateQuery_Optimized)(THIS_ D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery);
 
 	//com routes for them
 	D912PXY_METHOD(DrawIndexedPrimitive_PS)(PXY_THIS_ D3DPRIMITIVETYPE, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
@@ -361,6 +362,7 @@ public:
 	D912PXY_METHOD(SetRenderTarget_Compat)(PXY_THIS_ DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
 	D912PXY_METHOD(SetRenderState_Tracked)(PXY_THIS_ D3DRENDERSTATETYPE State, DWORD Value);
 	D912PXY_METHOD(SetSamplerState_Tracked)(PXY_THIS_ DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value);
+	D912PXY_METHOD(CreateQuery_Optimized)(PXY_THIS_ D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery);
 	
 	
 
@@ -388,6 +390,8 @@ private:
 	
 	d912pxy_surface* mNullTexture;
 	UINT mNullTextureSRV;
+
+	IDirect3DQuery9* mFakeOccQuery;
 
 	//info data and dx9 catch'ups
 	DWORD gpu_totalVidmemMB;

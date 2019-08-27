@@ -127,6 +127,9 @@ ULONG d912pxy_device::ReleaseDevice()
 
 void d912pxy_device::FreeAdditionalDX9Objects()
 {
+	if (mFakeOccQuery)
+		mFakeOccQuery->Release();
+
 	d912pxy_query_occlusion::DeInitOccQueryEmulation();
 
 	d912pxy_s.render.draw_up.~d912pxy_draw_up();

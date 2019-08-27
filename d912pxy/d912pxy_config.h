@@ -64,6 +64,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_MISC_USE_DX9,
 	PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH,
 	PXY_CFG_COMPAT_OCCLUSION,
+	PXY_CFG_COMPAT_OCCLUSION_OPT_CONSTRUCTOR,
 	PXY_CFG_COMPAT_CLEAR,
 	PXY_CFG_COMPAT_CPU_API_REDUCTION,
 	PXY_CFG_COMPAT_BATCH_COMMIT,
@@ -139,6 +140,7 @@ private:
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
 		{L"misc",L"draw_up_buffer_length", L"FFFF"},//PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH
 		{L"compat",L"occlusion",L"0"},//PXY_CFG_COMPAT_OCCLUSION
+		{L"compat",L"occlusion_opt_ctor",L"0"},//PXY_CFG_COMPAT_OCCLUSION_OPT_CONSTRUCTOR
 		{L"compat",L"clear",L"0"},//PXY_CFG_COMPAT_CLEAR
 		{L"compat",L"cpu_api_reduction",L"0"},//PXY_CFG_COMPAT_CPU_API_REDUCTION
 		{L"compat",L"batch_commit",L"0"},//PXY_CFG_COMPAT_BATCH_COMMIT
