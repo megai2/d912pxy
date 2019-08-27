@@ -9,6 +9,10 @@ WARNING: if you downloaded this software from web sources, other than github, yo
 MIT License
 
 Copyright (c) 2018-2019 megai2
+Copyright (c) 2017 Sean Barrett
+Copyright (c) 2015-2018 Baldur Karlsson
+Copyright (c) 2018 Jeremiah van Oosten
+Copyright (C) 2007-2005 Ariya Hidayat (ariya@kde.org)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,3 +33,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ########################################################
+
+Uses: 
+
+stb https://github.com/nothings/stb
+Proxy d3d9 library https://github.com/iorlas/D3D9Proxy
+StackWalker https://github.com/JochenKalmbach/StackWalker
+P7 http://baical.net/p7.html
+LearningDirectX12 https://github.com/jpvanoosten/LearningDirectX12/
+RenderDoc https://github.com/baldurk/renderdoc
+FastLZ https://github.com/ariya/fastlz

@@ -305,6 +305,7 @@
   <ItemGroup>
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3d9.h" />
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3dx9.h" />
+    <ClInclude Include="..\thirdparty\fastlz\fastlz.h" />
     <ClInclude Include="..\thirdparty\renderdoc_app.h" />
     <ClInclude Include="..\thirdparty\StackWalker\StackWalker.h" />
     <ClInclude Include="d3d9_proxy_dll.h" />
@@ -368,6 +369,7 @@
     <ClInclude Include="d912pxy_upload_pool.h" />
     <ClInclude Include="d912pxy_vdecl.h" />
     <ClInclude Include="d912pxy_vfs.h" />
+    <ClInclude Include="d912pxy_vfs_packer.h" />
     <ClInclude Include="d912pxy_vstream.h" />
     <ClInclude Include="d912pxy_vstream_pool.h" />
     <ClInclude Include="d912pxy_vtexture.h" />
@@ -382,6 +384,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\thirdparty\fastlz\fastlz.cpp" />
     <ClCompile Include="..\thirdparty\StackWalker\StackWalker.cpp" />
     <ClCompile Include="d3d9_proxy_dll.cpp" />
     <ClCompile Include="d912pxy_async_upload_thread.cpp" />
@@ -458,6 +461,7 @@
     <ClCompile Include="d912pxy_upload_pool.cpp" />
     <ClCompile Include="d912pxy_vdecl.cpp" />
     <ClCompile Include="d912pxy_vfs.cpp" />
+    <ClCompile Include="d912pxy_vfs_packer.cpp" />
     <ClCompile Include="d912pxy_vstream.cpp" />
     <ClCompile Include="d912pxy_vstream_pool.cpp" />
     <ClCompile Include="d912pxy_vtexture.cpp" />

@@ -28,6 +28,7 @@ d912pxy_vfs_file_header s_headerTable[PXY_VFS_MAX_FILES_PER_BID];
 
 d912pxy_vfs::d912pxy_vfs()
 {
+
 }
 
 
@@ -35,15 +36,16 @@ d912pxy_vfs::~d912pxy_vfs()
 {	
 	for (int i = 0; i != PXY_VFS_MAX_BID; ++i)
 	{
-		if (m_vfsBlocks[i] != NULL)
+		d912pxy_vfs_entry* item = &items[i];
+		if (item->m_vfsBlocks != NULL)
 		{
-			fflush(m_vfsBlocks[i]);
-			fclose(m_vfsBlocks[i]);
+			fflush(item->m_vfsBlocks);
+			fclose(item->m_vfsBlocks);
 
-			delete m_vfsFileOffsets[i];
+			delete item->m_vfsFileOffsets;
 
-			if (m_vfsCache[i])
-				PXY_FREE(m_vfsCache[i]);
+			if (item->m_vfsCache)
+				PXY_FREE(item->m_vfsCache);
 		}
 	}
 
@@ -67,9 +69,12 @@ void d912pxy_vfs::Init(const char * lockPath)
 		writeAllowed = 1;
 	}
 
-	ZeroMemory(m_vfsBlocks, sizeof(FILE*)*PXY_VFS_MAX_BID);
-	ZeroMemory(m_vfsFileOffsets, sizeof(d912pxy_memtree*)*PXY_VFS_MAX_BID);
-	ZeroMemory(m_vfsCache, sizeof(void*)*PXY_VFS_MAX_BID);
+	ZeroMemory(items, sizeof(d912pxy_vfs_entry)*PXY_VFS_MAX_BID);	
+
+	for (int i = 0; i != PXY_VFS_MAX_BID; ++i)
+	{
+		items[i].lock.Init();
+	}
 }
 
 void d912pxy_vfs::SetRoot(wchar_t * rootPath)
@@ -77,32 +82,34 @@ void d912pxy_vfs::SetRoot(wchar_t * rootPath)
 	sprintf(m_rootPath, "%ws", rootPath);
 }
 
-void* d912pxy_vfs::LoadVFS(UINT id, const char * name, UINT memCache)
+void* d912pxy_vfs::LoadVFS(d912pxy_vfs_id_name* id, UINT memCache)
 {
 	char fn[4096];
 
-	sprintf(fn, "%s/%s.pck", m_rootPath, name);
+	sprintf(fn, "%s/%s.pck", m_rootPath, id->name);
 
-	m_vfsBlocks[id] = fopen(fn, "rb+");
+	d912pxy_vfs_entry* item = &items[id->num];
 
-	if (m_vfsBlocks[id] == NULL)
-		m_vfsBlocks[id] = fopen(fn, "wb+");
+	item->m_vfsBlocks = fopen(fn, "rb+");
 
-	if (m_vfsBlocks[id] == NULL)
+	if (item->m_vfsBlocks == NULL)
+		item->m_vfsBlocks = fopen(fn, "wb+");
+
+	if (item->m_vfsBlocks == NULL)
 	{
 		return NULL;
 	}
 
-	fseek(m_vfsBlocks[id], 0, SEEK_END);
+	fseek(item->m_vfsBlocks, 0, SEEK_END);
 		
-	UINT sz = ftell(m_vfsBlocks[id]);
+	UINT sz = ftell(item->m_vfsBlocks);
 
-	fseek(m_vfsBlocks[id], 0, SEEK_SET);
+	fseek(item->m_vfsBlocks, 0, SEEK_SET);
 
-	m_vfsFileOffsets[id] = new d912pxy_memtree2(8, 256, 2);
+	item->m_vfsFileOffsets = new d912pxy_memtree2(8, 256, 2);
 
-	m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
-	m_vfsFileCount[id] = 0;
+	item->m_vfsLastFileOffset = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
+	item->m_vfsFileCount = 0;
 	
 	ZeroMemory(s_headerTable, PXY_VFS_BID_TABLE_SIZE);
 
@@ -110,19 +117,19 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name, UINT memCache)
 
 	if (sz < PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START)
 	{					
-		if (fwrite(signature, 8, 2, m_vfsBlocks[id]) != 2)
+		if (fwrite(signature, 8, 2, item->m_vfsBlocks) != 2)
 			return NULL;
 		
-		fwrite(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, m_vfsBlocks[id]);
-		fwrite(&sz, 1, 4, m_vfsBlocks[id]);
+		fwrite(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, item->m_vfsBlocks);
+		fwrite(&sz, 1, 4, item->m_vfsBlocks);
 
-		fflush(m_vfsBlocks[id]);
+		fflush(item->m_vfsBlocks);
 	}
 	else {
 
 		UINT64 readedSignature[2] = { 0,0 };
 
-		if (fread(readedSignature, 8, 2, m_vfsBlocks[id]) != 2)
+		if (fread(readedSignature, 8, 2, item->m_vfsBlocks) != 2)
 			return NULL;
 
 		if (memcmp(signature, readedSignature, 16))
@@ -130,67 +137,67 @@ void* d912pxy_vfs::LoadVFS(UINT id, const char * name, UINT memCache)
 			return NULL;
 		}
 
-		fseek(m_vfsBlocks[id], 0, SEEK_SET);
+		fseek(item->m_vfsBlocks, 0, SEEK_SET);
 
-		if (fwrite(signature, 8, 2, m_vfsBlocks[id]) != 2)
+		if (fwrite(signature, 8, 2, item->m_vfsBlocks) != 2)
 			return NULL;
 
-		fseek(m_vfsBlocks[id], 16, SEEK_SET);
+		fseek(item->m_vfsBlocks, 16, SEEK_SET);
 
-		fread(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, m_vfsBlocks[id]);
+		fread(s_headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, item->m_vfsBlocks);
 		
 		for (int i = 0; i != PXY_VFS_MAX_FILES_PER_BID; ++i)
 		{
-			if (s_headerTable[i].offset > m_vfsLastFileOffset[id])			
-				m_vfsLastFileOffset[id] = s_headerTable[i].offset;
+			if (s_headerTable[i].offset > item->m_vfsLastFileOffset)			
+				item->m_vfsLastFileOffset = s_headerTable[i].offset;
 
 			if (s_headerTable[i].hash != 0)
 			{
-				m_vfsFileOffsets[id]->PointAtMem(&s_headerTable[i].hash, 8);
-				m_vfsFileOffsets[id]->SetValue(s_headerTable[i].offset);
-				++m_vfsFileCount[id];
+				item->m_vfsFileOffsets->PointAtMem(&s_headerTable[i].hash, 8);
+				item->m_vfsFileOffsets->SetValue(s_headerTable[i].offset);
+				++item->m_vfsFileCount;
 			}
 		}
 
-		if (m_vfsLastFileOffset[id] > 0)
+		if (item->m_vfsLastFileOffset > 0)
 		{
 
-			fseek(m_vfsBlocks[id], (UINT32)m_vfsLastFileOffset[id], SEEK_SET);
+			fseek(item->m_vfsBlocks, (UINT32)item->m_vfsLastFileOffset, SEEK_SET);
 
 			UINT32 lastFileSize;
 
-			fread(&lastFileSize, 4, 1, m_vfsBlocks[id]);
+			fread(&lastFileSize, 4, 1, item->m_vfsBlocks);
 
-			m_vfsLastFileOffset[id] += lastFileSize + 4;
+			item->m_vfsLastFileOffset += lastFileSize + 4;
 		}
 		else
-			m_vfsLastFileOffset[id] = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
+			item->m_vfsLastFileOffset = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
 
-		if (m_vfsLastFileOffset[id] == sz)
+		if (item->m_vfsLastFileOffset == sz)
 		{
-			fseek(m_vfsBlocks[id], 0, SEEK_END);
-			fwrite(&sz, 1, 4, m_vfsBlocks[id]);
-			fflush(m_vfsBlocks[id]);
+			fseek(item->m_vfsBlocks, 0, SEEK_END);
+			fwrite(&sz, 1, 4, item->m_vfsBlocks);
+			fflush(item->m_vfsBlocks);
 		}
 		
-		m_vfsCacheSize[id] = (UINT32)m_vfsLastFileOffset[id] - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START;
+		item->m_vfsCacheSize = (UINT32)item->m_vfsLastFileOffset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START;
 
-		if (m_vfsCacheSize[id] && memCache)
+		if (item->m_vfsCacheSize && memCache)
 		{
-			PXY_MALLOC(m_vfsCache[id], m_vfsCacheSize[id], void*);
+			PXY_MALLOC(item->m_vfsCache, item->m_vfsCacheSize, void*);
 
 
-			fseek(m_vfsBlocks[id], PXY_VFS_BID_TABLE_SIZE+PXY_VFS_BID_TABLE_START, SEEK_SET);
+			fseek(item->m_vfsBlocks, PXY_VFS_BID_TABLE_SIZE+PXY_VFS_BID_TABLE_START, SEEK_SET);
 
-			fread(m_vfsCache[id], 1, m_vfsCacheSize[id], m_vfsBlocks[id]);
+			fread(item->m_vfsCache, 1, item->m_vfsCacheSize, item->m_vfsBlocks);
 		}
 		else {
-			m_vfsCache[id] = 0;
-			m_vfsCacheSize[id] = 0;
+			item->m_vfsCache = 0;
+			item->m_vfsCacheSize = 0;
 		}
 	}	
 
-	return m_vfsBlocks[id];
+	return item->m_vfsBlocks;
 }
 
 UINT64 d912pxy_vfs::IsPresentN(const char * fnpath, UINT32 vfsId)
@@ -200,12 +207,13 @@ UINT64 d912pxy_vfs::IsPresentN(const char * fnpath, UINT32 vfsId)
 
 UINT64 d912pxy_vfs::IsPresentH(UINT64 fnHash, UINT32 vfsId)
 {
-	int i = vfsId;
+	d912pxy_vfs_entry* item = &items[vfsId];
+
 	{
-		if (m_vfsBlocks[i] != NULL)
+		if (item->m_vfsBlocks != NULL)
 		{
-			m_vfsFileOffsets[i]->PointAtMem(&fnHash, 8);
-			UINT64 offset = m_vfsFileOffsets[i]->CurrentCID();
+			item->m_vfsFileOffsets->PointAtMem(&fnHash, 8);
+			UINT64 offset = item->m_vfsFileOffsets->CurrentCID();
 
 			if (offset)
 			{
@@ -234,45 +242,47 @@ void d912pxy_vfs::ReWriteFileN(const char * fnpath, void * data, UINT sz, UINT i
 
 void * d912pxy_vfs::LoadFileH(UINT64 namehash, UINT * sz, UINT id)
 {
-	lock[id].Hold();
+	d912pxy_vfs_entry* item = &items[id];
+
+	item->lock.Hold();
 	
 	UINT64 offset = IsPresentH(namehash, id);
 
 	if (!offset)
 	{
-		lock[id].Release();
+		item->lock.Release();
 		return nullptr;
 	}
 
-	if (m_vfsCache[id] && ((offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START) < m_vfsCacheSize[id]))
+	if (item->m_vfsCache && ((offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START) < item->m_vfsCacheSize))
 	{
 		offset -= PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
 
-		lock[id].Release();
+		item->lock.Release();
 
-		*sz = *((UINT32*)((intptr_t)m_vfsCache[id] + offset));
+		*sz = *((UINT32*)((intptr_t)item->m_vfsCache + offset));
 
 
 		void* ret = NULL;
 
 		PXY_MALLOC(ret, *sz, void*);
 
-		memcpy(ret, ((void*)((intptr_t)m_vfsCache[id] + offset + 4)), *sz);
+		memcpy(ret, ((void*)((intptr_t)item->m_vfsCache + offset + 4)), *sz);
 
 		return ret;
 	}
 
-	fseek(m_vfsBlocks[id], (UINT32)offset, SEEK_SET);
+	fseek(item->m_vfsBlocks, (UINT32)offset, SEEK_SET);
 
-	fread(sz, 4, 1, m_vfsBlocks[id]);
+	fread(sz, 4, 1, item->m_vfsBlocks);
 
 
 	void* ret = NULL;
 	PXY_MALLOC(ret, *sz, void*);
 
-	fread(ret, 1, *sz, m_vfsBlocks[id]);
+	fread(ret, 1, *sz, item->m_vfsBlocks);
 
-	lock[id].Release();
+	item->lock.Release();
 
 	return ret;
 }
@@ -282,27 +292,29 @@ void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 	if (!writeAllowed)
 		return;
 
-	lock[id].Hold();
+	d912pxy_vfs_entry* item = &items[id];
 
-	fseek(m_vfsBlocks[id], PXY_VFS_FILE_HEADER_SIZE*m_vfsFileCount[id] + PXY_VFS_BID_TABLE_START, SEEK_SET);
+	item->lock.Hold();
 
-	fwrite(&namehash, 8, 1, m_vfsBlocks[id]);
-	fwrite(&m_vfsLastFileOffset[id], 8, 1, m_vfsBlocks[id]);
-	++m_vfsFileCount[id];
+	fseek(item->m_vfsBlocks, PXY_VFS_FILE_HEADER_SIZE*item->m_vfsFileCount + PXY_VFS_BID_TABLE_START, SEEK_SET);
 
-	fseek(m_vfsBlocks[id], (UINT32)m_vfsLastFileOffset[id], SEEK_SET);
+	fwrite(&namehash, 8, 1, item->m_vfsBlocks);
+	fwrite(&item->m_vfsLastFileOffset, 8, 1, item->m_vfsBlocks);
+	++item->m_vfsFileCount;
 
-	fwrite(&sz, 1, 4, m_vfsBlocks[id]);
-	fwrite(data, 1, sz, m_vfsBlocks[id]);
-	fwrite(&sz, 1, 4, m_vfsBlocks[id]);
-	fflush(m_vfsBlocks[id]);
+	fseek(item->m_vfsBlocks, (UINT32)item->m_vfsLastFileOffset, SEEK_SET);
 
-	m_vfsFileOffsets[id]->PointAtMem(&namehash, 8);
-	m_vfsFileOffsets[id]->SetValue(m_vfsLastFileOffset[id]);
+	fwrite(&sz, 1, 4, item->m_vfsBlocks);
+	fwrite(data, 1, sz, item->m_vfsBlocks);
+	fwrite(&sz, 1, 4, item->m_vfsBlocks);
+	fflush(item->m_vfsBlocks);
 
-	m_vfsLastFileOffset[id] += sz + 4;
+	item->m_vfsFileOffsets->PointAtMem(&namehash, 8);
+	item->m_vfsFileOffsets->SetValue(item->m_vfsLastFileOffset);
 
-	lock[id].Release();
+	item->m_vfsLastFileOffset += sz + 4;
+
+	item->lock.Release();
 }
 
 void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
@@ -310,23 +322,25 @@ void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 	if (!writeAllowed)
 		return;
 
-	lock[id].Hold();
+	d912pxy_vfs_entry* item = &items[id];
+
+	item->lock.Hold();
 
 	UINT64 offset = IsPresentH(namehash, id);
 
 	if (offset)
 	{
-		fseek(m_vfsBlocks[id], (UINT32)offset + 4, SEEK_SET);
-		fwrite(data, 1, sz, m_vfsBlocks[id]);
-		fflush(m_vfsBlocks[id]);
+		fseek(item->m_vfsBlocks, (UINT32)offset + 4, SEEK_SET);
+		fwrite(data, 1, sz, item->m_vfsBlocks);
+		fflush(item->m_vfsBlocks);
 
-		if (m_vfsCache[id] && (m_vfsCacheSize[id] > (offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START)))
-			memcpy((void*)((intptr_t)m_vfsCache[id] + (offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START) + 4), data, sz);
+		if (item->m_vfsCache && (item->m_vfsCacheSize > (offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START)))
+			memcpy((void*)((intptr_t)item->m_vfsCache + (offset - PXY_VFS_BID_TABLE_SIZE - PXY_VFS_BID_TABLE_START) + 4), data, sz);
 	}
 	else
 		WriteFileH(namehash, data, sz, id);
 
-	lock[id].Release();
+	item->lock.Release();
 }
 
 UINT64 d912pxy_vfs::HashFromName(const char * fnpath)
@@ -336,11 +350,13 @@ UINT64 d912pxy_vfs::HashFromName(const char * fnpath)
 
 d912pxy_memtree2 * d912pxy_vfs::GetHeadTree(UINT id)
 {
-	return m_vfsFileOffsets[id];
+	d912pxy_vfs_entry* item = &items[id];
+	return item->m_vfsFileOffsets;
 }
 
 void * d912pxy_vfs::GetCachePointer(UINT32 offset, UINT id)
 {
+	d912pxy_vfs_entry* item = &items[id];
 	offset -= PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
-	return ((void*)((intptr_t)m_vfsCache[id] + offset + 4));
+	return ((void*)((intptr_t)item->m_vfsCache + offset + 4));
 }

@@ -257,6 +257,12 @@
     <ClCompile Include="d912pxy_com_route_overhead_tracked.cpp">
       <Filter>d3d9_proxy\com\routing</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_vfs_packer.cpp">
+      <Filter>base\vfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\fastlz\fastlz.cpp">
+      <Filter>base\utils\3rd_party</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -485,6 +491,12 @@
     </ClInclude>
     <ClInclude Include="d912pxy_replay_base.h">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_vfs_packer.h">
+      <Filter>base\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\fastlz\fastlz.h">
+      <Filter>base\utils\3rd_party</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

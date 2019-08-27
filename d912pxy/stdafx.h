@@ -57,6 +57,7 @@ SOFTWARE.
 
 #include "dbg_imagewriter.h"
 #include "stb_image.h"
+#include "../thirdparty/fastlz/fastlz.h"
 #include "IDirect3D9Proxy.h"
 #include "IDirect3DDevice9Proxy.h"
 #include "d912pxy_com_routing.h"
@@ -79,6 +80,7 @@ SOFTWARE.
 #include "d912pxy_memtree.h"
 #include "d912pxy_memtree2.h"
 #include "d912pxy_vfs.h"
+#include "d912pxy_vfs_packer.h"
 #include "d912pxy_swapchain.h"
 #include "d912pxy_resource.h"
 #include "d912pxy_basetexture.h"

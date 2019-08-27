@@ -24,8 +24,6 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-#include "../thirdparty/font.c"
-
 d912pxy_performance_graph::d912pxy_performance_graph(UINT isDX9)
 {
 	dx9 = isDX9;

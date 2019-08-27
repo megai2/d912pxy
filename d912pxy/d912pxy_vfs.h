@@ -30,6 +30,7 @@ SOFTWARE.
 #define PXY_VFS_FILE_HEADER_SIZE 16
 #define PXY_VFS_BID_TABLE_SIZE (PXY_VFS_MAX_FILES_PER_BID * PXY_VFS_FILE_HEADER_SIZE)
 #define PXY_VFS_BID_TABLE_START 16
+#define PXY_VFS_DATA_OFFSET (PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START)
 
 #define PXY_VFS_BID_CSO 0
 #define PXY_VFS_BID_SHADER_PROFILE 1
@@ -38,6 +39,7 @@ SOFTWARE.
 #define PXY_VFS_BID_SHADER_SOURCES 4
 #define PXY_VFS_BID_DERIVED_CSO_VS 5
 #define PXY_VFS_BID_DERIVED_CSO_PS 6
+#define PXY_VFS_BID_END 7
 
 #define PXY_VFS_SIGNATURE 0x443931325043b46
 #define PXY_VFS_VER 1
@@ -49,6 +51,21 @@ typedef struct d912pxy_vfs_file_header {
 } d912pxy_vfs_file_header;
 #pragma pack(pop)
 
+typedef struct d912pxy_vfs_id_name {
+	UINT num;
+	const char* name;
+} d912pxy_vfs_id_name;
+
+typedef struct d912pxy_vfs_entry {
+	d912pxy_thread_lock lock;
+	FILE* m_vfsBlocks;
+	void* m_vfsCache;
+	UINT32 m_vfsCacheSize;
+	UINT32 m_vfsFileCount;
+	d912pxy_memtree2* m_vfsFileOffsets;
+	UINT64 m_vfsLastFileOffset;
+} d912pxy_vfs_entry;
+
 class d912pxy_vfs
 {
 public:
@@ -58,7 +75,7 @@ public:
 	void Init(const char* lockPath);
 
 	void SetRoot(wchar_t* rootPath);
-	void* LoadVFS(UINT id, const char* name, UINT memCache);
+	void* LoadVFS(d912pxy_vfs_id_name* id, UINT memCache);
 
 	UINT64 IsPresentN(const char* fnpath, UINT32 vfsId);
 	UINT64 IsPresentH(UINT64 fnHash, UINT32 vfsId);
@@ -81,17 +98,9 @@ public:
 private:
 	HANDLE lockFile;
 	UINT32 writeAllowed;
-
-	d912pxy_thread_lock lock[PXY_VFS_MAX_BID];
-
 	char m_rootPath[2048];
-	FILE* m_vfsBlocks[PXY_VFS_MAX_BID];
-	void* m_vfsCache[PXY_VFS_MAX_BID];
-	UINT32 m_vfsCacheSize[PXY_VFS_MAX_BID];
-	UINT32 m_vfsFileCount[PXY_VFS_MAX_BID];
 
-	d912pxy_memtree2* m_vfsFileOffsets[PXY_VFS_MAX_BID];
-	UINT64 m_vfsLastFileOffset[PXY_VFS_MAX_BID];
+	d912pxy_vfs_entry items[PXY_VFS_MAX_BID];
 
 
 };

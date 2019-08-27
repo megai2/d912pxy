@@ -303,7 +303,7 @@ public:
 
 	void CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATION_PARAMETERS* origPars, D3DPRESENT_PARAMETERS* origPP);
 	void InitVFS();
-	void InitVFSitem(UINT id, const char* name, UINT64 memCache);
+	void InitVFSitem(d912pxy_vfs_id_name* id, UINT64 memCache);
 
 	void InitClassFields();
 	void InitThreadSyncObjects();

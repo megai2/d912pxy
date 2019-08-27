@@ -72,6 +72,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_COMPAT_DUP_UNSAFE,
 	PXY_CFG_VFS_ROOT,
 	PXY_CFG_VFS_MEMCACHE_MASK,
+	PXY_CFG_VFS_PACK_DATA,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -145,7 +146,8 @@ private:
 		{L"compat",L"track_rs",L"0"},//PXY_CFG_COMPAT_TRACK_RS
 		{L"compat",L"unsafe_dup",L"0"},//PXY_CFG_COMPAT_DUP_UNSAFE
 		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
-		{L"vfs", L"memcache_mask", L"6F"}//PXY_CFG_VFS_MEMCACHE_MASK
+		{L"vfs", L"memcache_mask", L"6F"},//PXY_CFG_VFS_MEMCACHE_MASK
+		{L"vfs", L"pack_data", L"0"}//PXY_CFG_VFS_PACK_DATA
 	};
 
 };

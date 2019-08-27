@@ -131,20 +131,39 @@ void d912pxy_device::InitVFS()
 
 	UINT64 memcacheMask = d912pxy_s.config.GetValueXI64(PXY_CFG_VFS_MEMCACHE_MASK);
 
-	InitVFSitem(PXY_VFS_BID_CSO,						"shader_cso",			memcacheMask);
-	InitVFSitem(PXY_VFS_BID_SHADER_PROFILE,				"shader_profiles",		memcacheMask);
-	InitVFSitem(PXY_VFS_BID_PSO_CACHE_KEYS,				"pso_cache",			memcacheMask);
-	InitVFSitem(PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile",		memcacheMask);
-	InitVFSitem(PXY_VFS_BID_SHADER_SOURCES,				"shader_sources",		memcacheMask);
-	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_VS,				"derived_cso_vs",	    memcacheMask);
-	InitVFSitem(PXY_VFS_BID_DERIVED_CSO_PS,				"derived_cso_ps",       memcacheMask);
+	d912pxy_vfs_id_name vfsNames[] = {
+		{PXY_VFS_BID_CSO,						"shader_cso"},
+		{PXY_VFS_BID_SHADER_PROFILE,			"shader_profiles"},
+		{PXY_VFS_BID_PSO_CACHE_KEYS,			"pso_cache"},
+		{PXY_VFS_BID_PSO_PRECOMPILE_LIST,		"pso_precompile"},
+		{PXY_VFS_BID_SHADER_SOURCES,			"shader_sources"},
+		{PXY_VFS_BID_DERIVED_CSO_VS,			"derived_cso_vs"},
+		{PXY_VFS_BID_DERIVED_CSO_PS,			"derived_cso_ps"},
+		{0, 0}
+	};
+
+	d912pxy_vfs_packer* packer = new d912pxy_vfs_packer(d912pxy_s.config.GetValueRaw(PXY_CFG_VFS_ROOT), vfsNames);
+
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_VFS_PACK_DATA))
+	{		
+		packer->PackArchive(d912pxy_vfs_pack_file);
+	}
+	else if (packer->IsUnpackNeeded())
+	{
+		packer->UnpackArchive(d912pxy_vfs_pack_file);
+	}
+
+	delete packer;
+	
+	for (int i = 0; i != PXY_VFS_BID_END; ++i)
+		InitVFSitem(&vfsNames[i], memcacheMask);
 }
 
-void d912pxy_device::InitVFSitem(UINT id, const char* name, UINT64 memCache)
+void d912pxy_device::InitVFSitem(d912pxy_vfs_id_name* id, UINT64 memCache)
 {
-	if (!d912pxy_s.vfs.LoadVFS(id, name, ((1ULL << id) & memCache)) != 0ULL)
+	if (!d912pxy_s.vfs.LoadVFS(id, ((1ULL << id->num) & memCache)) != 0ULL)
 	{
-		LOG_ERR_DTDM("%S VFS not loaded", name);
+		LOG_ERR_DTDM("%S VFS not loaded", id->name);
 		LOG_ERR_THROW2(-1, "VFS error");
 	}
 }
