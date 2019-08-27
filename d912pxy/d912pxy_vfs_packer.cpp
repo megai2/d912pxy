@@ -173,7 +173,7 @@ void d912pxy_vfs_packer::StreamInit(d912pxy_vfs_packer_stream_id id, UINT warmup
 {
 	d912pxy_vfs_packer_stream* stream = &streams[id];
 
-	PXY_MALLOC(stream->buf, warmupSz, void*);
+	PXY_MALLOC(stream->buf, warmupSz, intptr_t);
 
 	stream->offset = 0;
 	stream->sz = warmupSz;
@@ -210,7 +210,7 @@ void d912pxy_vfs_packer::StreamReAlloc(d912pxy_vfs_packer_stream * stream, UINT 
 	if (newOffset >= stream->sz)
 	{
 		UINT32 nsz = (newOffset + (1 << 20) * 10);
-		PXY_REALLOC(stream->buf, nsz, void*);
+		PXY_REALLOC(stream->buf, nsz, intptr_t);
 		stream->sz = nsz;
 	}
 }
