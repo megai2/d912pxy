@@ -393,7 +393,10 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 
 ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 {
-	ComPtr<IDXGIFactory4> dxgiFactory;
+	//megai2: try to load win7 compatible dx12 dll
+	HMODULE h_d3d12 = LoadLibrary(L"./d912pxy/12on7/d3d12.dll");	
+
+	ComPtr<IDXGIFactory1> dxgiFactory;
 	UINT createFactoryFlags = 0;
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_DX_DBG_RUNTIME))
@@ -405,8 +408,8 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	LOG_ERR_THROW2(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)), "DXGI factory @ GetAdapter");
 
 	ComPtr<IDXGIAdapter1> dxgiAdapter1;
-	ComPtr<IDXGIAdapter3> dxgiAdapter4;
-	ComPtr<IDXGIAdapter3> gpu = nullptr;
+	ComPtr<IDXGIAdapter2> dxgiAdapter4;
+	ComPtr<IDXGIAdapter2> gpu = nullptr;
 
 	SIZE_T maxVidmem = 0;
 	D3D_FEATURE_LEVEL usingFeatures = D3D_FEATURE_LEVEL_12_1;
@@ -501,12 +504,14 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 		GPUNameA[i] = (char)pDesc.Description[i];
 	}
 	
+	/*
 	DXGI_QUERY_VIDEO_MEMORY_INFO vaMem;
 	gpu->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vaMem);
 
 	LOG_INFO_DTDM("Adapter local memory: BU %u AR %u CR %u CU %u",
 		vaMem.Budget >> 20, vaMem.AvailableForReservation >> 20, vaMem.CurrentReservation >> 20, vaMem.CurrentUsage >> 20
 	);
+	*/
 
 	//megai2: create device actually
 

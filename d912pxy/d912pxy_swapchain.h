@@ -39,6 +39,9 @@ typedef enum d912pxy_swapchain_state {
 	SWCS_RESETUP,
 	SWCS_SHUTDOWN,
 	SWCS_SWAP_TEST,
+	SWCS_SETUP_W7,
+	SWCS_RECONFIGURE_W7,
+	SWCS_SWAPPABLE_W7,
 	SWCS_COUNT
 } d912pxy_swapchain_state;
 
@@ -134,6 +137,10 @@ private:
 	HRESULT SwapHandle_Focus_Pending();
 	HRESULT SwapHandle_Focus_Lost_Switch();
 	HRESULT SwapHandle_Swap_Test();
+
+	HRESULT SwapHandle_Setup_W7();
+	HRESULT SwapHandle_Reconfigure_W7();
+	HRESULT SwapHandle_Swappable_W7();
 	
 	//DXGI related
 	HRESULT InitDXGISwapChain();
@@ -145,7 +152,7 @@ private:
 	DXGI_FORMAT GetDXGIFormatForBackBuffer(D3DFORMAT fmt);
 	UINT DXGIFullscreenInterrupt(UINT inactive);
 	void CacheDXGITearingSupport();
-
+	
 	ComPtr<IDXGISwapChain4> dxgiSwapchain;
 	ComPtr<ID3D12Resource> dxgiBackBuffer[4];	
 	UINT dxgiResizeFlags;
@@ -156,5 +163,11 @@ private:
 
 	d912pxy_thread_lock fullscreenIterrupt;
 	WNDPROC dxgiOWndProc;
+
+	//w7 port
+	ComPtr<ID3D12CommandQueueDownlevel> w7_cq;
+	ComPtr<ID3D12GraphicsCommandList> w7_cls[2];
+	ComPtr<ID3D12CommandAllocator> w7_cla[2];
+	UINT32 w7_cl_idx;
 };
 

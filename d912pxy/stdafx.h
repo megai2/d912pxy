@@ -43,6 +43,7 @@ SOFTWARE.
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <wrl.h>
+#include "../thirdparty/D3D12Downlevel.h"
 
 #include "targetver.h"
 #include <chrono>

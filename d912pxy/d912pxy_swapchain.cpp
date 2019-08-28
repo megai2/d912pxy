@@ -40,7 +40,13 @@ LRESULT APIENTRY d912pxy_dxgi_wndproc_patch(
 
 d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) : d912pxy_comhandler(PXY_COM_OBJ_SWAPCHAIN, L"swap chain")
 {
-	state = SWCS_SETUP;
+	if (!FAILED(d912pxy_s.dx12.que.GetDXQue().As(&w7_cq)))
+	{		
+		LOG_INFO_DTDM("downleveled queue is present, running w7 swap path");
+		state = SWCS_SETUP_W7;
+	} else 
+		state = SWCS_SETUP;
+
 	depthStencilSurface = NULL;
 	backBufferSurface = NULL;
 	swapCheckValue = D3D_OK;
@@ -67,6 +73,10 @@ d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) :
 	swapHandlers[SWCS_FOCUS_PENDING] = &d912pxy_swapchain::SwapHandle_Focus_Pending;
 	swapHandlers[SWCS_SHUTDOWN] = &d912pxy_swapchain::SwapHandle_Default;
 	swapHandlers[SWCS_SWAP_TEST] = &d912pxy_swapchain::SwapHandle_Swap_Test;
+
+	swapHandlers[SWCS_SETUP_W7] = &d912pxy_swapchain::SwapHandle_Setup_W7;
+	swapHandlers[SWCS_RECONFIGURE_W7] = &d912pxy_swapchain::SwapHandle_Reconfigure_W7;
+	swapHandlers[SWCS_SWAPPABLE_W7] = &d912pxy_swapchain::SwapHandle_Swappable_W7;
 
 	CacheDXGITearingSupport();
 	ResetFrameTargets();
@@ -156,7 +166,7 @@ HRESULT d912pxy_swapchain::SetPresentParameters(D3DPRESENT_PARAMETERS * pp)
 		return D3D_OK;
 	
 	//megai2: error out if system is not ready for one more reset
-	while ((state != SWCS_SWAPPABLE) && ((state != SWCS_SWAPPABLE_EXCLUSIVE)))
+	while ((state != SWCS_SWAPPABLE) && (state != SWCS_SWAPPABLE_EXCLUSIVE) && (state != SWCS_SWAPPABLE_W7))
 	{
 		Swap();		
 		if (state == SWCS_FOCUS_LOST)
@@ -168,10 +178,13 @@ HRESULT d912pxy_swapchain::SetPresentParameters(D3DPRESENT_PARAMETERS * pp)
 	
 	ResetFrameTargets();	
 
-	ChangeState(SWCS_RECONFIGURE);
+	if (state == SWCS_SWAPPABLE_W7)
+		ChangeState(SWCS_RECONFIGURE_W7);
+	else
+		ChangeState(SWCS_RECONFIGURE);
 
 	//megai2: force state processing due to window message lockup
-	while ((state != SWCS_SWAPPABLE) && ((state != SWCS_SWAPPABLE_EXCLUSIVE)))
+	while ((state != SWCS_SWAPPABLE) && (state != SWCS_SWAPPABLE_EXCLUSIVE) && (state != SWCS_SWAPPABLE_W7))
 	{
 		Swap();
 		if (state == SWCS_FOCUS_LOST)
@@ -632,6 +645,47 @@ HRESULT d912pxy_swapchain::SwapHandle_Swap_Test()
 			ChangeState(SWCS_SWAPPABLE_EXCLUSIVE);		
 	}
 		
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Setup_W7()
+{
+	for (int i = 0; i != 2; ++i)
+	{
+		LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&w7_cla[i])), "w7 gpu cmd list allocator error");
+		LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, w7_cla[i].Get(), NULL, IID_PPV_ARGS(&w7_cls[i])), "w7 gpu cmd list allocator error");
+	}
+
+	w7_cl_idx = 0;
+
+	ChangeState(SWCS_SWAPPABLE_W7);
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Reconfigure_W7()
+{
+	//megai2: looks like nothing to do here
+	//for now
+	ChangeState(SWCS_SWAPPABLE_W7);
+
+	return D3D_OK;
+}
+
+HRESULT d912pxy_swapchain::SwapHandle_Swappable_W7()
+{
+	w7_cla[!w7_cl_idx]->Reset();
+	w7_cls[!w7_cl_idx]->Reset(w7_cla[!w7_cl_idx].Get(), 0);
+
+	w7_cq->Present(
+		w7_cls[w7_cl_idx].Get(),
+		backBufferSurface->GetD12Obj(),
+		currentPP.hDeviceWindow,
+		currentPP.PresentationInterval != D3DPRESENT_INTERVAL_ONE ? D3D12_DOWNLEVEL_PRESENT_FLAG_NONE : D3D12_DOWNLEVEL_PRESENT_FLAG_WAIT_FOR_VBLANK
+	);
+
+	w7_cl_idx = !w7_cl_idx;
 
 	return D3D_OK;
 }
