@@ -47,6 +47,9 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 
 	UINT indexCount = d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
 
+	if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
+		return;
+
 	UINT32 len = buf[PXY_DUP_DPI].vstream->GetLength();
 
 	//megai2: make a bigger index buffer if current is to small
@@ -86,9 +89,6 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 	UINT vstreamRegLen = VertexStreamZeroStride * indexCount;
 	UINT vsvOffset = BufferWrite(PXY_DUP_DPV, vstreamRegLen, pVertexStreamZeroData);
 
-	if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
-		return;
-
 	d912pxy_s.render.iframe.SetIBuf(buf[PXY_DUP_DPI].vstream);
 	d912pxy_s.render.iframe.SetVBuf(buf[PXY_DUP_DPV].vstream, 0, vsvOffset, VertexStreamZeroStride);
 
@@ -102,8 +102,8 @@ void d912pxy_draw_up::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UIN
 	d912pxy_draw_up_buffer_name indBuf = hiInd ? PXY_DUP_DIPI4 : PXY_DUP_DIPI2;
 
 	UINT indBufSz = (hiInd * 2 + 2)*d912pxy_s.render.iframe.GetIndexCount(PrimitiveCount, PrimitiveType);
-	UINT vertBufSz = VertexStreamZeroStride * (MinVertexIndex + NumVertices);
-		
+	UINT vertBufSz = VertexStreamZeroStride * (MinVertexIndex + NumVertices);		
+
 	if (!d912pxy_s.render.iframe.CommitBatchPreCheck(PrimitiveType))
 		return;
 
@@ -224,6 +224,10 @@ void d912pxy_draw_up::PushVSBinds()
 	if (oss.buffer)
 		oss.buffer->ThreadRef(1);
 
+	if (ossi.buffer)
+		ossi.buffer->ThreadRef(1);
+
+	d912pxy_s.render.iframe.SetVBuf(0, 1, 0, 0);
 	d912pxy_s.render.iframe.SetStreamFreq(0, 1);
 	d912pxy_s.render.iframe.SetStreamFreq(1, 0);
 }
@@ -232,6 +236,7 @@ void d912pxy_draw_up::PopVSBinds()
 {
 	d912pxy_s.render.iframe.SetIBuf(oi);
 	d912pxy_s.render.iframe.SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
+	d912pxy_s.render.iframe.SetVBuf(ossi.buffer, 1, ossi.offset, ossi.stride);
 	d912pxy_s.render.iframe.SetStreamFreq(0, oss.divider);
 	d912pxy_s.render.iframe.SetStreamFreq(1, ossi.divider);
 
@@ -240,6 +245,9 @@ void d912pxy_draw_up::PopVSBinds()
 
 	if (oss.buffer)
 		oss.buffer->ThreadRef(-1);
+
+	if (ossi.buffer)
+		ossi.buffer->ThreadRef(-1);
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

@@ -120,6 +120,7 @@ typedef struct d912pxy_replay_clear_rt {
 	d912pxy_surface* tgt;
 	float clr[4];
 	D3D12_RECT clearRect;
+	D3D12_RESOURCE_STATES cuState;
 } d912pxy_replay_clear_rt;
 
 typedef struct d912pxy_replay_clear_ds {
@@ -128,6 +129,7 @@ typedef struct d912pxy_replay_clear_ds {
 	UINT8 stencil;
 	D3D12_CLEAR_FLAGS flag;
 	D3D12_RECT clearRect;
+	D3D12_RESOURCE_STATES cuState;
 } d912pxy_replay_clear_ds;
 
 typedef struct d912pxy_replay_pso_raw {
@@ -195,6 +197,7 @@ typedef struct d912pxy_replay_thread_transit_data {
 	DWORD srefVal;
 	DWORD bfacVal;
 	
+	UINT32 activeStreams;
 	d912pxy_device_streamsrc streams[PXY_INNER_MAX_VBUF_STREAMS];
 	d912pxy_vstream* indexBuf;
 
@@ -205,6 +208,8 @@ typedef struct d912pxy_replay_thread_transit_data {
 
 	D3D12_VIEWPORT main_viewport;
 	D3D12_RECT main_scissor;
+
+	D3DPRIMITIVETYPE primType;
 	
 } d912pxy_replay_thread_transit_data;
 
@@ -257,7 +262,7 @@ public:
 
 	void Finish();
 	void Start();
-	void IFrameStart();
+	void IFrameStart();	
 	void IssueWork(UINT batch);
 	void ReRangeThreads(UINT batches);
 

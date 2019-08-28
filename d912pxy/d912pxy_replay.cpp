@@ -30,8 +30,8 @@ SOFTWARE.
 	#define REPLAY_STACK_INCREMENT DbgStackIncrement()
 	#define REPLAY_STACK_IGNORE return DbgStackIgnore()
 #else
-	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[stackTop]; it->type = x
-	#define REPLAY_STACK_INCREMENT ++stackTop
+	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[stackTop]; it->type = x	
+	#define REPLAY_STACK_INCREMENT ++stackTop; if (stackTop >= switchPoint) IssueWork(0)
 	#define REPLAY_STACK_IGNORE return 0
 #endif
 
@@ -270,6 +270,8 @@ void d912pxy_replay::QueryMark(d912pxy_query * va, UINT start)
 
 void d912pxy_replay::PrimTopo(D3DPRIMITIVETYPE primType)
 {
+
+
 	REPLAY_STACK_GET(DRPL_PRMT);
 
 	it->topo.newTopo = primType;
@@ -279,9 +281,6 @@ void d912pxy_replay::PrimTopo(D3DPRIMITIVETYPE primType)
 
 void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT* currentVWP)
 {
-	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
-	StateTransit(tgt, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
 	REPLAY_STACK_GET(DRPL_RCLR);
 
 	it->clrRt.clr[0] = clr[3];
@@ -289,6 +288,7 @@ void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT*
 	it->clrRt.clr[2] = clr[1];
 	it->clrRt.clr[3] = clr[0];
 	it->clrRt.tgt = tgt;
+	it->clrRt.cuState = tgt->GetCurrentState();
 
 	it->clrRt.clearRect.left = (LONG)currentVWP->TopLeftX;
 	it->clrRt.clearRect.top = (LONG)currentVWP->TopLeftY;
@@ -296,30 +296,24 @@ void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT*
 	it->clrRt.clearRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
 
 	REPLAY_STACK_INCREMENT;
-
-	StateTransit(tgt, prevState);
 }
 
 void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP)
 {
-	D3D12_RESOURCE_STATES prevState = tgt->GetCurrentState();
-	StateTransit(tgt, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
 	REPLAY_STACK_GET(DRPL_DCLR);
 
 	it->clrDs.depth = depth;
 	it->clrDs.flag = flag;
 	it->clrDs.stencil = stencil;
 	it->clrDs.tgt = tgt;
+	it->clrDs.cuState = tgt->GetCurrentState();
 
 	it->clrDs.clearRect.left = (LONG)currentVWP->TopLeftX;
 	it->clrDs.clearRect.top = (LONG)currentVWP->TopLeftY;
 	it->clrDs.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
 	it->clrDs.clearRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
 
-	REPLAY_STACK_INCREMENT;
-
-	StateTransit(tgt, prevState);
+	REPLAY_STACK_INCREMENT;	
 }
 
 void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
@@ -569,6 +563,8 @@ void d912pxy_replay::SaveCLState(UINT thread)
 
 	trd->indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
+	//trd->activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
+
 	for (int i = 0; i!= PXY_INNER_MAX_VBUF_STREAMS;++i)
 		trd->streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
 
@@ -577,7 +573,10 @@ void d912pxy_replay::SaveCLState(UINT thread)
 	trd->main_viewport = *d912pxy_s.render.iframe.GetViewport();
 	trd->main_scissor = *d912pxy_s.render.iframe.GetScissorRect();
 
+	trd->primType = d912pxy_s.render.iframe.GetCurrentPrimType();
+
 	trd->saved = 1;
+	
 
 	trd->cpso = d912pxy_s.render.db.pso.GetCurrentCPSO();
 }
@@ -597,7 +596,12 @@ UINT d912pxy_replay::DbgStackGet()
 void d912pxy_replay::DbgStackIncrement()
 {
 	++stackTop;
-	simThreadAcc.Release();
+	simThreadAcc.Release();	
+
+	if (stackTop >= switchPoint)
+	{
+		IssueWork(0);
+	}
 }
 
 UINT d912pxy_replay::DbgStackIgnore()
@@ -638,10 +642,13 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 		PlayId(&streamBind, cl, context);
 	}
 
-	streamBind.type = DRPL_IFIB;
-	streamBind.ib.buf = trd->indexBuf;
-	PlayId(&streamBind, cl, context);
-
+	
+	if (trd->indexBuf)
+	{
+		streamBind.type = DRPL_IFIB;
+		streamBind.ib.buf = trd->indexBuf;
+		PlayId(&streamBind, cl, context);
+	}
 
 	d912pxy_replay_item sbVal;
 
@@ -654,6 +661,12 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 
 	fv4Color bfColor = d912pxy_s.render.db.pso.TransformBlendFactor(trd->bfacVal);
 	memcpy(sbVal.ombf.color, bfColor.val, 16);
+
+	PlayId(&sbVal, cl, context);
+
+	sbVal.type = DRPL_PRMT;
+
+	sbVal.topo.newTopo = trd->primType;
 
 	PlayId(&sbVal, cl, context);
 
@@ -760,12 +773,24 @@ void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommand
 {
 	LOG_DBG_DTDM("RCLR tgt %llX", it->tgt);
 
+	if (it->cuState != D3D12_RESOURCE_STATE_RENDER_TARGET)
+		it->tgt->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, it->cuState, cl);
+
 	it->tgt->ClearAsRTV(it->clr, cl, &it->clearRect);
+
+	if (it->cuState != D3D12_RESOURCE_STATE_RENDER_TARGET)
+		it->tgt->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->cuState, D3D12_RESOURCE_STATE_RENDER_TARGET, cl);
 }
 
 void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl, void* unused)
 {
+	if (it->cuState != D3D12_RESOURCE_STATE_DEPTH_WRITE)
+		it->tgt->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_DEPTH_WRITE, it->cuState, cl);
+
 	it->tgt->ClearAsDSV(it->depth, it->stencil, it->flag, cl, &it->clearRect);
+
+	if (it->cuState != D3D12_RESOURCE_STATE_DEPTH_WRITE)
+		it->tgt->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->cuState, D3D12_RESOURCE_STATE_DEPTH_WRITE, cl);
 }
 
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)

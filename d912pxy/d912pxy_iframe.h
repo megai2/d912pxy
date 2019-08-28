@@ -94,6 +94,10 @@ public:
 
 	void ProcessSurfaceBinds(UINT psoOnly);
 
+	D3DPRIMITIVETYPE GetCurrentPrimType() { return cuPrimType; };
+
+	UINT GetActiveStreamCount() { return streamsActive; };
+
 private:	
 	void InitRootSignature();
 

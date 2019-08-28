@@ -149,7 +149,7 @@ UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
 	}
 
 #ifdef PER_DRAW_FLUSH
-	if (d912pxy_s.render.batch.GetBatchNum() >= 1)
+	if (d912pxy_s.render.batch.GetBatchNum() >= 10)
 		StateSafeFlush(0);
 #else
 	if (d912pxy_s.render.batch.GetBatchNum() >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
@@ -524,13 +524,13 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 	d912pxy_device_streamsrc vstreamTransfer[PXY_INNER_MAX_VBUF_STREAMS];
 	UINT savedActiveStreams = streamsActive;
 
-	for (int i = 0; i != savedActiveStreams; ++i)
+	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 	{
 		if (streamBinds[i].buffer)
 		{
-			streamBinds[i].buffer->ThreadRef(1);
-			vstreamTransfer[i] = streamBinds[i];
+			streamBinds[i].buffer->ThreadRef(1);			
 		}
+		vstreamTransfer[i] = streamBinds[i];
 	}
 
 	d912pxy_surface* refSurf[2];
@@ -541,7 +541,7 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 		if (refSurf[i])
 			refSurf[i]->ThreadRef(1);
 	}
-
+		
 	End();
 	if (fullFlush)
 		d912pxy_s.dx12.que.Flush(0);
@@ -565,7 +565,7 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 		indTransfer->ThreadRef(-1);
 	}
 
-	for (int i = 0; i != savedActiveStreams; ++i)
+	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 	{
 		if (vstreamTransfer[i].buffer)
 		{
@@ -578,6 +578,7 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 
 	//megai2: rebind scissor 
 	SetScissors(&transSR);
+	SetViewport(&transVW);	
 	
 	ForceStateRebind();	
 }
