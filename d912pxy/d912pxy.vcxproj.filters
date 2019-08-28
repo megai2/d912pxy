@@ -585,4 +585,7 @@
       <UniqueIdentifier>{e6b279d5-aa8c-4195-83eb-99d55b609b3a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="version.rc" />
+  </ItemGroup>
 </Project>
