@@ -58,6 +58,9 @@ static const char* d912pxy_swapchain_state_names[] = {
 	"SWCS_RESETUP",
 	"SWCS_SHUTDOWN",
 	"SWCS_SWAP_TEST",
+	"SWCS_SETUP_W7",
+	"SWCS_RECONFIGURE_W7",
+	"SWCS_SWAPPABLE_W7",
 	"SWCS_COUNT"
 };
 
