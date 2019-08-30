@@ -85,6 +85,7 @@ void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT Offse
 	UpdateActiveStreams(vb, StreamNumber);
 
 	batchCommisionDF |= 1;	
+
 	streamBinds[StreamNumber].buffer = vb;
 	streamBinds[StreamNumber].offset = OffsetInBytes;
 	streamBinds[StreamNumber].stride = Stride;
@@ -149,7 +150,7 @@ UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
 	}
 
 #ifdef PER_DRAW_FLUSH
-	if (d912pxy_s.render.batch.GetBatchNum() >= 10)
+	if (d912pxy_s.render.batch.GetBatchNum() >= 1)
 		StateSafeFlush(0);
 #else
 	if (d912pxy_s.render.batch.GetBatchNum() >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))

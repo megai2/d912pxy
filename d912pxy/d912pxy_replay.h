@@ -210,6 +210,10 @@ typedef struct d912pxy_replay_thread_transit_data {
 	D3D12_RECT main_scissor;
 
 	D3DPRIMITIVETYPE primType;
+
+#ifdef _DEBUG
+	UINT base;
+#endif
 	
 } d912pxy_replay_thread_transit_data;
 
@@ -273,6 +277,8 @@ public:
 
 	d912pxy_replay_item* GetItem(UINT id) { return &stack[id]; };
 	d912pxy_replay_item* BacktraceItemType(d912pxy_replay_item_type type, UINT depth, UINT base);
+	d912pxy_replay_item* FindItemType(d912pxy_replay_item_type type, UINT depth, UINT base, UINT endpoint);
+	UINT FindItemIdType(d912pxy_replay_item_type type, UINT depth, UINT base, UINT endpoint);
 
 	void TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base, d912pxy_replay_thread_context* context);
 

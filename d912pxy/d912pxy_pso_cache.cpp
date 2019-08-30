@@ -212,20 +212,20 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	{
 	case D3DRS_BLENDFACTOR:
 	{
-		d912pxy_s.render.replay.OMBlendFac(TransformBlendFactor(Value).val);		
 		DX9RSvalues[State] = Value;
+		d912pxy_s.render.replay.OMBlendFac(TransformBlendFactor(Value).val);				
 	}
 	break; //193,   /* D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR */
 	case D3DRS_STENCILREF:
-		d912pxy_s.render.replay.OMStencilRef(Value);
 		DX9RSvalues[State] = Value;
+		d912pxy_s.render.replay.OMStencilRef(Value);		
 		break; //57,   /* Reference value used in stencil test */
 	case D3DRS_SCISSORTESTENABLE:
+		DX9RSvalues[State] = Value;
 		if (Value)
 			d912pxy_s.render.iframe.RestoreScissor();
 		else
-			d912pxy_s.render.iframe.IgnoreScissor();
-		DX9RSvalues[State] = Value;
+			d912pxy_s.render.iframe.IgnoreScissor();		
 		break;
 	case D3DRS_ZENABLE:
 		cDsc.DepthStencilState.DepthEnable = (Value == D3DZB_TRUE);

@@ -31,7 +31,7 @@ SOFTWARE.
 	#define REPLAY_STACK_IGNORE return DbgStackIgnore()
 #else
 	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[stackTop]; it->type = x	
-	#define REPLAY_STACK_INCREMENT ++stackTop; if (stackTop >= switchPoint) IssueWork(0)
+	#define REPLAY_STACK_INCREMENT ++stackTop
 	#define REPLAY_STACK_IGNORE return 0
 #endif
 
@@ -270,8 +270,6 @@ void d912pxy_replay::QueryMark(d912pxy_query * va, UINT start)
 
 void d912pxy_replay::PrimTopo(D3DPRIMITIVETYPE primType)
 {
-
-
 	REPLAY_STACK_GET(DRPL_PRMT);
 
 	it->topo.newTopo = primType;
@@ -323,7 +321,7 @@ void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList *
 
 void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd)
 {
-	LOG_DBG_DTDM("replay range [%u , %u, %u]", start, end, stackTop);
+	LOG_DBG_DTDM2("replay range [%u , %u, %u]", start, end, stackTop);
 	
 	UINT i = start;		
 	UINT maxRI = 0;
@@ -439,15 +437,24 @@ void d912pxy_replay::Finish()
 
 void d912pxy_replay::IssueWork(UINT batch)
 {
-	if (stackTop >= switchPoint)
+	if (stackTop > switchPoint)
 	{	
 		SyncStackTop();
+
+		//megai2: skip workers if they don't have DIIP calls and transit state to proper one
+		while (stackTop > rangeEnds[cWorker + 1])
+		{
+			//megai2: wake threads so they do their job
+			threads[cWorker]->SignalWork();
+			++cWorker;
+		}
+
+		SaveCLState(cWorker+1);
 
 		threads[cWorker]->SignalWork();
 		
 		++cWorker;
-		switchPoint = rangeEnds[cWorker];
-		SaveCLState(cWorker);
+		switchPoint = rangeEnds[cWorker];	
 				
 		threads[cWorker]->SignalWork();
 		
@@ -543,6 +550,50 @@ d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type
 	return nullptr;
 }
 
+d912pxy_replay_item * d912pxy_replay::FindItemType(d912pxy_replay_item_type type, UINT depth, UINT base, UINT endpoint)
+{
+	if (stackTop == 0)
+		return nullptr;
+
+	for (int i = base; i != endpoint; ++i)
+	{
+		if (stack[i].type == type)
+		{
+			if (!depth)
+			{
+				return &stack[i];
+			}
+			else
+				--depth;
+		}
+	}
+
+	return nullptr;
+}
+
+UINT d912pxy_replay::FindItemIdType(d912pxy_replay_item_type type, UINT depth, UINT base, UINT endpoint)
+{
+	if (stackTop == 0)
+		return -1;
+
+	for (int i = base; i != endpoint; ++i)
+	{
+		if (stack[i].type == type)
+		{
+			if (!depth)
+			{
+				return i;
+			}
+			else
+				--depth;
+		}
+	}	
+
+	return -1;
+}
+
+
+
 void d912pxy_replay::TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base, d912pxy_replay_thread_context* context)
 {
 	d912pxy_replay_item * it = BacktraceItemType(type, depth, base);
@@ -563,7 +614,7 @@ void d912pxy_replay::SaveCLState(UINT thread)
 
 	trd->indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
-	//trd->activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
+	trd->activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
 
 	for (int i = 0; i!= PXY_INNER_MAX_VBUF_STREAMS;++i)
 		trd->streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
@@ -576,6 +627,10 @@ void d912pxy_replay::SaveCLState(UINT thread)
 	trd->primType = d912pxy_s.render.iframe.GetCurrentPrimType();
 
 	trd->saved = 1;
+
+#ifdef _DEBUG
+	trd->base = stackTop-1;
+#endif
 	
 
 	trd->cpso = d912pxy_s.render.db.pso.GetCurrentCPSO();
@@ -597,11 +652,6 @@ void d912pxy_replay::DbgStackIncrement()
 {
 	++stackTop;
 	simThreadAcc.Release();	
-
-	if (stackTop >= switchPoint)
-	{
-		IssueWork(0);
-	}
 }
 
 UINT d912pxy_replay::DbgStackIgnore()
@@ -617,13 +667,159 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 	d912pxy_replay_thread_transit_data* trd = &transitData[thread];
 
 	if (!trd->saved)
+	{
+		LOG_DBG_DTDM2("zero transition CL %u", thread);
 		return;
+	}
+
+#ifdef _DEBUG
+	{
+		if (base > trd->base)
+		{
+			LOG_ERR_DTDM("thread ranges broken! transit save item = %u ; threadStart = %u", rangeEnds[thread - 1], base);
+		}
+		
+		UINT syncBase = FindItemIdType(DRPL_DIIP, 0, base, stackTopMT);
+
+		if (syncBase == -1)
+			syncBase = base;
+		else {
+			if (trd->base != syncBase)
+			{
+				LOG_ERR_DTDM("CL %u transit base item %u but first DIIP item after base %u index is at %u", thread, trd->base, base, syncBase);
+			}							
+		}
+			
+
+		d912pxy_replay_item* btItem = BacktraceItemType(DRPL_OMRT, 0, syncBase);
+
+		if (!btItem)
+		{
+			LOG_ERR_DTDM("OMRT bt fail on CL %u", thread);
+		}
+		else {												
+
+			if (btItem->rt.dsv != trd->surfBind[0])
+			{				
+				LOG_ERR_DTDM("CL %u transit rt.dsv mismatched %016llX != %016llX", thread, btItem->rt.dsv, trd->surfBind[0]);
+			}
+
+			if (btItem->rt.rtv != trd->surfBind[1])
+			{
+				LOG_ERR_DTDM("CL %u transit rt.rtv mismatched %016llX != %016llX", thread, btItem->rt.rtv, trd->surfBind[1]);
+			}
+		}
+
+
+		if (trd->indexBuf)
+		{
+			btItem = BacktraceItemType(DRPL_IFIB, 0, syncBase);
+
+			if (!btItem)
+			{
+				LOG_ERR_DTDM("IFIB bt fail on CL %u", thread);
+			}
+
+			if (btItem->ib.buf != trd->indexBuf)
+			{
+				LOG_ERR_DTDM("CL %u transit ib.buf mismatched %016llX != %016llX", thread, btItem->ib.buf, trd->indexBuf);
+			}
+		}
+
+		UINT trdAStreams = 0;
+
+		for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
+		{
+			if (!trd->streams[i].buffer)
+				continue;
+
+			++trdAStreams;				
+		}
+
+		if (trdAStreams != trd->activeStreams)
+		{
+			LOG_ERR_DTDM("CL %u transit active streams miscalculation %u != %u", thread, trdAStreams, trd->activeStreams);
+		}
+		
+		for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
+		{
+			UINT btDepth = 0;
+		btNextIFVB:
+			btItem = BacktraceItemType(DRPL_IFVB, btDepth, syncBase);
+
+			if (!btItem)
+			{
+				if (trd->streams[i].buffer)
+					LOG_ERR_DTDM("CL %u trd have stream %u but bt not found it even at depth %u", thread, i, btDepth);
+				else
+					continue;
+			}
+
+			if (btItem->vb.slot != i)
+			{
+				++btDepth;
+				goto btNextIFVB;
+			}
+
+			//megai2: iframe does not call replay if api sets null buffer
+			if (!trd->streams[i].buffer)
+				continue;
+
+
+			if (btItem->vb.buf != trd->streams[i].buffer)
+			{
+				LOG_ERR_DTDM("CL %u transit vb[%u].buf mismatched %016llX != %016llX", thread, i, btItem->vb.buf, trd->streams[i].buffer);
+			}
+
+			if (btItem->vb.offset != trd->streams[i].offset)
+			{
+				LOG_ERR_DTDM("CL %u transit vb[%u].offset mismatched %08lX != %08lX", thread, i, btItem->vb.offset, trd->streams[i].offset);
+			}
+
+			if (btItem->vb.stride != trd->streams[i].stride)
+			{
+				LOG_ERR_DTDM("CL %u transit vb[%u].stride mismatched %08lX != %08lX", thread, i, btItem->vb.stride, trd->streams[i].stride);
+			}
+		}
+
+		btItem = BacktraceItemType(DRPL_OMSR, 0, syncBase);
+
+		if (btItem->omsr.dRef != trd->srefVal)
+		{
+			LOG_ERR_DTDM("CL %u transit omsr.dRef mismatched %08lX != %08lX", thread, btItem->omsr.dRef, trd->srefVal);
+		}		
+
+		btItem = BacktraceItemType(DRPL_OMBF, 0, syncBase);
+		fv4Color bfColor = d912pxy_s.render.db.pso.TransformBlendFactor(trd->bfacVal);
+
+		if (memcmp(&btItem->ombf.color, &bfColor, 4 * 4) != 0)
+		{
+			LOG_ERR_DTDM("CL %u transit ombf.color mismatched", thread);
+		}		
+
+		btItem = BacktraceItemType(DRPL_PRMT, 0, syncBase);
+
+		if (btItem)
+		{
+			if (btItem->topo.newTopo != trd->primType)
+			{
+				LOG_ERR_DTDM("CL %u transit topo.newTopo mismatched %u != %u", thread, btItem->topo.newTopo, trd->primType);
+			}
+		}
+		else {
+			if (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST != trd->primType)
+			{
+				LOG_ERR_DTDM("CL %u transit topo.newTopo is %u but not trianglelist while it should be it", thread, trd->primType);
+			}
+		}
+	}
+
+#endif
 
 	d912pxy_replay_item surfBind;
 	surfBind.type = DRPL_OMRT;
 	surfBind.rt.dsv = trd->surfBind[0];
 	surfBind.rt.rtv = trd->surfBind[1];
-
 	PlayId(&surfBind, cl, context);
 
 	d912pxy_replay_item streamBind;
