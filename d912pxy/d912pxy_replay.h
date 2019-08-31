@@ -196,7 +196,8 @@ typedef struct d912pxy_replay_thread_transit_data {
 	d912pxy_surface* surfBind[2];
 	DWORD srefVal;
 	DWORD bfacVal;
-	
+	UINT scissorEnabled;
+
 	UINT32 activeStreams;
 	d912pxy_device_streamsrc streams[PXY_INNER_MAX_VBUF_STREAMS];
 	d912pxy_vstream* indexBuf;

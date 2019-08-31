@@ -28,6 +28,9 @@ IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* 
 
 typedef struct d912pxy_instance {
 	d912pxy_instance() { running = 0; };
+
+	//megai2: yes this is not nice. 
+	//if you have better idea, show it!
 	~d912pxy_instance() { exit(0); };
 
 	struct pool {

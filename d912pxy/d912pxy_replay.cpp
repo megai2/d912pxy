@@ -615,6 +615,7 @@ void d912pxy_replay::SaveCLState(UINT thread)
 	trd->indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
 	trd->activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
+	trd->scissorEnabled = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
 
 	for (int i = 0; i!= PXY_INNER_MAX_VBUF_STREAMS;++i)
 		trd->streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
@@ -880,7 +881,9 @@ void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, U
 	PlayId(&psoSet, cl, context);
 
 	cl->RSSetViewports(1, &trd->main_viewport);
-	cl->RSSetScissorRects(1, &trd->main_scissor);
+
+	if (trd->scissorEnabled)
+		cl->RSSetScissorRects(1, &trd->main_scissor);
 	   
 	trd->saved = 0;	
 }
