@@ -396,7 +396,17 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	//megai2: try to load win7 compatible dx12 dll
 	HMODULE h_d3d12 = LoadLibrary(L"./d912pxy/12on7/d3d12.dll");	
 
+	if (h_d3d12)
+	{
+		LOG_INFO_DTDM("Pepe: Is this windows 7? windows 7 right.");
+
+		//megai2: maybe this will help same way as with dx12 dll 
+		HMODULE h_d3dcompiler_47 = LoadLibrary(L"./d912pxy/12on7/d3dcompiler_47.dll");
+	}
+
 	ComPtr<IDXGIFactory1> dxgiFactory;
+
+#ifdef _DEBUG
 	UINT createFactoryFlags = 0;
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_DX_DBG_RUNTIME))
@@ -405,7 +415,13 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 	}
 
-	LOG_ERR_THROW2(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)), "DXGI factory @ GetAdapter");
+	LOG_ERR_THROW2(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)), "DXGI factory 2 @ GetAdapter");
+
+#else
+
+	LOG_ERR_THROW2(CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory)), "DXGI factory @ GetAdapter");
+
+#endif
 
 	ComPtr<IDXGIAdapter1> dxgiAdapter1;
 	ComPtr<IDXGIAdapter2> dxgiAdapter4;
@@ -419,7 +435,12 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 		D3D_FEATURE_LEVEL_12_1,
 		D3D_FEATURE_LEVEL_12_0,
 		D3D_FEATURE_LEVEL_11_1,
-		D3D_FEATURE_LEVEL_11_0
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_10_1,
+		D3D_FEATURE_LEVEL_10_0,
+		D3D_FEATURE_LEVEL_9_3,
+		D3D_FEATURE_LEVEL_9_2,
+		D3D_FEATURE_LEVEL_9_1
 	};
 
 	LOG_INFO_DTDM("Enum DXGI adapters");
@@ -439,40 +460,39 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 				"FL_12_1 should work 100%",
 				"FL_12_0 should work  99%",
 				"FL_11_1 should work  80%",
-				"FL_11_0 expect problems "
+				"FL_11_0 expect problems ",
+				"FL_10_1 expect problems ",
+				"FL_10_0 expect problems ",
+				"FL_9_3 expect problems ",
+				"FL_9_2 expect problems ",
+				"FL_9_1 expect problems "
 			};
+
+			UINT flTestMask = 0;
 
 			if (operational)
 			{
-				operational = SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr));
-				operational |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)) << 1;
-				operational |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_1, __uuidof(ID3D12Device), nullptr)) << 2;
-				operational |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)) << 3;
+				flTestMask = SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr));
+				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)) << 1;
+				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_1, __uuidof(ID3D12Device), nullptr)) << 2;
+				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)) << 3;
+				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_10_1, __uuidof(ID3D12Device), nullptr)) << 4;
+				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_10_0, __uuidof(ID3D12Device), nullptr)) << 5;
+				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_3, __uuidof(ID3D12Device), nullptr)) << 6;
+				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_2, __uuidof(ID3D12Device), nullptr)) << 7;
+				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_1, __uuidof(ID3D12Device), nullptr)) << 8;
 
-				switch (operational)
+				if ((flTestMask & 1) == 0)
 				{
-				case 0xF:
-					operational = 1;
-					break;
-				case 0xE:
-					operational = 2;
-					break;
-				case 0xC:
-					operational = 3;
-					break;
-				case 0x8:
-					operational = 4;
-					break;
-				default:
-					operational = 0;
-					break;
+					flTestMask = flTestMask >> 1;
+					++operational;
 				}
 			}
 
-			LOG_INFO_DTDM("%u: VRAM: %06u Mb | FL: %S | %s",
+			LOG_INFO_DTDM("%u: VRAM: %06u Mb | FL: %S (%u) | %s",
 				i,
 				(DWORD)(dxgiAdapterDesc2.DedicatedVideoMemory >> 20llu),
-				flText[operational],
+				flText[operational], flTestMask,
 				dxgiAdapterDesc2.Description
 			);
 
