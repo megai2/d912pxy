@@ -26,7 +26,7 @@ SOFTWARE.
 
 d912pxy_dheap::d912pxy_dheap(d912pxy_device * dev, UINT idx) : d912pxy_noncom( L"dheap")
 {
-	const D3D12_DESCRIPTOR_HEAP_DESC* desc = &d912pxy_dx12_heap_config[idx];
+	const D3D12_DESCRIPTOR_HEAP_DESC* desc = d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_DHEAP_MODE) ? &d912pxy_dx12_heap_config_compat[idx] : &d912pxy_dx12_heap_config[idx];
 
 	LOG_ERR_THROW(d912pxy_s.dx12.dev->CreateDescriptorHeap(desc, IID_PPV_ARGS(&heap)));
 
