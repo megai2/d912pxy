@@ -24,6 +24,10 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+pD3DCompile_47 d912pxy_shader_replacer::D3DCompile_47 = NULL;
+pD3DCompileFromFile_47 d912pxy_shader_replacer::D3DCompileFromFile_47 = NULL;
+
+
 d912pxy_shader_replacer::d912pxy_shader_replacer(DWORD * fun, UINT len, d912pxy_shader_uid UID, UINT isVs) : d912pxy_noncom( L"shader replacer")
 {
 	mUID = UID;
@@ -53,9 +57,9 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_CS(const wchar_t* b
 	ComPtr<ID3DBlob> ret, eret;
 
 #ifdef _DEBUG
-	HRESULT compRet = D3DCompileFromFile(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES | D3DCOMPILE_DEBUG, 0, &ret, &eret);
+	HRESULT compRet = D3DCompileFromFile_47(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES | D3DCOMPILE_DEBUG, 0, &ret, &eret);
 #else
-	HRESULT compRet = D3DCompileFromFile(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
+	HRESULT compRet = D3DCompileFromFile_47(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
 #endif
 
 	if ((compRet != S_OK) && (eret == NULL))
@@ -115,9 +119,9 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfol
 	ComPtr<ID3DBlob> ret, eret;
 	
 #ifdef _DEBUG
-	HRESULT compRet = D3DCompileFromFile(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES | D3DCOMPILE_DEBUG, 0, &ret, &eret);
+	HRESULT compRet = D3DCompileFromFile_47(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES | D3DCOMPILE_DEBUG, 0, &ret, &eret);
 #else
- 	HRESULT compRet = D3DCompileFromFile(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
+ 	HRESULT compRet = D3DCompileFromFile_47(replFn, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
 #endif
 
 	if ((compRet != S_OK) && (eret == NULL))
@@ -182,9 +186,9 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 	ComPtr<ID3DBlob> ret, eret;
 
 #ifdef _DEBUG
-	HRESULT compRet = D3DCompile(imem, size, replFn, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES | D3DCOMPILE_DEBUG, 0, &ret, &eret);
+	HRESULT compRet = D3DCompile_47(imem, size, replFn, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES | D3DCOMPILE_DEBUG, 0, &ret, &eret);
 #else
-	HRESULT compRet = D3DCompile(imem, size, replFn, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
+	HRESULT compRet = D3DCompile_47(imem, size, replFn, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", targetCompiler, D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES, 0, &ret, &eret);
 #endif
 
 	if ((compRet != S_OK) && (eret == NULL))

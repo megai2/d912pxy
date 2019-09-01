@@ -396,13 +396,27 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	//megai2: try to load win7 compatible dx12 dll
 	HMODULE h_d3d12 = LoadLibrary(L"./d912pxy/12on7/d3d12.dll");	
 
+	HMODULE h_d3dcompiler_47;
+
 	if (h_d3d12)
 	{
 		LOG_INFO_DTDM("Pepe: Is this windows 7? windows 7 right.");
-
-		//megai2: maybe this will help same way as with dx12 dll 
-		HMODULE h_d3dcompiler_47 = LoadLibrary(L"./d912pxy/12on7/d3dcompiler_47.dll");
+		
+		//megai2: stack up sanity a bit
+		h_d3dcompiler_47 = LoadLibrary(L"./d912pxy/12on7/d3dcompiler_47_v10.dll");
 	}
+	else {
+		h_d3dcompiler_47 = LoadLibrary(L"d3dcompiler_47.dll");
+	}
+
+	if (!h_d3dcompiler_47)	
+		LOG_ERR_THROW2(-1, "D3D HLSL compiler missing or can't be loaded");
+
+	d912pxy_shader_replacer::D3DCompile_47 = (pD3DCompile)GetProcAddress(h_d3dcompiler_47, "D3DCompile");
+	d912pxy_shader_replacer::D3DCompileFromFile_47 = (pD3DCompileFromFile_47)GetProcAddress(h_d3dcompiler_47, "D3DCompileFromFile");
+
+	if (!d912pxy_shader_replacer::D3DCompile_47 || !d912pxy_shader_replacer::D3DCompileFromFile_47)	
+		LOG_ERR_THROW2(-1, "D3D HLSL compiler missing exports");	
 
 	ComPtr<IDXGIFactory1> dxgiFactory;
 
