@@ -496,10 +496,16 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_2, __uuidof(ID3D12Device), nullptr)) << 7;
 				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_1, __uuidof(ID3D12Device), nullptr)) << 8;
 
-				if ((flTestMask & 1) == 0)
+				while ((flTestMask & 1) == 0)
 				{
 					flTestMask = flTestMask >> 1;
 					++operational;
+
+					if (operational > 9)
+					{
+						operational = 0;
+						break;
+					}
 				}
 			}
 
