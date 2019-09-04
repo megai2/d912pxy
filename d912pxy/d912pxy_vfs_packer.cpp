@@ -27,7 +27,7 @@ SOFTWARE.
 
 d912pxy_vfs_packer::d912pxy_vfs_packer(wchar_t * rootPath, d912pxy_vfs_id_name * id)
 {
-	sprintf(m_rootPath, "%ws", rootPath);
+	sprintf(m_rootPath, "%s/%ws", d912pxy_helper::GetFilePath(FP_VFS_PREFIX)->s, rootPath);
 	items = id;
 }
 

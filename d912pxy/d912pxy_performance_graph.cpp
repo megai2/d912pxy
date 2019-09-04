@@ -70,11 +70,11 @@ void d912pxy_performance_graph::DumpData()
 	FILE* of = NULL;
 
 	if (dx9)
-	{
-		of = fopen(d912pxy_perf_graph_dx9_outfile, "wb");
+	{		
+		of = fopen(d912pxy_helper::GetFilePath(FP_PERF_GRAPH_DX9_OUTFILE)->s, "wb");
 	}
 	else
-		of = fopen(d912pxy_perf_graph_outfile, "wb");
+		of = fopen(d912pxy_helper::GetFilePath(FP_PERF_GRAPH_OUTFILE)->s, "wb");
 
 	UINT8* imgData = NULL;
 	PXY_MALLOC(imgData, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 4, UINT8*);
@@ -167,9 +167,9 @@ void d912pxy_performance_graph::DumpData()
 	fclose(of);
 
 	if (dx9)
-		stbi_write_png(d912pxy_perf_graph_dx9_outfile_png, PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 4, imgData, PXY_PERFGRPH_BATCH_PTS * 4);
+		stbi_write_png(d912pxy_helper::GetFilePath(FP_PERF_GRAPH_DX9_OUTFILE_PNG)->s, PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 4, imgData, PXY_PERFGRPH_BATCH_PTS * 4);
 	else
-		stbi_write_png(d912pxy_perf_graph_outfile_png, PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 4, imgData, PXY_PERFGRPH_BATCH_PTS * 4);
+		stbi_write_png(d912pxy_helper::GetFilePath(FP_PERF_GRAPH_OUTFILE_PNG)->s, PXY_PERFGRPH_BATCH_PTS, PXY_PERFGRPH_FRAMETIME_PTS, 4, imgData, PXY_PERFGRPH_BATCH_PTS * 4);
 
 	PXY_FREE(imgData);
 }

@@ -1312,8 +1312,8 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	d912pxy_shader_replacer* replVS = new d912pxy_shader_replacer(0, 0, desc->VS->GetID(), 1);
 	d912pxy_shader_replacer* replPS = new d912pxy_shader_replacer(0, 0, desc->PS->GetID(), 0);
 
-	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, shdSrc[0], shdSrcSz[0], 0);
-	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, shdSrc[1], shdSrcSz[1], 0);
+	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, shdSrc[0], shdSrcSz[0], 0);
+	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, shdSrc[1], shdSrcSz[1], 0);
 
 	PXY_FREE(shdSrc[0]);
 	PXY_FREE(shdSrc[1]);

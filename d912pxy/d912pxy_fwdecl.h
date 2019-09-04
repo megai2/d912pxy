@@ -246,20 +246,77 @@ SOFTWARE.
 
 //paths to files =======================
 
-#define d912pxy_cs_hlsl_dir L"./d912pxy/shaders/cs"
-#define d912pxy_cs_cso_dir "cs/cso"
-#define d912pxy_shader_db_hlsl_dir L"./d912pxy/shaders/hlsl"
-#define d912pxy_vfs_lock_file "./d912pxy/pck/pid.lock"
-#define d912pxy_vfs_pack_file "vfs_archive"
-#define d912pxy_shader_db_hlsl_custom_dir L"./d912pxy/shaders/hlsl/custom"
-#define d912pxy_shader_db_cso_dir "shaders/cso"
-#define d912pxy_shader_db_bugs_dir "shaders/bugs"
-#define PXY_CRASH_LOG_FILE_PATH "d912pxy/crash"
-#define PXY_LOG_FILE_NAME "d912pxy/log.txt"
-#define d912pxy_perf_graph_outfile "./d912pxy/dx12_perf_graph.html"
-#define d912pxy_perf_graph_dx9_outfile "./d912pxy/dx9_perf_graph.html"
-#define d912pxy_perf_graph_outfile_png "./d912pxy/dx12_perf_graph.png"
-#define d912pxy_perf_graph_dx9_outfile_png "./d912pxy/dx9_perf_graph.png"
+typedef enum d912pxy_file_path_id {
+	FP_CS_HLSL_DIR,
+	FP_CS_CSO_DIR,
+	FP_SHADER_DB_HLSL_DIR,
+	FP_VFS_LOCK_FILE,
+	FP_VFS_PACK_FILE,
+	FP_SHADER_DB_HLSL_CUSTOM_DIR,
+	FP_SHADER_DB_CSO_DIR,
+	FP_SHADER_DB_BUGS_DIR,
+	FP_CRASH_LOG,
+	FP_LOG,
+	FP_PERF_GRAPH_OUTFILE,
+	FP_PERF_GRAPH_DX9_OUTFILE,
+	FP_PERF_GRAPH_OUTFILE_PNG,
+	FP_PERF_GRAPH_DX9_OUTFILE_PNG,
+	FP_CONFIG,
+	FP_W7_D3DCOMPILER,
+	FP_W7_D3D12,
+	FP_VFS_PREFIX
+} d912pxy_file_path_id;
+
+typedef struct d912pxy_file_path {
+	const char* s;
+	const wchar_t* w;
+} d912pxy_file_path;
+
+#define FP_DEF(a) {a, L##a }
+
+static const d912pxy_file_path d912pxy_file_paths_default[] = {
+	FP_DEF("./d912pxy/shaders/cs"),
+	FP_DEF("cs/cso"),
+	FP_DEF("./d912pxy/shaders/hlsl"),
+	FP_DEF("./d912pxy/pck/pid.lock"),
+	FP_DEF("vfs_archive"),
+	FP_DEF("./d912pxy/shaders/hlsl/custom"),
+	FP_DEF("shaders/cso"),
+	FP_DEF("shaders/bugs"),
+	FP_DEF("d912pxy/crash"),
+	FP_DEF("d912pxy/log.txt"),
+	FP_DEF("./d912pxy/dx12_perf_graph.html"),
+	FP_DEF("./d912pxy/dx9_perf_graph.html"),
+	FP_DEF("./d912pxy/dx12_perf_graph.png"),
+	FP_DEF("./d912pxy/dx9_perf_graph.png"),
+	FP_DEF("./d912pxy/config.ini"),
+	FP_DEF("./d912pxy/12on7/d3dcompiler_47_v10.dll"),
+	FP_DEF("./d912pxy/12on7/d3d12.dll"),
+	FP_DEF(""),
+};
+
+static const d912pxy_file_path d912pxy_file_paths_addon[] = {
+	FP_DEF("./addons/d912pxy/shaders/cs"),
+	FP_DEF("cs/cso"),
+	FP_DEF("./addons/d912pxy/shaders/hlsl"),
+	FP_DEF("./addons/d912pxy/pck/pid.lock"),
+	FP_DEF("vfs_archive"),
+	FP_DEF("./addons/d912pxy/shaders/hlsl/custom"),
+	FP_DEF("shaders/cso"),
+	FP_DEF("shaders/bugs"),
+	FP_DEF("./addons/d912pxy/crash"),
+	FP_DEF("./addons/d912pxy/log.txt"),
+	FP_DEF("./addons/d912pxy/dx12_perf_graph.html"),
+	FP_DEF("./addons/d912pxy/dx9_perf_graph.html"),
+	FP_DEF("./addons/d912pxy/dx12_perf_graph.png"),
+	FP_DEF("./addons/d912pxy/dx9_perf_graph.png"),
+	FP_DEF("./addons/d912pxy/config.ini"),
+	FP_DEF("./d912pxy/12on7/d3dcompiler_47_v10.dll"),
+	FP_DEF("./d912pxy/12on7/d3d12.dll"),
+	FP_DEF("./addons/"),
+};
+
+#undef FP_DEF
 
 //forward class defenitions =======================
 

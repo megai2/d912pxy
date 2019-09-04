@@ -1,0 +1,5 @@
+LIBRARY gw2addon_d912pxy.dll
+EXPORTS
+	gw2addon_get_description
+	gw2addon_load
+	gw2addon_unload

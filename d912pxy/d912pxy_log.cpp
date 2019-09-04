@@ -74,7 +74,7 @@ void d912pxy_log::Init()
 
 	threadNameId = 0;
 #else
-	logfile = fopen(PXY_LOG_FILE_NAME, "w");
+	logfile = fopen(d912pxy_helper::GetFilePath(FP_LOG)->s, "w");
 #endif
 }
 
@@ -110,7 +110,7 @@ void d912pxy_log::WriteCrashLogLine(wchar_t * buf)
 {
 	char fn[255];
 
-	sprintf(fn, "%s.txt", PXY_CRASH_LOG_FILE_PATH);
+	sprintf(fn, "%s.txt", d912pxy_helper::GetFilePath(FP_CRASH_LOG)->s);
 
 	if (crashLog == NULL)
 	{
@@ -118,7 +118,7 @@ void d912pxy_log::WriteCrashLogLine(wchar_t * buf)
 		while (d912pxy_helper::IsFileExist(fn))
 		{
 			++i;
-			sprintf(fn, "%s%u.txt", PXY_CRASH_LOG_FILE_PATH, i);
+			sprintf(fn, "%s%u.txt", d912pxy_helper::GetFilePath(FP_CRASH_LOG)->s, i);
 
 			if (i >= 10)
 				break;

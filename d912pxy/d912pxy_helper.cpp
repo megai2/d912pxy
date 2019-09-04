@@ -507,3 +507,15 @@ UINT64 d912pxy_helper::AlignValueByPow2(UINT64 val, UINT64 pow2val)
 	else
 		return val;
 }
+
+d912pxy_file_path* currentFilePath = (d912pxy_file_path*)d912pxy_file_paths_default;
+
+d912pxy_file_path * d912pxy_helper::GetFilePath(d912pxy_file_path_id fpId)
+{
+	return &currentFilePath[fpId];
+}
+
+void d912pxy_helper::SwitchFilePaths(d912pxy_file_path * newFpArray)
+{
+	currentFilePath = newFpArray;
+}

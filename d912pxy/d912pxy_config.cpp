@@ -35,10 +35,13 @@ d912pxy_config::~d912pxy_config()
 
 void d912pxy_config::Init()
 {
-	FILE* f = fopen(PXY_CFG_FILE_NAME, "rb");
+	if (!d912pxy_helper::IsFileExist("./d912pxy/dll/release/d3d9.dll"))
+		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_file_paths_addon);
+
+	FILE* f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "rb");
 
 	if (!f) {
-		f = fopen(PXY_CFG_FILE_NAME, "wb");
+		f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "wb");
 
 		wchar_t csection[256] = L"0";
 

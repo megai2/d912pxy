@@ -79,7 +79,7 @@ void d912pxy_vfs::Init(const char * lockPath)
 
 void d912pxy_vfs::SetRoot(wchar_t * rootPath)
 {
-	sprintf(m_rootPath, "%ws", rootPath);
+	sprintf(m_rootPath, "%s/%ws", d912pxy_helper::GetFilePath(FP_VFS_PREFIX)->s, rootPath);
 }
 
 void* d912pxy_vfs::LoadVFS(d912pxy_vfs_id_name* id, UINT memCache)

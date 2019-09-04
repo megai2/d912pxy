@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "P7ClientLib", "thirdparty\p
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "installer", "installer\installer.vcxproj", "{F1D2D374-6C3B-401F-9043-3297F7C3510A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gw2_addon", "gw2_addon\gw2_addon.vcxproj", "{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -44,6 +46,14 @@ Global
 		{F1D2D374-6C3B-401F-9043-3297F7C3510A}.Release_pp|x64.Build.0 = Release|x64
 		{F1D2D374-6C3B-401F-9043-3297F7C3510A}.Release|x64.ActiveCfg = Release|x64
 		{F1D2D374-6C3B-401F-9043-3297F7C3510A}.Release|x64.Build.0 = Release|x64
+		{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}.Debug|x64.ActiveCfg = Debug|x64
+		{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}.Debug|x64.Build.0 = Debug|x64
+		{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}.Release_d|x64.ActiveCfg = Release|x64
+		{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}.Release_d|x64.Build.0 = Release|x64
+		{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}.Release_pp|x64.ActiveCfg = Release|x64
+		{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}.Release_pp|x64.Build.0 = Release|x64
+		{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}.Release|x64.ActiveCfg = Release|x64
+		{BDCB35C3-8ED9-4A6E-A346-D16F17D4600C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -285,11 +285,11 @@ d912pxy_hlsl_generator_memout* d912pxy_shader_replacer::GenerateHLSL(const wchar
 
 d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 {
-	d912pxy_shader_code ret = LoadFromCSO(d912pxy_shader_db_cso_dir);
+	d912pxy_shader_code ret = LoadFromCSO(d912pxy_helper::GetFilePath(FP_SHADER_DB_CSO_DIR)->s);
 
 	if (!ret.code)
 	{
-		ret = CompileFromHLSL(d912pxy_shader_db_hlsl_custom_dir, 1);
+		ret = CompileFromHLSL(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_CUSTOM_DIR)->w, 1);
 
 		if ((oCode == NULL) && (ret.code == NULL))
 		{			
@@ -299,7 +299,7 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 
 		if (!ret.code)
 		{
-			d912pxy_hlsl_generator_memout* genRet = GenerateHLSL(d912pxy_shader_db_hlsl_dir);
+			d912pxy_hlsl_generator_memout* genRet = GenerateHLSL(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w);
 			if (!genRet)
 			{
 				LOG_ERR_DTDM("Failed to re-generate shader with UID = %016llX", mUID);
@@ -310,7 +310,7 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 				}
 				LOG_ERR_THROW2(-1, "shader replace error");
 			}
-			ret = CompileFromHLSL_MEM(d912pxy_shader_db_hlsl_dir, genRet->data, genRet->size, 1);
+			ret = CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, genRet->data, genRet->size, 1);
 
 			PXY_FREE(genRet);
 
@@ -325,10 +325,10 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 				LOG_ERR_THROW2(-1, "shader replace error");
 			}
 			else {
-				SaveCSO(ret, d912pxy_shader_db_cso_dir);
+				SaveCSO(ret, d912pxy_helper::GetFilePath(FP_SHADER_DB_CSO_DIR)->s);
 			}
 		} else 
-			SaveCSO(ret, d912pxy_shader_db_cso_dir);
+			SaveCSO(ret, d912pxy_helper::GetFilePath(FP_SHADER_DB_CSO_DIR)->s);
 	}
 
 	return ret;
@@ -336,15 +336,15 @@ d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 
 d912pxy_shader_code d912pxy_shader_replacer::GetCodeCS()
 {
-	d912pxy_shader_code ret = LoadFromCSO(d912pxy_cs_cso_dir);
+	d912pxy_shader_code ret = LoadFromCSO(d912pxy_helper::GetFilePath(FP_CS_CSO_DIR)->s);
 
 	if (!ret.code)
 	{
-		ret = CompileFromHLSL_CS(d912pxy_cs_hlsl_dir);
+		ret = CompileFromHLSL_CS(d912pxy_helper::GetFilePath(FP_CS_HLSL_DIR)->w);
 		if (!ret.code)
 			LOG_ERR_THROW2(-1, "cs code error");
 		else
-			SaveCSO(ret, d912pxy_cs_cso_dir);
+			SaveCSO(ret, d912pxy_helper::GetFilePath(FP_CS_CSO_DIR)->s);
 	}
 
 	return ret;

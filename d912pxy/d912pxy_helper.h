@@ -60,4 +60,8 @@ namespace d912pxy_helper {
 	UINT64 GetClosestPow2(UINT64 size);
 
 	UINT64 AlignValueByPow2(UINT64 val, UINT64 pow2val);
+
+	d912pxy_file_path* GetFilePath(d912pxy_file_path_id fpId);	
+
+	void SwitchFilePaths(d912pxy_file_path* newFpArray);
 }

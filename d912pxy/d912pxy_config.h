@@ -84,8 +84,6 @@ typedef struct d912pxy_config_value_dsc {
 	wchar_t value[256];
 } d912pxy_config_value_dsc;
 
-#define PXY_CFG_FILE_NAME "d912pxy/config.ini"
-
 class d912pxy_config 
 {
 public:

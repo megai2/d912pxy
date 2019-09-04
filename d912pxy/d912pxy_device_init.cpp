@@ -120,7 +120,7 @@ void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATI
 
 void d912pxy_device::InitVFS()
 {
-	d912pxy_s.vfs.Init(d912pxy_vfs_lock_file);
+	d912pxy_s.vfs.Init(d912pxy_helper::GetFilePath(FP_VFS_LOCK_FILE)->s);
 
 	if (!d912pxy_s.vfs.IsWriteAllowed())
 	{
@@ -145,12 +145,12 @@ void d912pxy_device::InitVFS()
 	d912pxy_vfs_packer* packer = new d912pxy_vfs_packer(d912pxy_s.config.GetValueRaw(PXY_CFG_VFS_ROOT), vfsNames);
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_VFS_PACK_DATA))
-	{		
-		packer->PackArchive(d912pxy_vfs_pack_file);
+	{				
+		packer->PackArchive(d912pxy_helper::GetFilePath(FP_VFS_PACK_FILE)->s);
 	}
 	else if (packer->IsUnpackNeeded())
 	{
-		packer->UnpackArchive(d912pxy_vfs_pack_file);
+		packer->UnpackArchive(d912pxy_helper::GetFilePath(FP_VFS_PACK_FILE)->s);
 	}
 
 	delete packer;
@@ -394,7 +394,8 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 {
 	//megai2: try to load win7 compatible dx12 dll
-	HMODULE h_d3d12 = LoadLibrary(L"./d912pxy/12on7/d3d12.dll");	
+
+	HMODULE h_d3d12 = LoadLibrary(d912pxy_helper::GetFilePath(FP_W7_D3D12)->w);	
 
 	HMODULE h_d3dcompiler_47;
 
@@ -403,7 +404,7 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 		LOG_INFO_DTDM("Pepe: Is this windows 7? windows 7 right.");
 		
 		//megai2: stack up sanity a bit
-		h_d3dcompiler_47 = LoadLibrary(L"./d912pxy/12on7/d3dcompiler_47_v10.dll");
+		h_d3dcompiler_47 = LoadLibrary(d912pxy_helper::GetFilePath(FP_W7_D3DCOMPILER)->w);
 	}
 	else {
 		h_d3dcompiler_47 = LoadLibrary(L"d3dcompiler_47.dll");
