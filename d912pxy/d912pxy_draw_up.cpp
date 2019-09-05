@@ -63,12 +63,6 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 
 		len = len >= 0x7FFFFFF ? 0x7FFFFFF : len;
 
-		if (indexCount >= (len >> 2))
-		{
-			LOG_ERR_DTDM("DPUP Index Count = %lX is too much, skipping!", indexCount);
-			return;
-		}
-
 		if (buf[PXY_DUP_DPI].writePoint)
 		{
 			buf[PXY_DUP_DPI].vstream->UnlockRanged(0, buf[PXY_DUP_DPI].offset);
@@ -76,14 +70,22 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 		}
 
 		AllocateBuffer(PXY_DUP_DPI, len);
-		LockBuffer(PXY_DUP_DPI);
+		len = buf[PXY_DUP_DPI].vstream->GetLength();
 
+		LockBuffer(PXY_DUP_DPI);
+	
 		for (int j = 0; j != len >> 2; ++j)
 		{
 			((UINT32*)buf[PXY_DUP_DPI].writePoint)[j] = j;
 		}
 
 		buf[PXY_DUP_DPI].offset = len;
+
+		if (indexCount >= (len >> 2))
+		{
+			LOG_ERR_DTDM("DPUP Index Count = %lX is too much, skipping!", indexCount);
+			return;
+		}
 	}
 
 	UINT vstreamRegLen = VertexStreamZeroStride * indexCount;
@@ -148,7 +150,7 @@ UINT d912pxy_draw_up::BufferWrite(d912pxy_draw_up_buffer_name bid, UINT size, co
 		//len *= 2;
 		
 
-		len = size > len ? size * 2 : len;
+		len = size >= len ? size * 2 : len;
 
 		len = len >= 0x7FFFFFF ? 0x7FFFFFF : len;
 
