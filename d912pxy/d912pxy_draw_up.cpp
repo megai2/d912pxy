@@ -70,6 +70,7 @@ void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Primi
 		}
 
 		AllocateBuffer(PXY_DUP_DPI, len);
+		//megai2: update for possible pooling limitations
 		len = buf[PXY_DUP_DPI].vstream->GetLength();
 
 		LockBuffer(PXY_DUP_DPI);

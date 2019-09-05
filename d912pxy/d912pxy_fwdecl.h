@@ -292,7 +292,7 @@ static const d912pxy_file_path d912pxy_file_paths_default[] = {
 	FP_DEF("./d912pxy/config.ini"),
 	FP_DEF("./d912pxy/12on7/d3dcompiler_47_v10.dll"),
 	FP_DEF("./d912pxy/12on7/d3d12.dll"),
-	FP_DEF(""),
+	FP_DEF("."),
 };
 
 static const d912pxy_file_path d912pxy_file_paths_addon[] = {
