@@ -264,6 +264,7 @@ typedef enum d912pxy_file_path_id {
 	FP_CONFIG,
 	FP_W7_D3DCOMPILER,
 	FP_W7_D3D12,
+	FP_W7_DXILCONV7,
 	FP_VFS_PREFIX
 } d912pxy_file_path_id;
 
@@ -292,6 +293,7 @@ static const d912pxy_file_path d912pxy_file_paths_default[] = {
 	FP_DEF("./d912pxy/config.ini"),
 	FP_DEF("./d912pxy/12on7/d3dcompiler_47_v10.dll"),
 	FP_DEF("./d912pxy/12on7/d3d12.dll"),
+	FP_DEF("./d912pxy/12on7/dxilconv7.dll"),
 	FP_DEF("."),
 };
 

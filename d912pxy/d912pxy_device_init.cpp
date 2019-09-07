@@ -407,6 +407,10 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 		
 		//megai2: stack up sanity a bit
 		h_d3dcompiler_47 = LoadLibrary(d912pxy_helper::GetFilePath(FP_W7_D3DCOMPILER)->w);
+		HMODULE dxilconv7 = LoadLibrary(d912pxy_helper::GetFilePath(FP_W7_DXILCONV7)->w);
+
+		if (!dxilconv7)
+			LOG_ERR_THROW2(-1, "dxilconv7 missing or can't be loaded (win10)");
 	}
 	else {
 		h_d3dcompiler_47 = LoadLibrary(L"d3dcompiler_47.dll");
