@@ -399,6 +399,8 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 
 	HMODULE h_d3dcompiler_47;
 
+	PFN_D3D12_CREATE_DEVICE dx12CreateDevice;
+
 	if (h_d3d12)
 	{
 		LOG_INFO_DTDM("Pepe: Is this windows 7? windows 7 right.");
@@ -408,6 +410,10 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	}
 	else {
 		h_d3dcompiler_47 = LoadLibrary(L"d3dcompiler_47.dll");
+		h_d3d12 = LoadLibrary(L"d3d12.dll");
+
+		if (!h_d3d12)
+			LOG_ERR_THROW2(-1, "d3d12 missing or can't be loaded (win10)");
 	}
 
 	if (!h_d3dcompiler_47)	
@@ -415,6 +421,11 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 
 	d912pxy_shader_replacer::D3DCompile_47 = (pD3DCompile)GetProcAddress(h_d3dcompiler_47, "D3DCompile");
 	d912pxy_shader_replacer::D3DCompileFromFile_47 = (pD3DCompileFromFile_47)GetProcAddress(h_d3dcompiler_47, "D3DCompileFromFile");
+	d912pxy_iframe::dx12SerializeRootSig = (PFN_D3D12_SERIALIZE_ROOT_SIGNATURE)GetProcAddress(h_d3d12, "D3D12SerializeRootSignature");
+	dx12CreateDevice = (PFN_D3D12_CREATE_DEVICE)GetProcAddress(h_d3d12, "D3D12CreateDevice");
+
+	if (!d912pxy_iframe::dx12SerializeRootSig || !dx12CreateDevice)
+		LOG_ERR_THROW2(-1, "D3D12 missing exports");
 
 	if (!d912pxy_shader_replacer::D3DCompile_47 || !d912pxy_shader_replacer::D3DCompileFromFile_47)	
 		LOG_ERR_THROW2(-1, "D3D HLSL compiler missing exports");	
@@ -487,15 +498,15 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 
 			if (operational)
 			{
-				flTestMask = SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr));
-				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)) << 1;
-				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_1, __uuidof(ID3D12Device), nullptr)) << 2;
-				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)) << 3;
-				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_10_1, __uuidof(ID3D12Device), nullptr)) << 4;
-				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_10_0, __uuidof(ID3D12Device), nullptr)) << 5;
-				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_3, __uuidof(ID3D12Device), nullptr)) << 6;
-				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_2, __uuidof(ID3D12Device), nullptr)) << 7;
-				flTestMask |= SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_1, __uuidof(ID3D12Device), nullptr)) << 8;
+				flTestMask = SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr));
+				flTestMask |= SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)) << 1;
+				flTestMask |= SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_1, __uuidof(ID3D12Device), nullptr)) << 2;
+				flTestMask |= SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)) << 3;
+				flTestMask |= SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_10_1, __uuidof(ID3D12Device), nullptr)) << 4;
+				flTestMask |= SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_10_0, __uuidof(ID3D12Device), nullptr)) << 5;
+				flTestMask |= SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_3, __uuidof(ID3D12Device), nullptr)) << 6;
+				flTestMask |= SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_2, __uuidof(ID3D12Device), nullptr)) << 7;
+				flTestMask |= SUCCEEDED(dx12CreateDevice(dxgiAdapter1.Get(), D3D_FEATURE_LEVEL_9_1, __uuidof(ID3D12Device), nullptr)) << 8;
 
 				while ((flTestMask & 1) == 0)
 				{
@@ -557,7 +568,7 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	//megai2: create device actually
 
 	ComPtr<ID3D12Device> ret;
-	LOG_ERR_THROW2(D3D12CreateDevice(gpu.Get(), usingFeatures, IID_PPV_ARGS(&ret)), "D3D12CreateDevice");
+	LOG_ERR_THROW2(dx12CreateDevice(gpu.Get(), usingFeatures, IID_PPV_ARGS(&ret)), "dx12CreateDevice");
 
 	// Enable debug messages in debug mode.
 #ifdef _DEBUG
@@ -591,7 +602,7 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 		NewFilter.DenyList.NumIDs = _countof(DenyIds);
 		NewFilter.DenyList.pIDList = DenyIds;
 
-		LOG_ERR_THROW2(pInfoQueue->PushStorageFilter(&NewFilter), "D3D12CreateDevice dbg filters");
+		LOG_ERR_THROW2(pInfoQueue->PushStorageFilter(&NewFilter), "dx12CreateDevice dbg filters");
 	}
 #endif
 

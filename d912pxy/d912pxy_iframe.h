@@ -98,6 +98,8 @@ public:
 
 	UINT GetActiveStreamCount() { return streamsActive; };
 
+	static PFN_D3D12_SERIALIZE_ROOT_SIGNATURE dx12SerializeRootSig;
+
 private:	
 	void InitRootSignature();
 

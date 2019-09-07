@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+PFN_D3D12_SERIALIZE_ROOT_SIGNATURE d912pxy_iframe::dx12SerializeRootSig = NULL;
+
 d912pxy_iframe::d912pxy_iframe() 
 {
 }
@@ -767,7 +769,8 @@ void d912pxy_iframe::InitRootSignature()
 
 	ComPtr<ID3DBlob> signature;
 	ComPtr<ID3DBlob> error;
-	LOG_ERR_THROW(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+	
+	LOG_ERR_THROW(dx12SerializeRootSig(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
 	LOG_ERR_THROW(d912pxy_s.dx12.dev->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
 
 	d912pxy_s.render.db.pso.SetRootSignature(mRootSignature);
