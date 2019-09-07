@@ -51,8 +51,9 @@ d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) :
 	backBufferSurface = NULL;
 	swapCheckValue = D3D_OK;
 	dxgiNoWaitFlag = DXGI_PRESENT_DO_NOT_WAIT;
-	dxgiOWndProc = NULL;
+	dxgiOWndProc = NULL;	
 	errorCount = 0;
+
 
 	if (index == 0)
 	{
@@ -252,6 +253,9 @@ void d912pxy_swapchain::SetGammaRamp(DWORD Flags, CONST D3DGAMMARAMP* pRamp)
 	ComPtr<IDXGISwapChain4> d12sw = dxgiSwapchain;
 	ComPtr<IDXGIOutput> odata;
 
+	if (!d12sw)
+		return;
+
 	if (FAILED(d12sw->GetContainingOutput(&odata)))
 		return;
 
@@ -314,6 +318,9 @@ void d912pxy_swapchain::GetGammaRamp(D3DGAMMARAMP* pRamp)
 	//get output info to convert ramp formats
 	ComPtr<IDXGISwapChain4> d12sw = dxgiSwapchain;
 	ComPtr<IDXGIOutput> odata;
+
+	if (!d12sw)
+		return;
 
 	if (FAILED(d12sw->GetContainingOutput(&odata)))
 		return;
