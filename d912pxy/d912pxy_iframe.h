@@ -106,7 +106,7 @@ private:
 	UINT mSetHeapArrCnt;
 	d912pxy_swapchain* mSwapChain;
 	
-	ComPtr<ID3D12RootSignature> mRootSignature;
+	ID3D12RootSignature* mRootSignature;
 	
 	d912pxy_surface* bindedSurfaces[1+PXY_INNER_MAX_RENDER_TARGETS];
 	d912pxy_surface* zeroWriteRT;

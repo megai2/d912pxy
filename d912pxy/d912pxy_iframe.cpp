@@ -30,6 +30,8 @@ d912pxy_iframe::d912pxy_iframe()
 
 d912pxy_iframe::~d912pxy_iframe()
 {
+	mRootSignature->Release();
+
 	d912pxy_s.render.batch.~d912pxy_batch();
 	d912pxy_s.render.tex.~d912pxy_texture_state();
 	d912pxy_s.render.db.pso.~d912pxy_pso_cache();
@@ -490,7 +492,7 @@ void d912pxy_iframe::SetRSigOnList(d912pxy_gpu_cmd_list_group lstID)
 		
 	cl->SetDescriptorHeaps(mSetHeapArrCnt, mSetHeapArr);
 
-	cl->SetGraphicsRootSignature(mRootSignature.Get());
+	cl->SetGraphicsRootSignature(mRootSignature);
 
 	cl->SetGraphicsRootDescriptorTable(0, mHeaps[PXY_INNER_HEAP_SRV]->GetGPUDHeapHandle(0));
 	cl->SetGraphicsRootDescriptorTable(1, mHeaps[PXY_INNER_HEAP_SRV]->GetGPUDHeapHandle(0));
@@ -706,18 +708,6 @@ void d912pxy_iframe::InitRootSignature()
 	ranges[2].OffsetInDescriptorsFromTableStart = 0;
 	ranges[2].RegisterSpace = 0;
 
-	/*ranges[2].BaseShaderRegister = 0;
-	ranges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	ranges[2].NumDescriptors = 1;//device_heap_config[PXY_INNER_HEAP_CBV].NumDescriptors;
-	ranges[2].OffsetInDescriptorsFromTableStart = 0;
-	ranges[2].RegisterSpace = 0;
-
-	ranges[3].BaseShaderRegister = 0;
-	ranges[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	ranges[3].NumDescriptors = 1;//device_heap_config[PXY_INNER_HEAP_CBV].NumDescriptors;
-	ranges[3].OffsetInDescriptorsFromTableStart = 0;
-	ranges[3].RegisterSpace = 1;*/
-
 	D3D12_ROOT_PARAMETER rootParameters[5];
 
 	for (int i = 0; i != 3; ++i)
@@ -728,20 +718,10 @@ void d912pxy_iframe::InitRootSignature()
 		rootParameters[i].DescriptorTable.pDescriptorRanges = &ranges[i];
 	}
 
-/*	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters[2].Descriptor.RegisterSpace = 0;
-	rootParameters[2].Descriptor.ShaderRegister = 0;
-	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;*/
-
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[3].Descriptor.RegisterSpace = 0;
 	rootParameters[3].Descriptor.ShaderRegister = 0;	
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-/*	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters[4].Descriptor.RegisterSpace = 2;
-	rootParameters[4].Descriptor.ShaderRegister = 0;
-	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;*/
 
 	D3D12_STATIC_SAMPLER_DESC staticPCF;
 	staticPCF.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
@@ -765,11 +745,7 @@ void d912pxy_iframe::InitRootSignature()
 	rootSignatureDesc.pParameters = rootParameters;
 	rootSignatureDesc.pStaticSamplers = &staticPCF;
 
-	ComPtr<ID3DBlob> signature;
-	ComPtr<ID3DBlob> error;
+	mRootSignature = d912pxy_s.dev.ConstructRootSignature(&rootSignatureDesc);
 	
-	LOG_ERR_THROW(d912pxy_s.imports.dx12.SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-	LOG_ERR_THROW(d912pxy_s.dx12.dev->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
-
 	d912pxy_s.render.db.pso.SetRootSignature(mRootSignature);
 }
