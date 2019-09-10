@@ -110,7 +110,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\release\</OutDir>
     <TargetName>d3d9</TargetName>
-    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ps|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -315,6 +315,7 @@
     <ClInclude Include="d912pxy_com_routing.h" />
     <ClInclude Include="d912pxy_config.h" />
     <ClInclude Include="d912pxy_draw_up.h" />
+    <ClInclude Include="d912pxy_dynamic_imports.h" />
     <ClInclude Include="d912pxy_linked_list.h" />
     <ClInclude Include="d912pxy_basetexture.h" />
     <ClInclude Include="d912pxy_batch.h" />
@@ -406,6 +407,7 @@
     <ClCompile Include="d912pxy_device_texstate.cpp" />
     <ClCompile Include="d912pxy_device_unimpl.cpp" />
     <ClCompile Include="d912pxy_draw_up.cpp" />
+    <ClCompile Include="d912pxy_dynamic_imports.cpp" />
     <ClCompile Include="d912pxy_fwdecl.cpp" />
     <ClCompile Include="d912pxy_linked_list.cpp" />
     <ClCompile Include="d912pxy_basetexture.cpp" />

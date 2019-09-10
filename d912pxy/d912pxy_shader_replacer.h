@@ -34,31 +34,6 @@ typedef struct d912pxy_shader_code {
 	ComPtr<ID3DBlob> blob;
 } d912pxy_shader_code;
 
-typedef HRESULT(WINAPI *pD3DCompile_47)
-(LPCVOID                         pSrcData,
-	SIZE_T                          SrcDataSize,
-	LPCSTR                          pFileName,
-	CONST D3D_SHADER_MACRO*         pDefines,
-	ID3DInclude*                    pInclude,
-	LPCSTR                          pEntrypoint,
-	LPCSTR                          pTarget,
-	UINT                            Flags1,
-	UINT                            Flags2,
-	ID3DBlob**                      ppCode,
-	ID3DBlob**                      ppErrorMsgs);
-
-typedef HRESULT(WINAPI *pD3DCompileFromFile_47)(
-	LPCWSTR pFileName,
-	CONST D3D_SHADER_MACRO* pDefines,
-	ID3DInclude* pInclude,
-	LPCSTR pEntrypoint,
-	LPCSTR pTarget,
-	UINT Flags1,
-	UINT Flags2,
-	ID3DBlob** ppCode,
-	ID3DBlob** ppErrorMsgs
-	);
-
 class d912pxy_shader_replacer : public d912pxy_noncom
 {
 public:
@@ -77,9 +52,6 @@ public:
 	d912pxy_shader_code GetCodeCS();
 
 	UINT GetMaxVars();
-
-	static pD3DCompile_47 D3DCompile_47;
-	static pD3DCompileFromFile_47 D3DCompileFromFile_47;
 
 private:
 	UINT CheckTypeSignature();

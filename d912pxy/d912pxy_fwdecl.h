@@ -262,10 +262,9 @@ typedef enum d912pxy_file_path_id {
 	FP_PERF_GRAPH_OUTFILE_PNG,
 	FP_PERF_GRAPH_DX9_OUTFILE_PNG,
 	FP_CONFIG,
-	FP_W7_D3DCOMPILER,
-	FP_W7_D3D12,
-	FP_W7_DXILCONV7,
-	FP_VFS_PREFIX
+	FP_W7_12ON7,
+	FP_VFS_PREFIX,
+	FP_NO_PATH
 } d912pxy_file_path_id;
 
 typedef struct d912pxy_file_path {
@@ -291,10 +290,9 @@ static const d912pxy_file_path d912pxy_file_paths_default[] = {
 	FP_DEF("./d912pxy/dx12_perf_graph.png"),
 	FP_DEF("./d912pxy/dx9_perf_graph.png"),
 	FP_DEF("./d912pxy/config.ini"),
-	FP_DEF("./d912pxy/12on7/d3dcompiler_47_v10.dll"),
-	FP_DEF("./d912pxy/12on7/d3d12.dll"),
-	FP_DEF("./d912pxy/12on7/dxilconv7.dll"),
+	FP_DEF("./d912pxy/12on7/"),
 	FP_DEF("."),
+	FP_DEF("")
 };
 
 static const d912pxy_file_path d912pxy_file_paths_addon[] = {
@@ -313,9 +311,9 @@ static const d912pxy_file_path d912pxy_file_paths_addon[] = {
 	FP_DEF("./addons/d912pxy/dx12_perf_graph.png"),
 	FP_DEF("./addons/d912pxy/dx9_perf_graph.png"),
 	FP_DEF("./addons/d912pxy/config.ini"),
-	FP_DEF("./d912pxy/12on7/d3dcompiler_47_v10.dll"),
-	FP_DEF("./d912pxy/12on7/d3d12.dll"),
+	FP_DEF("./addons/d912pxy/12on7/"),	
 	FP_DEF("./addons/"),
+	FP_DEF("")
 };
 
 #undef FP_DEF

@@ -89,6 +89,8 @@ typedef struct d912pxy_instance {
 	d912pxy_com_mgr com;
 	d912pxy_mem_mgr mem;
 
+	d912pxy_dynamic_imports imports;
+
 	UINT running;
 } d912pxy_instance;
 

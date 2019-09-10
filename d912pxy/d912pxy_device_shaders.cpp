@@ -81,7 +81,7 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 
 	HRESULT ret;
 
-	ret = d912pxy_iframe::dx12SerializeRootSig(rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+	ret = d912pxy_s.imports.dx12.SerializeRootSignature(rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
 
 	if (FAILED(ret))
 	{
