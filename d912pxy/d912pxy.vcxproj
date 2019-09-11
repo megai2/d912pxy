@@ -104,7 +104,7 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetName>d3d9</TargetName>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\debug\</OutDir>
-    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
