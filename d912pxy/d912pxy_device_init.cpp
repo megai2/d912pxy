@@ -501,11 +501,17 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 			);
 
 			if (operational && (maxVidmem < dxgiAdapterDesc2.DedicatedVideoMemory))
-			{
-				maxVidmem = dxgiAdapterDesc2.DedicatedVideoMemory;
-				gpu = dxgiAdapter4;
+			{				
+				if ((maxVidmem > 0) && (dxgiAdapterDesc2.VendorId == 0x8086))
+				{
+					LOG_WARN_DTDM("Under prioritized Intel GPU have more VRAM than other non-Intel GPU. Odd, skipping Intel GPU.");
+				}
+				else {
+					maxVidmem = dxgiAdapterDesc2.DedicatedVideoMemory;
+					gpu = dxgiAdapter4;
 
-				usingFeatures = featureToCreate[operational];
+					usingFeatures = featureToCreate[operational];
+				}
 			}
 		}
 	}
