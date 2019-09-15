@@ -91,14 +91,14 @@ HRESULT d912pxy_device::CreateVertexDeclaration(CONST D3DVERTEXELEMENT9* pVertex
 
 HRESULT d912pxy_device::CreateVertexShader(CONST DWORD* pFunction, IDirect3DVertexShader9** ppShader)
 { 
-	*ppShader = PXY_COM_CAST_(IDirect3DVertexShader9, d912pxy_shader::d912pxy_shader_com(1, pFunction, 0));
+	*ppShader = PXY_COM_CAST_(IDirect3DVertexShader9, d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_VS, pFunction, 0));
 	
 	return D3D_OK; 
 }
 
 HRESULT d912pxy_device::CreatePixelShader(CONST DWORD* pFunction, IDirect3DPixelShader9** ppShader)
 {
-	*ppShader = PXY_COM_CAST_(IDirect3DPixelShader9, d912pxy_shader::d912pxy_shader_com(0, pFunction, 0));
+	*ppShader = PXY_COM_CAST_(IDirect3DPixelShader9, d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_PS, pFunction, 0));
 
 	return D3D_OK;
 }

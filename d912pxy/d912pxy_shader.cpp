@@ -33,58 +33,34 @@ d912pxy_shader * d912pxy_shader::d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, 
 		L"vshader"
 	};
 	
-	try {
-
-		if (origCode)
-			new (&ret->shader)d912pxy_shader(objName[isVs], origCode);
-		else
-			new (&ret->shader)d912pxy_shader(objName[isVs], uid, isVs);
-
-	} 
-	catch (...)
-	{
-		ret->com.DeAllocateBase();
-
-		return 0;
-	}
-
+	new (&ret->shader)d912pxy_shader(objName[isVs], origCode, uid, isVs);
+	
 	ret->vtable = d912pxy_com_route_get_vtable(PXY_COM_ROUTE_SHADER);
 
 	return &ret->shader;
 }
 
-d912pxy_shader::d912pxy_shader(const wchar_t * shtName, const DWORD * fun) : d912pxy_comhandler(PXY_COM_OBJ_SHADER, shtName)
+d912pxy_shader::d912pxy_shader(const wchar_t * shtName, const DWORD* fun, d912pxy_shader_uid uid, UINT shdType) : d912pxy_comhandler(PXY_COM_OBJ_SHADER, shtName)
 {	
-	mUID = d912pxy_s.render.db.shader.GetUID((DWORD*)fun, &oLen);
+	if (fun)
+	{
+		mUID = d912pxy_s.render.db.shader.GetUID((DWORD*)fun, &oLen);
 
-	PXY_MALLOC(oCode, oLen * 4, DWORD*);
-	memcpy(oCode, fun, oLen * 4);
+		PXY_MALLOC(oCode, oLen * 4, DWORD*);
+		memcpy(oCode, fun, oLen * 4);
+	}
+	else {
+		oCode = 0;
+		oLen = 0;
+		mUID = uid;
+	}		
+
+	shaderType = shdType;
+
+	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
 
 	bytecode.code = 0;
-	bytecode.blob = nullptr;
-
-	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
-}
-
-d912pxy_shader::d912pxy_shader(const wchar_t * shtName, d912pxy_shader_uid uid, UINT isVS) : d912pxy_comhandler(PXY_COM_OBJ_SHADER, shtName)
-{
-	mUID = uid;
-
-	oCode = NULL;
-
-	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
-
-	d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID, isVS);
-
-	bytecode = replacer->GetCode();
-
-	delete replacer;	
-
-	if (!bytecode.code)
-	{
-		LOG_ERR_THROW2(-1, "shader cso load error");
-		delete pairs;
-	}
+	bytecode.blob = nullptr;	
 }
 
 d912pxy_shader::~d912pxy_shader()
@@ -104,13 +80,11 @@ D3D12_SHADER_BYTECODE * d912pxy_shader::GetCode()
 	if (!bytecode.code)
 	{	
 		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID, 0);
-
 		bytecode = replacer->GetCode();
-
 		delete replacer;
 
-		//free(oCode);
-		PXY_FREE(oCode);
+		if (oCode)
+			PXY_FREE(oCode);
 
 		oCode = NULL;
 	}

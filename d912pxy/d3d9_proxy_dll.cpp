@@ -38,6 +38,24 @@ HINSTANCE hlD3D9 = 0;
 d3d9ProxyCB_OnDevCreate pxCb_devCreate = NULL;
 d3d9ProxyCB_OnDevDestroy pxCb_devDestroy = NULL;
 
+//megai2: added for win10 update compat
+
+typedef void(*d3d9_ordinal_fn)();
+
+#ifdef _DEBUG
+#define d3d9_ordinal_export_passthru(a) d3d9_ordinal_fn d3d9_ordinal_ptr_##a; void d3d9_Ordinal##a() { return; }
+#else
+#define d3d9_ordinal_export_passthru(a) d3d9_ordinal_fn d3d9_ordinal_ptr_##a; void d3d9_Ordinal##a() { d3d9_ordinal_ptr_##a(); return; }
+#endif
+
+#define d3d9_ordinal_get_orig_adr(a) d3d9_ordinal_ptr_##a = (d3d9_ordinal_fn)GetProcAddress(hlD3D9, MAKEINTRESOURCEA(a))
+
+#define d3d9_ordinal_gen_macro(a) a(16); a(17); a(18); a(19); a(20); a(21); a(22); a(23);
+
+d3d9_ordinal_gen_macro(d3d9_ordinal_export_passthru);
+
+//
+
 bool loadD3D9dll()
 {
 	//Get path to the original d3d9.dll
@@ -51,8 +69,10 @@ bool loadD3D9dll()
 		MessageBox(NULL, L"Cannot find original d3d9.dll in the system directory!", L"D3D9 Proxy DLL error", MB_OK | MB_ICONERROR);
 		return FALSE;
 	}
-	else
+	else {
+		d3d9_ordinal_gen_macro(d3d9_ordinal_get_orig_adr);		
 		return TRUE;
+	}
 }
 
 bool d3d9_proxy_dll_main(HINSTANCE hInst, DWORD reason, LPVOID)

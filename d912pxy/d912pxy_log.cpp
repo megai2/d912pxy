@@ -74,6 +74,7 @@ void d912pxy_log::Init()
 
 	threadNameId = 0;
 #else
+	CopyFile(d912pxy_helper::GetFilePath(FP_LOG)->w, d912pxy_helper::GetFilePath(FP_LOG_OLD)->w, 0);
 	logfile = fopen(d912pxy_helper::GetFilePath(FP_LOG)->s, "w");
 #endif
 }
@@ -108,6 +109,9 @@ void d912pxy_log::SyncCrashWrite(UINT lock)
 
 void d912pxy_log::WriteCrashLogLine(wchar_t * buf)
 {
+#ifdef DISABLE_P7LIB
+	WriteLogLine((wchar_t*)L"note", L"%u | %s", L"note", crashLogLine, buf);
+#else
 	char fn[255];
 
 	sprintf(fn, "%s.txt", d912pxy_helper::GetFilePath(FP_CRASH_LOG)->s);
@@ -136,6 +140,7 @@ void d912pxy_log::WriteCrashLogLine(wchar_t * buf)
 
 	fwprintf(crashLog, L"%u | %s \r\n", crashLogLine, buf);	
 	fflush(crashLog);
+#endif
 	++crashLogLine;
 }
 

@@ -265,13 +265,22 @@ d912pxy_hlsl_generator_memout* d912pxy_shader_replacer::GenerateHLSL(const wchar
 	d912pxy_hlsl_generator* gen = new d912pxy_hlsl_generator(oCode, oLen, replFn, mUID);
 
 	try {
-
 		ret = gen->Process(1);
-
 	}
 	catch (...)
-	{
-		LOG_ERR_DTDM("hlsl generator got error for shader: %016llX", mUID);
+	{		
+		wsprintf(replFn, L"%s/%08lX%08lX.dxbc", bfolder, (UINT32)(mUID >> 32), (UINT32)(mUID & 0xFFFFFFFF));
+		LOG_ERR_DTDM("hlsl generator failed, dumping original bytecode to %s", replFn);
+
+		FILE* dumpFile = _wfopen(replFn, L"wb+");
+		if (dumpFile)
+		{			
+			fwrite(oCode, 4, oLen, dumpFile);
+			fclose(dumpFile);
+		}
+		else {
+			LOG_ERR_DTDM("failed to dump bytecode");
+		}
 	}
 
 	delete gen;
@@ -280,49 +289,47 @@ d912pxy_hlsl_generator_memout* d912pxy_shader_replacer::GenerateHLSL(const wchar
 }
 
 d912pxy_shader_code d912pxy_shader_replacer::GetCode()
-{
+{	
 	d912pxy_shader_code ret = LoadFromCSO(d912pxy_helper::GetFilePath(FP_SHADER_DB_CSO_DIR)->s);
 
 	if (!ret.code)
 	{
 		ret = CompileFromHLSL(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_CUSTOM_DIR)->w, 1);
 
-		if ((oCode == NULL) && (ret.code == NULL))
-		{			
-			ret.code = NULL;
-			return ret;
-		} 
+		if ((oCode == NULL) && (ret.code == NULL))			
+			return ret;		
 
 		if (!ret.code)
 		{
 			d912pxy_hlsl_generator_memout* genRet = GenerateHLSL(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w);
 			if (!genRet)
-			{
-				LOG_ERR_DTDM("Failed to re-generate shader with UID = %016llX", mUID);
-				LOG_ERR_DTDM("bytecode dump: ");
-				for (UINT i = 0; i != oLen; ++i)
-				{
-					LOG_ERR_DTDM("%04u : %08lX", i, oCode[i]);
-				}
-				LOG_ERR_THROW2(-1, "shader replace error");
-			}
-			ret = CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, genRet->data, genRet->size, 1);
+				return ret;
 
-			PXY_FREE(genRet);
+			ret = CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, genRet->data, genRet->size, 1);			
 
 			if (!ret.code)
 			{
-				LOG_ERR_DTDM("Failed to replace shader with UID = %016llX", mUID);
-				LOG_ERR_DTDM("bytecode dump: ");
-				for (UINT i = 0; i != oLen; ++i)
+				wchar_t replFn[4096];
+				wsprintf(replFn, L"%s/err_%08lX%08lX.hlsl", d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, (UINT32)(mUID >> 32), (UINT32)(mUID & 0xFFFFFFFF));
+
+				LOG_ERR_DTDM("Can't compile generated shader, dumping HLSL code to %s", replFn);				
+
+				FILE* dumpFile = _wfopen(replFn, L"wb+");
+				if (dumpFile)
 				{
-					LOG_ERR_DTDM("%04u : %08lX", i, oCode[i]);
+					fwrite(genRet->data, 1, genRet->size, dumpFile);
+					fwrite(oCode, 4, oLen, dumpFile);
+					fclose(dumpFile);
 				}
-				LOG_ERR_THROW2(-1, "shader replace error");
+				else {
+					LOG_ERR_DTDM("failed to dump generated code");
+				}
 			}
 			else {
 				SaveCSO(ret, d912pxy_helper::GetFilePath(FP_SHADER_DB_CSO_DIR)->s);
 			}
+
+			PXY_FREE(genRet);
 		} else 
 			SaveCSO(ret, d912pxy_helper::GetFilePath(FP_SHADER_DB_CSO_DIR)->s);
 	}

@@ -83,8 +83,7 @@ void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATI
 
 		IDirect3DSwapChain9* dx9swc;
 		LOG_ERR_THROW2(dev->GetSwapChain(0, &dx9swc), "dx9 dev->GetSwapChain");
-		dx9swc->GetPresentParameters(origPP);
-		dx9swc->Release();
+		dx9swc->GetPresentParameters(origPP);		
 
 		if (!origPP->hDeviceWindow)
 			origPP->hDeviceWindow = origPars->hFocusWindow;
@@ -100,7 +99,15 @@ void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATI
 
 		((IDirect3D9*)initPtr)->AddRef();//megai2: keep original d3d9 object
 
-		dev->Release();
+		try {
+
+			dx9swc->Release();
+			dev->Release();
+		}
+		catch (...)
+		{
+			LOG_ERR_DTDM("Something wrong on original dx9 objects cleanup. Ignoring that.");
+		}
 	}
 	else {
 		LOG_INFO_DTDM("Using no-dx9 startup");

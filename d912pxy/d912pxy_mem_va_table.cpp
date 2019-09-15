@@ -45,6 +45,8 @@ void d912pxy_mem_va_table::Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 en
 
 	UINT64 pageSz = d912pxy_s.mem.GetPageSize();
 
+	m_entryCount = entryCount;
+
 	entryShift = d912pxy_helper::GetClosestPow2(entryCount);
 	entryBase = 1ULL << (allocBitSize - entryShift);
 	baseMask = (1ULL << allocBitSize) - 1;
@@ -109,10 +111,10 @@ void d912pxy_mem_va_table::Init(UINT64* objSizes, UINT64 allocBitSize, UINT64 en
 
 void d912pxy_mem_va_table::DeInit()
 {
-	for (int i = 0; i != 4; ++i)
+	for (int i = 0; i != m_entryCount; ++i)
 	{
 		if (table[i].stackPtr != table[i].stackBase)
-			LOG_ERR_DTDM("mem leaked in VA table %016llX type %u, objects leaked = %u", i, this, ((intptr_t)(table[i].stackPtr)-(intptr_t)(table[i].stackBase))/4);
+			LOG_ERR_DTDM("mem leaked in VA table %016llX type %u, objects leaked = %u", this, i, ((intptr_t)(table[i].stackPtr)-(intptr_t)(table[i].stackBase))/4);
 	}
 
 	d912pxy_s.mem.ReleaseReservedVARange(baseAdr);

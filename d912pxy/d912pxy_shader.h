@@ -27,13 +27,15 @@ SOFTWARE.
 
 #define PXY_INNER_MAX_SHADER_LISTING_LEN 1024 * 1024
 
+#define PXY_SHADER_TYPE_PS 0
+#define PXY_SHADER_TYPE_VS 1
+
 class d912pxy_shader : public d912pxy_vtable, public d912pxy_comhandler
 {
 public:
 	static d912pxy_shader* d912pxy_shader_com(PXY_INSTANCE_PAR UINT isVs, const DWORD* origCode, d912pxy_shader_uid uid);
 
-	d912pxy_shader(const wchar_t * shtName, const DWORD* fun);
-	d912pxy_shader(const wchar_t * shtName, d912pxy_shader_uid uid, UINT isVS);
+	d912pxy_shader(const wchar_t * shtName, const DWORD* fun, d912pxy_shader_uid uid, UINT isVS);	
 	~d912pxy_shader();
 
 	D912PXY_METHOD(GetFunction)(PXY_THIS_ void* arg, UINT* pSizeOfData);
@@ -57,6 +59,8 @@ private:
 
 	d912pxy_shader_code bytecode;
 	d912pxy_shader_uid mUID;
+
+	UINT shaderType;
 
 	UINT oLen;	
 	DWORD* oCode;

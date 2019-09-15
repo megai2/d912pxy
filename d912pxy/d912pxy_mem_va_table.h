@@ -67,12 +67,12 @@ public:
 
 private:
 	intptr_t baseAdr;
-	UINT64 entryCount;
+	UINT64 m_entryCount;
 	UINT64 entryShift;
 	UINT64 entryBase;
 	UINT64 baseMask;
 	UINT64 objShift;
-	UINT64 objMask;
+	UINT64 objMask;	
 
 	d912pxy_mem_va_table_entry table[PXY_INNER_MAX_VA_TABLE_ENTRYS];
 	d912pxy_thread_lock lock[PXY_INNER_MAX_VA_TABLE_ENTRYS];

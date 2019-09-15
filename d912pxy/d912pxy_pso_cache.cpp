@@ -766,7 +766,15 @@ void d912pxy_pso_cache::LoadCachedData()
 
 		if (max_ && *max_)
 		{
+			LOG_INFO_DTDM("Loading %u PSO cache keys", *max_+1);
+
 			cacheIncID = *max_;
+
+			if (cacheIncID >= PXY_SDB_PAIR_MAX_PSO_ENTRY_ID)
+			{
+				LOG_ERR_DTDM("Game uses more than %u unique PSO cache keys", PXY_SDB_PAIR_MAX_PSO_ENTRY_ID);
+				LOG_ERR_THROW2(-1, "PSO precompile is out of operational conditions");
+			}
 
 			PXY_MALLOC(psoKeyCache, sizeof(d912pxy_serialized_pso_key*) * (*max_ + 2), d912pxy_serialized_pso_key**);
 
@@ -792,6 +800,8 @@ void d912pxy_pso_cache::LoadCachedData()
 
 			if (d912pxy_s.render.db.shader.GetPrecompileFlag() & PXY_SDB_PSO_PRECOMPILE_LOAD)
 			{
+				LOG_INFO_DTDM("Loading PSO precompile data");
+
 				d912pxy_memtree2* mt = d912pxy_s.vfs.GetHeadTree(PXY_VFS_BID_PSO_PRECOMPILE_LIST);
 
 				mt->Begin();
@@ -807,12 +817,15 @@ void d912pxy_pso_cache::LoadCachedData()
 						d912pxy_shader* ps = NULL;
 
 						
-						vs = d912pxy_shader::d912pxy_shader_com(1, 0, entry->vs);
-						ps = d912pxy_shader::d912pxy_shader_com(0, 0, entry->ps);
+						vs = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_VS, 0, entry->vs);
+						ps = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_PS, 0, entry->ps);
 
-						if (!vs || !ps)
+						if (!vs->GetCode()->pShaderBytecode || !ps->GetCode()->pShaderBytecode)
 						{
-							LOG_ERR_DTDM("Shader pair VS: %llX PS: %llX load fail", entry->vs, entry->ps);					
+							LOG_ERR_DTDM("Can't precompile PSO with VS: %llX PS: %llX due to missing CSO/custom HLSL data", entry->vs, entry->ps);					
+
+							delete vs;
+							delete ps;
 
 							mt->Next();
 							continue;
@@ -971,21 +984,19 @@ void d912pxy_pso_cache_item::Compile()
 	d912pxy_shader* psObj = desc->PS;
 	d912pxy_vdecl* vdclObj = desc->InputLayout;
 		
-	try {
-		d912pxy_pso_cache::cDscBase.VS = *vsObj->GetCode();
-		d912pxy_pso_cache::cDscBase.PS = *psObj->GetCode();
-	}
-	catch (...) {
-		LOG_ERR_DTDM("final error compiling shader pair VS %016llX PS %016llX", vsObj->GetID(), psObj->GetID());
+	d912pxy_pso_cache::cDscBase.VS = *vsObj->GetCode();
+	d912pxy_pso_cache::cDscBase.PS = *psObj->GetCode();
+	
+
+	if (!d912pxy_pso_cache::cDscBase.VS.pShaderBytecode || !d912pxy_pso_cache::cDscBase.PS.pShaderBytecode)
+	{
+		LOG_ERR_DTDM("Can't compile pso with shader pair VS %016llX PS %016llX", vsObj->GetID(), psObj->GetID());
 
 		vsObj->ThreadRef(-1);
 		psObj->ThreadRef(-1);
 		vdclObj->ThreadRef(-1);
 
-		PXY_FREE(desc);
-
-		//m_status = 2;
-
+		PXY_FREE(desc);		
 		return;
 	}
 	d912pxy_pso_cache::cDscBase.InputLayout = *vdclObj->GetD12IA_InputElementFmt();
@@ -1053,12 +1064,11 @@ void d912pxy_pso_cache_item::CreatePSO()
 {
 	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", desc->VS->GetID(), desc->PS->GetID());
 
-	try {
-		LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj)), "PSO item are not created");
-	}
-	catch (...)
-	{
-		LOG_ERR_DTDM("CreateGraphicsPipelineState error for VS %016llX PS %016llX", desc->VS->GetID(), desc->PS->GetID());
+	HRESULT psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&d912pxy_pso_cache::cDscBase, IID_PPV_ARGS(&obj));
+
+	if (FAILED(psoHRet))
+	{	
+		LOG_ERR_DTDM("CreateGraphicsPipelineState error %llX for VS %016llX PS %016llX", psoHRet, desc->VS->GetID(), desc->PS->GetID());
 
 		char dumpString[sizeof(d912pxy_trimmed_dx12_pso) * 2 + 1];
 		dumpString[0] = 0;
@@ -1320,9 +1330,10 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 
 	if ((!bcVS.blob) || (!bcPS.blob))
 		LOG_ERR_DTDM("PSO RCE fail for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);
-
-	d912pxy_s.vfs.WriteFileH(derivedAlias, bcVS.code, (UINT)bcVS.sz, PXY_VFS_BID_DERIVED_CSO_VS);
-	d912pxy_s.vfs.WriteFileH(derivedAlias, bcPS.code, (UINT)bcPS.sz, PXY_VFS_BID_DERIVED_CSO_PS);
+	else {
+		d912pxy_s.vfs.WriteFileH(derivedAlias, bcVS.code, (UINT)bcVS.sz, PXY_VFS_BID_DERIVED_CSO_VS);
+		d912pxy_s.vfs.WriteFileH(derivedAlias, bcPS.code, (UINT)bcPS.sz, PXY_VFS_BID_DERIVED_CSO_PS);
+	}
 
 	delete replVS;
 	delete replPS;
