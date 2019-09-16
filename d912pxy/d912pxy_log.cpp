@@ -74,7 +74,8 @@ void d912pxy_log::Init()
 
 	threadNameId = 0;
 #else
-	CopyFile(d912pxy_helper::GetFilePath(FP_LOG)->w, d912pxy_helper::GetFilePath(FP_LOG_OLD)->w, 0);
+	if (d912pxy_helper::IsFileExist(d912pxy_helper::GetFilePath(FP_LOG)->s))
+		CopyFile(d912pxy_helper::GetFilePath(FP_LOG)->w, d912pxy_helper::GetFilePath(FP_LOG_OLD)->w, 0);
 	logfile = fopen(d912pxy_helper::GetFilePath(FP_LOG)->s, "w");
 #endif
 }
