@@ -597,6 +597,12 @@ UINT d912pxy_pso_cache::UseCompiled(d912pxy_pso_cache_item * it)
 
 UINT d912pxy_pso_cache::UseWithFeedbackPtr(void ** feedback)
 {
+	//megai2: hold VS/PS/vdecl here too cause 3rd party mods usually release resources on hooked Reset call
+	//that can be before replay thread add thread ref on compile enqueue ending in crash
+	cDsc.VS->ThreadRef(1);
+	cDsc.PS->ThreadRef(1);
+	cDsc.InputLayout->ThreadRef(1);
+
 	d912pxy_s.render.replay.PSORawFeedback(&cDsc, feedback);
 
 	//megai2: force dirty to reset PSO to current state data 
@@ -824,8 +830,8 @@ void d912pxy_pso_cache::LoadCachedData()
 						{
 							LOG_ERR_DTDM("Can't precompile PSO with VS: %llX PS: %llX due to missing CSO/custom HLSL data", entry->vs, entry->ps);					
 
-							delete vs;
-							delete ps;
+							ps->Release();
+							vs->Release();
 
 							mt->Next();
 							continue;

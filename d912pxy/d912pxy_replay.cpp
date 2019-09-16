@@ -1015,6 +1015,10 @@ void d912pxy_replay::RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCom
 void d912pxy_replay::RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl, void* unused)
 {	
 	*it->feedbackPtr = d912pxy_s.render.db.pso.GetByDescMT(&it->rawState, 0);	
+
+	it->rawState.VS->ThreadRef(-1);
+	it->rawState.PS->ThreadRef(-1);
+	it->rawState.InputLayout->ThreadRef(-1);
 }
 
 void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void* unused)
