@@ -79,7 +79,7 @@ D3D12_SHADER_BYTECODE * d912pxy_shader::GetCode()
 {
 	if (!bytecode.code)
 	{	
-		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID, 0);
+		d912pxy_shader_replacer* replacer = new d912pxy_shader_replacer(oCode, oLen, mUID, shaderType);
 		bytecode = replacer->GetCode();
 		delete replacer;
 
