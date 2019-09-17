@@ -597,11 +597,12 @@ UINT d912pxy_pso_cache::UseCompiled(d912pxy_pso_cache_item * it)
 
 UINT d912pxy_pso_cache::UseWithFeedbackPtr(void ** feedback)
 {
-	//megai2: hold VS/PS/vdecl here too cause 3rd party mods usually release resources on hooked Reset call
+	//megai2: looks like this is overdo after all
+	//hold VS/PS/vdecl here too cause 3rd party mods usually release resources on hooked Reset call
 	//that can be before replay thread add thread ref on compile enqueue ending in crash
-	cDsc.VS->ThreadRef(1);
+	/*cDsc.VS->ThreadRef(1);
 	cDsc.PS->ThreadRef(1);
-	cDsc.InputLayout->ThreadRef(1);
+	cDsc.InputLayout->ThreadRef(1);*/
 
 	d912pxy_s.render.replay.PSORawFeedback(&cDsc, feedback);
 

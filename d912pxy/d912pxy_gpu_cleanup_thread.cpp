@@ -29,6 +29,8 @@ d912pxy_gpu_cleanup_thread::d912pxy_gpu_cleanup_thread() : d912pxy_thread()
 {
 	InitThread("d912pxy gpu cleanup", 0);
 	finishedEvent = CreateEvent(0, 0, 1, 0);
+	items = 0;
+	cl = 0;
 }
 
 d912pxy_gpu_cleanup_thread::~d912pxy_gpu_cleanup_thread()
