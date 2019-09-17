@@ -57,16 +57,11 @@ void d912pxy_first_init()
 	d912pxy_s.dev_vtable = NULL;
 
 	d912pxy_s.mem.Init();
-	d912pxy_s.config.Init();
-	d912pxy_s.log.text.Init();
+	d912pxy_s.log.text.Init();	   
+	d912pxy_s.config.Init();	
 	d912pxy_s.mem.PostInit();
 
 	D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
-
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_LOAD_RDOC))
-	{
-		HMODULE mod = LoadLibraryA("renderdoc.dll");
-	}
 }
 
 void d912pxy_final_cleanup()
@@ -74,6 +69,7 @@ void d912pxy_final_cleanup()
 	if (!d912pxy_s.running)
 		return;
 
+	d912pxy_s.imports.~d912pxy_dynamic_imports();
 	d912pxy_s.mem.~d912pxy_mem_mgr();
 	d912pxy_s.log.text.~d912pxy_log();
 	d912pxy_s.config.~d912pxy_config();

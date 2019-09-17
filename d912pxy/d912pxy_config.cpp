@@ -34,10 +34,7 @@ d912pxy_config::~d912pxy_config()
 }
 
 void d912pxy_config::Init()
-{
-	if (d912pxy_helper::IsFileExist("./addons/d912pxy/dll/release/d3d9.dll"))
-		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_file_paths_addon);
-
+{	
 	FILE* f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "rb");
 
 	if (!f) {

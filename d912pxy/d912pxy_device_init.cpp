@@ -54,8 +54,6 @@ void d912pxy_device::Init(IDirect3DDevice9* dev, void* par)
 	else
 		perfGraph = NULL;
 
-	d912pxy_s.imports.Init();
-
 	LOG_INFO_DTDM2(InitClassFields(), "Startup step  1/10");
 	LOG_INFO_DTDM2(InitVFS(), "Startup step  2/10");
 	LOG_INFO_DTDM2(InitThreadSyncObjects(), "Startup step  3/10");
@@ -347,7 +345,7 @@ void d912pxy_device::InitDescriptorHeaps()
 
 void d912pxy_device::PrintInfoBanner()
 {
-	LOG_INFO_DTDM("d912pxy(Direct3D9 to Direct3D12 api proxy) loaded");
+	LOG_INFO_DTDM("d912pxy(Direct3D9 to Direct3D12 api proxy) starting up");
 	LOG_INFO_DTDM("Original project link: https://github.com/megai2/d912pxy/");
 	LOG_INFO_DTDM(BUILD_VERSION_NAME);
 	LOG_INFO_DTDM("Batch Limit: %u", PXY_INNER_MAX_IFRAME_BATCH_COUNT);

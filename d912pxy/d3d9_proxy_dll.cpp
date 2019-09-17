@@ -63,7 +63,9 @@ bool loadD3D9dll()
 	GetSystemDirectory(infoBuf, 4096);
 	lstrcatW(infoBuf, L"\\d3d9.dll");
 
-	//And load it...
+	//And load it, but before we do that, load d3d12 dll to fix wrong hooking behaivour on various tools
+	d912pxy_s.imports.Init();
+
 	hlD3D9 = LoadLibrary(infoBuf);
 	if (!hlD3D9) {
 		MessageBox(NULL, L"Cannot find original d3d9.dll in the system directory!", L"D3D9 Proxy DLL error", MB_OK | MB_ICONERROR);

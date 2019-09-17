@@ -74,9 +74,21 @@ void d912pxy_log::Init()
 
 	threadNameId = 0;
 #else
+	if (d912pxy_helper::IsFileExist("./addons/d912pxy/dll/release/d3d9.dll"))
+		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_file_paths_addon);
+
 	if (d912pxy_helper::IsFileExist(d912pxy_helper::GetFilePath(FP_LOG)->s))
 		CopyFile(d912pxy_helper::GetFilePath(FP_LOG)->w, d912pxy_helper::GetFilePath(FP_LOG_OLD)->w, 0);
 	logfile = fopen(d912pxy_helper::GetFilePath(FP_LOG)->s, "w");
+
+	if (!logfile)
+	{
+		MessageBox(0, L"Can't create log file! Check your installation folder file premissions!", L"d912pxy", MB_ICONERROR);
+		exit(-1);
+	}
+	else {
+		WriteLogLine((wchar_t*)L"log", L"d912pxy dll loaded", L"info");
+	}
 #endif
 }
 

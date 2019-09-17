@@ -36,6 +36,16 @@ void d912pxy_dynamic_imports::Init()
 {
 	NonCom_Init(L"dyn_imports");
 
+	LOG_INFO_DTDM("Loading dynamic libs");
+
+	//megai2: try to load rdoc first if specified
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_LOAD_RDOC))
+	{	
+		HMODULE mod = LoadLibraryA("renderdoc.dll");
+		LOG_INFO_DTDM("RDoc loaded at %016llX", mod);
+	}
+
+
 	UINT dynLibSet = LoadDynLib(DYNIMP_DX12, DYNIMP_LIB_SET_WIN7) ? DYNIMP_LIB_SET_WIN7 : DYNIMP_LIB_SET_WIN10;
 
 	if (dynLibSet)
@@ -76,6 +86,9 @@ UINT d912pxy_dynamic_imports::LoadDynLib(d912pxy_dynamic_import_lib lib, UINT se
 		wsprintf(buf, L"%s%s", d912pxy_helper::GetFilePath(d912pxy_dynamic_import_libs[set].pathPrefix[lib])->w, d912pxy_dynamic_import_libs[set].dllName[lib]);
 
 		libHandles[lib] = LoadLibrary(buf);
+
+		if (libHandles[lib])
+			LOG_INFO_DTDM("set %u lib %u loaded from %s at %016llX", set, lib, buf, libHandles[lib]);
 
 		return libHandles[lib] != 0;
 	}
