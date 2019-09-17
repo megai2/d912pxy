@@ -113,7 +113,7 @@ private:
 		{L"pooling", L"keep_resident",L"0"},//PXY_CFG_POOLING_KEEP_RESIDENT
 		{L"samplers", L"min_lod", L"0"},//PXY_CFG_SAMPLERS_MIN_LOD		
 		{L"cleanup", L"period",L"10000"},//PXY_CFG_CLEANUP_PERIOD
-		{L"cleanup", L"subsleep",L"100"},//PXY_CFG_CLEANUP_SUBSLEEP	
+		{L"cleanup", L"subsleep",L"50"},//PXY_CFG_CLEANUP_SUBSLEEP	
 		{L"sdb", L"keep_pairs", L"1"},//PXY_CFG_SDB_KEEP_PAIRS
 		{L"sdb", L"use_pso_precompile", L"0"},//PXY_CFG_SDB_USE_PSO_PRECOMPILE
 		{L"sdb", L"use_pso_key_cache", L"0"},//PXY_CFG_SDB_USE_PSO_KEY_CACHE
