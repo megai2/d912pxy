@@ -9,12 +9,4 @@ EXPORTS
 	D3DPERF_QueryRepeatFrame
 	D3DPERF_SetOptions
 	D3DPERF_GetStatus
-	CreateD912PXY
-	d3d9_Ordinal16 @16
-	d3d9_Ordinal17 @17
-	d3d9_Ordinal18 @18
-	d3d9_Ordinal19 @19
-	d3d9_Ordinal20 @20
-	d3d9_Ordinal21 @21
-	d3d9_Ordinal22 @22
-	d3d9_Ordinal23 @23
+	CreateD912PXY	

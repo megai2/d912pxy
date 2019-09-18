@@ -55,11 +55,11 @@ void d912pxy_first_init()
 	d912pxy_s.running = 1;
 
 	d912pxy_s.dev_vtable = NULL;
-
 	d912pxy_s.mem.Init();
 	d912pxy_s.log.text.Init();	   
 	d912pxy_s.config.Init();	
 	d912pxy_s.mem.PostInit();
+	d912pxy_s.imports.Init();
 
 	D3D9ProxyCb_set_OnDevCreate(&app_cb_D3D9Dev_create);
 }

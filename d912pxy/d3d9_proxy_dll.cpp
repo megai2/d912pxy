@@ -52,6 +52,8 @@ typedef void(*d3d9_ordinal_fn)();
 
 #define d3d9_ordinal_gen_macro(a) a(16); a(17); a(18); a(19); a(20); a(21); a(22); a(23);
 
+bool loadD3D9dll();
+
 d3d9_ordinal_gen_macro(d3d9_ordinal_export_passthru);
 
 //
@@ -63,8 +65,8 @@ bool loadD3D9dll()
 	GetSystemDirectory(infoBuf, 4096);
 	lstrcatW(infoBuf, L"\\d3d9.dll");
 
-	//And load it, but before we do that, load d3d12 dll to fix wrong hooking behaivour on various tools
-	d912pxy_s.imports.Init();
+	//megai2: moved first init here, due to static dll load DllMain crashes
+	d912pxy_first_init();	
 
 	hlD3D9 = LoadLibrary(infoBuf);
 	if (!hlD3D9) {
@@ -73,18 +75,19 @@ bool loadD3D9dll()
 	}
 	else {
 		d3d9_ordinal_gen_macro(d3d9_ordinal_get_orig_adr);		
+
 		return TRUE;
 	}
 }
 
 bool d3d9_proxy_dll_main(HINSTANCE hInst, DWORD reason, LPVOID)
 {
-	if (reason == DLL_PROCESS_ATTACH) {
+	if (reason == DLL_PROCESS_ATTACH) 
+	{
 		hlThis = hInst;
 	}
 	else if (reason == DLL_PROCESS_DETACH) {
-		if (hlD3D9)
-			FreeLibrary(hlD3D9);
+
 	}
 	return TRUE;
 }

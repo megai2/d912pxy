@@ -42,26 +42,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                        LPVOID lpReserved
                      )
 {
-
 	if (!d3d9_proxy_dll_main(hModule, ul_reason_for_call, lpReserved))
 		return FALSE;
 
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-	{
-		d912pxy_first_init();
-		break;
-	}
-    case DLL_THREAD_ATTACH:
-		break;
-    case DLL_THREAD_DETACH:
-		break;
-    case DLL_PROCESS_DETACH:
-	{
-		d912pxy_final_cleanup();
-		break;
-	}
-    }
     return TRUE;
 }
