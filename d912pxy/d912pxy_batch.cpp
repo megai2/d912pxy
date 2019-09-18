@@ -42,7 +42,7 @@ void d912pxy_batch::Init()
 {
 	NonCom_Init(L"draw batch");
 
-	doNewBatch = 1;
+	doNewBatch = 0;
 	streamIdx = 0;
 	batchNum = 0;
 	lastBatchCount = 0;
@@ -67,8 +67,10 @@ void d912pxy_batch::Init()
 UINT d912pxy_batch::NextBatch()
 {
 	++batchCount;
-	doNewBatch = 1;
-	return batchNum;	
+	if (doNewBatch)
+		return batchNum++;
+	else
+		return batchNum;	
 }
 
 UINT d912pxy_batch::GetBatchNum()
@@ -88,7 +90,7 @@ void d912pxy_batch::SetShaderConstF(UINT type, UINT start, UINT cnt4, float * da
 
 void d912pxy_batch::FrameStart()
 {
-	doNewBatch = 1;
+	doNewBatch = 0;
 	topCl = d912pxy_s.dx12.cl->GID(CLG_TOP);
 
 	GPUWriteStart(0, 0);
@@ -109,7 +111,7 @@ void d912pxy_batch::FrameEnd()
 	streamData = (d912pxy_batch_stream_data_entry*)streamPoint;
 	streamControl = (d912pxy_batch_stream_control_entry*)(streamPoint + PXY_BATCH_STREAM_CONTROL_OFFSET);
 	
-	lastBatchCount = batchNum - 1;
+	lastBatchCount = batchNum-1;
 	batchNum = 0;
 	batchCount = 0;
 }
@@ -240,11 +242,7 @@ void d912pxy_batch::ClearShaderVars()
 
 void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 {
-	if (doNewBatch)
-	{
-		doNewBatch = 0;
-		++batchNum;
-	}
+	doNewBatch = 1;		
 
 	memcpy(&streamData[streamIdx], src, size << 4);
 	
