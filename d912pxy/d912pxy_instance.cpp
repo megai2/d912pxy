@@ -53,11 +53,14 @@ void d912pxy_first_init()
 		return;
 
 	d912pxy_s.running = 1;
+	
+	if (d912pxy_helper::IsFileExist("./addons/d912pxy/dll/release/d3d9.dll"))
+		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_file_paths_addon);
 
 	d912pxy_s.dev_vtable = NULL;
-	d912pxy_s.mem.Init();
-	d912pxy_s.log.text.Init();	   
-	d912pxy_s.config.Init();	
+	d912pxy_s.mem.Init();	
+	d912pxy_s.config.Init();
+	d912pxy_s.log.text.Init();	   		
 	d912pxy_s.mem.PostInit();
 	d912pxy_s.imports.Init();
 

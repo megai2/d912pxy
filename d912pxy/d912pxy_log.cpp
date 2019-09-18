@@ -54,9 +54,6 @@ void d912pxy_log::Init()
 	crashLog = NULL;
 	crashLogLine = 0;
 
-	if (d912pxy_helper::IsFileExist("./addons/d912pxy/dll/release/d3d9.dll"))
-		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_file_paths_addon);
-
 #ifndef DISABLE_P7LIB
 	//create P7 client object		
 	p7cli = P7_Create_Client(d912pxy_s.config.GetValueRaw(PXY_CFG_LOG_P7CONFIG));

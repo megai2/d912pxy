@@ -96,6 +96,9 @@ public:
 
 	void FlushIFrameValues();
 
+	void TrackGPUWDepth(UINT64 depth);
+	void TrackReplayItems(UINT64 stackIdx);
+
 private:
 	IP7_Telemetry* iframeMetrics;	
 	tUINT16 metricIFrameTimes[PXY_METRICS_IFRAME_COUNT];	
@@ -103,7 +106,7 @@ private:
 	tUINT16 metricIFrameCleans;	
 	tUINT16 metricIFramePerBatchPrep;
 	tUINT16 metricIFramePerBatchOverhead;
-	tUINT16 metricIFrameAppPrep;	
+	tUINT16 metricIFrameAppPrep;		
 
 	tUINT16 metricMemVA;
 	tUINT16 metricMemHeap;
@@ -113,6 +116,8 @@ private:
 	tUINT16 metricMemWatched;
 	tUINT16 metricMemVStream;
 	tUINT16 metricOverhead;
+	tUINT16 metricGPUWDepth;
+	tUINT16 metricReplayItems;
 
 	tUINT16 metricVRAM;
 	tUINT16 metricVRAMShared;
@@ -127,7 +132,7 @@ private:
 	
 	Stopwatch* iframeTime[PXY_METRICS_IFRAME_COUNT];	
 	
-	UINT lastDraws;
+	UINT lastDraws;	
 #endif
 };
 

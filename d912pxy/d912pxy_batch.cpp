@@ -140,6 +140,16 @@ void d912pxy_batch::GPUCSCpy()
 
 		streamIdx = npb;
 	}
+
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.TrackGPUWDepth(streamIdx);
+#endif
+
+	if (streamIdx >= PXY_BATCH_STREAM_ELEMENT_COUNT)
+	{
+		LOG_ERR_THROW2(-1, L"Too much gpu writes per frame");
+	}
+
 		
 	UINT ofDlt = streamOfDlt[oddFrame];
 
@@ -253,6 +263,8 @@ void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 	//GPUWriteControl(streamIdx, offset, size, batchNum);	
 
 	streamIdx += size;
+
+
 }
 
 void d912pxy_batch::GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)

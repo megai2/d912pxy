@@ -419,6 +419,10 @@ UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_
 
 void d912pxy_replay::Finish()
 {
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.TrackReplayItems(stackTop);
+#endif
+
 	if (stackTop >= maxReplayItems)
 	{
 		LOG_ERR_THROW2(-1, "too many replay items");

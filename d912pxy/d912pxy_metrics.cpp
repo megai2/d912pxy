@@ -81,6 +81,8 @@ void d912pxy_metrics::Init()
 	iframeMetrics->Create(TM("mem / VA"), 0, 0, 1024 * 5, 1024 * 15, 1, &metricMemVA);
 	iframeMetrics->Create(TM("mem / watched"), 0, 0, 65535, 0, 1, &metricMemWatched);
 	iframeMetrics->Create(TM("derived / overhead"), 0, 0, 60000, 60000, 1, &metricOverhead);
+	iframeMetrics->Create(TM("counters / GPUW depth"), 0, 0, 60000, 60000, 1, &metricGPUWDepth);
+	iframeMetrics->Create(TM("counters / replay items"), 0, 0, 60000, 60000, 1, &metricReplayItems);
 
 	iframeMetrics->Create(TM("mem / VRAM shared"), 0, 0, 1024 * 5, 1024 * 15, 1, &metricVRAMShared);
 	iframeMetrics->Create(TM("mem / VRAM"), 0, 0, 1024 * 5, 1024 * 15, 1, &metricVRAM);
@@ -97,6 +99,7 @@ void d912pxy_metrics::Init()
 	}
 
 	l_pClient->Release();
+	
 #endif
 }
 
@@ -198,7 +201,7 @@ void d912pxy_metrics::FlushIFrameValues()
 
 		metricOHval[i] = 0;
 	}
-
+	
 	iframeMetrics->Add(metricOverhead, totalOH);
 	iframeMetrics->Add(metricIFrameAppPrep, 
 		(iframeTime[PXY_METRICS_IFRAME_PREP]->GetStopTime() - totalOH 
@@ -226,6 +229,16 @@ void d912pxy_metrics::FlushIFrameValues()
 	);
 
 	
+}
+
+void d912pxy_metrics::TrackGPUWDepth(UINT64 depth)
+{
+	iframeMetrics->Add(metricGPUWDepth, (double)depth);
+}
+
+void d912pxy_metrics::TrackReplayItems(UINT64 stackIdx)
+{
+	iframeMetrics->Add(metricReplayItems, (double)stackIdx);
 }
 
 #endif
