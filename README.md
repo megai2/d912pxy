@@ -65,25 +65,38 @@ Video by reddit u/moriz0, running WvW in 4k: https://www.youtube.com/watch?v=RQA
 
 # Installing
 
-[**Install instructions** (EN)](https://github.com/megai2/d912pxy/wiki/Installing)
-
-[**Руководство по установке** (RU)](https://github.com/megai2/d912pxy/wiki/InstallingRU)
-
-[**Tutoriel d'installation** (FR)](https://www.youtube.com/watch?v=hfSSIBICG6E)
+[**Base guide (EN)**](https://github.com/megai2/d912pxy/wiki/Installing)
 
 [**Using with other addons and overlays**](https://github.com/megai2/d912pxy/wiki/Using-with-other-addons-and-overlays)
 
+Translated guides:
+
+[**RU**](https://github.com/megai2/d912pxy/wiki/InstallingRU)
+
+[**FR**](https://www.youtube.com/watch?v=hfSSIBICG6E)
+
+[**CN**](https://hackmd.io/vXa_ukUpQaOaLRBDdXdMLA)
+
 # Known bugs
 
-**Bug**: Fullscreen crash can hang system videofeed.
+**Bug**: 
 
-*Troubleshooting*: If you encounter this, use Ctrl+Alt+Delete -> Logout for a soft reboot. Use windowed fullscreen as workaround and report this as crash.
+Fullscreen/Alt+Enter crashing/hanging my game.
 
-**Bug**: Crashes with 3-rd party tool/overlay/addon 
+*Troubleshooting*: 
 
-*Troubleshooting*: Check is your tool/overlay/addon compatible with d912pxy [here](https://github.com/megai2/d912pxy/issues/38). 
+Avoid using fullscreen mode and Alt+Enter mode switching due to DXGI limitations. 
+While it works and even recovers from DXGI deadlock, this is not 100% safe.
+To recover from this bug manually, do soft-reboot: use Ctrl+Alt+Delete -> Logout.
+
+**Bug**:
+
+Crashes with 3-rd party tool/overlay/addon 
+
+*Troubleshooting*: 
+
+Check is your tool/overlay/addon compatible with d912pxy [here](https://github.com/megai2/d912pxy/issues/38). 
 If you see no comments for your case, [report crash](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)
-
 
 # Troubleshooting
 
