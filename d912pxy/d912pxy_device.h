@@ -322,6 +322,9 @@ public:
 	void PrintInfoBanner();
 	void InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters);
 
+	void NvGPU_force_highpower();
+	void NvGPU_restore();
+
 	ComPtr<ID3D12Device> SelectSuitableGPU();
 	void SetupDevice(ComPtr<ID3D12Device> device);
 
@@ -415,5 +418,10 @@ private:
 
 	d912pxy_performance_graph* perfGraph;
 	D3DFORMAT stageFormatsTrack[1024];
+
+	//nvapi 
+	nvapi_fptrs* nvapi;
+
+	UINT nvapi_dynPstateChanged;
 };
 

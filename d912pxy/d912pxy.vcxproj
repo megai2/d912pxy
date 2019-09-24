@@ -307,6 +307,7 @@
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3d9.h" />
     <ClInclude Include="..\thirdparty\D3D9Proxy\d3dx9.h" />
     <ClInclude Include="..\thirdparty\fastlz\fastlz.h" />
+    <ClInclude Include="..\thirdparty\nv_api\nv_api_oc.h" />
     <ClInclude Include="..\thirdparty\renderdoc_app.h" />
     <ClInclude Include="..\thirdparty\StackWalker\StackWalker.h" />
     <ClInclude Include="d3d9_proxy_dll.h" />
@@ -387,6 +388,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\thirdparty\fastlz\fastlz.cpp" />
+    <ClCompile Include="..\thirdparty\nv_api\nv_api_oc.cpp" />
     <ClCompile Include="..\thirdparty\StackWalker\StackWalker.cpp" />
     <ClCompile Include="d3d9_proxy_dll.cpp" />
     <ClCompile Include="d912pxy_async_upload_thread.cpp" />

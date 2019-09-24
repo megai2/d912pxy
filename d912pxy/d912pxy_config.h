@@ -62,6 +62,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_DX_DBG_RUNTIME,
 	PXY_CFG_MISC_USE_DX9,
 	PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH,
+	PXY_CFG_MISC_NV_DISABLE_THROTTLE,
 	PXY_CFG_COMPAT_OCCLUSION,
 	PXY_CFG_COMPAT_OCCLUSION_OPT_CONSTRUCTOR,
 	PXY_CFG_COMPAT_CLEAR,
@@ -137,6 +138,7 @@ private:
 		{L"misc",L"dx_debug",L"0"},//PXY_CFG_DX_DBG_RUNTIME
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
 		{L"misc",L"draw_up_buffer_length", L"FFFF"},//PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH
+		{L"misc",L"nv_disable_throttle", L"0"},//PXY_CFG_MISC_NV_DISABLE_THROTTLE
 		{L"compat",L"occlusion",L"0"},//PXY_CFG_COMPAT_OCCLUSION
 		{L"compat",L"occlusion_opt_ctor",L"0"},//PXY_CFG_COMPAT_OCCLUSION_OPT_CONSTRUCTOR
 		{L"compat",L"clear",L"0"},//PXY_CFG_COMPAT_CLEAR

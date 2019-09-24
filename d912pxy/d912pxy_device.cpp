@@ -51,6 +51,8 @@ d912pxy_device::~d912pxy_device(void)
 {	
 	LOG_INFO_DTDM("Device last reference removal");
 
+	NvGPU_restore();
+
 	LOG_INFO_DTDM("d912pxy exiting");
 	isRunning.SetValue(0);
 

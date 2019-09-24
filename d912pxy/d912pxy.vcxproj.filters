@@ -266,6 +266,9 @@
     <ClCompile Include="d912pxy_dynamic_imports.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\thirdparty\nv_api\nv_api_oc.cpp">
+      <Filter>base\utils\3rd_party</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -503,6 +506,9 @@
     </ClInclude>
     <ClInclude Include="d912pxy_dynamic_imports.h">
       <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\nv_api\nv_api_oc.h">
+      <Filter>base\utils\3rd_party</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

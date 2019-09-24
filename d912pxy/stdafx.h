@@ -56,6 +56,7 @@ SOFTWARE.
 	#include "../thirdparty/p7logger/Headers/P7_Telemetry.h"
 #endif
 
+#include "../thirdparty/nv_api/nv_api_oc.h"
 #include "dbg_imagewriter.h"
 #include "stb_image.h"
 #include "../thirdparty/fastlz/fastlz.h"

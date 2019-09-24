@@ -551,6 +551,14 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	gpu_totalVidmemMB = (DWORD)(pDesc.DedicatedVideoMemory >> 20llu);
 
 	LOG_INFO_DTDM("GPU name: %s vidmem: %u Mb", pDesc.Description, gpu_totalVidmemMB);
+
+	//nvidia 
+	if (pDesc.VendorId == 0x10de)
+	{
+		NvGPU_force_highpower();
+	}
+	else
+		nvapi = 0;
 	
 	for (int i = 0; i != 128; ++i)
 	{		
@@ -636,6 +644,106 @@ void d912pxy_device::SetupDevice(ComPtr<ID3D12Device> device)
 	LOG_INFO_DTDM("Adapter Nodes: %u", m_d12evice->GetNodeCount());
 	
 	LOG_DBG_DTDM("dev %016llX", m_d12evice.Get());
+}
+
+void d912pxy_device::NvGPU_force_highpower()
+{
+	nvapi = init_nv_api_oc();
+
+	nvapi_dynPstateChanged = 0;
+
+	if (!nvapi)
+	{
+		LOG_ERR_DTDM("Can't load nv_api!");
+		return;
+	}
+
+	LOG_INFO_DTDM("============ nv api =============");
+
+	int nGPU = 0, systype = 0, memsize = 0, memtype = 0;
+	int *hdlGPU[64] = { 0 };
+	char sysname[64] = { 0 }, biosname[64] = { 0 };
+	char drvname[64] = { 0 }; NvU32 drv_ver;
+	NV_GPU_PERF_PSTATES20_INFO_V1 pstates_info;
+	pstates_info.version = 0x11c94;
+
+	nvapi->Init();
+	nvapi->EnumGPUs(hdlGPU, &nGPU);
+	nvapi->GetSysType(hdlGPU[0], &systype);
+	nvapi->GetName(hdlGPU[0], sysname);
+	nvapi->GetMemSize(hdlGPU[0], &memsize);
+	nvapi->GetMemType(hdlGPU[0], &memtype);
+	nvapi->GetBiosName(hdlGPU[0], biosname);
+	nvapi->GetPstates(hdlGPU[0], &pstates_info);
+	nvapi->GetDriverAndBranchVersion(&drv_ver, drvname);
+
+	LOG_INFO_DTDM("Name: %S", sysname);
+
+	switch (systype) {
+		case 1:     LOG_INFO_DTDM("Type: Laptop"); break;
+		case 2:     LOG_INFO_DTDM("Type: Desktop"); break;
+		default:    LOG_INFO_DTDM("Type: Unknown"); break;
+	}
+	
+	LOG_INFO_DTDM("VRAM: %dMB GDDR%d", memsize / 1024, memtype <= 7 ? 3 : 5);
+	LOG_INFO_DTDM("BIOS: %S", biosname);
+	LOG_INFO_DTDM("GPU: %dMHz", (int)((pstates_info.pstates[0].clocks[0]).data.range.maxFreq_kHz) / 1000);
+	LOG_INFO_DTDM("RAM: %dMHz", (int)((pstates_info.pstates[0].clocks[1]).data.single.freq_kHz) / 1000);
+	LOG_INFO_DTDM("Current GPU OC: %dMHz", (int)((pstates_info.pstates[0].clocks[0]).freqDelta_kHz.value) / 1000);
+	LOG_INFO_DTDM("Current RAM OC: %dMHz", (int)((pstates_info.pstates[0].clocks[1]).freqDelta_kHz.value) / 1000);
+	LOG_INFO_DTDM("Driver: ver %u branch %S", drv_ver, drvname);
+	
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_MISC_NV_DISABLE_THROTTLE))
+	{
+		//megai2: this is not working in terms of "//!< bit 0 indicates if the dynamic Pstate is enabled or not", at least for me
+		/*
+		NV_GPU_DYNAMIC_PSTATES_INFO_EX dynPstateInfo;
+
+		dynPstateInfo.version = 0x10048;
+
+		if (nvapi->GetDynamicPstatesInfoEx(hdlGPU[0], &dynPstateInfo))
+		{
+			LOG_ERR_DTDM("Can't get dynamic pstate info");
+			return;
+		}
+		
+		if (dynPstateInfo.flags & 1)*/
+
+		{			
+			LOG_INFO_DTDM("**UNSAFE** Disabling dynamic power managment");
+			if (nvapi->EnableDynamicPstates(hdlGPU[0], 0))
+			{
+				LOG_ERR_DTDM("Can't disable dynamic pstate, sorry");
+				return;
+			}
+			nvapi_dynPstateChanged = 1;
+		}
+	}
+	
+	LOG_INFO_DTDM("=================================");
+}
+
+void d912pxy_device::NvGPU_restore()
+{
+	if (!nvapi)
+		return;
+
+	if (nvapi_dynPstateChanged)
+	{
+		LOG_INFO_DTDM("Restoring dynamic power managment");
+
+		int nGPU = 0;
+		int *hdlGPU[64] = { 0 };
+
+		nvapi->EnumGPUs(hdlGPU, &nGPU);
+
+		if (nvapi->EnableDynamicPstates(hdlGPU[0], 1))
+		{
+			LOG_ERR_DTDM("Can't enable back dynamic pstate! Something is broken, this is very very bad!");
+		}
+	}
+
+	nvapi->Unload();
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 
