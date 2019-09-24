@@ -39,6 +39,7 @@ namespace d912pxy_helper {
 	LONG NTAPI VexHandler(PEXCEPTION_POINTERS ExceptionInfo);
 	LONG NTAPI VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo);
 
+	void InitLogModule();
 	void InstallVehHandler();
 
 	int IsFileExist(const char *name);
@@ -52,6 +53,7 @@ namespace d912pxy_helper {
 	DXGI_FORMAT DXGIFormatFromDX9FMT(D3DFORMAT fmt);
 	UINT8 BitsPerPixel(DXGI_FORMAT fmt);
 
+	BOOL GetTrueWindowsVersion(OSVERSIONINFOEX* pOSversion);
 	char* GetCPUBrandString();
 
 	char* StrGetCurrentLineStart(char* buffer);

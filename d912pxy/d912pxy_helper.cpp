@@ -125,12 +125,14 @@ LONG NTAPI d912pxy_helper::VexDbgHandler(PEXCEPTION_POINTERS ExceptionInfo)
 	}	
 }
 
+void d912pxy_helper::InitLogModule()
+{
+	d912pxy_s.log.text.RegisterModule(L"helper", &LGC_DEFAULT);
+}
+
 void d912pxy_helper::InstallVehHandler()
 {
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_ENABLE_VEH))
-		AddVectoredExceptionHandler(TRUE, VexDbgHandler);
-
-	d912pxy_s.log.text.RegisterModule(L"helper", &LGC_DEFAULT);
+	AddVectoredExceptionHandler(TRUE, VexDbgHandler);	
 }
 
 int d912pxy_helper::IsFileExist(const char *name)
@@ -429,6 +431,38 @@ UINT8 d912pxy_helper::BitsPerPixel(DXGI_FORMAT fmt)
 }
 
 static char CPUBrandString[0x40] = { 0 };
+
+
+//megai2: some stackoverflow.com code. Thanks to Peter Thaus.
+BOOL d912pxy_helper::GetTrueWindowsVersion(OSVERSIONINFOEX* pOSversion)
+{
+	// Function pointer to driver function
+	DWORD (WINAPI *pRtlGetVersion)(
+		PRTL_OSVERSIONINFOW lpVersionInformation) = NULL;
+
+	// load/get the System-DLL
+	HINSTANCE hNTdllDll = LoadLibrary(L"ntdll.dll");
+
+	BOOL ret;
+
+	// successfully loaded?
+	if (hNTdllDll != NULL)
+	{
+		// get the function pointer to RtlGetVersion
+		pRtlGetVersion = (DWORD (WINAPI *)(PRTL_OSVERSIONINFOW))
+			GetProcAddress(hNTdllDll, "RtlGetVersion");
+
+		// if successfull then read the function
+		if (pRtlGetVersion != NULL)
+			ret = (pRtlGetVersion((PRTL_OSVERSIONINFOW)pOSversion) & 0x3) == 0;
+	} 
+
+	// if function failed, get out of here
+	if (pRtlGetVersion == NULL)
+		ret = FALSE;
+	
+	return ret;
+} 
 
 char * d912pxy_helper::GetCPUBrandString()
 {

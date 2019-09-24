@@ -357,19 +357,44 @@ void d912pxy_device::PrintInfoBanner()
 	LOG_INFO_DTDM("!!!NOT INTENDED TO PERFORM ALL DIRECT3D9 FEATURES!!!");
 	LOG_INFO_DTDM("DX9: original display mode width %u height %u", cached_dx9displaymode.Width, cached_dx9displaymode.Height);
 
-	LOG_INFO_DTDM("Redirecting debug messages to P7");
-	LOG_INFO_DTDM("Adding vectored exception handler");
-	d912pxy_helper::InstallVehHandler();
+	d912pxy_helper::InitLogModule();
 
-
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
-		LOG_INFO_DTDM("Running ps build, expect performance drops");
-
-	UINT64 memKb = 0;
-
-	if (GetPhysicallyInstalledSystemMemory(&memKb))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_ENABLE_VEH))
 	{
-		LOG_INFO_DTDM("System physical RAM size: %llu Gb", memKb >> 20llu);
+		LOG_INFO_DTDM("Adding vectored exception handler");
+		LOG_INFO_DTDM("dbg messages and errors are now redirected to log file");
+		d912pxy_helper::InstallVehHandler();		
+	}
+	
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
+		LOG_INFO_DTDM("Shader profiling enabled, expect performance drops");
+
+	OSVERSIONINFOEX info;
+	ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
+	info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+
+	if (d912pxy_helper::GetTrueWindowsVersion(&info))
+	{
+		LOG_INFO_DTDM("OS: v%u.%u %s r%u", info.dwMajorVersion, info.dwMinorVersion, info.szCSDVersion,info.dwBuildNumber);
+	}
+	else {
+		LOG_ERR_DTDM("OS: unknown");
+	}
+	
+	MEMORYSTATUSEX ramInfo;
+
+	ramInfo.dwLength = sizeof(ramInfo);
+
+	if (GlobalMemoryStatusEx(&ramInfo))
+	{
+		LOG_INFO_DTDM("System RAM info");
+		LOG_INFO_DTDM("- phys: %0.3f Gb", (ramInfo.ullTotalPhys >> 20llu)/1024.0f);
+		LOG_INFO_DTDM("- commit limit: %0.3f Gb", (ramInfo.ullTotalPageFile >> 20llu)/ 1024.0f);
+		LOG_INFO_DTDM("- usable: %0.3f Gb", (ramInfo.ullAvailPageFile >> 20llu) / 1024.0f);
+		LOG_INFO_DTDM("- phys usable: %0.3f Gb", (ramInfo.ullAvailPhys >> 20llu) / 1024.0f);
+	}
+	else {
+		LOG_ERR_DTDM("No info about system RAM is available");
 	}
 
 	//string includes manufacturer, model and clockspeed
