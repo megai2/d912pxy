@@ -263,7 +263,9 @@
     <ClCompile Include="..\thirdparty\fastlz\fastlz.cpp">
       <Filter>base\utils\3rd_party</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_dynamic_imports.cpp" />
+    <ClCompile Include="d912pxy_dynamic_imports.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -500,7 +502,7 @@
       <Filter>base\utils\3rd_party</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_dynamic_imports.h">
-      <Filter>d3d9_impl\device\dx12</Filter>
+      <Filter>base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

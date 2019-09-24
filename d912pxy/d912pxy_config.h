@@ -25,7 +25,6 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-
 typedef enum d912pxy_config_value {
 	PXY_CFG_POOLING_UPLOAD_ALLOC_STEP = 0,
 	PXY_CFG_POOLING_UPLOAD_LIMITS = 1,

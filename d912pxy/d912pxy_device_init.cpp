@@ -624,8 +624,17 @@ void d912pxy_device::SetupDevice(ComPtr<ID3D12Device> device)
 		1 << (vaSizes.MaxGPUVirtualAddressBitsPerResource - 20), 1 << (vaSizes.MaxGPUVirtualAddressBitsPerProcess - 20)
 	);
 
-	LOG_INFO_DTDM("Adapter Nodes: %u", m_d12evice->GetNodeCount());
 
+	D3D12_FEATURE_DATA_CROSS_NODE crossNode;
+	if (!FAILED(m_d12evice->CheckFeatureSupport(D3D12_FEATURE_CROSS_NODE, &crossNode, sizeof(crossNode))))
+	{
+		LOG_INFO_DTDM("Device cross node sharing tier: %u", crossNode.SharingTier);
+	} else 
+		LOG_INFO_DTDM("Device cross node sharing tier: not available", crossNode.SharingTier);
+	
+
+	LOG_INFO_DTDM("Adapter Nodes: %u", m_d12evice->GetNodeCount());
+	
 	LOG_DBG_DTDM("dev %016llX", m_d12evice.Get());
 }
 
