@@ -76,6 +76,8 @@ void d912pxy_dynamic_imports::Init()
 		}
 		++funIdx;
 	}
+
+	LOG_INFO_DTDM("All dynamic imports are fine");
 }
 
 UINT d912pxy_dynamic_imports::LoadDynLib(d912pxy_dynamic_import_lib lib, UINT set)
