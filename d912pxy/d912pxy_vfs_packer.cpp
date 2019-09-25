@@ -61,6 +61,9 @@ void d912pxy_vfs_packer::UnpackArchive(const char * name)
 
 	FILE* f = fopen(fn, "rb");
 
+	if (!f)
+		return;
+
 	UINT32 header[3] = { 0 };
 
 	fread(header, 1, 4 * 3, f);
@@ -125,6 +128,7 @@ void d912pxy_vfs_packer::UnpackArchive(const char * name)
 			--listingInfo[1];
 		}		
 
+		fflush(vfs_f);
 		fseek(vfs_f, 0, SEEK_SET);
 		fwrite(signature, 1, 16, vfs_f);
 		fwrite(headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, vfs_f);
@@ -266,7 +270,7 @@ void d912pxy_vfs_packer::ReadVFS(d912pxy_vfs_id_name * id)
 		
 	UINT64 signature[2] = { PXY_VFS_SIGNATURE, PXY_VFS_VER };
 
-	if (sz < PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START)
+	if (sz <= PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START)
 	{
 		fclose(f);
 		return;		
