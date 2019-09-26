@@ -1072,14 +1072,24 @@ void d912pxy_hlsl_generator::CheckRegDefinition(DWORD op, UINT isDst)
 			{
 				if (majVer <= 2)
 				{
-					HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0),"	float4 %s%u: SV_POSITION;",
-						GetRegTypeStr(op, 0),
-						num
-					);
-					HLSL_GEN_WRITE_PROC_PD("#define dx9_halfpixel_pos_reg_ac %s%u", 
-						GetRegTypeStr(op, 1),
-						num
-					);
+					if (num == 0)
+					{
+						HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "	float4 %s%u: SV_POSITION;",
+							GetRegTypeStr(op, 0),
+							num
+						);
+						HLSL_GEN_WRITE_PROC_PD("#define dx9_halfpixel_pos_reg_ac %s%u",
+							GetRegTypeStr(op, 1),
+							num
+						);
+					}
+					else {
+						//megai2: i think this is fog & point size registers, that are not routed to PS, so we need to emulate them or just ignore
+						HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "	float4 %s%u: FIXPIPE_UNIMPL%u;",
+							GetRegTypeStr(op, 0),
+							num, num
+						);
+					}
 				}
 				break;
 			}
@@ -2433,6 +2443,7 @@ void d912pxy_hlsl_generator::FillHandlers()
 	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
 	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
 	SIOhandlers[__SIOtOF + D3DSIO_TEXLDL] = &d912pxy_hlsl_generator::ProcSIO_TEXLDL;
+	SIOhandlers[__SIOtOF + D3DSIO_LRP] = &d912pxy_hlsl_generator::ProcSIO_LRP;
 	SIOhandlers[__SIOtOF + D3DSIO_SLT] = &d912pxy_hlsl_generator::ProcSIO_SLT;
 	SIOhandlers[__SIOtOF + D3DSIO_ABS] = &d912pxy_hlsl_generator::ProcSIO_ABS;
 	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
