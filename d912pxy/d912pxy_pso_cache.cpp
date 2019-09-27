@@ -809,8 +809,8 @@ void d912pxy_pso_cache::LoadCachedData()
 			{
 				LOG_INFO_DTDM("Loading PSO precompile data");
 
-				d912pxy_vdecl** vdcl;
-				d912pxy_trimmed_dx12_pso* dsc;
+				d912pxy_vdecl** vdcl = 0;
+				d912pxy_trimmed_dx12_pso* dsc = 0;
 				PXY_MALLOC(vdcl, sizeof(d912pxy_vdecl*)*(*max_ + 2), d912pxy_vdecl**);
 				PXY_MALLOC(dsc, sizeof(d912pxy_trimmed_dx12_pso)*(*max_ + 2), d912pxy_trimmed_dx12_pso*);
 

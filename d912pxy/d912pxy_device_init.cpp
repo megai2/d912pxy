@@ -133,6 +133,9 @@ void d912pxy_device::InitVFS()
 	{
 		LOG_INFO_DTDM("VFS is locked by another process, no data will be saved on disk");
 	}
+	else {
+		d912pxy_s.vfs.SetWriteMask((UINT32)d912pxy_s.config.GetValueXI64(PXY_CFG_VFS_WRITE_MASK));
+	}
 
 	d912pxy_s.vfs.SetRoot(d912pxy_s.config.GetValueRaw(PXY_CFG_VFS_ROOT));
 
@@ -255,6 +258,9 @@ void d912pxy_device::InitComPatches()
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
 	{
+		LOG_INFO_DTDM("Profiling enabled, only profile data will be saved to vfs");
+		d912pxy_s.vfs.SetWriteMask(~(1 << PXY_VFS_BID_SHADER_PROFILE));
+
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETTEXTURE, &d912pxy_device::com_SetTexture_PS);
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_PS);		
 	}

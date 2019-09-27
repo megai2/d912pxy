@@ -130,6 +130,9 @@ void * d912pxy_vfs::GetFileDataH(UINT64 namehash, UINT * sz, UINT id)
 
 void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 {
+	if ((1 << id) & cuWriteMask)
+		return;
+
 	lock.Hold();
 
 	if (!writeAllowed)
@@ -145,6 +148,9 @@ void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 
 void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
 {
+	if ((1 << id) & cuWriteMask)
+		return;
+
 	lock.Hold();
 
 	if (!writeAllowed)
@@ -180,6 +186,11 @@ d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk* prevC
 
 		return newChunk;
 	}
+}
+
+void d912pxy_vfs::SetWriteMask(UINT32 val)
+{
+	cuWriteMask = val;
 }
 
 void d912pxy_vfs::LoadPckFromRootPath()
