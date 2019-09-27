@@ -98,15 +98,24 @@ Crashes with 3-rd party tool/overlay/addon
 Check is your tool/overlay/addon compatible with d912pxy [here](https://github.com/megai2/d912pxy/issues/38). 
 If you see no comments for your case, [report crash](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)
 
+**Bug**:
+
+Pop-ins/slow loading/missing objects
+
+*Troubleshooting*
+
+This is normal for clean/first install as tool generates shader cache from ground up.
+After shader cache is generated, load times will be much faster.
+If you want to eleminate this problem once and for all, use [PSO precompile](https://github.com/megai2/d912pxy/wiki/Using-PSO-precompile)
+and/or ready-to-use shader [packs](https://github.com/megai2/d912pxy/wiki/Shader-packs)
+
 # Troubleshooting
 
-Case #1: [Things are loading piece-by-piece](https://github.com/megai2/d912pxy/wiki/HLSL-recompilation-and-loading#shader-loading)
+Case #1: [Game crashes/hangs](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)
 
-Case #2: [Game crashes/hangs](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)
+Case #2: [Visual errors](https://github.com/megai2/d912pxy/wiki/Reporting-visual-errors)
 
-Case #3: [Visual errors](https://github.com/megai2/d912pxy/wiki/Reporting-visual-errors)
-
-Case #4: [Unnatural performance drops](https://github.com/megai2/d912pxy/wiki/Reporting-performance-issues)
+Case #3: [Unnatural performance drops](https://github.com/megai2/d912pxy/wiki/Reporting-performance-issues)
 
 # Support the developer
 
