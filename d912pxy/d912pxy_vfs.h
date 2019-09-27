@@ -26,11 +26,6 @@ SOFTWARE.
 #include "stdafx.h"
 
 #define PXY_VFS_MAX_BID 256
-#define PXY_VFS_MAX_FILES_PER_BID 0x80000
-#define PXY_VFS_FILE_HEADER_SIZE 16
-#define PXY_VFS_BID_TABLE_SIZE (PXY_VFS_MAX_FILES_PER_BID * PXY_VFS_FILE_HEADER_SIZE)
-#define PXY_VFS_BID_TABLE_START 16
-#define PXY_VFS_DATA_OFFSET (PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START)
 
 #define PXY_VFS_BID_CSO 0
 #define PXY_VFS_BID_SHADER_PROFILE 1
@@ -41,32 +36,19 @@ SOFTWARE.
 #define PXY_VFS_BID_DERIVED_CSO_PS 6
 #define PXY_VFS_BID_END 7
 
-#define PXY_VFS_SIGNATURE 0x443931325043b46
-#define PXY_VFS_VER 1
+#define PXY_VFS_LATEST_PCK L"latest.pck"
 
-#pragma pack(push, 1)
-typedef struct d912pxy_vfs_file_header {
-	UINT64 hash;
-	UINT64 offset;
-} d912pxy_vfs_file_header;
-#pragma pack(pop)
+static const wchar_t* d912pxy_vfs_entry_name_str[] = {
+	L"Compiled shader cache",
+	L"Shader profiles",
+	L"PSO cache keys",
+	L"PSO precompile list",
+	L"Shader sources",
+	L"PSO derived VS cache",
+	L"PSO derived PS cache"
+};
 
-typedef struct d912pxy_vfs_id_name {
-	UINT num;
-	const char* name;
-} d912pxy_vfs_id_name;
-
-typedef struct d912pxy_vfs_entry {
-	d912pxy_thread_lock lock;
-	FILE* m_vfsBlocks;
-	void* m_vfsCache;
-	UINT32 m_vfsCacheSize;
-	UINT32 m_vfsFileCount;
-	d912pxy_memtree2* m_vfsFileOffsets;
-	UINT64 m_vfsLastFileOffset;
-} d912pxy_vfs_entry;
-
-class d912pxy_vfs
+class d912pxy_vfs : public d912pxy_noncom
 {
 public:
 	d912pxy_vfs();
@@ -75,33 +57,37 @@ public:
 	void Init(const char* lockPath);
 
 	void SetRoot(wchar_t* rootPath);
-	void* LoadVFS(d912pxy_vfs_id_name* id, UINT memCache);
+	void LoadVFS();
 
 	UINT64 IsPresentN(const char* fnpath, UINT32 vfsId);
-	UINT64 IsPresentH(UINT64 fnHash, UINT32 vfsId);
-
-	void* LoadFileN(const char* fnpath, UINT* sz, UINT id);
+	void* GetFileDataN(const char* fnpath, UINT* sz, UINT id);
 	void WriteFileN(const char* fnpath, void* data, UINT sz, UINT id);
 	void ReWriteFileN(const char* fnpath, void* data, UINT sz, UINT id);
-
-	void* LoadFileH(UINT64 namehash, UINT* sz, UINT id);
+	
+	UINT64 IsPresentH(UINT64 fnHash, UINT32 vfsId);
+	void* GetFileDataH(UINT64 namehash, UINT* sz, UINT id);
 	void WriteFileH(UINT64 namehash, void* data, UINT sz, UINT id);
 	void ReWriteFileH(UINT64 namehash, void* data, UINT sz, UINT id);
 
 	UINT64 HashFromName(const char* fnpath);
-
-	d912pxy_memtree2* GetHeadTree(UINT id);
-	void* GetCachePointer(UINT32 offset, UINT id);
 		
 	UINT32 IsWriteAllowed() { return writeAllowed; };
+
+	d912pxy_memtree2* GetChunkTree(UINT id) { return items[id]->GetChunkTree(); };
+
+	d912pxy_vfs_pck_chunk* WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk,UINT id, UINT64 namehash, void* data, UINT sz);
 
 private:
 	HANDLE lockFile;
 	UINT32 writeAllowed;
 	char m_rootPath[2048];
 
-	d912pxy_vfs_entry items[PXY_VFS_MAX_BID];
+	d912pxy_vfs_entry* items[PXY_VFS_MAX_BID];
 
+	void LoadPckFromRootPath();
 
+	d912pxy_vfs_pck* cuPck;
+
+	d912pxy_thread_lock lock;
 };
 

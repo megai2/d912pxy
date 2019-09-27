@@ -767,7 +767,7 @@ void d912pxy_pso_cache::LoadCachedData()
 	if (fileCacheFlags & PXY_PSO_CACHE_KEYFILE_READ)
 	{
 		UINT fsz = 0;
-		UINT32* max_ = (UINT32*)d912pxy_s.vfs.LoadFileH(PXY_PSO_CACHE_KEYFILE_NAME, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS); // Alrai: I had to change the name of max as it was being considered a macro in PXY_MALLOC.
+		UINT32* max_ = (UINT32*)d912pxy_s.vfs.GetFileDataH(PXY_PSO_CACHE_KEYFILE_NAME, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS); // Alrai: I had to change the name of max as it was being considered a macro in PXY_MALLOC.
 
 		psoKeyCache = NULL;
 
@@ -787,7 +787,7 @@ void d912pxy_pso_cache::LoadCachedData()
 
 			for (int i = 1; i != (*max_+1); ++i)
 			{
-				d912pxy_serialized_pso_key* psoTrimmedDsc = (d912pxy_serialized_pso_key*)d912pxy_s.vfs.LoadFileH(i+1, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS);
+				d912pxy_serialized_pso_key* psoTrimmedDsc = (d912pxy_serialized_pso_key*)d912pxy_s.vfs.GetFileDataH(i+1, &fsz, PXY_VFS_BID_PSO_CACHE_KEYS);
 
 				if (fsz != sizeof(d912pxy_serialized_pso_key))
 				{
@@ -809,16 +809,29 @@ void d912pxy_pso_cache::LoadCachedData()
 			{
 				LOG_INFO_DTDM("Loading PSO precompile data");
 
-				d912pxy_memtree2* mt = d912pxy_s.vfs.GetHeadTree(PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+				d912pxy_vdecl** vdcl;
+				d912pxy_trimmed_dx12_pso* dsc;
+				PXY_MALLOC(vdcl, sizeof(d912pxy_vdecl*)*(*max_ + 2), d912pxy_vdecl**);
+				PXY_MALLOC(dsc, sizeof(d912pxy_trimmed_dx12_pso)*(*max_ + 2), d912pxy_trimmed_dx12_pso*);
+
+				for (int i = 1; i != (*max_ + 1); ++i)
+				{					
+					d912pxy_s.dev.CreateVertexDeclaration(psoKeyCache[i]->declData, (IDirect3DVertexDeclaration9**)(&vdcl[i]));
+
+					void* dscMem = (void*)((intptr_t)&dsc[i] + d912pxy_trimmed_dx12_pso_hash_offset);
+					memcpy(dscMem, psoKeyCache[i]->staticPsoDesc, d912pxy_trimmed_pso_static_data_size);
+				}
+
+				d912pxy_memtree2* mt = d912pxy_s.vfs.GetChunkTree(PXY_VFS_BID_PSO_PRECOMPILE_LIST);
 
 				mt->Begin();
 
 				while (!mt->IterEnd())
 				{
-					UINT32 entryOffset = (UINT32)mt->CurrentCID();
-					if (entryOffset != 0)
+					d912pxy_vfs_pck_chunk* chunkData = (d912pxy_vfs_pck_chunk*)mt->CurrentCID();
+					if (chunkData != 0)
 					{
-						d912pxy_shader_pair_cache_entry* entry = (d912pxy_shader_pair_cache_entry*)d912pxy_s.vfs.GetCachePointer(entryOffset, PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+						d912pxy_shader_pair_cache_entry* entry = (d912pxy_shader_pair_cache_entry*)(&chunkData->data.rawData);
 
 						d912pxy_shader* vs = NULL;
 						d912pxy_shader* ps = NULL;
@@ -838,30 +851,19 @@ void d912pxy_pso_cache::LoadCachedData()
 							continue;
 						}
 
+						d912pxy_shader_pair* pair = d912pxy_s.render.db.shader.GetPair(vs, ps);
+
 						for (int i = 1; i != (*max_ + 1); ++i)
 						{
 							if (entry->compiled[i >> 6] & (1ULL << (i & 0x3F)))
-							{
-								d912pxy_trimmed_dx12_pso dsc;
+							{								   
+								dsc[i].PS = ps;
+								dsc[i].VS = vs;
+								dsc[i].InputLayout = vdcl[i];
+								
+								pair->PrecompilePSO(i, &dsc[i]);
 
-								void* dscMem = (void*)((intptr_t)&dsc + d912pxy_trimmed_dx12_pso_hash_offset);
-
-								memcpy(dscMem, psoKeyCache[i]->staticPsoDesc, d912pxy_trimmed_pso_static_data_size);
-
-								d912pxy_vdecl* vdcl;
-								d912pxy_s.dev.CreateVertexDeclaration(psoKeyCache[i]->declData, (IDirect3DVertexDeclaration9**)&vdcl);
-
-								dsc.PS = ps;
-								dsc.VS = vs;
-								dsc.InputLayout = vdcl;
-
-								d912pxy_shader_pair* pair = d912pxy_s.render.db.shader.GetPair(vs, ps);
-
-								pair->PrecompilePSO(i, &dsc);
-
-								//UseByDesc(&dsc, 0);
-
-								vdcl->Release();
+								//UseByDesc(&dsc, 0);								
 							}
 						}
 
@@ -871,15 +873,17 @@ void d912pxy_pso_cache::LoadCachedData()
 
 					mt->Next();
 				}
+
+				for (int i = 1; i != (*max_ + 1); ++i)
+				{
+					vdcl[i]->Release();
+				}
+
+				PXY_FREE(dsc);
+				PXY_FREE(vdcl);
 			}
 
-			for (int i = 1; i != (*max_ +1); ++i)
-			{
-				PXY_FREE(psoKeyCache[i]);
-			}
-
-			PXY_FREE(psoKeyCache);
-			PXY_FREE(max_);
+			PXY_FREE(psoKeyCache);			
 		}
 	}
 }
@@ -1006,6 +1010,7 @@ void d912pxy_pso_cache_item::Compile()
 		PXY_FREE(desc);		
 		return;
 	}
+
 	d912pxy_pso_cache::cDscBase.InputLayout = *vdclObj->GetD12IA_InputElementFmt();
 
 	d912pxy_pso_cache::cDscBase.NumRenderTargets = desc->NumRenderTargets;
@@ -1100,8 +1105,8 @@ void d912pxy_pso_cache_item::CreatePSODerived(UINT64 derivedAlias)
 	void* shdDerCSO[2];
 	UINT shdDerCSOSz[2];
 
-	shdDerCSO[0] = d912pxy_s.vfs.LoadFileH(derivedAlias, &shdDerCSOSz[0], PXY_VFS_BID_DERIVED_CSO_VS);
-	shdDerCSO[1] = d912pxy_s.vfs.LoadFileH(derivedAlias, &shdDerCSOSz[1], PXY_VFS_BID_DERIVED_CSO_PS);
+	shdDerCSO[0] = d912pxy_s.vfs.GetFileDataH(derivedAlias, &shdDerCSOSz[0], PXY_VFS_BID_DERIVED_CSO_VS);
+	shdDerCSO[1] = d912pxy_s.vfs.GetFileDataH(derivedAlias, &shdDerCSOSz[1], PXY_VFS_BID_DERIVED_CSO_PS);
 
 	d912pxy_pso_cache::cDscBase.VS.BytecodeLength = shdDerCSOSz[0];
 	d912pxy_pso_cache::cDscBase.PS.BytecodeLength = shdDerCSOSz[1];
@@ -1109,9 +1114,6 @@ void d912pxy_pso_cache_item::CreatePSODerived(UINT64 derivedAlias)
 	d912pxy_pso_cache::cDscBase.PS.pShaderBytecode = shdDerCSO[1];
 
 	CreatePSO();
-
-	PXY_FREE(shdDerCSO[0]);
-	PXY_FREE(shdDerCSO[1]);
 }
 
 void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
@@ -1132,8 +1134,8 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	char* shdSrc[2];
 	UINT shdSrcSz[2];
 
-	shdSrc[0] = (char*)d912pxy_s.vfs.LoadFileH(desc->VS->GetID(), &shdSrcSz[0], PXY_VFS_BID_SHADER_SOURCES);
-	shdSrc[1] = (char*)d912pxy_s.vfs.LoadFileH(desc->PS->GetID(), &shdSrcSz[1], PXY_VFS_BID_SHADER_SOURCES);
+	shdSrc[0] = (char*)d912pxy_s.vfs.GetFileDataH(desc->VS->GetID(), &shdSrcSz[0], PXY_VFS_BID_SHADER_SOURCES);
+	shdSrc[1] = (char*)d912pxy_s.vfs.GetFileDataH(desc->PS->GetID(), &shdSrcSz[1], PXY_VFS_BID_SHADER_SOURCES);
 
 	if (!shdSrc[0] || !shdSrc[1])
 	{
@@ -1331,9 +1333,6 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 
 	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, shdSrc[0], shdSrcSz[0], 0);
 	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, shdSrc[1], shdSrcSz[1], 0);
-
-	PXY_FREE(shdSrc[0]);
-	PXY_FREE(shdSrc[1]);
 
 	if ((!bcVS.blob) || (!bcPS.blob))
 		LOG_ERR_DTDM("PSO RCE fail for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);

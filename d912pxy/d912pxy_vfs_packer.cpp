@@ -25,41 +25,18 @@ SOFTWARE.
 #include "stdafx.h"
 #include "../thirdparty/fastlz/fastlz.h"
 
-d912pxy_vfs_packer::d912pxy_vfs_packer(wchar_t * rootPath, d912pxy_vfs_id_name * id)
+d912pxy_vfs_packer::d912pxy_vfs_packer()
 {
-	sprintf(m_rootPath, "%s/%ws", d912pxy_helper::GetFilePath(FP_VFS_PREFIX)->s, rootPath);
-	items = id;
+	
 }
 
 d912pxy_vfs_packer::~d912pxy_vfs_packer()
 {
 }
 
-bool d912pxy_vfs_packer::IsUnpackNeeded()
+void d912pxy_vfs_packer::UnpackArchive(const wchar_t * name)
 {
-	int i = 0;
-	
-	while (items[i].name != 0)
-	{
-		char fn[4096];
-
-		sprintf(fn, "%s/%s.pck", m_rootPath, items[i].name);
-		
-		if (d912pxy_helper::IsFileExist(fn))
-			return false;
-
-		++i;
-	}
-
-	return true;
-}
-
-void d912pxy_vfs_packer::UnpackArchive(const char * name)
-{
-	char fn[4096];
-	sprintf(fn, "%s/%s.zpck", m_rootPath, name);
-
-	FILE* f = fopen(fn, "rb");
+	FILE* f = _wfopen(name, L"rb");
 
 	if (!f)
 		return;
@@ -81,83 +58,17 @@ void d912pxy_vfs_packer::UnpackArchive(const char * name)
 
 	PXY_FREE(zipData);
 
-	intptr_t listingPtr = (intptr_t)rawData;
-	intptr_t dataPtrBase = (intptr_t)rawData + header[2];
-	intptr_t dataPtr = dataPtrBase;
-	
-	while (listingPtr < dataPtrBase)
-	{
-		UINT32* listingInfo = (UINT32*)listingPtr;
-
-		listingPtr += 8;
-
-		char fn_vfs[4096];
-		sprintf(fn_vfs, "%s/%s.pck", m_rootPath, items[listingInfo[0]].name);
-
-		FILE* vfs_f = fopen(fn_vfs, "wb+");
-
-		UINT64 signature[2] = { PXY_VFS_SIGNATURE, PXY_VFS_VER };
-
-		d912pxy_vfs_file_header* headerTable = NULL;
-		PXY_MALLOC(headerTable, PXY_VFS_BID_TABLE_SIZE, d912pxy_vfs_file_header*);
-		ZeroMemory(headerTable, PXY_VFS_BID_TABLE_SIZE);
-
-		fseek(vfs_f, 0, SEEK_SET);
-		fwrite(signature, 1, 16, vfs_f);
-		fwrite(headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, vfs_f);
-
-		int fileNum = 0;
-		int offset = PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START;
-	
-		while (listingInfo[1] != 0)
-		{			
-			headerTable[fileNum].hash = *(UINT64*)(listingPtr);
-			listingPtr += 8;
-			headerTable[fileNum].offset = offset;
-			
-			UINT fileSize = *(UINT32*)(listingPtr);
-
-			fwrite((void*)listingPtr, 1, 4, vfs_f);
-			fwrite((void*)dataPtr, 1, fileSize, vfs_f);
-			
-			dataPtr += fileSize;
-			listingPtr += 4;
-
-			offset += fileSize + 4;
-			++fileNum;
-			--listingInfo[1];
-		}		
-
-		fflush(vfs_f);
-		fseek(vfs_f, 0, SEEK_SET);
-		fwrite(signature, 1, 16, vfs_f);
-		fwrite(headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, vfs_f);
-
-		fclose(vfs_f);
-
-		PXY_FREE(headerTable);
-	}
+	//todo
 
 	PXY_FREE(rawData);
 }
 
-void d912pxy_vfs_packer::PackArchive(const char * name)
+void d912pxy_vfs_packer::PackArchive(const wchar_t * name)
 {
-	char fn[4096];
-	sprintf(fn, "%s/%s.zpck", m_rootPath, name);
-
-	FILE* of = fopen(fn, "wb");
+	FILE* of = _wfopen(name, L"wb");
 
 	StreamInit(VFS_PCK_STREAM_LISTING, 1 << 20);
 	StreamInit(VFS_PCK_STREAM_DATA, 1 << 20);
-
-	int i = 0;
-
-	while (items[i].name != 0)
-	{
-		ReadVFS(&items[i]);
-		++i;
-	}
 
 	UINT sz, oSz;
 	
@@ -251,118 +162,4 @@ void* d912pxy_vfs_packer::PackStreams(UINT * sz, UINT* oSz)
 	PXY_FREE(rawData);
 	
 	return zipData;
-}
-
-void d912pxy_vfs_packer::ReadVFS(d912pxy_vfs_id_name * id)
-{
-	char fn[4096];
-
-	sprintf(fn, "%s/%s.pck", m_rootPath, id->name);
-
-	FILE* f = fopen(fn, "rb+");
-
-	if (f == NULL)
-		return;
-	
-	fseek(f, 0, SEEK_END);
-	UINT sz = ftell(f);
-	fseek(f, 0, SEEK_SET);
-		
-	UINT64 signature[2] = { PXY_VFS_SIGNATURE, PXY_VFS_VER };
-
-	if (sz <= PXY_VFS_BID_TABLE_SIZE + PXY_VFS_BID_TABLE_START)
-	{
-		fclose(f);
-		return;		
-	}
-	else {
-
-		UINT64 readedSignature[2] = { 0,0 };
-
-		if (fread(readedSignature, 8, 2, f) != 2)
-		{
-			fclose(f);
-			return;
-		}
-
-		if (memcmp(signature, readedSignature, 16))
-		{
-			fclose(f);
-			return;
-		}
-
-		fseek(f, 16, SEEK_SET);
-
-		d912pxy_vfs_file_header* headerTable = NULL;
-		PXY_MALLOC(headerTable, PXY_VFS_BID_TABLE_SIZE, d912pxy_vfs_file_header*);
-		
-		fread(headerTable, PXY_VFS_FILE_HEADER_SIZE, PXY_VFS_MAX_FILES_PER_BID, f);
-
-		d912pxy_memtree2* files = new d912pxy_memtree2(8, 256, 2);
-
-		UINT32 haveFiles = 0;
-
-		for (int i = 0; i != PXY_VFS_MAX_FILES_PER_BID; ++i)
-		{
-			if (headerTable[i].hash != 0)
-			{
-				files->PointAtMem(&headerTable[i].hash, 8);
-				files->SetValue(i+1);				
-				++haveFiles;
-			}
-		}
-
-		if (haveFiles)
-		{
-			StreamWrite(VFS_PCK_STREAM_LISTING, &id->num, 4);
-
-			//megai2: count unique files
-			UINT uniqueFiles = haveFiles;
-
-			files->Begin();
-
-			while (!files->IterEnd())
-			{
-				if (files->CurrentCID() != 0)
-					--haveFiles;
-				files->Next();
-			}
-
-			uniqueFiles -= haveFiles;
-
-			StreamWrite(VFS_PCK_STREAM_LISTING, &uniqueFiles, 4);
-									
-			files->Begin();
-
-			void* vfsFileData = NULL;
-			PXY_MALLOC(vfsFileData, (sz - PXY_VFS_DATA_OFFSET), void*);			
-			fread(vfsFileData, 1, sz - PXY_VFS_DATA_OFFSET, f);
-
-			while (!files->IterEnd())
-			{
-				if (files->CurrentCID() == 0)
-				{
-					files->Next();
-					continue;
-				}
-
-				d912pxy_vfs_file_header fDsc = headerTable[files->CurrentCID()-1];
-								
-				StreamWrite(VFS_PCK_STREAM_LISTING, &fDsc.hash, 8);				
-				StreamWrite(VFS_PCK_STREAM_LISTING, (void*)((intptr_t)vfsFileData + fDsc.offset - PXY_VFS_DATA_OFFSET) , 4);
-
-				StreamWrite(VFS_PCK_STREAM_DATA, (void*)((intptr_t)vfsFileData + fDsc.offset - PXY_VFS_DATA_OFFSET + 4), *(UINT32*)((intptr_t)vfsFileData + fDsc.offset - PXY_VFS_DATA_OFFSET));
-				
-
-				files->Next();
-			}			
-
-			PXY_FREE(vfsFileData);
-		}
-
-		PXY_FREE(headerTable);				
-		delete files;
-
-		fclose(f);
-	}	
 }

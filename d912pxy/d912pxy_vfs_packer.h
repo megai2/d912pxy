@@ -40,13 +40,11 @@ typedef enum d912pxy_vfs_packer_stream_id {
 class d912pxy_vfs_packer {
 
 public:
-	d912pxy_vfs_packer(wchar_t* rootPath, d912pxy_vfs_id_name* id);
+	d912pxy_vfs_packer();
 	~d912pxy_vfs_packer();
 
-	bool IsUnpackNeeded();
-
-	void UnpackArchive(const char* name);
-	void PackArchive(const char* name);
+	void UnpackArchive(const wchar_t* name);
+	void PackArchive(const wchar_t* name);
 
 private:
 	void StreamInit(d912pxy_vfs_packer_stream_id id, UINT warmupSz);
@@ -57,11 +55,7 @@ private:
 
 	void* PackStreams(UINT* sz, UINT* oSz);
 
-	void ReadVFS(d912pxy_vfs_id_name* id);
-	
-	char m_rootPath[2048];
-
-	d912pxy_vfs_id_name* items;
-
+	void ReadVFS();
+		
 	d912pxy_vfs_packer_stream streams[VFS_PCK_STREAM_CNT];
 };

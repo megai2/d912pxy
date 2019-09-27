@@ -35,6 +35,7 @@ SOFTWARE.
 #include <d3d9.h>
 #include <map>
 #include <unordered_map>
+#include <algorithm>
 
 // DirectX 12 specific headers.
 #include <d3d12.h>
@@ -82,6 +83,8 @@ SOFTWARE.
 #include "d912pxy_cleanup_thread.h"
 #include "d912pxy_memtree.h"
 #include "d912pxy_memtree2.h"
+#include "d912pxy_vfs_pck.h"
+#include "d912pxy_vfs_entry.h"
 #include "d912pxy_vfs.h"
 #include "d912pxy_vfs_packer.h"
 #include "d912pxy_swapchain.h"

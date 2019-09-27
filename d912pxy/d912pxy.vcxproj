@@ -372,7 +372,9 @@
     <ClInclude Include="d912pxy_upload_pool.h" />
     <ClInclude Include="d912pxy_vdecl.h" />
     <ClInclude Include="d912pxy_vfs.h" />
+    <ClInclude Include="d912pxy_vfs_entry.h" />
     <ClInclude Include="d912pxy_vfs_packer.h" />
+    <ClInclude Include="d912pxy_vfs_pck.h" />
     <ClInclude Include="d912pxy_vstream.h" />
     <ClInclude Include="d912pxy_vstream_pool.h" />
     <ClInclude Include="d912pxy_vtexture.h" />
@@ -466,7 +468,9 @@
     <ClCompile Include="d912pxy_upload_pool.cpp" />
     <ClCompile Include="d912pxy_vdecl.cpp" />
     <ClCompile Include="d912pxy_vfs.cpp" />
+    <ClCompile Include="d912pxy_vfs_entry.cpp" />
     <ClCompile Include="d912pxy_vfs_packer.cpp" />
+    <ClCompile Include="d912pxy_vfs_pck.cpp" />
     <ClCompile Include="d912pxy_vstream.cpp" />
     <ClCompile Include="d912pxy_vstream_pool.cpp" />
     <ClCompile Include="d912pxy_vtexture.cpp" />

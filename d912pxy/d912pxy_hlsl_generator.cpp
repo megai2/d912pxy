@@ -1170,7 +1170,7 @@ UINT d912pxy_hlsl_generator::IsNaNGuardEnabled(UINT bit)
 void d912pxy_hlsl_generator::LoadGenProfile()
 {
 	UINT32 sz;
-	UINT32* data = (UINT32*)d912pxy_s.vfs.LoadFileH(mUID, &sz, PXY_VFS_BID_SHADER_PROFILE);
+	UINT32* data = (UINT32*)d912pxy_s.vfs.GetFileDataH(mUID, &sz, PXY_VFS_BID_SHADER_PROFILE);
 
 	if (data)
 	{
@@ -1181,9 +1181,7 @@ void d912pxy_hlsl_generator::LoadGenProfile()
 				continue;
 
 			genProfile[i] = bva;
-		}
-
-		PXY_FREE(data);
+		}		
 	}
 	else {
 		ZeroMemory(genProfile, sizeof(UINT)*PXY_INNER_SHDR_BUG_COUNT);

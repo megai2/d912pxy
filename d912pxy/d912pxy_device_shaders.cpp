@@ -100,7 +100,7 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId)
 {
 	UINT32 size;
-	UINT32* data = (UINT32*)d912pxy_s.vfs.LoadFileH(faultyId, &size, PXY_VFS_BID_SHADER_PROFILE);
+	UINT32* data = (UINT32*)d912pxy_s.vfs.GetFileDataH(faultyId, &size, PXY_VFS_BID_SHADER_PROFILE);
 
 	if (data == NULL)
 	{
@@ -123,9 +123,7 @@ void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid
 
 			d912pxy_s.vfs.ReWriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
 		}
-	}
-
-	PXY_FREE(data);
+	}	
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

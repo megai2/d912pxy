@@ -200,3 +200,4 @@ template class d912pxy_ringbuffer<d912pxy_linked_list_element*>;
 template class d912pxy_ringbuffer<d912pxy_vstream_lock_data>;
 template class d912pxy_ringbuffer<void*>;
 template class d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>;
+template class d912pxy_ringbuffer<d912pxy_vfs_pck_chunk*>;

@@ -243,8 +243,17 @@ d912pxy_shader_code d912pxy_shader_replacer::LoadFromCSO(const char* bfolder)
 	ret.code = 0;
 	ret.sz = 0;
 	ret.blob = nullptr;
-		
-	ret.code = d912pxy_s.vfs.LoadFileH(mUID, (UINT*)&ret.sz, PXY_VFS_BID_CSO);
+	
+	ret.code = d912pxy_s.vfs.GetFileDataH(mUID, (UINT*)&ret.sz, PXY_VFS_BID_CSO);
+
+	//megai2: FIXME remove deallocation in shader code
+	if (ret.code)
+	{
+		void* tmp = 0;
+		PXY_MALLOC(tmp, ret.sz, void*);
+		memcpy(tmp, ret.code, ret.sz);
+		ret.code = tmp;
+	}
 
 	return ret;
 

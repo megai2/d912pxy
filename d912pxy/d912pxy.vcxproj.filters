@@ -269,6 +269,12 @@
     <ClCompile Include="..\thirdparty\nv_api\nv_api_oc.cpp">
       <Filter>base\utils\3rd_party</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_vfs_pck.cpp">
+      <Filter>base\vfs</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_vfs_entry.cpp">
+      <Filter>base\vfs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -509,6 +515,12 @@
     </ClInclude>
     <ClInclude Include="..\thirdparty\nv_api\nv_api_oc.h">
       <Filter>base\utils\3rd_party</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_vfs_pck.h">
+      <Filter>base\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_vfs_entry.h">
+      <Filter>base\vfs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
