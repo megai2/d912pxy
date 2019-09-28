@@ -123,7 +123,7 @@ private:
 		{L"sdb", L"force_unused_regs", L"0"},//PXY_CFG_SDB_FORCE_UNUSED_REGS
 		{L"sdb", L"allow_realtime_checks", L"0"},//PXY_CFG_SDB_ALLOW_REALTIME_CHECKS
 		{L"sdb", L"nan_guard_flag", L"81"},//PXY_CFG_SDB_NAN_GUARD_FLAG
-		{L"sdb", L"srgb_alphatest_flag", L"8"},//PXY_CFG_SDB_SRGB_ALPHATEST_FLAG
+		{L"sdb", L"srgb_alphatest_flag", L"0"},//PXY_CFG_SDB_SRGB_ALPHATEST_FLAG
 		{L"replay", L"replay", L"1"},//PXY_CFG_REPLAY_BEHAIVOUR
 		{L"replay", L"replay_threads", L"1"},//PXY_CFG_REPLAY_THREADS
 		{L"replay", L"items_per_batch", L"100"},//PXY_CFG_REPLAY_ITEMS_PER_BATCH
