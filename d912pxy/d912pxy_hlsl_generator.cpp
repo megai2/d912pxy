@@ -1759,7 +1759,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
 					{
 						HLSL_GEN_WRITE_HEADI(
 							0,
-							"/*default*/    uint4 %s%u: %s%uE;",
+							"/*default*/     uint4 %s%u: %s%uE;",
 							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(op[1] & 0x1F, 0), (op[1] >> 16) & 0xF
 						);
 					} else {
