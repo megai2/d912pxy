@@ -258,6 +258,9 @@ void d912pxy_device::InitComPatches()
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
 	{
+		for (int i = 0; i != 32; ++i)
+			stageFormatsTrack[i] = D3DFMT_UNKNOWN;
+
 		LOG_INFO_DTDM("Profiling enabled, only profile data will be saved to vfs");
 		d912pxy_s.vfs.SetWriteMask(~(1 << PXY_VFS_BID_SHADER_PROFILE));
 
