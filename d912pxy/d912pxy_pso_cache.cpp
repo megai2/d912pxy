@@ -455,7 +455,7 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	case D3DRS_ALPHAREF:
 	case D3DRS_ALPHAFUNC:
 		DX9RSvalues[State] = Value;
-		d912pxy_s.render.tex.SetTexture(31, (DX9RSvalues[D3DRS_ALPHATESTENABLE] & 1) | (DX9RSvalues[D3DRS_ALPHAFUNC] << 1) | (DX9RSvalues[D3DRS_ALPHAREF] << 5));
+		d912pxy_s.render.tex.ModStageByMask(31, (DX9RSvalues[D3DRS_ALPHATESTENABLE] & 1) | (DX9RSvalues[D3DRS_ALPHAFUNC] << 1) | (DX9RSvalues[D3DRS_ALPHAREF] << 5), 0xFFFFE000);
 		break;
 	case D3DRS_CLIPPLANEENABLE:
 	{

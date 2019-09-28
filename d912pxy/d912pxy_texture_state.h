@@ -52,6 +52,7 @@ public:
 	void Init();
 
 	void SetTexture(UINT stage, UINT srv);
+	void ModStageByMask(UINT stage, UINT srv, UINT mask);
 	void ModStageBit(UINT stage, UINT bit, UINT set);
 	void ModSamplerTracked(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value);
 	void ModSampler(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value);
