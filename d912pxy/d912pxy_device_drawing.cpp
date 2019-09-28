@@ -108,7 +108,7 @@ HRESULT d912pxy_device::DrawIndexedPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, 
 	
 	UINT srgbState = d912pxy_s.render.tex.GetTexStage(30);
 	if (srgbState)
-		for (int i = 0; i != 32; ++i)
+		for (int i = 0; i != 30; ++i)
 		{
 			if (srgbState & 1)
 			{

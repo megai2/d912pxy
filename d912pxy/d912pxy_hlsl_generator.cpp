@@ -1175,12 +1175,8 @@ void d912pxy_hlsl_generator::LoadGenProfile()
 	if (data)
 	{
 		for (int i = 0; i != PXY_INNER_SHDR_BUG_COUNT; ++i)
-		{
-			UINT32 bva = data[i];
-			if (!bva)
-				continue;
-
-			genProfile[i] = bva;
+		{			
+			genProfile[i] = data[i];
 		}		
 	}
 	else {
