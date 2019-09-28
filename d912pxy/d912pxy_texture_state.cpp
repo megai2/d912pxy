@@ -61,7 +61,7 @@ void d912pxy_texture_state::ModStageByMask(UINT stage, UINT srv, UINT mask)
 			
 	current.texHeapID[stage] = (current.texHeapID[stage] & mask) | srv;
 
-	LOG_DBG_DTDM("tex[%u] = %u", stage, val);
+	LOG_DBG_DTDM("tex[%u] = %u", stage, current.texHeapID[stage]);
 }
 
 void d912pxy_texture_state::ModStageBit(UINT stage, UINT bit, UINT set)
