@@ -273,8 +273,8 @@ void d912pxy_comhandler::DeAllocateBase()
 	case PXY_COM_OBJ_STATIC:
 		;
 		break;
-	case PXY_COM_OBJ_RESOURCE:
-		dtor_call(d912pxy_resource);		
+	case PXY_COM_OBJ_RESOURCE:				
+		delete ((d912pxy_resource*)this);
 		break;
 	default:
 		LOG_ERR_THROW2(-1, "wrong com object typeid");
