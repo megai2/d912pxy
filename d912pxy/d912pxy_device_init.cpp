@@ -127,15 +127,14 @@ void d912pxy_device::CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATI
 
 void d912pxy_device::InitVFS()
 {
+	d912pxy_s.vfs.SetWriteMask((UINT32)d912pxy_s.config.GetValueXI64(PXY_CFG_VFS_WRITE_MASK));
+
 	d912pxy_s.vfs.Init(d912pxy_helper::GetFilePath(FP_VFS_LOCK_FILE)->s);
 
 	if (!d912pxy_s.vfs.IsWriteAllowed())
 	{
-		LOG_INFO_DTDM("VFS is locked by another process, no data will be saved on disk");
-	}
-	else {
-		d912pxy_s.vfs.SetWriteMask((UINT32)d912pxy_s.config.GetValueXI64(PXY_CFG_VFS_WRITE_MASK));
-	}
+		LOG_WARN_DTDM("VFS is in read-only mode, no data will be saved on disk");
+	}	
 
 	d912pxy_s.vfs.SetRoot(d912pxy_s.config.GetValueRaw(PXY_CFG_VFS_ROOT));
 

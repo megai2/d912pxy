@@ -60,6 +60,11 @@ void d912pxy_vfs::Init(const char * lockPath)
 		writeAllowed = 1;
 	}
 
+	if (cuWriteMask == ((1 << PXY_VFS_BID_END) - 1))
+	{
+		TakeOutWriteAccess();
+	}
+	
 	for (int i = 0; i != PXY_VFS_BID_END; ++i)
 		items[i] = new d912pxy_vfs_entry(i);
 }
@@ -84,7 +89,9 @@ void d912pxy_vfs::LoadVFS()
 		if (cuPck->GetStatus())
 		{
 			LOG_ERR_DTDM("Latest pck file is broken, nothing will be saved");
-		}
+
+			TakeOutWriteAccess();
+		}		
 	}	
 }
 
@@ -208,6 +215,14 @@ d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk* prevC
 void d912pxy_vfs::SetWriteMask(UINT32 val)
 {
 	cuWriteMask = val;
+}
+
+void d912pxy_vfs::TakeOutWriteAccess()
+{
+	if (writeAllowed)
+		CloseHandle(lockFile);
+
+	writeAllowed = 0;
 }
 
 void d912pxy_vfs::LoadPckFromRootPath()

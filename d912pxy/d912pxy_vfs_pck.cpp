@@ -33,9 +33,17 @@ d912pxy_vfs_pck::d912pxy_vfs_pck(wchar_t * fn, UINT in_allowWrite)
 
 	if (!FS_Open(fn))
 	{
-		if (!CreateNewPckFile(fn))
+		if (fs_write_allowed)
 		{
-			LOG_ERR_DTDM("Error opening & creating %s file", fn);
+			if (!CreateNewPckFile(fn))
+			{
+				LOG_ERR_DTDM("Error opening & creating %s file", fn);
+				cuStatus = 1;
+				return;
+			}
+		}
+		else {
+			LOG_ERR_DTDM("Can't open %s for read", fn);
 			cuStatus = 1;
 			return;
 		}
@@ -67,8 +75,10 @@ d912pxy_vfs_pck::d912pxy_vfs_pck(wchar_t * fn, UINT in_allowWrite)
 
 d912pxy_vfs_pck::~d912pxy_vfs_pck()
 {
-	if (!cuStatus)
+	if (cuStatus)
+	{
 		return;
+	}
 	else {
 		LOG_WARN_DTDM("pck %016llX are not closed!", this);
 		Close(0);
@@ -93,7 +103,7 @@ UINT d912pxy_vfs_pck::Close(UINT compress)
 	FreeChunk(cuChunkIndex);
 	delete cuChunkList;
 
-	cuStatus = 0;
+	cuStatus = 1;
 
 	if (compress)
 	{
@@ -225,17 +235,15 @@ UINT d912pxy_vfs_pck::CreateNewPckFile(wchar_t * fn)
 
 UINT d912pxy_vfs_pck::FS_CreateNew(wchar_t * fn)
 {
-	fs_file = CreateFile(fn, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+	fs_file = CreateFile(fn, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
 
 	return fs_file != INVALID_HANDLE_VALUE;		
 }
 
 UINT d912pxy_vfs_pck::FS_Open(wchar_t * fn)
 {
-	if (fs_write_allowed)
-		fs_file = CreateFile(fn, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	else
-		fs_file = CreateFile(fn, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	//megai2: works this way, i'l keep writes OFF in FS_IO
+	fs_file = CreateFile(fn, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 
 	return fs_file != INVALID_HANDLE_VALUE;
 }

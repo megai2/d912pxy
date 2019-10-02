@@ -78,6 +78,7 @@ public:
 	d912pxy_vfs_pck_chunk* WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk,UINT id, UINT64 namehash, void* data, UINT sz);
 
 	void SetWriteMask(UINT32 val);
+	void TakeOutWriteAccess();
 
 private:
 	HANDLE lockFile;
