@@ -44,7 +44,7 @@ class d912pxy_vfs_pck;
 typedef struct d912pxy_vfs_pck_chunk_index_data {
 	UINT32 id;
 	UINT64 packedInfo;
-};
+} d912pxy_vfs_pck_chunk_index_data;
 
 typedef struct d912pxy_vfs_pck_chunk_dsc {	
 	UINT32 checksum;
@@ -113,8 +113,8 @@ static UINT d912pxy_vfs_pck_in_mem_chunk_sizes[] = {
 class d912pxy_vfs_pck : public d912pxy_noncom
 {
 public:
-	d912pxy_vfs_pck(wchar_t* fn);
-	~d912pxy_vfs_pck();
+	d912pxy_vfs_pck(wchar_t* fn, UINT in_allowWrite);
+	~d912pxy_vfs_pck(); 
 
 	UINT GetStatus();
 
@@ -127,6 +127,8 @@ public:
 	d912pxy_ringbuffer<d912pxy_vfs_pck_chunk*>* GetFileList();
 
 	UINT Cleanup();
+
+	void ModRef(INT dlt);
 		   
 private:
 	UINT32 CalcCRC32(intptr_t data, UINT32 length);
@@ -169,8 +171,9 @@ private:
 
 	HANDLE fs_file;
 	UINT64 fs_write_offset;
+	UINT fs_write_allowed;
 
 	UINT cuStatus;
-	   
+	UINT refs;
 };
 

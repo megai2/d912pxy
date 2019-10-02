@@ -999,6 +999,12 @@ void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommand
 void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
 {
 	ID3D12PipelineState * pso = d912pxy_s.render.db.pso.UseByDescMT(&it->rawState, 0);
+
+	/*
+	//megai2: debug mode busy wait for pso compile
+	while (!pso)
+		pso = d912pxy_s.render.db.pso.UseByDescMT(&it->rawState, 0);
+	*/
 		
 	if (pso && (context->pso != pso))					
 		cl->SetPipelineState(pso);	

@@ -38,6 +38,7 @@ public:
 	void ReWriteFileH(UINT64 namehash, void* data, UINT sz);
 
 	void AddFileInfo(d912pxy_vfs_pck_chunk* fileInfo);
+	void LoadFileFromDisk(d912pxy_vfs_pck_chunk* fileInfo);
 	void LoadFilesFromDisk();
 
 	d912pxy_memtree2* GetChunkTree() {

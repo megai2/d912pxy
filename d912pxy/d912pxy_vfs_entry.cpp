@@ -39,7 +39,11 @@ d912pxy_vfs_entry::~d912pxy_vfs_entry()
 		d912pxy_vfs_pck_chunk* dtCh = (d912pxy_vfs_pck_chunk*)chunkTree->CurrentCID();
 
 		if (dtCh)
+		{
+			if (dtCh->dsc.type == CHU_FILE_INFO)
+				dtCh->parent->ModRef(-1);
 			PXY_FREE(dtCh);
+		}
 
 		chunkTree->Next();
 	}
@@ -59,6 +63,16 @@ void * d912pxy_vfs_entry::GetFileDataH(UINT64 namehash, UINT * sz)
 
 	if (!dtCh)
 		return 0;
+
+	//megai2: file is not precached
+	if (dtCh->dsc.type == CHU_FILE_INFO)
+	{
+		LoadFileFromDisk(dtCh);
+		dtCh = (d912pxy_vfs_pck_chunk*)chunkTree->CurrentCID();
+
+		if (!dtCh)
+			return 0;
+	}
 
 	*sz = dtCh->dsc.size - PXY_VFS_PCK_CHUNK_DSC_SIZE;
 
@@ -82,11 +96,29 @@ void d912pxy_vfs_entry::ReWriteFileH(UINT64 namehash, void * data, UINT sz)
 void d912pxy_vfs_entry::AddFileInfo(d912pxy_vfs_pck_chunk * fileInfo)
 {
 	d912pxy_vfs_pck_chunk* fiCh = (d912pxy_vfs_pck_chunk*)IsPresentH(fileInfo->data.file_info.name);
-
+	
 	if (fiCh)
+	{
+		fiCh->parent->ModRef(-1);
 		PXY_FREE(fiCh);
+	}
+
+	fileInfo->parent->ModRef(1);
 
 	chunkTree->SetValue((UINT64)fileInfo);
+}
+
+void d912pxy_vfs_entry::LoadFileFromDisk(d912pxy_vfs_pck_chunk * fiCh)
+{
+	if (fiCh)
+	{		
+		d912pxy_vfs_pck_chunk* dtCh = fiCh->parent->ReadFileFromPck(fiCh);
+
+		fiCh->parent->ModRef(-1);
+		PXY_FREE(fiCh);
+
+		chunkTree->SetValue((UINT64)dtCh);
+	}
 }
 
 void d912pxy_vfs_entry::LoadFilesFromDisk()
@@ -97,18 +129,10 @@ void d912pxy_vfs_entry::LoadFilesFromDisk()
 
 	while (!chunkTree->IterEnd())
 	{
-		d912pxy_vfs_pck_chunk* fiCh = (d912pxy_vfs_pck_chunk*)chunkTree->CurrentCID();
+		LoadFileFromDisk((d912pxy_vfs_pck_chunk*)chunkTree->CurrentCID());
 
-		if (fiCh)
-		{
-			d912pxy_vfs_pck_chunk* dtCh = fiCh->parent->ReadFileFromPck(fiCh);
-			PXY_FREE(fiCh);
-
-			if (dtCh)
-				++filesLoaded;
-
-			chunkTree->SetValue((UINT64)dtCh);
-		}
+		if (chunkTree->CurrentCID() != 0)
+			++filesLoaded;
 
 		chunkTree->Next();
 	}

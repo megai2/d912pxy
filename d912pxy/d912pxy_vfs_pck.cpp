@@ -24,9 +24,12 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_vfs_pck::d912pxy_vfs_pck(wchar_t * fn)
+d912pxy_vfs_pck::d912pxy_vfs_pck(wchar_t * fn, UINT in_allowWrite)
 {	
 	NonCom_Init(L"vfs_pck");
+
+	fs_write_allowed = in_allowWrite;
+	refs = 1;
 
 	if (!FS_Open(fn))
 	{
@@ -229,7 +232,10 @@ UINT d912pxy_vfs_pck::FS_CreateNew(wchar_t * fn)
 
 UINT d912pxy_vfs_pck::FS_Open(wchar_t * fn)
 {
-	fs_file = CreateFile(fn, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	if (fs_write_allowed)
+		fs_file = CreateFile(fn, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	else
+		fs_file = CreateFile(fn, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 
 	return fs_file != INVALID_HANDLE_VALUE;
 }
@@ -247,6 +253,9 @@ UINT d912pxy_vfs_pck::FS_Close()
 
 UINT d912pxy_vfs_pck::FS_IO(UINT64 offset, UINT rw, UINT32 size, void * buf)
 {
+	if (rw && !fs_write_allowed)
+		return 1;
+
 	LARGE_INTEGER liOfs;
 
 	liOfs.QuadPart = offset;
@@ -300,6 +309,17 @@ UINT d912pxy_vfs_pck::Cleanup()
 {
 	//megai2: TODO scan file for free space / unused chunks and relocate data
 	return 0;
+}
+
+void d912pxy_vfs_pck::ModRef(INT dlt)
+{
+	refs += dlt;
+
+	if (!refs)
+	{
+		Close(d912pxy_s.config.GetValueUI32(PXY_CFG_VFS_PACK_DATA));
+		delete this;
+	}
 }
 
 UINT32 d912pxy_vfs_pck::CalcCRC32(intptr_t data, UINT32 length)

@@ -79,7 +79,7 @@ void d912pxy_vfs::LoadVFS()
 
 		wsprintf(newPck, L"%S/%s", m_rootPath, PXY_VFS_LATEST_PCK);
 
-		cuPck = new d912pxy_vfs_pck(newPck);
+		cuPck = new d912pxy_vfs_pck(newPck, writeAllowed);
 
 		if (cuPck->GetStatus())
 		{
@@ -171,21 +171,38 @@ UINT64 d912pxy_vfs::HashFromName(const char * fnpath)
 
 d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk, UINT id, UINT64 namehash, void * data, UINT sz)
 {
-	if (prevChunk && (prevChunk->parent == cuPck) && (sz == (prevChunk->dsc.size - PXY_VFS_PCK_CHUNK_DSC_SIZE)))
+	if (prevChunk)
 	{
-		if (data != &prevChunk->data.rawData)
-			memcpy(&prevChunk->data.rawData, data, sz);
-		cuPck->UpdateChunk(prevChunk);
-		return prevChunk;
-	}
-	else {
-		d912pxy_vfs_pck_chunk * newChunk = cuPck->WriteFileToPck(id, namehash, sz, data);
+		if (prevChunk->dsc.type == CHU_FILE_INFO)
+		{
+			if (prevChunk->parent == cuPck)
+			{
+				items[id]->LoadFileFromDisk(prevChunk);
+				prevChunk = (d912pxy_vfs_pck_chunk*)items[id]->GetChunkTree()->CurrentCID();
 
-		if (prevChunk)
-			PXY_FREE(prevChunk);
-
-		return newChunk;
+				return WriteFileToPck(prevChunk, id, namehash, data, sz);
+			}
+			else {
+				prevChunk->parent->ModRef(-1);							
+			}
+		}
+		else {
+			if ((prevChunk->parent == cuPck) && (sz == (prevChunk->dsc.size - PXY_VFS_PCK_CHUNK_DSC_SIZE)))
+			{
+				if (data != &prevChunk->data.rawData)
+					memcpy(&prevChunk->data.rawData, data, sz);
+				cuPck->UpdateChunk(prevChunk);
+				return prevChunk;
+			}
+		}
 	}
+
+	d912pxy_vfs_pck_chunk * newChunk = cuPck->WriteFileToPck(id, namehash, sz, data);
+
+	if (prevChunk)
+		PXY_FREE(prevChunk);
+
+	return newChunk;
 }
 
 void d912pxy_vfs::SetWriteMask(UINT32 val)
@@ -227,14 +244,12 @@ void d912pxy_vfs::LoadPckFromRootPath()
 	FindClose(hFind); 
 
 	std::sort(ListOfFileNames.begin(), ListOfFileNames.end());
-
-	d912pxy_ringbuffer<void*>* pckCleanupList = new d912pxy_ringbuffer<void*>(100, 2);
-
+	
 	for (std::vector<std::wstring>::iterator it = ListOfFileNames.begin(); it != ListOfFileNames.end(); ++it)
 	{
 		wsprintf(sPath, L"%S/%s", m_rootPath, it->c_str());
 
-		d912pxy_vfs_pck* pck = new d912pxy_vfs_pck(sPath);
+		d912pxy_vfs_pck* pck = new d912pxy_vfs_pck(sPath, writeAllowed);
 		
 		if (pck->GetStatus())
 		{
@@ -242,7 +257,7 @@ void d912pxy_vfs::LoadPckFromRootPath()
 		}
 		else {
 			d912pxy_ringbuffer<d912pxy_vfs_pck_chunk*>* fileList = pck->GetFileList();
-
+		
 			while (fileList->HaveElements())
 			{
 				d912pxy_vfs_pck_chunk* fileInfo = fileList->GetElement();
@@ -254,30 +269,20 @@ void d912pxy_vfs::LoadPckFromRootPath()
 
 			delete fileList;
 
+			//megai2: never unload latest pck file on ref changes				
 			if (!wcscmp(it->c_str(), PXY_VFS_LATEST_PCK))
 			{
-				cuPck = pck;
-			}
-			else {
-				pckCleanupList->WriteElement(pck);
-			}
+				cuPck = pck;				
+			} else 
+				pck->ModRef(-1);
 		}		
 	}	
 
+	UINT64 memCache = d912pxy_s.config.GetValueXI64(PXY_CFG_VFS_MEMCACHE_MASK);
+
 	//megai2: load actual data from disk after we collect/overwrite listing from all pck files
+	//if precache specified
 	for (int i = 0; i != PXY_VFS_BID_END; ++i)
-		items[i]->LoadFilesFromDisk();
-	
-	while (pckCleanupList->HaveElements())
-	{
-		d912pxy_vfs_pck* pck = (d912pxy_vfs_pck*)pckCleanupList->GetElement();
-		
-		pck->Close(d912pxy_s.config.GetValueUI32(PXY_CFG_VFS_PACK_DATA));
-
-		delete pck;
-
-		pckCleanupList->Next();
-	}
-
-	delete pckCleanupList;
+		if (memCache & (1ULL << i))
+			items[i]->LoadFilesFromDisk();
 }
