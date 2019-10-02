@@ -328,35 +328,10 @@ int action_remove()
 
 int action_clear_shader_cache()
 {
-	std::cout << "Clear pck_bns (all but profiles) ? ";
+	std::cout << "Deleting latest.pck in pck and pck_bns \n";
 
-	if (ReadUserYN(0))
-	{
-		system("del /Q pck_bns\\derived_cso_ps.pck");
-		system("del /Q pck_bns\\derived_cso_vs.pck");
-		system("del /Q pck_bns\\pso_cache.pck");
-		system("del /Q pck_bns\\pso_precompile.pck");
-		system("del /Q pck_bns\\shader_sources.pck");
-		system("del /Q pck_bns\\shader_cso.pck");		
-	}
-
-	std::cout << "Clear derived cso, sources and PSO precompile cache? ";
-
-	if (ReadUserYN(0))
-	{
-		system("del /Q pck\\derived_cso_ps.pck");
-		system("del /Q pck\\derived_cso_vs.pck");
-		system("del /Q pck\\pso_cache.pck");
-		system("del /Q pck\\pso_precompile.pck");
-		system("del /Q pck\\shader_sources.pck");
-	}
-
-	std::cout << "Remove profiles too? ";
-
-	if (ReadUserYN(0))
-	{
-		system("del /Q pck\\shader_profiles.pck");
-	}
+	system("del /Q pck_bns\\latest.pck");			
+	system("del /Q pck\\latest.pck");		
 
 	std::cout << "Perform additional hlsl sources cleaning? ";
 
@@ -364,8 +339,6 @@ int action_clear_shader_cache()
 	{
 		system("del /Q shaders\\hlsl\\*");
 	}
-
-	system("del /Q pck\\shader_cso.pck");
 
 	std::cout << "Finished \n";
 
