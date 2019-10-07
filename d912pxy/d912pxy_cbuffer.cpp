@@ -65,8 +65,8 @@ d912pxy_cbuffer::d912pxy_cbuffer(UINT length, UINT uploadOnly, UINT32 allowUploa
 	{
 		d12res_uav_buffer(length, D3D12_HEAP_TYPE_DEFAULT);
 	}
-	else
-		dHeap = 0;
+
+	dHeap = 0;
 
 	if (allowUploadBuffer)
 	{
