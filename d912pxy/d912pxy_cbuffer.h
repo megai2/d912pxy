@@ -28,27 +28,13 @@ SOFTWARE.
 class d912pxy_cbuffer : public d912pxy_resource
 {
 public:
-	d912pxy_cbuffer(UINT length, UINT uploadOnly=0);	
-	d912pxy_cbuffer(UINT length, UINT uploadOnly, UINT32 allowUploadBuffer);
-	d912pxy_cbuffer(d912pxy_cbuffer* oBuf, UINT offset, UINT iSz);
+	d912pxy_cbuffer(UINT length, UINT32 allowUploadBuffer);
 	~d912pxy_cbuffer();
-
-	void WriteUINT32(UINT index, UINT32* val, UINT count);
-	void WriteFloat(UINT index, float* val, UINT count);
-
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDHeapHandle();
-	D3D12_GPU_DESCRIPTOR_HANDLE GetDHeapGPUHandle();
-
-	UINT GetHeapID() { return heapId; };
 
 	void Upload();
 	void UploadTarget(d912pxy_cbuffer* target, UINT offset, UINT size);
 	void UploadOffset(UINT offset, UINT size);
 	void UploadOffsetNB(ID3D12GraphicsCommandList* cq, UINT offset, UINT size);
-
-	void* OffsetWritePoint(UINT offset);
-
-	d912pxy_resource* GetUploadRes();
 
 	intptr_t DevPtr() { return pointers.dev; };
 	intptr_t HostPtr() { return pointers.host; };
@@ -56,7 +42,6 @@ public:
 private:
 	d912pxy_resource_ptr pointers;
 
-	d912pxy_resource * uploadRes;
-	UINT heapId;
+	d912pxy_resource * uploadRes;	
 };
 

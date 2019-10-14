@@ -30,6 +30,7 @@ SOFTWARE.
 #define PXY_BATCH_GPU_ELEMENT_OFFSET_SHADER_VARS_VERTEX 16
 #define PXY_BATCH_GPU_ELEMENT_OFFSET_SHADER_VARS_PIXEL 272
 
+#define PXY_BATCH_GPU_TRANSIT_ELEMENTS 530
 #define PXY_BATCH_GPU_ELEMENT_COUNT 544
 #define PXY_BATCH_GPU_ELEMENT_SIZE 16
 
@@ -85,7 +86,9 @@ public:
 	UINT GetBatchCount();
 
 	void SetShaderConstF(UINT type, UINT start, UINT cnt4, float* data);
+
 	void GPUWrite(void* src, UINT size, UINT offset);
+	void GPUWriteRaw(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);
 	void GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);	
 	void GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn, UINT tid);
 	void GPUWriteFinalize(UINT tid, UINT endBatch);	
@@ -93,14 +96,15 @@ public:
 
 	void FrameStart();
 	void FrameEnd();
+
 	void GPUCSCpy();
-	
+	void GPUCpy();
+
+	void PreDIPRaw(ID3D12GraphicsCommandList* cl, UINT bid);
 	void PreDIP(ID3D12GraphicsCommandList* cl, UINT bid);
 
 	void ClearShaderVars();
-
-
-
+	   
 private:
 	void InitCopyCS();
 
@@ -108,9 +112,12 @@ private:
 	ID3D12PipelineState* copyPSO;
 	ID3D12RootSignature* copyRS;
 	UINT mtCopyEnabled;
-			
+	UINT rawCopyEnabled;
+				
 	d912pxy_cbuffer* buffer;
 	d912pxy_cbuffer* stream;
+	UINT64 host_buffer_base_ptr;
+	UINT64 gpu_buffer_base_ptr;
 
 	d912pxy_batch_stream_data_entry* streamData;
 	d912pxy_batch_stream_control_entry* streamControl;

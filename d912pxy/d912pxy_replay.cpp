@@ -65,6 +65,27 @@ void d912pxy_replay::Init()
 		numThreads = 4;
 	}
 
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_MISC_RAW_GPUW))
+	{
+		if (numThreads > 1)
+		{
+			LOG_ERR_DTDM("Forcing replay threads to 1 due to enabled raw gpu write");
+			numThreads = 1;
+		}
+
+		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW_RAW;
+		replay_handlers[DRPL_DIIP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DIIP_RAW;
+	}
+	else
+	{
+		replay_handlers[DRPL_DIIP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DIIP;
+
+		if (numThreads > 1)
+			replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW_MT;
+		else
+			replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;
+	}
+
 	d912pxy_s.dev.AddActiveThreads(numThreads);
 
 	for (int i = 0; i != numThreads; ++i)
@@ -91,7 +112,6 @@ void d912pxy_replay::Init()
 	replay_handlers[DRPL_OMBF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMBF;
 	replay_handlers[DRPL_RSVP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RSVP;
 	replay_handlers[DRPL_RSSR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RSSR;
-	replay_handlers[DRPL_DIIP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DIIP;
 	replay_handlers[DRPL_OMRT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMRT;
 	replay_handlers[DRPL_IFVB] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_IFVB;
 	replay_handlers[DRPL_IFIB] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_IFIB;
@@ -104,10 +124,7 @@ void d912pxy_replay::Init()
 	replay_handlers[DRPL_PRMT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_PRMT;
 	replay_handlers[DRPL_QUMA] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_QUMA;
 
-	if (numThreads > 1)
-		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW_MT;
-	else
-		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;	
+	
 }
 
 UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
@@ -935,6 +952,22 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 	);	
 }
 
+void d912pxy_replay::RHA_DIIP_RAW(d912pxy_replay_draw_indexed_instanced * it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context * context)
+{
+	if (!context->pso)
+		return;
+
+	d912pxy_s.render.batch.PreDIPRaw(cl, it->batchId);
+
+	cl->DrawIndexedInstanced(
+		it->IndexCountPerInstance,
+		it->InstanceCount,
+		it->StartIndexLocation,
+		it->BaseVertexLocation,
+		it->StartInstanceLocation
+	);
+}
+
 void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl, void* unused)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[2];
@@ -1064,6 +1097,11 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 void d912pxy_replay::RHA_GPUW(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void * unused)
 {
 	d912pxy_s.render.batch.GPUWriteControl(it->streamIdx, it->offset, it->size, it->bn);
+}
+
+void d912pxy_replay::RHA_GPUW_RAW(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void * unused)
+{
+	d912pxy_s.render.batch.GPUWriteRaw(it->streamIdx, it->offset, it->size, it->bn);
 }
 
 void d912pxy_replay::RHA_GPUW_MT(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)

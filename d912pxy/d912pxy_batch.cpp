@@ -32,10 +32,16 @@ d912pxy_batch::d912pxy_batch()
 d912pxy_batch::~d912pxy_batch()
 {
 	delete buffer;
-	delete stream;
 
-	copyPSO->Release();
-	copyRS->Release();
+	if (!rawCopyEnabled)
+	{
+		delete stream;
+
+		copyPSO->Release();
+		copyRS->Release();
+	}
+	else
+		PXY_FREE(streamData);
 }
 
 void d912pxy_batch::Init()
@@ -47,21 +53,43 @@ void d912pxy_batch::Init()
 	batchNum = 0;
 	lastBatchCount = 0;
 	oddFrame = 0;
-
-	stream = new d912pxy_cbuffer(PXY_BATCH_STREAM_SIZE, 0, 1);
-	buffer = new d912pxy_cbuffer(PXY_BATCH_GPU_BUFFER_SIZE, 0, 0);
-
+	rawCopyEnabled = d912pxy_s.config.GetValueUI32(PXY_CFG_MISC_RAW_GPUW);
+	
 	streamOfDlt[0] = 0;
-	streamOfDlt[1] = PXY_BATCH_STREAM_PER_FRAME_SIZE;
-	intptr_t streamBase = stream->HostPtr();
-
-	streamData = (d912pxy_batch_stream_data_entry*)streamBase;
-	streamControl = (d912pxy_batch_stream_control_entry*)(streamBase + PXY_BATCH_STREAM_CONTROL_OFFSET);
 
 	ZeroMemory(stateTransfer, PXY_BATCH_GPU_DRAW_BUFFER_SIZE);
-	memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
 
-	InitCopyCS();
+	if (!rawCopyEnabled)
+	{
+		stream = new d912pxy_cbuffer(PXY_BATCH_STREAM_SIZE, 1);
+		buffer = new d912pxy_cbuffer(PXY_BATCH_GPU_BUFFER_SIZE, 0);
+
+		LOG_INFO_DTDM("GPU delta batching mem usage %u Mb", (PXY_BATCH_GPU_BUFFER_SIZE + PXY_BATCH_STREAM_SIZE) >> 20);
+
+		streamOfDlt[1] = PXY_BATCH_STREAM_PER_FRAME_SIZE;
+
+		intptr_t streamBase = stream->HostPtr();
+
+		streamData = (d912pxy_batch_stream_data_entry*)streamBase;
+		streamControl = (d912pxy_batch_stream_control_entry*)(streamBase + PXY_BATCH_STREAM_CONTROL_OFFSET);
+
+		
+		memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
+
+		InitCopyCS();
+	}
+	else {		
+		buffer = new d912pxy_cbuffer(PXY_BATCH_GPU_BUFFER_SIZE * 2, 1);
+		PXY_MALLOC(streamData, PXY_BATCH_GPU_BUFFER_SIZE, d912pxy_batch_stream_data_entry*);
+
+		LOG_INFO_DTDM("GPU raw batching mem usage %u Mb", (PXY_BATCH_GPU_BUFFER_SIZE * 3) >> 20);
+
+		streamOfDlt[1] = PXY_BATCH_GPU_BUFFER_SIZE;				
+
+		host_buffer_base_ptr = buffer->HostPtr();
+	}
+		
+	gpu_buffer_base_ptr = buffer->DevPtr();
 }
 
 UINT d912pxy_batch::NextBatch()
@@ -94,22 +122,16 @@ void d912pxy_batch::FrameStart()
 	topCl = d912pxy_s.dx12.cl->GID(CLG_TOP);
 
 	GPUWriteStart(0, 0);
-
-	topCl->SetComputeRootSignature(copyRS);
-	topCl->SetComputeRootUnorderedAccessView(0, buffer->DevPtr());
 }
 
 void d912pxy_batch::FrameEnd()
 {
 	++batchNum;
 
-	GPUCSCpy();
-
-	oddFrame = !oddFrame;
-
-	intptr_t streamPoint = stream->HostPtr() + streamOfDlt[oddFrame];
-	streamData = (d912pxy_batch_stream_data_entry*)streamPoint;
-	streamControl = (d912pxy_batch_stream_control_entry*)(streamPoint + PXY_BATCH_STREAM_CONTROL_OFFSET);
+	if (rawCopyEnabled)
+		GPUCpy();
+	else
+		GPUCSCpy();
 	
 	lastBatchCount = batchNum-1;
 	batchNum = 0;
@@ -128,6 +150,9 @@ void d912pxy_batch::GPUCSCpy()
 		for (int i = 0; i != d912pxy_s.render.replay.GetThreadCount(); ++i)
 			GPUWriteFinalize(i, batchNum);
 	}
+
+	//megai2: use zero index as skip-unfold point
+	streamControl[0].batchNums = 0;
 
 	if (streamIdx & PXY_BATCH_GPU_THREAD_BLOCK_MASK)
 	{
@@ -149,7 +174,6 @@ void d912pxy_batch::GPUCSCpy()
 	{
 		LOG_ERR_THROW2(-1, L"Too much gpu writes per frame");
 	}
-
 		
 	UINT ofDlt = streamOfDlt[oddFrame];
 
@@ -158,7 +182,7 @@ void d912pxy_batch::GPUCSCpy()
 	
 	stream->UploadOffsetNB(topCl, ofDlt, streamIdx * PXY_BATCH_STREAM_DATA_SIZE);
 	stream->UploadOffsetNB(topCl, ofDlt + PXY_BATCH_STREAM_CONTROL_OFFSET, streamIdx * PXY_BATCH_STREAM_CONTROL_SIZE);	
-	topCl->CopyBufferRegion(stream->GetD12Obj(), ofDlt, buffer->GetD12Obj(), PXY_BATCH_GPU_DRAW_BUFFER_SIZE * lastBatchCount, PXY_BATCH_GPU_DRAW_BUFFER_SIZE);
+	topCl->CopyBufferRegion(stream->GetD12Obj(), ofDlt + PXY_BATCH_GPU_ELEMENT_SIZE, buffer->GetD12Obj(), PXY_BATCH_GPU_DRAW_BUFFER_SIZE * lastBatchCount, PXY_BATCH_GPU_TRANSIT_ELEMENTS * PXY_BATCH_GPU_ELEMENT_SIZE);
 
 	buffer->BTransit(0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE, topCl);
 	stream->BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, topCl);
@@ -172,10 +196,39 @@ void d912pxy_batch::GPUCSCpy()
 	PIXEndEvent(topCl);
 
 	streamIdx = 0;
+
+	oddFrame = !oddFrame;
+
+	intptr_t streamPoint = stream->HostPtr() + streamOfDlt[oddFrame];
+	streamData = (d912pxy_batch_stream_data_entry*)streamPoint;
+	streamControl = (d912pxy_batch_stream_control_entry*)(streamPoint + PXY_BATCH_STREAM_CONTROL_OFFSET);
+}
+
+void d912pxy_batch::GPUCpy()
+{
+	PIXBeginEvent(topCl, 0xAA00AA, "Cpy");
+
+	UINT ofDlt = streamOfDlt[oddFrame];
+
+	buffer->BTransitTo(0, D3D12_RESOURCE_STATE_COPY_DEST, topCl);
+	buffer->UploadOffsetNB(topCl, ofDlt, batchNum*PXY_BATCH_GPU_DRAW_BUFFER_SIZE);
+	buffer->BTransitTo(0, D3D12_RESOURCE_STATE_GENERIC_READ, topCl);
+	
+	PIXEndEvent(topCl);
+
+	streamIdx = 0;
+
+	oddFrame = !oddFrame;
+
+	gpu_buffer_base_ptr = buffer->DevPtr() + streamOfDlt[oddFrame];
+	host_buffer_base_ptr = buffer->HostPtr() + streamOfDlt[oddFrame];
 }
 
 void d912pxy_batch::GPUWriteFinalize(UINT tid, UINT endBatch)
 {
+	if (rawCopyEnabled)
+		return;
+
 	if (mtCopyEnabled)
 	{
 		UINT dltRefOfs = tid * PXY_BATCH_GPU_ELEMENT_COUNT;
@@ -207,21 +260,27 @@ void d912pxy_batch::GPUWriteFinalize(UINT tid, UINT endBatch)
 }
 
 void d912pxy_batch::GPUWriteStart(UINT tid, UINT fromReplay)
-{
+{	
+	if (rawCopyEnabled)
+		return;
+
 	if (!fromReplay)
 	{
+		topCl->SetComputeRootSignature(copyRS);
+		topCl->SetComputeRootUnorderedAccessView(0, buffer->DevPtr());
+
 		if (tid == 0)
-			streamIdx += PXY_BATCH_GPU_ELEMENT_COUNT;
+			streamIdx += PXY_BATCH_GPU_TRANSIT_ELEMENTS + 1;	
+
 		return;
 	}
-
+	
 	if (mtCopyEnabled)
 	{
-
 		if (!tid)
 		{
-			memset(mDataDltRefMT, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
-			GPUWriteControlMT(0, 0, PXY_BATCH_GPU_ELEMENT_COUNT, 0, 0);
+			memset(mDataDltRefMT, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);			
+			GPUWriteControlMT(1, 0, PXY_BATCH_GPU_TRANSIT_ELEMENTS, 0, 0);
 			return;
 		}
 
@@ -234,14 +293,23 @@ void d912pxy_batch::GPUWriteStart(UINT tid, UINT fromReplay)
 		}
 	}
 	else {
-		memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);
-		GPUWriteControl(0, 0, PXY_BATCH_GPU_ELEMENT_COUNT, 0);		
+		memset(mDataDltRef, 0, PXY_BATCH_GPU_ELEMENT_COUNT * 4);		
+		GPUWriteControl(1, 0, PXY_BATCH_GPU_TRANSIT_ELEMENTS, 0);
 	}		
+}
+
+void d912pxy_batch::PreDIPRaw(ID3D12GraphicsCommandList * cl, UINT bid)
+{
+	UINT64 bid_offset = PXY_BATCH_GPU_DRAW_BUFFER_SIZE * bid;
+
+	memcpy((void*)(host_buffer_base_ptr + bid_offset), stateTransfer, PXY_BATCH_GPU_DRAW_BUFFER_SIZE);
+
+	cl->SetGraphicsRootConstantBufferView(3, gpu_buffer_base_ptr + bid_offset);
 }
 
 void d912pxy_batch::PreDIP(ID3D12GraphicsCommandList* cl, UINT bid)
 {
-	cl->SetGraphicsRootConstantBufferView(3, buffer->DevPtr() + PXY_BATCH_GPU_DRAW_BUFFER_SIZE * bid);
+	cl->SetGraphicsRootConstantBufferView(3, gpu_buffer_base_ptr + PXY_BATCH_GPU_DRAW_BUFFER_SIZE * bid);
 }
 
 void d912pxy_batch::ClearShaderVars()
@@ -265,6 +333,11 @@ void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 	streamIdx += size;
 
 
+}
+
+void d912pxy_batch::GPUWriteRaw(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)
+{
+	memcpy(&stateTransfer[of << 4], &streamData[si], cnt << 4);
 }
 
 void d912pxy_batch::GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn)
