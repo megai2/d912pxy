@@ -63,7 +63,8 @@ void d912pxy_comhandler::Init(d912pxy_com_obj_typeid tid, const wchar_t * module
 HRESULT d912pxy_comhandler::QueryInterface(REFIID riid, void ** ppvObj)
 {
 	LOG_DBG_DTDM("::CQI");
-	*ppvObj = this;
+	*ppvObj = comBase;
+	AddRef();
 	return NOERROR;
 }
 
