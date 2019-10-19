@@ -101,8 +101,8 @@ HRESULT d912pxy_texture::UnlockRect(UINT Level)
 
 HRESULT d912pxy_texture::AddDirtyRect(const RECT * pDirtyRect)
 {
-	if (m_levels == 1)
-		baseSurface->GetLayer(0, 0)->SetDirtyRect(pDirtyRect->left, pDirtyRect->right, pDirtyRect->top, pDirtyRect->bottom);
+	//if (m_levels == 1)
+		//baseSurface->GetLayer(0, 0)->SetDirtyRect(pDirtyRect->left, pDirtyRect->right, pDirtyRect->top, pDirtyRect->bottom);
 
 
 	return D3D_OK;

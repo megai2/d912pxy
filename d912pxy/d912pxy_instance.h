@@ -91,6 +91,8 @@ typedef struct d912pxy_instance {
 
 	d912pxy_dynamic_imports imports;
 
+	d912pxy_extras extras;
+
 	UINT running;
 } d912pxy_instance;
 

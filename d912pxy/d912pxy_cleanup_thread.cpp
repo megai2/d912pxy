@@ -68,9 +68,7 @@ void d912pxy_cleanup_thread::ThreadJob()
 				Sleep(iterationSubsleep);
 
 			buffer->IterRemove();
-#ifdef ENABLE_METRICS
 			--watchCount;
-#endif
 			obj->Watching(-1);
 			
 		}
@@ -112,9 +110,7 @@ void d912pxy_cleanup_thread::Watch(d912pxy_comhandler * obj)
 {	
 	if (obj->Watching(0) < 2)
 	{
-#ifdef ENABLE_METRICS
 		++watchCount;
-#endif
 		buffer->Insert(obj);
 		obj->Watching(1);
 	}

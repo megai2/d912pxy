@@ -65,7 +65,7 @@ void d912pxy_replay::Init()
 		numThreads = 4;
 	}
 
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_MISC_RAW_GPUW))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_RAW_GPUW))
 	{
 		if (numThreads > 1)
 		{

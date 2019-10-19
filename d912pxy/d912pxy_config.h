@@ -58,12 +58,13 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_LOG_ENABLE_VEH,
 	PXY_CFG_LOG_LOAD_RDOC,
 	PXY_CFG_UPLOAD_TEX_ASYNC,	
+	PXY_CFG_BATCHING_FORCE_NEW_BATCH,
+	PXY_CFG_BATCHING_RAW_GPUW,
 	PXY_CFG_MISC_GPU_TIMEOUT,
 	PXY_CFG_DX_DBG_RUNTIME,
 	PXY_CFG_MISC_USE_DX9,
 	PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH,
-	PXY_CFG_MISC_NV_DISABLE_THROTTLE,
-	PXY_CFG_MISC_RAW_GPUW,
+	PXY_CFG_MISC_NV_DISABLE_THROTTLE,	
 	PXY_CFG_COMPAT_OCCLUSION,
 	PXY_CFG_COMPAT_OCCLUSION_OPT_CONSTRUCTOR,
 	PXY_CFG_COMPAT_CLEAR,
@@ -77,6 +78,14 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_VFS_MEMCACHE_MASK,
 	PXY_CFG_VFS_PACK_DATA,
 	PXY_CFG_VFS_WRITE_MASK,
+	PXY_CFG_EXTRAS_ENABLE,
+	PXY_CFG_EXTRAS_FPS_LIMIT,
+	PXY_CFG_EXTRAS_SHOW_FPS,
+	PXY_CFG_EXTRAS_SHOW_DRAW_COUNT,
+	PXY_CFG_EXTRAS_SHOW_FPS_GRAPH,
+	PXY_CFG_EXTRAS_SHOW_TIMINGS,
+	PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE,
+	PXY_CFG_EXTRAS_SHOW_GC_QUE,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -136,12 +145,13 @@ private:
 		{L"log", L"enable_veh", L"1"}, //PXY_CFG_LOG_ENABLE_VEH
 		{L"log", L"load_rdoc", L"0"},//PXY_CFG_LOG_LOAD_RDOC
 		{L"upload",L"tex_async",L"0"},//PXY_CFG_UPLOAD_TEX_ASYNC
+		{L"batching",L"force_new",L"0"},//PXY_CFG_BATCHING_FORCE_NEW_BATCH
+		{L"batching",L"raw_gpuw",L"0"},//PXY_CFG_BATCHING_RAW_GPUW		
 		{L"misc",L"gpu_timeout",L"5000"},//PXY_CFG_MISC_GPU_TIMEOUT
 		{L"misc",L"dx_debug",L"0"},//PXY_CFG_DX_DBG_RUNTIME
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
 		{L"misc",L"draw_up_buffer_length", L"FFFF"},//PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH
-		{L"misc",L"nv_disable_throttle", L"0"},//PXY_CFG_MISC_NV_DISABLE_THROTTLE
-		{L"misc",L"raw_gpuw",L"0"},//PXY_CFG_MISC_RAW_GPUW
+		{L"misc",L"nv_disable_throttle", L"0"},//PXY_CFG_MISC_NV_DISABLE_THROTTLE		
 		{L"compat",L"occlusion",L"0"},//PXY_CFG_COMPAT_OCCLUSION
 		{L"compat",L"occlusion_opt_ctor",L"0"},//PXY_CFG_COMPAT_OCCLUSION_OPT_CONSTRUCTOR
 		{L"compat",L"clear",L"0"},//PXY_CFG_COMPAT_CLEAR
@@ -154,7 +164,15 @@ private:
 		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
 		{L"vfs", L"memcache_mask", L"6F"},//PXY_CFG_VFS_MEMCACHE_MASK
 		{L"vfs", L"pack_data", L"0"},//PXY_CFG_VFS_PACK_DATA
-		{L"vfs", L"write_mask", L"0"}//PXY_CFG_VFS_WRITE_MASK
+		{L"vfs", L"write_mask", L"0"},//PXY_CFG_VFS_WRITE_MASK
+		{L"extras", L"enable", L"0"},//PXY_CFG_EXTRAS_ENABLE
+		{L"extras", L"fps_limit", L"0"},//PXY_CFG_EXTRAS_FPS_LIMIT,
+		{L"extras", L"show_fps", L"0"},//PXY_CFG_EXTRAS_SHOW_FPS,
+		{L"extras", L"show_draw_count", L"0"},//PXY_CFG_EXTRAS_SHOW_DRAW_COUNT,
+		{L"extras", L"show_fps_graph", L"0"},//PXY_CFG_EXTRAS_SHOW_FPS_GRAPH,
+		{L"extras", L"show_timings", L"0"},//PXY_CFG_EXTRAS_SHOW_TIMINGS,
+		{L"extras", L"show_pso_compile_que", L"0"},//PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE,
+		{L"extras", L"show_gc_que", L"0"}//PXY_CFG_EXTRAS_SHOW_GC_QUE,
 	};
 
 };

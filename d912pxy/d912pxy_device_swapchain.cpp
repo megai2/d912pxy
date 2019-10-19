@@ -95,7 +95,6 @@ void d912pxy_device::InnerPresentFinish()
 {
 	FRAME_METRIC_PRESENT(1)
 	
-
 	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
@@ -136,6 +135,29 @@ HRESULT d912pxy_device::Present_PG(const RECT * pSourceRect, const RECT * pDestR
 #endif s
 
 	InnerPresentFinish();
+
+	return ret;
+}
+
+HRESULT d912pxy_device::Present_Extra(const RECT * pSourceRect, const RECT * pDestRect, HWND hDestWindowOverride, const RGNDATA * pDirtyRegion)
+{
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.TrackDrawCount(d912pxy_s.render.batch.GetBatchCount());
+#endif 
+
+	d912pxy_s.extras.OnPresent();
+
+	perfGraph->RecordPresent(d912pxy_s.render.batch.GetBatchCount());
+
+	HRESULT ret = InnerPresentExecute();
+
+#ifdef ENABLE_METRICS
+	d912pxy_s.log.metrics.FlushIFrameValues();
+#endif s
+
+	InnerPresentFinish();
+
+	d912pxy_s.extras.WaitForTargetFrameTime();
 
 	return ret;
 }

@@ -103,8 +103,12 @@ public:
 	void GetGammaRamp(D3DGAMMARAMP* pRamp);
 
 	LRESULT DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	LRESULT DXGIWndProc_Extras(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	void ReanimateDXGI();
+
+	HWND GetTargetWindow();
+	d912pxy_surface* GetRenderBuffer();
 
 private:	
 	d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS* in_pp);

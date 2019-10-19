@@ -959,6 +959,13 @@ D912PXY_METHOD_IMPL(Present_PG)(PXY_THIS_ CONST RECT* pSourceRect, CONST RECT* p
 	D912PXY_ROUTE_IMPL_END
 }
 
+D912PXY_METHOD_IMPL(Present_Extra)(PXY_THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
+{
+	D912PXY_ROUTE_IMPL_START
+		D912PXY_ROUTE_IMPL_PREFIX Present_Extra(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+	D912PXY_ROUTE_IMPL_END
+}
+
 D912PXY_METHOD_IMPL(Clear_Emulated)(PXY_THIS_ DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
 	D912PXY_ROUTE_IMPL_START

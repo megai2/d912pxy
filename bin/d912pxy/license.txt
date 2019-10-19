@@ -13,6 +13,7 @@ Copyright (c) 2017 Sean Barrett
 Copyright (c) 2015-2018 Baldur Karlsson
 Copyright (c) 2018 Jeremiah van Oosten
 Copyright (C) 2007-2005 Ariya Hidayat (ariya@kde.org)
+Copyright (c) 2014-2019 Omar Cornut
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -43,3 +44,4 @@ P7 http://baical.net/p7.html
 LearningDirectX12 https://github.com/jpvanoosten/LearningDirectX12/
 RenderDoc https://github.com/baldurk/renderdoc
 FastLZ https://github.com/ariya/fastlz
+imgui https://github.com/ocornut/imgui

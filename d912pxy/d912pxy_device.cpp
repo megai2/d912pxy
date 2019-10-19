@@ -63,6 +63,9 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(d912pxy_s.dx12.que.Flush(0),      "Last gpu cmd lists flushed");
 	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(),		 "Swapchain stopped");
 
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
+		d912pxy_s.extras.~d912pxy_extras();
+
 	d912pxy_s.dev_vtable = NULL;
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
@@ -255,6 +258,11 @@ void d912pxy_device::ExternalFlush()
 	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
+}
+
+d912pxy_swapchain * d912pxy_device::GetPrimarySwapChain()
+{
+	return swapchains[0];
 }
 
 

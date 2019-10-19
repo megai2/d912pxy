@@ -57,6 +57,9 @@ SOFTWARE.
 	#include "../thirdparty/p7logger/Headers/P7_Telemetry.h"
 #endif
 
+#include "../thirdparty/imgui/imgui.h"
+#include "../thirdparty/imgui/imgui_impl_dx12.h"
+#include "../thirdparty/imgui/imgui_impl_win32.h"
 #include "../thirdparty/nv_api/nv_api_oc.h"
 #include "dbg_imagewriter.h"
 #include "stb_image.h"
@@ -128,6 +131,7 @@ SOFTWARE.
 #include "d912pxy_replay_passthru.h"
 #include "d912pxy_draw_up.h"
 #include "d912pxy_surface_clear.h"
+#include "d912pxy_extras.h"
 #include "d912pxy_device.h"
 #include "d912pxy_instance.h"
 #include "d912pxy_com_object.h"

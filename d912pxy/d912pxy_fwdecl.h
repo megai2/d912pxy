@@ -367,6 +367,7 @@ class d912pxy_ctexture;
 class d912pxy_vtexture;
 class d912pxy_base_texture;
 class d912pxy_texture;
+class d912pxy_extras;
 struct d912pxy_com_object;
 
 

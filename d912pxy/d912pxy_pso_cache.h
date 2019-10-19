@@ -189,6 +189,7 @@ public:
 	void CompileItem(d912pxy_pso_cache_item* item);
 
 	UINT IsCompileQueueFree();
+	UINT GetCompileQueueLength();
 
 	void LockCompileQue(UINT lock);
 

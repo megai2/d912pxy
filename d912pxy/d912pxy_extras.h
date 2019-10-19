@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2019 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -23,46 +23,48 @@ SOFTWARE.
 
 */
 #pragma once
-#include "d912pxy_noncom.h"
+#include "stdafx.h"
 
-template <class ElementType>
-class d912pxy_ringbuffer:
-	public d912pxy_noncom
+#define PXY_INNER_EXTRA_FPS_GRAPH_PTS 256
+
+class d912pxy_extras : public d912pxy_noncom
 {
 public:
-	d912pxy_ringbuffer(UINT iMaxElements, UINT iGrow);
-	~d912pxy_ringbuffer();
+	d912pxy_extras();
+	~d912pxy_extras();	
+	void Init();
 
-	void WriteElement(ElementType ele);
-	void WriteElementFast(ElementType ele);
-	void WriteElementMT(ElementType ele);
-	ElementType GetElement();
-	ElementType PopElement();
-	ElementType PopElementFast();
-	
-	UINT HaveElements();
-	UINT HaveFreeSpace();
-	void Next();
-	
-	UINT TotalElements() { return writed; };
+	void OnPresent();
+	void OnReset();
 
-	ElementType PopElementMTG();
+	void WaitForTargetFrameTime();
 
-	void* GetBufferBase();
-	ElementType GetElementOffset(UINT index);
-		
 private:
-	intptr_t bufferData;
-	intptr_t writePoint;
-	intptr_t readPoint;
-	intptr_t bufferEnd;
+	void ImGUI_Render_Start();
+	void ImGUI_Render_End();
 
-	LONG maxElements;
-	UINT grow;
-	LONG writed;
+	//config state
 
-	d912pxy_thread_lock growthLock;
-	d912pxy_thread_lock writeLock;
+	UINT32 bShowFps;
+	UINT32 bShowDrawCount;
+	UINT32 bShowFpsGraph;
+	UINT32 bShowTimings;
+	UINT32 bShowPSOCompileQue;
+	UINT32 bShowGCQue;
 
+	//gpu exec + sync time
+	Stopwatch syncNexecTime;
+	
+	//frame limiter & frame time
+
+	UINT64 targetFrameTime;
+	UINT64 targetFrameTimeDelay;
+	Stopwatch frameTime;
+	UINT64 frTimeMs;
+
+	HANDLE waitEvent;
+
+	//fps graph
+
+	d912pxy_ringbuffer<float>* fpsGraphData;
 };
-

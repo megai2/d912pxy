@@ -745,6 +745,11 @@ UINT d912pxy_pso_cache::IsCompileQueueFree()
 	return (psoCompileBuffer->HaveElements() == 0);
 }
 
+UINT d912pxy_pso_cache::GetCompileQueueLength()
+{
+	return psoCompileBuffer->TotalElements();
+}
+
 void d912pxy_pso_cache::LockCompileQue(UINT lock)
 {
 	if (lock)

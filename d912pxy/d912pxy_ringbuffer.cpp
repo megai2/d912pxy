@@ -184,6 +184,25 @@ ElementType d912pxy_ringbuffer<ElementType>::PopElementMTG()
 	return ret;	
 }
 
+template<class ElementType>
+void * d912pxy_ringbuffer<ElementType>::GetBufferBase()
+{
+	return (void*)bufferData;
+}
+
+template<class ElementType>
+ElementType d912pxy_ringbuffer<ElementType>::GetElementOffset(UINT index)
+{
+	intptr_t bufOffsetPtr = readPoint + index * sizeof(ElementType);
+
+	if (bufOffsetPtr >= bufferEnd)
+	{
+		bufOffsetPtr = (bufOffsetPtr - bufferEnd) % (maxElements * sizeof(ElementType)) + bufferData;
+	}
+
+	return *((ElementType*)bufOffsetPtr);
+}
+
 template class d912pxy_ringbuffer<d912pxy_comhandler*>;
 template class d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>;
 template class d912pxy_ringbuffer<d912pxy_batch*>;
@@ -201,3 +220,4 @@ template class d912pxy_ringbuffer<d912pxy_vstream_lock_data>;
 template class d912pxy_ringbuffer<void*>;
 template class d912pxy_ringbuffer<d912pxy_replay_gpu_write_control*>;
 template class d912pxy_ringbuffer<d912pxy_vfs_pck_chunk*>;
+template class d912pxy_ringbuffer<float>;

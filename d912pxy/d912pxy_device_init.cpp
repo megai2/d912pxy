@@ -49,7 +49,7 @@ void d912pxy_device::Init(IDirect3DDevice9* dev, void* par)
 	FRAME_METRIC_PRESENT(1)
 #endif
 
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_PERF_GRAPH) || d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
 		perfGraph = new d912pxy_performance_graph(0);
 	else
 		perfGraph = NULL;
@@ -65,6 +65,11 @@ void d912pxy_device::Init(IDirect3DDevice9* dev, void* par)
 	LOG_INFO_DTDM2(InitDrawUPBuffers(), "Startup step  9/10");
 	LOG_INFO_DTDM2(InitDefaultSwapChain(&initialPresentParameters), "Startup step 10/10");
 	LOG_INFO_DTDM2(d912pxy_s.render.iframe.Start(), "Started first IFrame");
+
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
+	{
+		LOG_INFO_DTDM2(d912pxy_s.extras.Init(), "Initializing extras");
+	}
 
 	isRunning.SetValue(1);
 }
@@ -277,10 +282,13 @@ void d912pxy_device::InitComPatches()
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWPRIMITIVEUP, &d912pxy_device::com_DrawPrimitiveUP_StateUnsafe);
 	}
 
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
 	{
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_PRESENT, &d912pxy_device::com_Present_Extra);		
+	} else if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_PERF_GRAPH))
+	{		
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_PRESENT, &d912pxy_device::com_Present_PG);
-	}
+	}	
 }
 
 void d912pxy_device::InitNullSRV()

@@ -38,6 +38,15 @@ LRESULT APIENTRY d912pxy_dxgi_wndproc_patch(
 	return baseSwapChain->DXGIWndProc(hwnd, uMsg, wParam, lParam);
 }
 
+LRESULT APIENTRY d912pxy_dxgi_wndproc_patch_extras(
+	HWND hwnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam)
+{
+	return baseSwapChain->DXGIWndProc_Extras(hwnd, uMsg, wParam, lParam);
+}
+
 d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) : d912pxy_comhandler(PXY_COM_OBJ_SWAPCHAIN, L"swap chain")
 {
 	if (!FAILED(d912pxy_s.dx12.que.GetDXQue().As(&w7_cq)))
@@ -358,8 +367,7 @@ void d912pxy_swapchain::GetGammaRamp(D3DGAMMARAMP* pRamp)
 
 LRESULT d912pxy_swapchain::DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	//megai2: this procedure is called out of context, beware various conditions!
-
+	//megai2: this procedure is called out of context, beware various conditions!	
 	LOG_DBG_DTDM2("DXGI_WP MSG = %04X", uMsg);
 
 	switch (uMsg)
@@ -380,10 +388,29 @@ LRESULT d912pxy_swapchain::DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 	return ret;
 }
 
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT d912pxy_swapchain::DXGIWndProc_Extras(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+		return true;
+
+	return DXGIWndProc(hwnd, uMsg, wParam, lParam);
+}
+
 void d912pxy_swapchain::ReanimateDXGI()
 {		
 	fullscreenIterrupt.SetValue(1);
 	fullscreenIterrupt.ResetLock();
+}
+
+HWND d912pxy_swapchain::GetTargetWindow()
+{
+	return currentPP.hDeviceWindow;
+}
+
+d912pxy_surface * d912pxy_swapchain::GetRenderBuffer()
+{
+	return backBufferSurface;
 }
 
 void d912pxy_swapchain::ChangeState(d912pxy_swapchain_state newState)
@@ -765,7 +792,10 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 
 	if (!dxgiOWndProc)
 	{
-		dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch);
+		if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
+			dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch_extras);
+		else
+			dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch);
 	}
 	
 	HRESULT swapRet = dxgiFactory4->CreateSwapChainForHwnd(
