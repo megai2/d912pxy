@@ -136,4 +136,5 @@ private:
 	BYTE stateTransfer[PXY_BATCH_GPU_DRAW_BUFFER_SIZE];	
 
 	BYTE doNewBatch;
+	BYTE forceNewBatch;
 };

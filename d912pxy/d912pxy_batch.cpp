@@ -53,7 +53,8 @@ void d912pxy_batch::Init()
 	batchNum = 0;
 	lastBatchCount = 0;
 	oddFrame = 0;
-	rawCopyEnabled = d912pxy_s.config.GetValueUI32(PXY_CFG_MISC_RAW_GPUW);
+	rawCopyEnabled = d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_RAW_GPUW);
+	forceNewBatch = d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_FORCE_NEW_BATCH);
 	
 	streamOfDlt[0] = 0;
 
@@ -95,10 +96,13 @@ void d912pxy_batch::Init()
 UINT d912pxy_batch::NextBatch()
 {
 	++batchCount;
-	if (doNewBatch)
+
+	if (forceNewBatch)
 		return batchNum++;
-	else
-		return batchNum;	
+	else {
+		doNewBatch = 1;
+		return batchNum;
+	}
 }
 
 UINT d912pxy_batch::GetBatchNum()
@@ -118,7 +122,7 @@ void d912pxy_batch::SetShaderConstF(UINT type, UINT start, UINT cnt4, float * da
 
 void d912pxy_batch::FrameStart()
 {
-	doNewBatch = 0;
+	doNewBatch = !forceNewBatch;
 	topCl = d912pxy_s.dx12.cl->GID(CLG_TOP);
 
 	GPUWriteStart(0, 0);
@@ -320,7 +324,11 @@ void d912pxy_batch::ClearShaderVars()
 
 void d912pxy_batch::GPUWrite(void * src, UINT size, UINT offset)
 {
-	doNewBatch = 1;		
+	if (doNewBatch)
+	{
+		doNewBatch = 0;
+		++batchNum;
+	}
 
 	memcpy(&streamData[streamIdx], src, size << 4);
 	
