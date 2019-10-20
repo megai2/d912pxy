@@ -149,13 +149,13 @@ static void ImGui_ImplWin32_UpdateMousePos()
 }
 
 #ifdef _MSC_VER
-#pragma comment(lib, "xinput")
+//#pragma comment(lib, "xinput")
 #endif
 
 // Gamepad navigation mapping
 static void ImGui_ImplWin32_UpdateGamepads()
 {
-    ImGuiIO& io = ImGui::GetIO();
+  /*  ImGuiIO& io = ImGui::GetIO();
     memset(io.NavInputs, 0, sizeof(io.NavInputs));
     if ((io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) == 0)
         return;
@@ -196,7 +196,7 @@ static void ImGui_ImplWin32_UpdateGamepads()
         MAP_ANALOG(ImGuiNavInput_LStickDown,    gamepad.sThumbLY,  -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32767);
         #undef MAP_BUTTON
         #undef MAP_ANALOG
-    }
+    }*/
 }
 
 void    ImGui_ImplWin32_NewFrame()
