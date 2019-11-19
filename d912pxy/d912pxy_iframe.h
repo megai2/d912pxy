@@ -34,6 +34,7 @@ public:
 	~d912pxy_iframe();
 
 	void Init(d912pxy_dheap** heaps);
+	void UnInit();
 
 	void SetStreamFreq(UINT StreamNumber, UINT Divider);
 	void SetVBuf(d912pxy_vstream* vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride);

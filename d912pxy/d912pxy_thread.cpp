@@ -60,10 +60,7 @@ d912pxy_thread::d912pxy_thread()
 
 
 d912pxy_thread::~d912pxy_thread()
-{
-	
-
-	PXY_FREE(name);
+{	
 }
 
 void d912pxy_thread::InitThread(const char * threadName, UINT suspend)
@@ -95,6 +92,7 @@ void d912pxy_thread::Stop()
 	CloseHandle(thrdHandle);
 	CloseHandle(workEvent);	
 	CloseHandle(workCompleteEvent);
+	PXY_FREE(name);
 }
 
 void d912pxy_thread::ThreadProc()

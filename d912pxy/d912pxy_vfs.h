@@ -55,6 +55,7 @@ public:
 	~d912pxy_vfs();
 
 	void Init(const char* lockPath);
+	void UnInit();
 
 	void SetRoot(wchar_t* rootPath);
 	void LoadVFS();

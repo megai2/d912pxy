@@ -33,8 +33,7 @@ d912pxy_pool_memcat<ElementType, ProcImpl>::d912pxy_pool_memcat() : d912pxy_pool
 template<class ElementType, class ProcImpl>
 d912pxy_pool_memcat<ElementType, ProcImpl>::~d912pxy_pool_memcat()
 {
-	PXY_FREE(memTable);
-	PXY_FREE(this->rwMutex);
+
 }
 
 template<class ElementType, class ProcImpl>
@@ -60,6 +59,15 @@ void d912pxy_pool_memcat<ElementType, ProcImpl>::Init(UINT32 iBitIgnore, UINT32 
 		memTable[i] = new d912pxy_ringbuffer<ElementType>(64, 2);
 		this->rwMutex[i].Init();
 	}
+}
+
+template<class ElementType, class ProcImpl>
+void d912pxy_pool_memcat<ElementType, ProcImpl>::UnInit()
+{
+	PXY_FREE(memTable);
+	PXY_FREE(this->rwMutex);
+
+	d912pxy_pool<ElementType, ProcImpl>::UnInit();
 }
 
 template<class ElementType, class ProcImpl>

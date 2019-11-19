@@ -31,16 +31,6 @@ d912pxy_vfs::d912pxy_vfs()
 
 d912pxy_vfs::~d912pxy_vfs()
 {	
-	for (int i = 0; i != PXY_VFS_BID_END; ++i)
-		delete items[i];
-
-	if (writeAllowed)
-	{		
-		CloseHandle(lockFile);
-	}
-
-	cuPck->Close(0);
-	delete cuPck;
 }
 
 void d912pxy_vfs::Init(const char * lockPath)
@@ -67,6 +57,22 @@ void d912pxy_vfs::Init(const char * lockPath)
 	
 	for (int i = 0; i != PXY_VFS_BID_END; ++i)
 		items[i] = new d912pxy_vfs_entry(i);
+}
+
+void d912pxy_vfs::UnInit()
+{
+	for (int i = 0; i != PXY_VFS_BID_END; ++i)
+		delete items[i];
+
+	if (writeAllowed)
+	{
+		CloseHandle(lockFile);
+	}
+
+	cuPck->Close(0);
+	delete cuPck;
+
+	d912pxy_noncom::UnInit();
 }
 
 void d912pxy_vfs::SetRoot(wchar_t * rootPath)

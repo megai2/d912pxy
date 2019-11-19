@@ -32,21 +32,6 @@ d912pxy_log::d912pxy_log()
 d912pxy_log::~d912pxy_log()
 {
 	
-#ifndef DISABLE_P7LIB
-	//megai2: wait a bit for final datas to be processed
-	Sleep(2000);
-
-	//m_log->Release();
-	//m_trackLog->Release();
-
-	p7cli->Release();	
-#else
-	if (logfile)
-		fclose(logfile);
-#endif
-
-	if (crashLog)
-		fclose(crashLog);
 }
 
 void d912pxy_log::Init()
@@ -88,6 +73,25 @@ void d912pxy_log::Init()
 		WriteLogLine((wchar_t*)L"log", L"d912pxy dll loaded", L"info");
 	}
 #endif
+}
+
+void d912pxy_log::UnInit()
+{
+#ifndef DISABLE_P7LIB
+	//megai2: wait a bit for final datas to be processed
+	Sleep(2000);
+
+	m_log->Release();
+	m_trackLog->Release();
+
+	p7cli->Release();
+#else
+	if (logfile)
+		fclose(logfile);
+#endif
+
+	if (crashLog)
+		fclose(crashLog);
 }
 
 #ifndef DISABLE_P7LIB

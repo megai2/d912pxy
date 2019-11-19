@@ -33,6 +33,7 @@ public:
 	~d912pxy_async_upload_thread();
 
 	void Init(UINT queueSize, UINT syncId, UINT throttleFactor, const wchar_t* objN, const char* thrdName);
+	void UnInit();
 
 	void QueueItem(QueItemType it);
 

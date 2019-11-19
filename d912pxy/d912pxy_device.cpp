@@ -64,27 +64,27 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(),		 "Swapchain stopped");
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
-		d912pxy_s.extras.~d912pxy_extras();
+		d912pxy_s.extras.UnInit();
 
 	d912pxy_s.dev_vtable = NULL;
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
 
-	LOG_INFO_DTDM2(d912pxy_s.thread.cleanup.~d912pxy_cleanup_thread(),	"Final cleanups  1/13");
+	LOG_INFO_DTDM2(d912pxy_s.thread.cleanup.UnInit(),	"Final cleanups  1/13");
 	swapOpLock.Release();
 		
-	LOG_INFO_DTDM2(d912pxy_s.thread.bufld.~d912pxy_buffer_loader(),	  		"Final cleanups  2/13");
-	LOG_INFO_DTDM2(d912pxy_s.thread.texld.~d912pxy_texture_loader(),		"Final cleanups  3/13");
-	LOG_INFO_DTDM2(d912pxy_s.render.iframe.~d912pxy_iframe(), 				"Final cleanups  4/13");
-	LOG_INFO_DTDM2(d912pxy_s.render.db.shader.~d912pxy_shader_db(),			"Final cleanups  5/13");
+	LOG_INFO_DTDM2(d912pxy_s.thread.bufld.UnInit(),	  		"Final cleanups  2/13");
+	LOG_INFO_DTDM2(d912pxy_s.thread.texld.UnInit(),		"Final cleanups  3/13");
+	LOG_INFO_DTDM2(d912pxy_s.render.iframe.UnInit(), 				"Final cleanups  4/13");
+	LOG_INFO_DTDM2(d912pxy_s.render.db.shader.UnInit(),			"Final cleanups  5/13");
 		
-	LOG_INFO_DTDM2(d912pxy_s.pool.vstream.~d912pxy_vstream_pool(),		"Final cleanups  6/13");
-	LOG_INFO_DTDM2(d912pxy_s.pool.upload.~d912pxy_upload_pool(),		"Final cleanups  7/13");
-	LOG_INFO_DTDM2(d912pxy_s.pool.surface.~d912pxy_surface_pool(),		"Final cleanups  8/13");
-	LOG_INFO_DTDM2(d912pxy_s.pool.rtds.~d912pxy_surface_pool(),			"Final cleanups  9/13");
-	LOG_INFO_DTDM2(d912pxy_s.dx12.que.~d912pxy_gpu_que(),				"Final cleanups 10/13");
+	LOG_INFO_DTDM2(d912pxy_s.pool.vstream.UnInit(),		"Final cleanups  6/13");
+	LOG_INFO_DTDM2(d912pxy_s.pool.upload.UnInit(),		"Final cleanups  7/13");
+	LOG_INFO_DTDM2(d912pxy_s.pool.surface.UnInit(),		"Final cleanups  8/13");
+	LOG_INFO_DTDM2(d912pxy_s.pool.rtds.UnInit(),			"Final cleanups  9/13");
+	LOG_INFO_DTDM2(d912pxy_s.dx12.que.UnInit(),				"Final cleanups 10/13");
 	LOG_INFO_DTDM2(d912pxy_s.render.replay.Free(),						"Final cleanups 11/13");	
-	LOG_INFO_DTDM2(d912pxy_s.vfs.~d912pxy_vfs(),						"Final cleanups 12/13");
+	LOG_INFO_DTDM2(d912pxy_s.vfs.UnInit(),						"Final cleanups 12/13");
 		
 	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
 		delete m_dheaps[i];
@@ -92,7 +92,7 @@ d912pxy_device::~d912pxy_device(void)
 	LOG_INFO_DTDM("Final cleanups 13/13");
 	
 #ifdef ENABLE_METRICS
-	d912pxy_s.log.metrics.~d912pxy_metrics();
+	d912pxy_s.log.metrics.UnInit();
 #endif
 
 	if (perfGraph)
@@ -102,8 +102,6 @@ d912pxy_device::~d912pxy_device(void)
 		((IDirect3D9*)initPtr)->Release();
 
 	d912pxy_s.pool.hostPow2.DeInit();
-	d912pxy_s.pool.hostPow2.~d912pxy_mem_va_table();
-
 	d912pxy_s.com.DeInit();
 	
 	LOG_INFO_DTDM("d912pxy exited");

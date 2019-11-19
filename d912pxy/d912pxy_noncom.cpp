@@ -46,6 +46,16 @@ d912pxy_noncom::d912pxy_noncom()
 d912pxy_noncom::~d912pxy_noncom()
 {
 #ifdef _DEBUG	
+	if (lkObjTrace != 0)
+	{
+		UnInit();
+	}
+#endif
+}
+
+void d912pxy_noncom::UnInit()
+{
+#ifdef _DEBUG	
 	//InterlockedDecrement(&g_ObjectsCounter);
 
 	LOG_DBG_DTDM("Objs last = %u", g_ObjectsCounter);
@@ -60,7 +70,7 @@ d912pxy_noncom::~d912pxy_noncom()
 		for (std::map<UINT, const wchar_t*>::iterator it = gLeakTracker->begin(); it != gLeakTracker->end(); ++it)
 		{
 			LOG_DBG_DTDM3("obj %u = %s is leaked", it->first, it->second);
-		}		
+		}
 	}
 
 	if (gLeakTracker->empty())
@@ -69,6 +79,8 @@ d912pxy_noncom::~d912pxy_noncom()
 
 		delete gLeakTracker;
 	}
+
+	lkObjTrace = 0;
 #endif
 }
 

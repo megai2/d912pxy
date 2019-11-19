@@ -32,6 +32,19 @@ d912pxy_shader_db::d912pxy_shader_db()
 
 d912pxy_shader_db::~d912pxy_shader_db()
 {
+}
+
+void d912pxy_shader_db::Init()
+{
+	NonCom_Init(L"shader database");
+
+	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_pair_hash_type), 0xFF, 2);
+
+	precompileFlag = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_SDB_USE_PSO_PRECOMPILE);
+}
+
+void d912pxy_shader_db::UnInit()
+{
 	shaderPairs->Begin();
 
 	while (!shaderPairs->IterEnd())
@@ -47,15 +60,8 @@ d912pxy_shader_db::~d912pxy_shader_db()
 	}
 
 	delete shaderPairs;
-}
 
-void d912pxy_shader_db::Init()
-{
-	NonCom_Init(L"shader database");
-
-	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_pair_hash_type), 0xFF, 2);
-
-	precompileFlag = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_SDB_USE_PSO_PRECOMPILE);
+	d912pxy_noncom::UnInit();
 }
 
 d912pxy_shader_uid d912pxy_shader_db::GetUID(DWORD * code, UINT32* len)

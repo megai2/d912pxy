@@ -34,6 +34,8 @@ public:
 
 	//virtual void Init();
 
+	void UnInit();
+
 	void ThrowErrorDbg(HRESULT hr, const char* msg);
 
 	static HRESULT WINAPI com_GetDevice(d912pxy_com_object* obj, IDirect3DDevice9** ppDevice);

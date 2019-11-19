@@ -34,6 +34,7 @@ public:
 	~d912pxy_pool();
 
 	void Init();
+	void UnInit();
 
 	virtual void PoolRW(UINT32 cat, ElementType* val, UINT8 rw);
 

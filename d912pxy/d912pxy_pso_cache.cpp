@@ -34,27 +34,7 @@ d912pxy_pso_cache::d912pxy_pso_cache()
 
 d912pxy_pso_cache::~d912pxy_pso_cache()
 {
-	Stop();
-	delete psoCompileBuffer;
 
-	delete cacheIndexes;
-
-	/*UINT32 itemsToClean;
-
-	d912pxy_memtree_node* mtnp = cacheData->GetNodePool(&itemsToClean);
-
-	for (int i = 0; i != itemsToClean; ++i)
-	{
-		UINT64 cid = mtnp[i].contentId;
-		if (cid)
-		{
-			d912pxy_pso_cache_item* item = (d912pxy_pso_cache_item*)cid;
-
-			item->Release();
-		}
-	}
-
-	delete cacheData;*/
 }
 
 void d912pxy_pso_cache::Init()
@@ -202,6 +182,33 @@ void d912pxy_pso_cache::Init()
 	dirty = 1;
 
 	psoCompileBuffer = new d912pxy_ringbuffer<d912pxy_pso_cache_item*>(0xFFFF, 0);
+}
+
+void d912pxy_pso_cache::UnInit()
+{
+	Stop();
+	delete psoCompileBuffer;
+
+	delete cacheIndexes;
+
+	/*UINT32 itemsToClean;
+
+	d912pxy_memtree_node* mtnp = cacheData->GetNodePool(&itemsToClean);
+
+	for (int i = 0; i != itemsToClean; ++i)
+	{
+		UINT64 cid = mtnp[i].contentId;
+		if (cid)
+		{
+			d912pxy_pso_cache_item* item = (d912pxy_pso_cache_item*)cid;
+
+			item->Release();
+		}
+	}
+
+	delete cacheData;*/
+
+	d912pxy_noncom::UnInit();
 }
 
 void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)

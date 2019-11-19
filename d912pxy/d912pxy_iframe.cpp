@@ -30,11 +30,7 @@ d912pxy_iframe::d912pxy_iframe()
 
 d912pxy_iframe::~d912pxy_iframe()
 {
-	mRootSignature->Release();
 
-	d912pxy_s.render.batch.~d912pxy_batch();
-	d912pxy_s.render.tex.~d912pxy_texture_state();
-	d912pxy_s.render.db.pso.~d912pxy_pso_cache();
 }
 
 void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
@@ -75,6 +71,17 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 	d912pxy_s.render.db.pso.LoadCachedData();
 
 	zeroWriteRT = NULL;
+}
+
+void d912pxy_iframe::UnInit()
+{
+	mRootSignature->Release();
+
+	d912pxy_s.render.batch.UnInit();
+	d912pxy_s.render.tex.UnInit();
+	d912pxy_s.render.db.pso.UnInit();
+
+	d912pxy_noncom::UnInit();
 }
 
 void d912pxy_iframe::SetStreamFreq(UINT StreamNumber, UINT Divider)

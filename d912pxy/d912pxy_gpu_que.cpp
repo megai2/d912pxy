@@ -31,20 +31,7 @@ d912pxy_gpu_que::d912pxy_gpu_que()
 
 d912pxy_gpu_que::~d912pxy_gpu_que()
 {
-	//clear all command lists and exec pending work
 
-	mGPUCleanupThread->SignalWork();
-	mGPUCleanupThread->IssueItems(NULL, 0);
-
-	while (mLists->HaveElements()) //but do get->next cuz we using one that is current
-	{
-		delete mLists->GetElement();
-		mLists->Next();
-	}
-
-	delete mLists;
-
-	delete mGPUCleanupThread;
 }
 
 void d912pxy_gpu_que::Init(UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences)
@@ -77,6 +64,26 @@ void d912pxy_gpu_que::Init(UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UIN
 	EnableGID(CLG_SEQ, PXY_INNER_CLG_PRIO_LAST);
 
 	d912pxy_s.dx12.cl = mLists->GetElement();
+}
+
+void d912pxy_gpu_que::UnInit()
+{
+	//clear all command lists and exec pending work
+
+	mGPUCleanupThread->SignalWork();
+	mGPUCleanupThread->IssueItems(NULL, 0);
+
+	while (mLists->HaveElements()) //but do get->next cuz we using one that is current
+	{
+		delete mLists->GetElement();
+		mLists->Next();
+	}
+
+	delete mLists;
+
+	delete mGPUCleanupThread;
+
+	d912pxy_noncom::UnInit();
 }
 
 HRESULT d912pxy_gpu_que::ExecuteCurrentGPUWork(UINT doSwap)

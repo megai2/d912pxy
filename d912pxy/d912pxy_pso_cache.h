@@ -142,6 +142,7 @@ public:
 	~d912pxy_pso_cache();
 
 	void Init();
+	void UnInit();
 
 	//things that affect pso only
 	void State(D3DRENDERSTATETYPE State, DWORD Value);

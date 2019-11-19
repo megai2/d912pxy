@@ -32,8 +32,32 @@ d912pxy_surface_pool::d912pxy_surface_pool() : d912pxy_pool<d912pxy_surface*, d9
 
 d912pxy_surface_pool::~d912pxy_surface_pool()
 {
-	
 
+}
+
+void d912pxy_surface_pool::Init(D3D12_HEAP_FLAGS memPoolFlag)
+{
+#ifdef ENABLE_METRICS
+	poolSize = 0;
+#endif
+
+	memPoolSize = d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_SURFACE_ALLOC_STEP);
+	memPoolHeapType = D3D12_HEAP_TYPE_DEFAULT;
+	memPoolHeapFlags = memPoolFlag;
+
+	d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>::Init();
+
+	config = d912pxy_s.config.GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
+
+	table = new d912pxy_memtree2(4, 4096, 2);
+
+	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1, d912pxy_thread_lock*);
+
+	this->rwMutex[0].Init();
+}
+
+void d912pxy_surface_pool::UnInit()
+{
 	pRunning = 0;
 
 	table->Begin();
@@ -59,27 +83,8 @@ d912pxy_surface_pool::~d912pxy_surface_pool()
 	delete table;
 
 	PXY_FREE(this->rwMutex);
-}
 
-void d912pxy_surface_pool::Init(D3D12_HEAP_FLAGS memPoolFlag)
-{
-#ifdef ENABLE_METRICS
-	poolSize = 0;
-#endif
-
-	memPoolSize = d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_SURFACE_ALLOC_STEP);
-	memPoolHeapType = D3D12_HEAP_TYPE_DEFAULT;
-	memPoolHeapFlags = memPoolFlag;
-
-	d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>::Init();
-
-	config = d912pxy_s.config.GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
-
-	table = new d912pxy_memtree2(4, 4096, 2);
-
-	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1, d912pxy_thread_lock*);
-
-	this->rwMutex[0].Init();
+	d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>::UnInit();
 }
 
 d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback)

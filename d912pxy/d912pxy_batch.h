@@ -80,6 +80,7 @@ public:
 	~d912pxy_batch();
 
 	void Init();
+	void UnInit();
 
 	UINT NextBatch();
 	UINT GetBatchNum();

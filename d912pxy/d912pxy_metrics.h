@@ -81,6 +81,7 @@ public:
 	~d912pxy_metrics();
 
 	void Init();
+	void UnInit();
 	   
 #ifdef ENABLE_METRICS
 

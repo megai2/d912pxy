@@ -33,6 +33,7 @@ public:
 	~d912pxy_pool_memcat();
 
 	void Init(UINT32 iBitIgnore, UINT32 iBitLimit, d912pxy_config_value limitCfg);
+	void UnInit();
 
 	d912pxy_ringbuffer<ElementType>* GetCatBuffer(UINT32 cat);
 

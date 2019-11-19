@@ -25,7 +25,6 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-
 class d912pxy_buffer_loader : public d912pxy_async_upload_thread<d912pxy_vstream_lock_data, d912pxy_buffer_loader*>
 {
 public:

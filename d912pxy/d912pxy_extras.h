@@ -33,6 +33,7 @@ public:
 	d912pxy_extras();
 	~d912pxy_extras();	
 	void Init();
+	void UnInit();
 
 	void OnPresent();
 	void OnReset();

@@ -66,13 +66,19 @@ d912pxy_mem_mgr::d912pxy_mem_mgr() : d912pxy_noncom() {
 
 d912pxy_mem_mgr::~d912pxy_mem_mgr() {
 	
+}
+
+void d912pxy_mem_mgr::UnInit()
+{
 #ifdef _DEBUG
-	delete stkWlk;	
+	delete stkWlk;
 	LogLeaked();
 #endif
 
-/*	free(d912pxy_s(memMgr));
-	d912pxy_s(memMgr) = NULL;*/
+	d912pxy_noncom::UnInit();
+
+	/*	free(d912pxy_s(memMgr));
+		d912pxy_s(memMgr) = NULL;*/
 }
 
 UINT64 d912pxy_mem_mgr::GetPageSize()

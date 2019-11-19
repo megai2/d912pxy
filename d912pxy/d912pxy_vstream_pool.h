@@ -39,6 +39,7 @@ public:
 	~d912pxy_vstream_pool();
 
 	void Init();
+	void UnInit();
 
 	d912pxy_vstream* GetVStreamObject(UINT size, UINT fmt, UINT isIB);
 

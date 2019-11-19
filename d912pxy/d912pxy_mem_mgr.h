@@ -47,6 +47,8 @@ public:
 	d912pxy_mem_mgr();
 	~d912pxy_mem_mgr();
 
+	void UnInit();
+
 	UINT64 GetPageSize();
 
 	void ReleaseReservedVARange(intptr_t base);

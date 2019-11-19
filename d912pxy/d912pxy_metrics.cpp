@@ -32,16 +32,7 @@ d912pxy_metrics::d912pxy_metrics()
 
 d912pxy_metrics::~d912pxy_metrics()
 {
-#ifdef ENABLE_METRICS
-	FlushIFrameValues();
 
-	for (int i = 0; i != PXY_METRICS_IFRAME_COUNT; ++i)
-		delete iframeTime[i];
-
-	dheapMetrics->Release();
-	iframeMetrics->Release();
-	ohMetrics->Release();
-#endif
 }
 
 void d912pxy_metrics::Init()
@@ -101,6 +92,22 @@ void d912pxy_metrics::Init()
 	l_pClient->Release();
 	
 #endif
+}
+
+void d912pxy_metrics::UnInit()
+{
+#ifdef ENABLE_METRICS
+	FlushIFrameValues();
+
+	for (int i = 0; i != PXY_METRICS_IFRAME_COUNT; ++i)
+		delete iframeTime[i];
+
+	dheapMetrics->Release();
+	iframeMetrics->Release();
+	ohMetrics->Release();
+#endif
+
+	d912pxy_noncom::UnInit();
 }
 
 #ifdef ENABLE_METRICS

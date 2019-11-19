@@ -31,12 +31,7 @@ d912pxy_extras::d912pxy_extras()
 
 d912pxy_extras::~d912pxy_extras()
 {
-	if (bShowFpsGraph)
-		delete fpsGraphData;
 
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
 }
 
 void d912pxy_extras::Init()
@@ -92,6 +87,18 @@ void d912pxy_extras::Init()
 	);
 
 
+}
+
+void d912pxy_extras::UnInit()
+{
+	if (bShowFpsGraph)
+		delete fpsGraphData;
+
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+	d912pxy_noncom::UnInit();
 }
 
 static float fps_graph_buffer_transform(void* data, int idx)

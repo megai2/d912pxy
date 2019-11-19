@@ -31,17 +31,7 @@ d912pxy_batch::d912pxy_batch()
 
 d912pxy_batch::~d912pxy_batch()
 {
-	delete buffer;
 
-	if (!rawCopyEnabled)
-	{
-		delete stream;
-
-		copyPSO->Release();
-		copyRS->Release();
-	}
-	else
-		PXY_FREE(streamData);
 }
 
 void d912pxy_batch::Init()
@@ -91,6 +81,23 @@ void d912pxy_batch::Init()
 	}
 		
 	gpu_buffer_base_ptr = buffer->DevPtr();
+}
+
+void d912pxy_batch::UnInit()
+{
+	delete buffer;
+
+	if (!rawCopyEnabled)
+	{
+		delete stream;
+
+		copyPSO->Release();
+		copyRS->Release();
+	}
+	else
+		PXY_FREE(streamData);
+
+	d912pxy_noncom::UnInit();
 }
 
 UINT d912pxy_batch::NextBatch()

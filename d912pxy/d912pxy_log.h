@@ -50,6 +50,7 @@ public:
 	~d912pxy_log();
 
 	void Init();
+	void UnInit();
 
 #ifndef DISABLE_P7LIB
 	IP7_Trace* GetP7Trace();

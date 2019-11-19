@@ -33,6 +33,7 @@ public:
 	~d912pxy_gpu_que();
 
 	void Init(UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UINT iGrowReferences);
+	void UnInit();
 
 	HRESULT ExecuteCurrentGPUWork(UINT doSwap);
 

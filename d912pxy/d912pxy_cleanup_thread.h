@@ -32,6 +32,7 @@ public:
 	~d912pxy_cleanup_thread();
 
 	void Init();
+	void UnInit();
 
 	void ThreadJob();
 	void Watch(d912pxy_comhandler* obj);

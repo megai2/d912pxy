@@ -33,10 +33,7 @@ d912pxy_pool<ElementType, ProcImpl>::d912pxy_pool()
 template<class ElementType, class ProcImpl>
 d912pxy_pool<ElementType, ProcImpl>::~d912pxy_pool()
 {
-	if (memPool)
-		memPool->Release();
 
-	delete memPoolLock;
 }
 
 template<class ElementType, class ProcImpl>
@@ -55,6 +52,17 @@ void d912pxy_pool<ElementType, ProcImpl>::Init()
 
 	if (memPoolSize)
 		CreateMemPool();
+}
+
+template<class ElementType, class ProcImpl>
+void d912pxy_pool<ElementType, ProcImpl>::UnInit()
+{
+	if (memPool)
+		memPool->Release();
+
+	delete memPoolLock;
+
+	d912pxy_noncom::UnInit();
 }
 
 template<class ElementType, class ProcImpl>

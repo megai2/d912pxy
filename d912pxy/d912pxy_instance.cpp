@@ -71,11 +71,11 @@ void d912pxy_final_cleanup()
 {
 	if (!d912pxy_s.running)
 		return;
-
-	d912pxy_s.imports.~d912pxy_dynamic_imports();
-	d912pxy_s.mem.~d912pxy_mem_mgr();
-	d912pxy_s.log.text.~d912pxy_log();
-	d912pxy_s.config.~d912pxy_config();
-
+	
+	d912pxy_s.imports.UnInit();	
+	d912pxy_s.pool.hostPow2.UnInit();
+	d912pxy_s.mem.UnInit();
+	d912pxy_s.log.text.UnInit();
+	
 	d912pxy_s.running = 0;
 }

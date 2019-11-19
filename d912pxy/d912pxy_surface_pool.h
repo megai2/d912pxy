@@ -32,6 +32,7 @@ public:
 	~d912pxy_surface_pool();
 
 	void Init(D3D12_HEAP_FLAGS memPoolFlag);
+	void UnInit();
 
 	d912pxy_surface* GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback);
 

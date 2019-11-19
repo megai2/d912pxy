@@ -35,6 +35,7 @@ public:
 	~d912pxy_shader_db();
 
 	void Init();
+	void UnInit();
 
 	d912pxy_shader_uid GetUID(DWORD* code, UINT32* len);		
 

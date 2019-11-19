@@ -83,6 +83,7 @@ public:
 	~d912pxy_upload_pool();
 
 	void Init();
+	void UnInit();
 
 	d912pxy_upload_item* GetUploadObject(UINT size);
 	ID3D12Resource* MakeUploadBuffer(UINT maxSize);

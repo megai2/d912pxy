@@ -31,6 +31,23 @@ d912pxy_vstream_pool::d912pxy_vstream_pool() : d912pxy_pool_memcat<d912pxy_vstre
 
 d912pxy_vstream_pool::~d912pxy_vstream_pool()
 {
+}
+
+void d912pxy_vstream_pool::Init()
+{
+	memPoolSize = d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_VSTREAM_ALLOC_STEP);
+	memPoolHeapType = D3D12_HEAP_TYPE_DEFAULT;
+	memPoolHeapFlags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
+
+	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>::Init(
+		PXY_INNDER_VSTREAM_POOL_BITIGNORE,
+		PXY_INNDER_VSTREAM_POOL_BITLIMIT,
+		PXY_CFG_POOLING_VSTREAM_LIMITS
+	);
+}
+
+void d912pxy_vstream_pool::UnInit()
+{
 	pRunning = 0;
 
 	for (int i = 0; i != PXY_INNDER_VSTREAM_POOL_BITCNT; ++i)
@@ -48,19 +65,7 @@ d912pxy_vstream_pool::~d912pxy_vstream_pool()
 
 		delete memTable[i];
 	}
-}
-
-void d912pxy_vstream_pool::Init()
-{
-	memPoolSize = d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_VSTREAM_ALLOC_STEP);
-	memPoolHeapType = D3D12_HEAP_TYPE_DEFAULT;
-	memPoolHeapFlags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
-
-	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>::Init(
-		PXY_INNDER_VSTREAM_POOL_BITIGNORE,
-		PXY_INNDER_VSTREAM_POOL_BITLIMIT,
-		PXY_CFG_POOLING_VSTREAM_LIMITS
-	);
+	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>::UnInit();
 }
 
 d912pxy_vstream * d912pxy_vstream_pool::GetVStreamObject(UINT size, UINT fmt, UINT isIB)

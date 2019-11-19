@@ -7,18 +7,7 @@ d912pxy_texture_state::d912pxy_texture_state()
 
 d912pxy_texture_state::~d912pxy_texture_state()
 {
-	splLookup->Begin();
 
-	while (!splLookup->IterEnd())
-	{
-		UINT32 cid = splLookup->CurrentCID() & 0xFFFFFFFF;
-		if (cid)
-			samplerHeap->FreeSlot(cid - 1);
-
-		splLookup->Next();
-	}
-
-	delete splLookup;
 }
 
 void d912pxy_texture_state::Init()
@@ -45,6 +34,24 @@ void d912pxy_texture_state::Init()
 	}
 
 	current.dirty = 0xFFFFFFFFFF;
+}
+
+void d912pxy_texture_state::UnInit()
+{
+	splLookup->Begin();
+
+	while (!splLookup->IterEnd())
+	{
+		UINT32 cid = splLookup->CurrentCID() & 0xFFFFFFFF;
+		if (cid)
+			samplerHeap->FreeSlot(cid - 1);
+
+		splLookup->Next();
+	}
+
+	delete splLookup;
+
+	d912pxy_noncom::UnInit();
 }
 
 void d912pxy_texture_state::SetTexture(UINT stage, UINT srv)

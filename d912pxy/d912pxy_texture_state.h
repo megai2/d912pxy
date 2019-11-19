@@ -50,6 +50,7 @@ public:
 	~d912pxy_texture_state();
 
 	void Init();
+	void UnInit();
 
 	void SetTexture(UINT stage, UINT srv);
 	void ModStageByMask(UINT stage, UINT srv, UINT mask);

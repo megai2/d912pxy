@@ -33,9 +33,6 @@ d912pxy_cleanup_thread::d912pxy_cleanup_thread() : d912pxy_noncom(), d912pxy_thr
 d912pxy_cleanup_thread::~d912pxy_cleanup_thread()
 {
 	
-
-	Stop();
-	delete buffer;
 }
 
 void d912pxy_cleanup_thread::Init()
@@ -50,6 +47,13 @@ void d912pxy_cleanup_thread::Init()
 
 	buffer = new d912pxy_linked_list<d912pxy_comhandler*>();
 	SignalWork();	
+}
+
+void d912pxy_cleanup_thread::UnInit()
+{
+	Stop();
+	delete buffer;
+	d912pxy_noncom::UnInit();
 }
 
 void d912pxy_cleanup_thread::ThreadJob()
