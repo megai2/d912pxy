@@ -305,7 +305,8 @@ public:
 	void LockAsyncThreads();
 	void UnLockAsyncThreads();
 
-	void TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId);
+	void TrackVSProfile();
+	void TrackPSProfile();
 
 	void CopyOriginalDX9Data(IDirect3DDevice9* dev, D3DDEVICE_CREATION_PARAMETERS* origPars, D3DPRESENT_PARAMETERS* origPP);
 	void InitVFS();

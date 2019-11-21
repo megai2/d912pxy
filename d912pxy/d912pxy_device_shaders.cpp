@@ -97,33 +97,67 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 	return rsObj;
 }
 
-void d912pxy_device::TrackShaderCodeBugs(UINT type, UINT val, d912pxy_shader_uid faultyId)
-{
-	UINT32 size;
-	UINT32* data = (UINT32*)d912pxy_s.vfs.GetFileDataH(faultyId, &size, PXY_VFS_BID_SHADER_PROFILE);
+void d912pxy_device::TrackVSProfile()
+{	
+	auto sProfile = d912pxy_shader_profile::unknown(d912pxy_s.render.db.pso.GetVShader());
 
-	if (data == NULL)
+	if (!sProfile.isValid())
+		return;
+
+	DWORD cp = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_CLIPPLANEENABLE);
+	if (cp & 1)	
+		sProfile.entryEnable(d912pxy_shader_profile::entry::clipplane0);			
+
+	d912pxy_vdecl* vdcl = d912pxy_s.render.db.pso.GetIAFormat();
+	if (vdcl)
 	{
-		PXY_MALLOC(data, PXY_INNER_SHDR_BUG_FILE_SIZE, UINT32*);
-		ZeroMemory(data, PXY_INNER_SHDR_BUG_FILE_SIZE);
-		data[type] = val;
+		UINT numElms = 0;
+		D3DVERTEXELEMENT9* vdArr = vdcl->GetDeclarationPtr(&numElms);
 
-		d912pxy_s.vfs.WriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
+		for (int i = 0; i != numElms; ++i)
+		{
+			if ((vdArr[i].Usage == D3DDECLUSAGE_NORMAL) && (vdArr[i].Type == D3DDECLTYPE_UBYTE4))
+				sProfile.entryEnable(d912pxy_shader_profile::entry::uint_normals);
+					
+			if ((vdArr[i].Usage == D3DDECLUSAGE_TANGENT) && (vdArr[i].Type == D3DDECLTYPE_UBYTE4))
+				sProfile.entryEnable(d912pxy_shader_profile::entry::uint_tangents);					
+		}
 	}
-	else {
+}
 
-		if (size != PXY_INNER_SHDR_BUG_FILE_SIZE)
+void d912pxy_device::TrackPSProfile()
+{
+	auto sProfile = d912pxy_shader_profile::unknown(d912pxy_s.render.db.pso.GetPShader());
+
+	if (!sProfile.isValid())
+		return;
+
+	for (int i = 0; i != 32; ++i)
+		if ((stageFormatsTrack[i] == D3DFMT_D24X8) || (stageFormatsTrack[i] == D3DFMT_D24S8))
 		{
-			LOG_ERR_THROW2(-1, "wrong shader profile file size");
+			sProfile.entryStageSelect(d912pxy_shader_profile::entry::pcf_sampler, i);			
 		}
 
-		if (data[type] != val)
+	UINT srgbState = d912pxy_s.render.tex.GetTexStage(30);
+	if (srgbState)
+		for (int i = 0; i != 30; ++i)
 		{
-			data[type] = val;
-
-			d912pxy_s.vfs.ReWriteFileH(faultyId, data, PXY_INNER_SHDR_BUG_FILE_SIZE, PXY_VFS_BID_SHADER_PROFILE);
+			if (srgbState & 1)
+			{
+				if (d912pxy_s.render.tex.GetTexStage(i) != mNullTextureSRV)
+				{
+					sProfile.entryEnable(d912pxy_shader_profile::entry::srgb_read);						
+					break;
+				}
+			}
+			srgbState = srgbState >> 1;
 		}
-	}	
+
+	if (d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_SRGBWRITEENABLE))
+		sProfile.entryEnable(d912pxy_shader_profile::entry::srgb_write);			
+
+	if (d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_ALPHATESTENABLE))
+		sProfile.entryEnable(d912pxy_shader_profile::entry::alpha_test);		
 }
 
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 

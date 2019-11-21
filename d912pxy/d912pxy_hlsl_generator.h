@@ -229,8 +229,8 @@ private:
 	void WriteHeadILine(UINT prio, const char* fmt, ...);
 	void WriteHeadOLine(UINT prio, const char* fmt, ...);
 
-	//megai2: shader profile managing 
-	UINT genProfile[PXY_INNER_SHDR_BUG_COUNT];
+	//megai2: shader profile managing 	
+	d912pxy_shader_profile genProfile;
 	void LoadGenProfile();
 
 	//megai2: register definition and tracking

@@ -162,21 +162,6 @@ SOFTWARE.
 
 #endif
 
-
-//shader profile defs =======================
-
-#define PXY_INNER_SHDR_BUG_PCF_SAMPLER 0
-#define PXY_INNER_SHDR_BUG_ALPHA_TEST 1
-#define PXY_INNER_SHDR_BUG_SRGB_READ 2
-#define PXY_INNER_SHDR_BUG_SRGB_WRITE 3
-#define PXY_INNER_SHDR_BUG_CLIPPLANE0 4
-#define PXY_INNER_SHDR_BUG_UINT_NORMALS 5
-#define PXY_INNER_SHDR_BUG_UINT_TANGENTS 6
-#define PXY_INNER_SHDR_BUG_RESERVED2 7
-#define PXY_INNER_SHDR_BUG_RESERVED3 8
-#define PXY_INNER_SHDR_BUG_COUNT 9
-#define PXY_INNER_SHDR_BUG_FILE_SIZE PXY_INNER_SHDR_BUG_COUNT * 4
-
 //metrics macros =======================
 
 #ifdef ENABLE_METRICS
@@ -368,6 +353,7 @@ class d912pxy_vtexture;
 class d912pxy_base_texture;
 class d912pxy_texture;
 class d912pxy_extras;
+class d912pxy_shader;
 struct d912pxy_com_object;
 
 

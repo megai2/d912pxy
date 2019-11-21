@@ -106,6 +106,7 @@ SOFTWARE.
 #include "d912pxy_surface_pool.h"
 #include "d912pxy_sblock.h"
 #include "d912pxy_vdecl.h"
+#include "d912pxy_shader_profile.h"
 #include "d912pxy_hlsl_generator.h"
 #include "d912pxy_shader_replacer.h"
 #include "d912pxy_shader.h"
