@@ -57,7 +57,7 @@ d912pxy_shader_pair::~d912pxy_shader_pair()
 			}
 		}
 
-		d912pxy_s.vfs.ReWriteFileH(node, &entryData, sizeof(d912pxy_shader_pair_cache_entry), PXY_VFS_BID_PSO_PRECOMPILE_LIST);
+		d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(node, d912pxy_vfs_bid::pso_precompile_list), d912pxy_mem_block::use(&entryData));
 	}
 
 	for (int i = 0; i != maxPsoId; ++i)

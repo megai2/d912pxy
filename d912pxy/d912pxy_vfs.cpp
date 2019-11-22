@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+d912pxy_thread_lock d912pxy_vfs_locked_entry::itemLocks[PXY_VFS_MAX_BID];
+
 d912pxy_vfs::d912pxy_vfs()
 {	
 }
@@ -35,7 +37,6 @@ d912pxy_vfs::~d912pxy_vfs()
 
 void d912pxy_vfs::Init(const char * lockPath)
 {	
-	lock.Init();
 	NonCom_Init(L"vfs");
 
 	lockFile = CreateFileA(lockPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
@@ -46,7 +47,7 @@ void d912pxy_vfs::Init(const char * lockPath)
 	else {
 		DWORD pid = GetProcessId(GetCurrentProcess());
 		DWORD ret = 0;
-		WriteFile(lockFile, &pid, 4, &ret, NULL);
+		::WriteFile(lockFile, &pid, 4, &ret, NULL);
 		writeAllowed = 1;
 	}
 
@@ -101,85 +102,51 @@ void d912pxy_vfs::LoadVFS()
 	}	
 }
 
-UINT64 d912pxy_vfs::IsPresentN(const char * fnpath, UINT32 vfsId)
-{		
-	return IsPresentH(HashFromName(fnpath), vfsId);
-}
-
-UINT64 d912pxy_vfs::IsPresentH(UINT64 fnHash, UINT32 vfsId)
-{	
-	lock.Hold();
-
-	UINT64 ret = items[vfsId]->IsPresentH(fnHash);
-
-	lock.Release();
-	return ret;
-}
-
-void * d912pxy_vfs::GetFileDataN(const char * fnpath, UINT * sz, UINT id)
+bool d912pxy_vfs::ReadFile(d912pxy_vfs_path path, d912pxy_mem_block to)
 {
-	return GetFileDataH(HashFromName(fnpath), sz, id);
+	UINT64 sz;
+	void* ptr = GetBidLocked(path)->GetFileDataH(path.pathHash(), &sz);
+
+	if (ptr == nullptr)
+		return false;
+	
+	if (to.size() != sz)
+		return false;
+
+	memcpy(to.ptr(), ptr, sz);
+
+	return true;
 }
 
-void d912pxy_vfs::WriteFileN(const char * fnpath, void * data, UINT sz, UINT id)
+d912pxy_mem_block d912pxy_vfs::ReadFile(d912pxy_vfs_path path)
 {
-	WriteFileH(HashFromName(fnpath), data, sz, id);
+	UINT64 sz;
+	void* ptr = GetBidLocked(path)->GetFileDataH(path.pathHash(), &sz);
+	
+	return d912pxy_mem_block::from(ptr, sz);
 }
 
-void d912pxy_vfs::ReWriteFileN(const char * fnpath, void * data, UINT sz, UINT id)
+void d912pxy_vfs::WriteFile(d912pxy_vfs_path path, d912pxy_mem_block data)
 {
-	ReWriteFileH(HashFromName(fnpath), data, sz, id);
-}
-
-void * d912pxy_vfs::GetFileDataH(UINT64 namehash, UINT * sz, UINT id)
-{
-	lock.Hold();
-
-	void* ret = items[id]->GetFileDataH(namehash, sz);
-
-	lock.Release();
-	return ret;
-}
-
-void d912pxy_vfs::WriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
-{
-	if ((1 << id) & cuWriteMask)
+	if (((1 << path.bidIndex()) & cuWriteMask) || (!writeAllowed))
 		return;
 
-	lock.Hold();
-
-	if (!writeAllowed)
-	{
-		lock.Release();
-		return;
-	}
-
-	items[id]->WriteFileH(namehash, data, sz);
-
-	lock.Release();	
+	GetBidLocked(path)->WriteFileH(path.pathHash(), data.ptr(), data.size());
 }
 
-void d912pxy_vfs::ReWriteFileH(UINT64 namehash, void * data, UINT sz, UINT id)
+bool d912pxy_vfs::IsFilePresent(d912pxy_vfs_path path)
 {
-	if ((1 << id) & cuWriteMask)
-		return;
-
-	lock.Hold();
-
-	if (!writeAllowed)
-	{
-		lock.Release();
-		return;
-	}
-
-	items[id]->ReWriteFileH(namehash, data, sz);
-
-	lock.Release();	
+	return GetBidLocked(path)->IsPresentH(path.pathHash());
 }
 
-UINT64 d912pxy_vfs::HashFromName(const char * fnpath)
+d912pxy_vfs_locked_entry d912pxy_vfs::GetBidLocked(d912pxy_vfs_path path)
 {
-	return d912pxy_memtree2::memHash64s((void*)fnpath, (UINT32)strlen(fnpath));
+	return d912pxy_vfs_locked_entry(path.bid(), items);	
+}
+
+d912pxy_vfs_locked_entry d912pxy_vfs::GetBidLocked(d912pxy_vfs_bid bid)
+{
+	return d912pxy_vfs_locked_entry(bid, items);
 }
 
 d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk, UINT id, UINT64 namehash, void * data, UINT sz)
@@ -306,4 +273,9 @@ void d912pxy_vfs::LoadPckFromRootPath()
 	for (int i = 0; i != PXY_VFS_BID_END; ++i)
 		if (memCache & (1ULL << i))
 			items[i]->LoadFilesFromDisk();
+}
+
+d912pxy_vfs_path_hash d912pxy_vfs_path::HashFromName(const char * fnpath)
+{
+	return d912pxy_memtree2::memHash64s((void*)fnpath, (UINT32)strlen(fnpath));
 }

@@ -25,28 +25,61 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_vfs_entry : public d912pxy_noncom
-{
-public:
-	d912pxy_vfs_entry(UINT id);
-	~d912pxy_vfs_entry();
+class d912pxy_mem_block {
+public:	
+	~d912pxy_mem_block();
 
-	UINT64 IsPresentH(UINT64 fnHash);
-	void* GetFileDataH(UINT64 namehash, UINT64* sz);
+	void Delete();
 
-	void WriteFileH(UINT64 namehash, void* data, UINT64 sz);
-	void ReWriteFileH(UINT64 namehash, void* data, UINT64 sz);
+	bool isNullptr() { return iPtr == nullptr; };
+	
+	template<class T>
+	T* c_arr() {
+		return (T*)iPtr;
+	}
 
-	void AddFileInfo(d912pxy_vfs_pck_chunk* fileInfo);
-	void LoadFileFromDisk(d912pxy_vfs_pck_chunk* fileInfo);
-	void LoadFilesFromDisk();
-
-	d912pxy_memtree2* GetChunkTree() {
-		return chunkTree;
+	void FillZero()
+	{
+		ZeroMemory(iPtr, iSz);
 	};
 
-private:
-	d912pxy_memtree2* chunkTree;
-	
-	UINT m_Id;
+	UINT64 size()
+	{
+		return iSz;
+	}
+
+	void* ptr()
+	{
+		return iPtr;
+	}
+
+	template<class T>
+	static d912pxy_mem_block use(T* ptr)
+	{
+		return use((void*)ptr, sizeof(T));
+	}
+
+	template<class T>
+	static d912pxy_mem_block alloc(T** target)
+	{
+		auto ret = alloc(sizeof(T));
+
+		*target = (T*)ret.ptr();
+
+		return ret;
+	}
+
+	static d912pxy_mem_block use(void* ptr, UINT64 size);
+	static d912pxy_mem_block alloc(UINT64 size);
+	static d912pxy_mem_block allocZero(UINT64 size);
+	static d912pxy_mem_block from(void* ptr, UINT64 size);
+	static d912pxy_mem_block null() {
+		return d912pxy_mem_block(nullptr, 0);
+	}
+
+protected:	
+	d912pxy_mem_block(void* ptr, UINT64 size);
+
+	void* iPtr;
+	UINT64 iSz;
 };

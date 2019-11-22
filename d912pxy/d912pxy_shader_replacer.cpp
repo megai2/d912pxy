@@ -229,7 +229,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 
 		if (saveSource)
 		{
-			d912pxy_s.vfs.WriteFileH(mUID, imem, size, PXY_VFS_BID_SHADER_SOURCES);
+			d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(mUID, d912pxy_vfs_bid::shader_sources), d912pxy_mem_block::use(imem, size));			
 		}
 
 		return ret2;
@@ -237,31 +237,21 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 }
 
 d912pxy_shader_code d912pxy_shader_replacer::LoadFromCSO(const char* bfolder)
-{
+{		
+	d912pxy_mem_block mem = d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(mUID, d912pxy_vfs_bid::cso));
+
 	d912pxy_shader_code ret;
-
-	ret.code = 0;
-	ret.sz = 0;
 	ret.blob = nullptr;
-	
-	ret.code = d912pxy_s.vfs.GetFileDataH(mUID, (UINT*)&ret.sz, PXY_VFS_BID_CSO);
-
-	//megai2: FIXME remove deallocation in shader code
-	if (ret.code)
-	{
-		void* tmp = 0;
-		PXY_MALLOC(tmp, ret.sz, void*);
-		memcpy(tmp, ret.code, ret.sz);
-		ret.code = tmp;
-	}
-
+	ret.code = mem.ptr();
+	ret.sz = mem.size();
+		
 	return ret;
 
 }
 
 void d912pxy_shader_replacer::SaveCSO(d912pxy_shader_code code, const char * bfolder)
 {
-	d912pxy_s.vfs.WriteFileH(mUID, code.code, (UINT32)code.sz, PXY_VFS_BID_CSO);
+	d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(mUID, d912pxy_vfs_bid::cso), d912pxy_mem_block::use(code.code, code.sz));	
 }
 
 d912pxy_hlsl_generator_memout* d912pxy_shader_replacer::GenerateHLSL(const wchar_t * bfolder)

@@ -48,8 +48,78 @@ static const wchar_t* d912pxy_vfs_entry_name_str[] = {
 	L"PSO derived PS cache"
 };
 
+enum class d912pxy_vfs_bid : UINT32 {
+	cso = 0,
+	shader_profile = 1,
+	pso_cache_keys = 2,
+	pso_precompile_list = 3,
+	shader_sources = 4,
+	derived_cso_vs = 5,
+	derived_cso_ps = 6,
+	end = 7
+};
+
+typedef UINT64 d912pxy_vfs_path_hash;
+
+class d912pxy_vfs_path {
+public:
+	d912pxy_vfs_path(const char* fnpath, d912pxy_vfs_bid bid) :
+		i_bid(bid)
+	{
+		i_path = HashFromName(fnpath);
+	}
+
+	d912pxy_vfs_path(d912pxy_vfs_path_hash path, d912pxy_vfs_bid bid) :
+		i_bid(bid),
+		i_path(path)
+	{
+
+	}
+
+	~d912pxy_vfs_path()
+	{
+
+	}
+
+	d912pxy_vfs_bid bid() { return i_bid; };
+	UINT32 bidIndex() { return static_cast<UINT32>(i_bid); };
+	d912pxy_vfs_path_hash pathHash() { return i_path; }
+
+private:
+	d912pxy_vfs_path_hash HashFromName(const char* fnpath);
+
+	d912pxy_vfs_path_hash i_path;
+	d912pxy_vfs_bid i_bid;
+};
+
+class d912pxy_vfs_locked_entry {
+public:
+	d912pxy_vfs_locked_entry(d912pxy_vfs_bid bid, d912pxy_vfs_entry** itemArray) :
+		i_bid(static_cast<UINT32>(bid))
+	{
+		i_item = itemArray[i_bid];
+		itemLocks[0/*i_bid*/].Hold();
+	}
+
+	~d912pxy_vfs_locked_entry()
+	{
+		itemLocks[0/*i_bid*/].Release();
+	}
+
+	d912pxy_vfs_entry* operator->() {
+		return i_item;
+	};
+
+private:
+	UINT32 i_bid;
+	d912pxy_vfs_entry* i_item;
+
+	static d912pxy_thread_lock itemLocks[PXY_VFS_MAX_BID];
+};
+
 class d912pxy_vfs : public d912pxy_noncom
 {
+	friend d912pxy_vfs_locked_entry;
 public:
 	d912pxy_vfs();
 	~d912pxy_vfs();
@@ -60,39 +130,32 @@ public:
 	void SetRoot(wchar_t* rootPath);
 	void LoadVFS();
 
-	UINT64 IsPresentN(const char* fnpath, UINT32 vfsId);
-	void* GetFileDataN(const char* fnpath, UINT* sz, UINT id);
-	void WriteFileN(const char* fnpath, void* data, UINT sz, UINT id);
-	void ReWriteFileN(const char* fnpath, void* data, UINT sz, UINT id);
-	
-	UINT64 IsPresentH(UINT64 fnHash, UINT32 vfsId);
-	void* GetFileDataH(UINT64 namehash, UINT* sz, UINT id);
-	void WriteFileH(UINT64 namehash, void* data, UINT sz, UINT id);
-	void ReWriteFileH(UINT64 namehash, void* data, UINT sz, UINT id);
-
-	UINT64 HashFromName(const char* fnpath);
+	bool IsFilePresent(d912pxy_vfs_path path);
+	bool ReadFile(d912pxy_vfs_path path, d912pxy_mem_block to);
+	d912pxy_mem_block ReadFile(d912pxy_vfs_path path);
+	void WriteFile(d912pxy_vfs_path path, d912pxy_mem_block data);		
 		
-	UINT32 IsWriteAllowed() { return writeAllowed; };
-
-	d912pxy_memtree2* GetChunkTree(UINT id) { return items[id]->GetChunkTree(); };
-
-	d912pxy_vfs_pck_chunk* WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk,UINT id, UINT64 namehash, void* data, UINT sz);
-
+	UINT32 IsWriteAllowed() { return writeAllowed; };		
 	void SetWriteMask(UINT32 val);
 	void TakeOutWriteAccess();
 
+	d912pxy_vfs_locked_entry GetBidLocked(d912pxy_vfs_path path);
+	d912pxy_vfs_locked_entry GetBidLocked(d912pxy_vfs_bid bid);
+
+	d912pxy_vfs_pck_chunk* WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk, UINT id, UINT64 namehash, void* data, UINT sz);
+
 private:
+	
+
 	HANDLE lockFile;
 	UINT32 writeAllowed;
 	char m_rootPath[2048];
-
+	
 	d912pxy_vfs_entry* items[PXY_VFS_MAX_BID];
 
 	void LoadPckFromRootPath();
 
 	d912pxy_vfs_pck* cuPck;
-
-	d912pxy_thread_lock lock;	
 
 	UINT32 cuWriteMask;
 };

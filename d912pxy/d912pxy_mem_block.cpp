@@ -22,31 +22,51 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#pragma once
 #include "stdafx.h"
 
-class d912pxy_vfs_entry : public d912pxy_noncom
+d912pxy_mem_block d912pxy_mem_block::use(void * ptr, UINT64 size)
 {
-public:
-	d912pxy_vfs_entry(UINT id);
-	~d912pxy_vfs_entry();
+	return d912pxy_mem_block(ptr, size);
+}
 
-	UINT64 IsPresentH(UINT64 fnHash);
-	void* GetFileDataH(UINT64 namehash, UINT64* sz);
+d912pxy_mem_block d912pxy_mem_block::alloc(UINT64 size)
+{
+	void* newMem;
+	PXY_MALLOC(newMem, size, void*);
+	return d912pxy_mem_block(newMem, size);
+}
 
-	void WriteFileH(UINT64 namehash, void* data, UINT64 sz);
-	void ReWriteFileH(UINT64 namehash, void* data, UINT64 sz);
+d912pxy_mem_block d912pxy_mem_block::allocZero(UINT64 size)
+{
+	auto ret = d912pxy_mem_block::alloc(size);
+	ret.FillZero();
+	return ret;
+}
 
-	void AddFileInfo(d912pxy_vfs_pck_chunk* fileInfo);
-	void LoadFileFromDisk(d912pxy_vfs_pck_chunk* fileInfo);
-	void LoadFilesFromDisk();
+d912pxy_mem_block d912pxy_mem_block::from(void * ptr, UINT64 size)
+{
+	if (!ptr)
+		return d912pxy_mem_block(nullptr, 0);
 
-	d912pxy_memtree2* GetChunkTree() {
-		return chunkTree;
-	};
+	auto ret = d912pxy_mem_block::alloc(size);
 
-private:
-	d912pxy_memtree2* chunkTree;
-	
-	UINT m_Id;
-};
+	memcpy(ret.ptr(), ptr, size);
+
+	return ret;
+}
+
+d912pxy_mem_block::d912pxy_mem_block(void * ptr, UINT64 size) :
+	iPtr(ptr),
+	iSz(size)
+{	
+}
+
+d912pxy_mem_block::~d912pxy_mem_block()
+{
+}
+
+void d912pxy_mem_block::Delete()
+{
+	PXY_FREE(iPtr);
+	iPtr = nullptr;
+}

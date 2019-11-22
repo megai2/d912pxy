@@ -33,7 +33,7 @@ d912pxy_shader_profile::d912pxy_shader_profile(d912pxy_shader_uid shdUID) :
 d912pxy_shader_profile::~d912pxy_shader_profile()
 {
 	if (dirty)
-		d912pxy_s.vfs.WriteFileH(shader, entryArray, dataSize, PXY_VFS_BID_SHADER_PROFILE);
+		d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(shader, d912pxy_vfs_bid::shader_profile), d912pxy_mem_block::use(entryArray, dataSize));		
 }
 
 void d912pxy_shader_profile::entryEnable(entry name)
@@ -104,15 +104,15 @@ void d912pxy_shader_profile::setEntryData(entry name, entry_data data)
 
 void d912pxy_shader_profile::LoadDataFromVFS()
 {
-	UINT32 size;
-	UINT32* data = (UINT32*)d912pxy_s.vfs.GetFileDataH(shader, &size, PXY_VFS_BID_SHADER_PROFILE);
+	//d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(shader, d912pxy_vfs_bid::shader_profile), d912pxy_mem_block::use(entryArray, dataSize));
 
-	memcpy(entryArray, data, dataSize);
+	d912pxy_vfs_path vfsPath = d912pxy_vfs_path(shader, d912pxy_vfs_bid::shader_profile);
+	d912pxy_mem_block mem = d912pxy_mem_block::use(entryArray, dataSize);
 
-	if (size != dataSize)
+	if (!d912pxy_s.vfs.ReadFile(vfsPath, mem))
 	{
-		ZeroMemory(entryArray, dataSize);		
-		d912pxy_s.vfs.WriteFileH(shader, entryArray, dataSize, PXY_VFS_BID_SHADER_PROFILE);		
+		mem.FillZero();
+		d912pxy_s.vfs.WriteFile(vfsPath, mem);
 	}
 
 	loaded = true;

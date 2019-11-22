@@ -57,7 +57,7 @@ UINT64 d912pxy_vfs_entry::IsPresentH(UINT64 fnHash)
 	return chunkTree->CurrentCID();
 }
 
-void * d912pxy_vfs_entry::GetFileDataH(UINT64 namehash, UINT * sz)
+void * d912pxy_vfs_entry::GetFileDataH(UINT64 namehash, UINT64 * sz)
 {
 	d912pxy_vfs_pck_chunk* dtCh = (d912pxy_vfs_pck_chunk*)IsPresentH(namehash);
 
@@ -79,7 +79,7 @@ void * d912pxy_vfs_entry::GetFileDataH(UINT64 namehash, UINT * sz)
 	return &dtCh->data.rawData;
 }
 
-void d912pxy_vfs_entry::WriteFileH(UINT64 namehash, void * data, UINT sz)
+void d912pxy_vfs_entry::WriteFileH(UINT64 namehash, void * data, UINT64 sz)
 {
 	d912pxy_vfs_pck_chunk* dtCh = (d912pxy_vfs_pck_chunk*)IsPresentH(namehash);
 
@@ -88,7 +88,7 @@ void d912pxy_vfs_entry::WriteFileH(UINT64 namehash, void * data, UINT sz)
 	chunkTree->SetValue((UINT64)dtCh);
 }
 
-void d912pxy_vfs_entry::ReWriteFileH(UINT64 namehash, void * data, UINT sz)
+void d912pxy_vfs_entry::ReWriteFileH(UINT64 namehash, void * data, UINT64 sz)
 {
 	WriteFileH(namehash, data, sz);
 }

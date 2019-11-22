@@ -75,6 +75,7 @@ SOFTWARE.
 #include "d912pxy_helper.h"
 #include "d912pxy_noncom.h"
 #include "d912pxy_dynamic_imports.h"
+#include "d912pxy_mem_block.h"
 #include "d912pxy_mem_mgr.h"
 #include "d912pxy_mem_va_table.h"
 #include "d912pxy_com_mgr.h"
