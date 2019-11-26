@@ -51,6 +51,7 @@ public:
 	~d912pxy_device(void);
 
 	void Init(IDirect3DDevice9* dev, void* par);
+	void UnInit();
 
 //com methods
 	D912PXY_METHOD_(ULONG, ReleaseDevice)(PXY_THIS);
@@ -377,8 +378,6 @@ public:
 	D912PXY_METHOD(SetSamplerState_Tracked)(PXY_THIS_ DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value);
 	D912PXY_METHOD(CreateQuery_Optimized)(PXY_THIS_ D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery);
 	
-	
-
 	HRESULT InnerPresentExecute();
 	void InnerPresentFinish();
 

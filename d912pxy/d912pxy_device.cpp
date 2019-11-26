@@ -49,6 +49,10 @@ d912pxy_device::d912pxy_device() : d912pxy_comhandler()
 
 d912pxy_device::~d912pxy_device(void)
 {	
+}
+
+void d912pxy_device::UnInit()
+{
 	LOG_INFO_DTDM("Device last reference removal");
 
 	NvGPU_restore();
@@ -58,10 +62,10 @@ d912pxy_device::~d912pxy_device(void)
 
 	swapOpLock.Hold();
 
-	LOG_INFO_DTDM2(d912pxy_s.render.iframe.End(),		 "Last iframe ended");
-	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(),		 "Additional DX9 objects freed");
-	LOG_INFO_DTDM2(d912pxy_s.dx12.que.Flush(0),      "Last gpu cmd lists flushed");
-	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(),		 "Swapchain stopped");
+	LOG_INFO_DTDM2(d912pxy_s.render.iframe.End(), "Last iframe ended");
+	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(), "Additional DX9 objects freed");
+	LOG_INFO_DTDM2(d912pxy_s.dx12.que.Flush(0), "Last gpu cmd lists flushed");
+	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(), "Swapchain stopped");
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
 		d912pxy_s.extras.UnInit();
@@ -70,27 +74,27 @@ d912pxy_device::~d912pxy_device(void)
 
 	LOG_INFO_DTDM("Pending GPU cleanups processed");
 
-	LOG_INFO_DTDM2(d912pxy_s.thread.cleanup.UnInit(),	"Final cleanups  1/13");
+	LOG_INFO_DTDM2(d912pxy_s.thread.cleanup.UnInit(), "Final cleanups  1/13");
 	swapOpLock.Release();
-		
-	LOG_INFO_DTDM2(d912pxy_s.thread.bufld.UnInit(),	  		"Final cleanups  2/13");
-	LOG_INFO_DTDM2(d912pxy_s.thread.texld.UnInit(),		"Final cleanups  3/13");
-	LOG_INFO_DTDM2(d912pxy_s.render.iframe.UnInit(), 				"Final cleanups  4/13");
-	LOG_INFO_DTDM2(d912pxy_s.render.db.shader.UnInit(),			"Final cleanups  5/13");
-		
-	LOG_INFO_DTDM2(d912pxy_s.pool.vstream.UnInit(),		"Final cleanups  6/13");
-	LOG_INFO_DTDM2(d912pxy_s.pool.upload.UnInit(),		"Final cleanups  7/13");
-	LOG_INFO_DTDM2(d912pxy_s.pool.surface.UnInit(),		"Final cleanups  8/13");
-	LOG_INFO_DTDM2(d912pxy_s.pool.rtds.UnInit(),			"Final cleanups  9/13");
-	LOG_INFO_DTDM2(d912pxy_s.dx12.que.UnInit(),				"Final cleanups 10/13");
-	LOG_INFO_DTDM2(d912pxy_s.render.replay.Free(),						"Final cleanups 11/13");	
-	LOG_INFO_DTDM2(d912pxy_s.vfs.UnInit(),						"Final cleanups 12/13");
-		
+
+	LOG_INFO_DTDM2(d912pxy_s.thread.bufld.UnInit(), "Final cleanups  2/13");
+	LOG_INFO_DTDM2(d912pxy_s.thread.texld.UnInit(), "Final cleanups  3/13");
+	LOG_INFO_DTDM2(d912pxy_s.render.iframe.UnInit(), "Final cleanups  4/13");
+	LOG_INFO_DTDM2(d912pxy_s.render.db.shader.UnInit(), "Final cleanups  5/13");
+
+	LOG_INFO_DTDM2(d912pxy_s.pool.vstream.UnInit(), "Final cleanups  6/13");
+	LOG_INFO_DTDM2(d912pxy_s.pool.upload.UnInit(), "Final cleanups  7/13");
+	LOG_INFO_DTDM2(d912pxy_s.pool.surface.UnInit(), "Final cleanups  8/13");
+	LOG_INFO_DTDM2(d912pxy_s.pool.rtds.UnInit(), "Final cleanups  9/13");
+	LOG_INFO_DTDM2(d912pxy_s.dx12.que.UnInit(), "Final cleanups 10/13");
+	LOG_INFO_DTDM2(d912pxy_s.render.replay.Free(), "Final cleanups 11/13");
+	LOG_INFO_DTDM2(d912pxy_s.vfs.UnInit(), "Final cleanups 12/13");
+
 	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
 		delete m_dheaps[i];
 
 	LOG_INFO_DTDM("Final cleanups 13/13");
-	
+
 #ifdef ENABLE_METRICS
 	d912pxy_s.log.metrics.UnInit();
 #endif
@@ -103,13 +107,17 @@ d912pxy_device::~d912pxy_device(void)
 
 	d912pxy_s.pool.hostPow2.DeInit();
 	d912pxy_s.com.DeInit();
-	
+
+	m_d12evice = nullptr;
+
 	LOG_INFO_DTDM("d912pxy exited");
 
+	d912pxy_comhandler::UnInit();
 #ifdef _DEBUG
 	d912pxy_helper::d3d12_ReportLeaks();
 #endif	
 }
+
 
 ULONG d912pxy_device::ReleaseDevice()
 {
@@ -117,7 +125,7 @@ ULONG d912pxy_device::ReleaseDevice()
 	{
 		d912pxy_com_object* comObj = comBase;
 
-		this->~d912pxy_device();
+		UnInit();
 		
 		d912pxy_final_cleanup();
 
@@ -135,7 +143,7 @@ void d912pxy_device::FreeAdditionalDX9Objects()
 
 	d912pxy_query_occlusion::DeInitOccQueryEmulation();
 
-	d912pxy_s.render.draw_up.~d912pxy_draw_up();
+	d912pxy_s.render.draw_up.UnInit();
 	delete m_clearEmul;
 
 	mNullTexture->Release();

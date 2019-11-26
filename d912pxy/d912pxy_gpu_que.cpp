@@ -83,6 +83,10 @@ void d912pxy_gpu_que::UnInit()
 
 	delete mGPUCleanupThread;
 
+	mDXQue = nullptr;
+
+	Stop();
+
 	d912pxy_noncom::UnInit();
 }
 
