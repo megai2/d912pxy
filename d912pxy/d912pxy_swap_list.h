@@ -22,74 +22,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#pragma once
 #include "stdafx.h"
+#pragma once
 
-class d912pxy_mem_block {
-public:	
-	~d912pxy_mem_block();
+template<class T>
+class d912pxy_swap_list {
+public:
+	d912pxy_swap_list() : index(0) {};
+	~d912pxy_swap_list() {};
 
-	void Delete();
-
-	bool isNullptr() { return iPtr == nullptr; };
-	
-	template<class T>
-	T* c_arr() {
-		return (T*)iPtr;
+	T* operator->() {
+		return objArr[index];
 	}
 
-	void FillZero()
+	void Next()
 	{
-		ZeroMemory(iPtr, iSz);
-	};
+		index += 1;
+		index %= PXY_INNER_GPU_QUEUE_BUFFER_COUNT;
+	}
 
-	UINT64 size()
+	void Add(T* obj)
 	{
-		return iSz;
+		objArr[index++] = obj;
+		index %= PXY_INNER_GPU_QUEUE_BUFFER_COUNT;
 	}
 
-	void* ptr()
-	{
-		return iPtr;
+	void Cleanup() {
+		for (int i = 0; i != PXY_INNER_GPU_QUEUE_BUFFER_COUNT; ++i)
+			delete objArr[i];
 	}
 
-	template<class T>
-	static d912pxy_mem_block use(T* ptr)
-	{
-		return use((void*)ptr, sizeof(T));
-	}
+private:
+	UINT index;
 
-	template<class T>
-	static d912pxy_mem_block alloc(T** target)
-	{
-		auto ret = alloc(sizeof(T));
-
-		*target = (T*)ret.ptr();
-
-		return ret;
-	}
-
-	template<class T>
-	static d912pxy_mem_block allocZero(T** target, UINT elements)
-	{
-		auto ret = allocZero(sizeof(T) * elements);
-
-		*target = (T*)ret.ptr();
-
-		return ret;
-	}
-
-	static d912pxy_mem_block use(void* ptr, UINT64 size);
-	static d912pxy_mem_block alloc(UINT64 size);
-	static d912pxy_mem_block allocZero(UINT64 size);
-	static d912pxy_mem_block from(void* ptr, UINT64 size);
-	static d912pxy_mem_block null() {
-		return d912pxy_mem_block(nullptr, 0);
-	}
-
-protected:	
-	d912pxy_mem_block(void* ptr, UINT64 size);
-
-	void* iPtr;
-	UINT64 iSz;
+	T* objArr[PXY_INNER_GPU_QUEUE_BUFFER_COUNT];
 };

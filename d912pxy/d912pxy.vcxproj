@@ -324,9 +324,11 @@
     <ClInclude Include="d912pxy_com_object.h" />
     <ClInclude Include="d912pxy_com_routing.h" />
     <ClInclude Include="d912pxy_config.h" />
+    <ClInclude Include="d912pxy_device_state.h" />
     <ClInclude Include="d912pxy_draw_up.h" />
     <ClInclude Include="d912pxy_dynamic_imports.h" />
     <ClInclude Include="d912pxy_extras.h" />
+    <ClInclude Include="d912pxy_folded_buffer.h" />
     <ClInclude Include="d912pxy_linked_list.h" />
     <ClInclude Include="d912pxy_basetexture.h" />
     <ClInclude Include="d912pxy_batch.h" />
@@ -347,6 +349,7 @@
     <ClInclude Include="d912pxy_log.h" />
     <ClInclude Include="d912pxy_memtree.h" />
     <ClInclude Include="d912pxy_memtree2.h" />
+    <ClInclude Include="d912pxy_mem_block.h" />
     <ClInclude Include="d912pxy_mem_mgr.h" />
     <ClInclude Include="d912pxy_mem_va_table.h" />
     <ClInclude Include="d912pxy_metrics.h" />
@@ -366,6 +369,7 @@
     <ClInclude Include="d912pxy_shader.h" />
     <ClInclude Include="d912pxy_shader_db.h" />
     <ClInclude Include="d912pxy_shader_pair.h" />
+    <ClInclude Include="d912pxy_shader_profile.h" />
     <ClInclude Include="d912pxy_shader_replacer.h" />
     <ClInclude Include="d912pxy_stackwalker.h" />
     <ClInclude Include="d912pxy_surface.h" />
@@ -373,6 +377,7 @@
     <ClInclude Include="d912pxy_surface_layer.h" />
     <ClInclude Include="d912pxy_surface_pool.h" />
     <ClInclude Include="d912pxy_swapchain.h" />
+    <ClInclude Include="d912pxy_swap_list.h" />
     <ClInclude Include="d912pxy_texture.h" />
     <ClInclude Include="d912pxy_texture_loader.h" />
     <ClInclude Include="d912pxy_texture_state.h" />
@@ -428,6 +433,7 @@
     <ClCompile Include="d912pxy_draw_up.cpp" />
     <ClCompile Include="d912pxy_dynamic_imports.cpp" />
     <ClCompile Include="d912pxy_extras.cpp" />
+    <ClCompile Include="d912pxy_folded_buffer.cpp" />
     <ClCompile Include="d912pxy_fwdecl.cpp" />
     <ClCompile Include="d912pxy_linked_list.cpp" />
     <ClCompile Include="d912pxy_basetexture.cpp" />
@@ -448,6 +454,7 @@
     <ClCompile Include="d912pxy_log.cpp" />
     <ClCompile Include="d912pxy_memtree.cpp" />
     <ClCompile Include="d912pxy_memtree2.cpp" />
+    <ClCompile Include="d912pxy_mem_block.cpp" />
     <ClCompile Include="d912pxy_mem_mgr.cpp" />
     <ClCompile Include="d912pxy_mem_va_table.cpp" />
     <ClCompile Include="d912pxy_metrics.cpp" />
@@ -468,6 +475,7 @@
     <ClCompile Include="d912pxy_shader.cpp" />
     <ClCompile Include="d912pxy_shader_db.cpp" />
     <ClCompile Include="d912pxy_shader_pair.cpp" />
+    <ClCompile Include="d912pxy_shader_profile.cpp" />
     <ClCompile Include="d912pxy_shader_replacer.cpp" />
     <ClCompile Include="d912pxy_stackwalker.cpp" />
     <ClCompile Include="d912pxy_surface.cpp" />

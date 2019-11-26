@@ -159,10 +159,10 @@ UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
 	}
 
 #ifdef PER_DRAW_FLUSH
-	if (d912pxy_s.render.batch.GetBatchNum() >= 1)
+	if (d912pxy_s.render.batch.GetBatchCount() >= 1)
 		StateSafeFlush(0);
 #else
-	if (d912pxy_s.render.batch.GetBatchNum() >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
+	if (d912pxy_s.render.batch.GetBatchCount() >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
 	{
 		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
@@ -213,11 +213,11 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	d912pxy_s.render.db.pso.Use();
 
-	d912pxy_s.render.replay.DIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.NextBatch());
+	d912pxy_s.render.replay.DIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
 
 	instanceCount = 1;
 
-	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchNum());
+	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchCount());
 
 	if (batchDF & 8)
 	{
@@ -293,11 +293,11 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 		d912pxy_s.render.replay.PrimTopo(cuPrimType);
 	}
 
-	d912pxy_s.render.replay.DIIP(GetIndexCount(primCount, PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.NextBatch());
+	d912pxy_s.render.replay.DIIP(GetIndexCount(primCount, PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
 
 	instanceCount = 1;
 
-	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchNum());
+	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchCount());
 
 	if (batchDF & 8)
 	{

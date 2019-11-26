@@ -9,12 +9,6 @@ d912pxy_draw_up::d912pxy_draw_up()
 
 d912pxy_draw_up::~d912pxy_draw_up()
 {
-	OnFrameEnd();
-
-	for (int i = 0; i != PXY_DUP_COUNT*2; ++i)
-	{
-		buf[i].vstream->Release();
-	}
 }
 
 void d912pxy_draw_up::Init()
@@ -39,6 +33,18 @@ void d912pxy_draw_up::Init()
 			buf[i].offset = tmpUPbufSpace;
 		}
 	}
+}
+
+void d912pxy_draw_up::UnInit()
+{
+	OnFrameEnd();
+
+	for (int i = 0; i != PXY_DUP_COUNT * 2; ++i)
+	{
+		buf[i].vstream->Release();
+	}
+
+	d912pxy_noncom::UnInit();
 }
 
 void d912pxy_draw_up::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void * pVertexStreamZeroData, UINT VertexStreamZeroStride)

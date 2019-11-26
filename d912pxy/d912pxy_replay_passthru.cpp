@@ -151,7 +151,7 @@ void d912pxy_replay_passthru::DIIP(UINT IndexCountPerInstance, UINT InstanceCoun
 
 	REPLAY_SYNC_START;
 
-	d912pxy_s.render.batch.PreDIP(cl, batchId);
+	d912pxy_s.render.batch.Bind(cl, batchId);
 
 	cl->DrawIndexedInstanced(
 		IndexCountPerInstance,
@@ -249,7 +249,7 @@ void d912pxy_replay_passthru::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 {
 	REPLAY_SYNC_START;
 
-	d912pxy_s.render.batch.GPUWriteControl(si, of, cnt, bn);
+	//d912pxy_s.render.batch.GPUWriteControl(si, of, cnt, bn);
 
 	REPLAY_SYNC_STOP;
 }

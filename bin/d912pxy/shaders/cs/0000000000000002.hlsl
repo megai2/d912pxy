@@ -1,56 +1,42 @@
 #define threadBlockSize 32
 #define dstBufferStride 8704
-#define PXY_INNER_MAX_IFRAME_BATCH_COUNT 4096*2
+#define dataElementSz 16
+#define ctlElementSz 16
 
 RWByteAddressBuffer dstBuffer : register(u0); 
-RWByteAddressBuffer srcBuffer : register(u1);
+RWByteAddressBuffer srcData : register(u1);
+RWByteAddressBuffer srcCtl  : register(u2);
 
 [numthreads(threadBlockSize, 1, 1)]
 void main(uint3 groupId : SV_GroupID, uint groupIndex : SV_GroupIndex)
 {
 	uint2 shift = {dstBufferStride, 1};
 	uint index = ((groupId.x * threadBlockSize) + groupIndex);
-
+	
 	//fv0
 	//fv1
 	//fv2
 	//fv3		
+	
 	//dstOffset = x
 	//startBatch = y 
 	//endBatch = z
 	//cacheAlignPlace
 		
-	index *= 16;	
-	
-	uint4 control = srcBuffer.Load4(index+PXY_INNER_MAX_IFRAME_BATCH_COUNT*dstBufferStride);
+	//megai2: right now data and control elements have same size, so we can skip extra ops
+	//don't get confused!
+	index *= ctlElementSz;	
+				
+	uint4 control = srcCtl.Load4(index);
 					
-	if (control.z == 0)
-		return;
+	if (control.y == control.z)
+		return;		
 		
-	uint4 data = srcBuffer.Load4(index);		
+	uint4 data = srcData.Load4(index);		
 	
-	uint orgCtl = control.x;
-	
-	control.x *= 16;		
+	control.x *= dataElementSz;		
 	control.x += control.y * dstBufferStride;
 	
-	index += 16 * control.z;
-		
-	uint4 ctlLookup = srcBuffer.Load4(index+PXY_INNER_MAX_IFRAME_BATCH_COUNT*dstBufferStride);
-		
-	while (ctlLookup.z != 0)
-	{
-		
-		if ((ctlLookup.x <= orgCtl) && ((ctlLookup.x + ctlLookup.z) > orgCtl))
-			break;
-			
-		index += 16 * ctlLookup.z;
-		
-		ctlLookup = srcBuffer.Load4(index+PXY_INNER_MAX_IFRAME_BATCH_COUNT*dstBufferStride);						
-	}
-	
-	control.z = ctlLookup.y;
-		
 	while (control.y != control.z)
 	{
 		dstBuffer.Store4(control.x, data);

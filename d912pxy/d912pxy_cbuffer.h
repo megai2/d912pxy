@@ -28,20 +28,18 @@ SOFTWARE.
 class d912pxy_cbuffer : public d912pxy_resource
 {
 public:
-	d912pxy_cbuffer(UINT length, UINT32 allowUploadBuffer);
+	d912pxy_cbuffer(UINT length, bool isUpload, const wchar_t* name);
 	~d912pxy_cbuffer();
-
-	void Upload();
-	void UploadTarget(d912pxy_cbuffer* target, UINT offset, UINT size);
-	void UploadOffset(UINT offset, UINT size);
-	void UploadOffsetNB(ID3D12GraphicsCommandList* cq, UINT offset, UINT size);
+	
+	void UploadTarget(ID3D12GraphicsCommandList* cl, d912pxy_cbuffer* target, UINT offset, UINT size);
 
 	intptr_t DevPtr() { return pointers.dev; };
 	intptr_t HostPtr() { return pointers.host; };
 
-private:
-	d912pxy_resource_ptr pointers;
+	static UINT memUsage_V;
+	static UINT memUsage_UL;
 
-	d912pxy_resource * uploadRes;	
+private:
+	d912pxy_resource_ptr pointers;	
 };
 

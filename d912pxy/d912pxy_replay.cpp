@@ -67,24 +67,11 @@ void d912pxy_replay::Init()
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_RAW_GPUW))
 	{
-		if (numThreads > 1)
-		{
-			LOG_ERR_DTDM("Forcing replay threads to 1 due to enabled raw gpu write");
-			numThreads = 1;
-		}
-
-		replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW_RAW;
-		replay_handlers[DRPL_DIIP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DIIP_RAW;
+		LOG_WARN_DTDM("Raw gpu write is removed from code due cuz it is useless, delta batching used");
 	}
-	else
-	{
-		replay_handlers[DRPL_DIIP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DIIP;
-
-		if (numThreads > 1)
-			replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW_MT;
-		else
-			replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;
-	}
+	
+	replay_handlers[DRPL_DIIP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DIIP;
+	replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;
 
 	d912pxy_s.dev.AddActiveThreads(numThreads);
 
@@ -275,6 +262,18 @@ void d912pxy_replay::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
 	REPLAY_STACK_INCREMENT;
 }
 
+void d912pxy_replay::GPUW2(d912pxy_replay_item_type ev, UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
+{
+	REPLAY_STACK_GET(ev);
+
+	it->gpuw_ctl.bn = bn;
+	it->gpuw_ctl.size = cnt;
+	it->gpuw_ctl.offset = of;
+	it->gpuw_ctl.streamIdx = si;
+
+	REPLAY_STACK_INCREMENT;
+}
+
 void d912pxy_replay::QueryMark(d912pxy_query * va, UINT start)
 {
 	REPLAY_STACK_GET(DRPL_QUMA);
@@ -346,8 +345,6 @@ void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl
 	d912pxy_replay_thread_context context;
 	context.pso = 0;
 	context.tid = thrd->GetId();
-
-	d912pxy_s.render.batch.GPUWriteStart(context.tid, 1);
 
 	//megai2: wait for actual stack to be filled	
 	maxRI = WaitForData(i, maxRI, end, thrd);
@@ -941,7 +938,7 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 	if (!context->pso)
 		return;
 
-	d912pxy_s.render.batch.PreDIP(cl, it->batchId);
+	d912pxy_s.render.batch.Bind(cl, it->batchId);
 
 	cl->DrawIndexedInstanced(
 		it->IndexCountPerInstance,
@@ -950,22 +947,6 @@ void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12G
 		it->BaseVertexLocation,
 		it->StartInstanceLocation
 	);	
-}
-
-void d912pxy_replay::RHA_DIIP_RAW(d912pxy_replay_draw_indexed_instanced * it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context * context)
-{
-	if (!context->pso)
-		return;
-
-	d912pxy_s.render.batch.PreDIPRaw(cl, it->batchId);
-
-	cl->DrawIndexedInstanced(
-		it->IndexCountPerInstance,
-		it->InstanceCount,
-		it->StartIndexLocation,
-		it->BaseVertexLocation,
-		it->StartInstanceLocation
-	);
 }
 
 void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl, void* unused)
@@ -1094,19 +1075,13 @@ void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList
 	}
 }
 
-void d912pxy_replay::RHA_GPUW(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void * unused)
+void d912pxy_replay::RHA_GPUW(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
 {
-	d912pxy_s.render.batch.GPUWriteControl(it->streamIdx, it->offset, it->size, it->bn);
-}
-
-void d912pxy_replay::RHA_GPUW_RAW(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, void * unused)
-{
-	d912pxy_s.render.batch.GPUWriteRaw(it->streamIdx, it->offset, it->size, it->bn);
-}
-
-void d912pxy_replay::RHA_GPUW_MT(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
-{
-	d912pxy_s.render.batch.GPUWriteControlMT(it->streamIdx, it->offset, it->size, it->bn, context->tid);
+	d912pxy_s.render.batch.ReplayWrite(
+		context->tid, 
+		it->streamIdx, 
+		d912pxy_batch_buffer::write_info(it->bn, it->offset, it->size)
+	);
 }
 
 void d912pxy_replay::RHA_PRMT(d912pxy_replay_primitive_topology * it, ID3D12GraphicsCommandList * cl, void * unused)

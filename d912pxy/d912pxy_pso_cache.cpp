@@ -501,7 +501,9 @@ void d912pxy_pso_cache::VShader(d912pxy_shader * vs)
 {
 #ifdef _DEBUG
 	if (vs)
+	{
 		LOG_DBG_DTDM("vs = %016llX", vs->GetID());
+	}
 #endif
 
 	dirty |= 1;
@@ -513,7 +515,9 @@ void d912pxy_pso_cache::PShader(d912pxy_shader * ps)
 {
 #ifdef _DEBUG
 	if (ps)
+	{
 		LOG_DBG_DTDM("ps = %016llX", ps->GetID());
+	}
 #endif
 
 	dirty |= 1;
@@ -824,6 +828,8 @@ void d912pxy_pso_cache::LoadCachedData()
 
 			void* dscMem = (void*)((intptr_t)&dsc[i] + d912pxy_trimmed_dx12_pso_hash_offset);
 			memcpy(dscMem, psoKeyCache[i]->staticPsoDesc, d912pxy_trimmed_pso_static_data_size);
+
+			PXY_FREE(psoKeyCache[i]);
 		}
 
 		d912pxy_memtree2* mt = d912pxy_s.vfs.GetBidLocked(d912pxy_vfs_bid::pso_precompile_list)->GetChunkTree();
@@ -1336,8 +1342,8 @@ void d912pxy_pso_cache_item::RealtimeIntegrityCheck()
 	d912pxy_shader_replacer* replVS = new d912pxy_shader_replacer(0, 0, desc->VS->GetID(), 1);
 	d912pxy_shader_replacer* replPS = new d912pxy_shader_replacer(0, 0, desc->PS->GetID(), 0);
 
-	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, shdSrc[0].ptr(), shdSrc[0].size(), 0);
-	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, shdSrc[1].ptr(), shdSrc[1].size(), 0);
+	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, shdSrc[0].ptr(), (UINT)shdSrc[0].size(), 0);
+	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, shdSrc[1].ptr(), (UINT)shdSrc[1].size(), 0);
 
 	if ((!bcVS.blob) || (!bcPS.blob))
 		LOG_ERR_DTDM("PSO RCE fail for pair %llX key %lX alias %llX", pairUID, psoKey, derivedAlias);

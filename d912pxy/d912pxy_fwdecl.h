@@ -335,7 +335,7 @@ class d912pxy_surface_layer;
 class d912pxy_texture_loader;
 class d912pxy_buffer_loader;
 class d912pxy_pso_cache;
-class d912pxy_batch;
+class d912pxy_batch_buffer;
 class d912pxy_pso_cache_item;
 class d912pxy_vfs;
 class d912pxy_metrics;
@@ -355,6 +355,7 @@ class d912pxy_texture;
 class d912pxy_extras;
 class d912pxy_shader;
 struct d912pxy_com_object;
+enum d912pxy_replay_item_type;
 
 
 typedef struct d912pxy_device_streamsrc {

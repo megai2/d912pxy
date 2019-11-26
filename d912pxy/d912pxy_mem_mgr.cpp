@@ -191,10 +191,10 @@ void d912pxy_mem_mgr::inFree(void* block) {
 
 bool d912pxy_mem_mgr::pxy_malloc_dbg(void** cp, size_t sz, const char* file, const int line, const char* function) { // Calls pxy_malloc until it gets a success or fails after trying "tries" times.
 #ifdef _DEBUG
-	if (*cp != NULL) { // Were we passed a non null pointer to malloc? Possible memory leak condition.
+	/*if (*cp != NULL) { // Were we passed a non null pointer to malloc? Possible memory leak condition.
 		LOG_ERR_DTDM("A malloc was called with a possible valid pointer. Size requested: %u. %S %u %S", sz, file, line, function);
 		//pxy_free(*cp); // Let's free that current pointer to avoid a memory leak. // Nevermind, we can't assume just because it isn't null that we should free it... but we will log it.
-	}
+	}*/
 
 	sz += sizeof(d912pxy_dbg_mem_block);
 

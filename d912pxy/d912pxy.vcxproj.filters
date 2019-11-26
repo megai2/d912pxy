@@ -293,6 +293,15 @@
     <ClCompile Include="..\thirdparty\imgui\imgui_impl_win32.cpp">
       <Filter>base\utils\3rd_party\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_shader_profile.cpp">
+      <Filter>d3d9_impl\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_mem_block.cpp">
+      <Filter>base\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_folded_buffer.cpp">
+      <Filter>d3d9_impl\device\iframe\batch</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -566,6 +575,21 @@
     </ClInclude>
     <ClInclude Include="..\thirdparty\imgui\imgui_impl_win32.h">
       <Filter>base\utils\3rd_party\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_shader_profile.h">
+      <Filter>d3d9_impl\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_mem_block.h">
+      <Filter>base\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_device_state.h">
+      <Filter>d3d9_impl\device</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_folded_buffer.h">
+      <Filter>d3d9_impl\device\iframe\batch</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_swap_list.h">
+      <Filter>base\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

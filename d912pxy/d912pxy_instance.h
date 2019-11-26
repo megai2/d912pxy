@@ -53,7 +53,7 @@ typedef struct d912pxy_instance {
 
 		d912pxy_iframe iframe;
 		d912pxy_texture_state tex;
-		d912pxy_batch batch;
+		d912pxy_batch_buffer batch;
 
 		d912pxy_draw_up draw_up;
 

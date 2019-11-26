@@ -226,13 +226,13 @@ void d912pxy_metrics::FlushIFrameValues()
 
 	iframeMetrics->Add(metricVRAM,		
 		d912pxy_s.pool.surface.GetPoolSizeMB() +
-		d912pxy_s.pool.vstream.GetMemoryInPoolMb()
-		+ ((PXY_BATCH_STREAM_SIZE + PXY_BATCH_GPU_BUFFER_SIZE) >> 20)
+		d912pxy_s.pool.vstream.GetMemoryInPoolMb() +
+		(d912pxy_cbuffer::memUsage_V >> 20)		
 	);
 
 	iframeMetrics->Add(metricVRAMShared,
 		d912pxy_s.pool.upload.GetMemoryInPoolMb() +
-		+ ((PXY_BATCH_STREAM_SIZE) >> 20)
+		(d912pxy_cbuffer::memUsage_UL >> 20)
 	);
 
 	

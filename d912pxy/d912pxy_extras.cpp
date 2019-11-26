@@ -124,8 +124,7 @@ void d912pxy_extras::OnPresent()
 
 	if (bShowDrawCount)
 	{
-		ImGui::Text("%6u DIPs", d912pxy_s.render.batch.GetBatchCount());
-		ImGui::Text("%6u Batches", d912pxy_s.render.batch.GetBatchNum());
+		ImGui::Text("%6u draw batches", d912pxy_s.render.batch.GetBatchCount());		
 	}
 
 	if (bShowGCQue)
@@ -186,7 +185,7 @@ void d912pxy_extras::WaitForTargetFrameTime()
 		}
 	}
 
-	WaitForSingleObject(waitEvent, targetFrameTimeDelay);
+	WaitForSingleObject(waitEvent, (DWORD)targetFrameTimeDelay);
 }
 
 void d912pxy_extras::ImGUI_Render_Start()

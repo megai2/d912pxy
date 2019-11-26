@@ -32,109 +32,55 @@ SOFTWARE.
 
 #define PXY_BATCH_GPU_TRANSIT_ELEMENTS 530
 #define PXY_BATCH_GPU_ELEMENT_COUNT 544
-#define PXY_BATCH_GPU_ELEMENT_SIZE 16
 
-#define PXY_BATCH_GPU_DRAW_BUFFER_SIZE (PXY_BATCH_GPU_ELEMENT_COUNT * PXY_BATCH_GPU_ELEMENT_SIZE)
-#define PXY_BATCH_GPU_BUFFER_SIZE (PXY_INNER_MAX_IFRAME_BATCH_COUNT * PXY_BATCH_GPU_DRAW_BUFFER_SIZE)
-
-#define PXY_BATCH_STREAM_DATA_SIZE 16
-#define PXY_BATCH_STREAM_CONTROL_SIZE 16
-#define PXY_BATCH_STREAM_ELEMENT_COUNT (PXY_BATCH_GPU_ELEMENT_COUNT * PXY_INNER_MAX_IFRAME_BATCH_COUNT)
-#define PXY_BATCH_STREAM_CONTROL_PART_SIZE (PXY_BATCH_STREAM_CONTROL_SIZE * PXY_BATCH_STREAM_ELEMENT_COUNT)
-#define PXY_BATCH_STREAM_DATA_PART_SIZE (PXY_BATCH_STREAM_DATA_SIZE * PXY_BATCH_STREAM_ELEMENT_COUNT)
-#define PXY_BATCH_STREAM_CONTROL_OFFSET PXY_BATCH_STREAM_DATA_PART_SIZE
-#define PXY_BATCH_STREAM_PER_FRAME_SIZE (PXY_BATCH_STREAM_CONTROL_PART_SIZE + PXY_BATCH_STREAM_DATA_PART_SIZE)
-#define PXY_BATCH_STREAM_SIZE (PXY_BATCH_STREAM_PER_FRAME_SIZE*2)
-
-#define PXY_BATCH_GPU_THREAD_BLOCK_SHIFT 5
-#define PXY_BATCH_GPU_THREAD_BLOCK_FIX 0x20
-#define PXY_BATCH_GPU_THREAD_BLOCK_MASK 0x1F
 
 #pragma pack(push, 1)
 
-typedef struct d912pxy_batch_stream_control_entry {
-	UINT32 dstOffset;
+typedef struct d912pxy_batch_buffer_sub_element {
 	union {
-		struct {
-			UINT32 startBatch;
-			UINT32 endBatch;
-		};
-		UINT64 batchNums;
+		float f[4];
+		UINT32 ui[4];
+		INT32 i[4];
 	};
-	UINT32 unused;
-} d912pxy_batch_stream_control_entry;
+} d912pxy_batch_buffer_sub_element;
 
-typedef struct d912pxy_batch_stream_data_entry {
-	float f0;
-	float f1;
-	float f2;
-	float f3;
-} d912pxy_batch_stream_data_entry;
+typedef struct d912pxy_batch_buffer_element {
+	d912pxy_batch_buffer_sub_element texture[8];
+	d912pxy_batch_buffer_sub_element sampler[8];
+	d912pxy_batch_buffer_sub_element vs_vars[256];
+	d912pxy_batch_buffer_sub_element ps_vars[256];
+	d912pxy_batch_buffer_sub_element clipPlane0;
+	d912pxy_batch_buffer_sub_element halfpixelFix;
+	d912pxy_batch_buffer_sub_element ext_tex;
+	d912pxy_batch_buffer_sub_element ext_spl;
+	d912pxy_batch_buffer_sub_element ext_vars[12];
+} d912pxy_batch_buffer_element;
 
 #pragma pack(pop)
 
-class d912pxy_batch : public d912pxy_noncom
+class d912pxy_batch_buffer : public d912pxy_folded_buffer<d912pxy_batch_buffer_element, d912pxy_batch_buffer_sub_element>
 {
 public:
-	d912pxy_batch();
-	~d912pxy_batch();
+	d912pxy_batch_buffer();
+	~d912pxy_batch_buffer();
 
 	void Init();
 	void UnInit();
-
-	UINT NextBatch();
-	UINT GetBatchNum();
-	UINT GetBatchCount();
-
+	
 	void SetShaderConstF(UINT type, UINT start, UINT cnt4, float* data);
+	void GPUWrite(void* src, UINT size, UINT offset);	
 
-	void GPUWrite(void* src, UINT size, UINT offset);
-	void GPUWriteRaw(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);
-	void GPUWriteControl(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn);	
-	void GPUWriteControlMT(UINT64 si, UINT64 of, UINT64 cnt, UINT64 bn, UINT tid);
-	void GPUWriteFinalize(UINT tid, UINT endBatch);	
-	void GPUWriteStart(UINT tid, UINT fromReplay);
-
+	UINT FinishCurrentDraw();
+	
 	void FrameStart();
 	void FrameEnd();
-
-	void GPUCSCpy();
-	void GPUCpy();
-
-	void PreDIPRaw(ID3D12GraphicsCommandList* cl, UINT bid);
-	void PreDIP(ID3D12GraphicsCommandList* cl, UINT bid);
-
-	void ClearShaderVars();
-	   
-private:
-	void InitCopyCS();
-
-	ID3D12GraphicsCommandList* topCl;
-	ID3D12PipelineState* copyPSO;
-	ID3D12RootSignature* copyRS;
-	UINT mtCopyEnabled;
-	UINT rawCopyEnabled;
-				
-	d912pxy_cbuffer* buffer;
-	d912pxy_cbuffer* stream;
-	UINT64 host_buffer_base_ptr;
-	UINT64 gpu_buffer_base_ptr;
-
-	d912pxy_batch_stream_data_entry* streamData;
-	d912pxy_batch_stream_control_entry* streamControl;
 	
-	UINT streamOfDlt[2];
-	UINT32 oddFrame;
-		
-	UINT32 streamIdx;
-	UINT32 batchNum;
-	UINT32 batchCount;
-	UINT32 lastBatchCount;
+	void Bind(ID3D12GraphicsCommandList* cl, UINT batch);
 
-	UINT32 mDataDltRef[PXY_BATCH_GPU_ELEMENT_COUNT];
-	UINT32 mDataDltRefMT[PXY_BATCH_GPU_ELEMENT_COUNT*PXY_INNER_REPLAY_THREADS_MAX];
-	UINT32 mDataDltRefMTTransfer[PXY_BATCH_GPU_ELEMENT_COUNT*PXY_INNER_REPLAY_THREADS_MAX];
-	BYTE stateTransfer[PXY_BATCH_GPU_DRAW_BUFFER_SIZE];	
+	UINT32 GetBatchCount() { return batchNum; };
+	   
+private:								
+	UINT32 batchNum;
 
 	BYTE doNewBatch;
 	BYTE forceNewBatch;
