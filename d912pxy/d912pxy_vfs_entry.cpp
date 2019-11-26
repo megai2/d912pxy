@@ -83,7 +83,7 @@ void d912pxy_vfs_entry::WriteFileH(UINT64 namehash, void * data, UINT64 sz)
 {
 	d912pxy_vfs_pck_chunk* dtCh = (d912pxy_vfs_pck_chunk*)IsPresentH(namehash);
 
-	dtCh = d912pxy_s.vfs.WriteFileToPck(dtCh, m_Id, namehash, data, sz);
+	dtCh = d912pxy_s.vfs.WriteFileToPck(dtCh, m_Id, namehash, data, (UINT)sz);
 
 	chunkTree->SetValue((UINT64)dtCh);
 }

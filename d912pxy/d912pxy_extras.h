@@ -58,10 +58,10 @@ private:
 	
 	//frame limiter & frame time
 
-	UINT64 targetFrameTime;
-	UINT64 targetFrameTimeDelay;
+	INT64 targetFrameTime;
+	INT64 targetFrameTimeDelay;
 	Stopwatch frameTime;
-	UINT64 frTimeMs;
+	INT64 frTimeMs;
 
 	HANDLE waitEvent;
 
