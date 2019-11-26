@@ -56,12 +56,7 @@ typedef struct d912pxy_instance {
 		d912pxy_batch_buffer batch;
 
 		d912pxy_draw_up draw_up;
-
-#ifdef USE_PASSTHRU_REPLAY
-		d912pxy_replay_passthru replay;
-#else
 		d912pxy_replay replay;
-#endif
 
 		struct db {
 			d912pxy_pso_cache pso;

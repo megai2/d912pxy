@@ -77,9 +77,6 @@
     <ClCompile Include="d912pxy_replay.cpp">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_replay_passthru.cpp">
-      <Filter>d3d9_impl\device\iframe\replay</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_replay_thread.cpp">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClCompile>
@@ -248,9 +245,6 @@
     <ClCompile Include="d912pxy_mem_va_table.cpp">
       <Filter>base\memory</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_replay_base.cpp">
-      <Filter>d3d9_impl\device\iframe\replay</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_com_route_default.cpp">
       <Filter>d3d9_proxy\com\routing</Filter>
     </ClCompile>
@@ -349,9 +343,6 @@
       <Filter>d3d9_impl\resource\textures</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_replay.h">
-      <Filter>d3d9_impl\device\iframe\replay</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_replay_passthru.h">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_replay_thread.h">
@@ -527,9 +518,6 @@
     </ClInclude>
     <ClInclude Include="d912pxy_mem_va_table.h">
       <Filter>base\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_replay_base.h">
-      <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_vfs_packer.h">
       <Filter>base\vfs</Filter>

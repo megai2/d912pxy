@@ -172,12 +172,10 @@ void d912pxy_device::InitSingletons()
 {	
 	d912pxy_s.dx12.que.Init(PXY_INNER_MAX_CLEANUPS_PER_SYNC, PXY_INNER_MAX_IFRAME_CLEANUPS, 0);
 
-	if (d912pxy_s.config.GetValueUI64(PXY_CFG_REPLAY_BEHAIVOUR))
-		d912pxy_s.render.replay.Init();
-	else {
-		LOG_ERR_DTDM("This feature is compile time disabled, using 1 thread replay");
-		d912pxy_s.render.replay.Init();
-	}
+	d912pxy_s.render.replay.Init();
+
+	if (!d912pxy_s.config.GetValueUI64(PXY_CFG_REPLAY_BEHAIVOUR))
+		LOG_ERR_DTDM("This feature is no longer available, sorry!");
 
 	d912pxy_s.render.db.shader.Init();
 

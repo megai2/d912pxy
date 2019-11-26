@@ -23,7 +23,6 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
-#include "d912pxy_replay_base.h"
 
 #ifdef _DEBUG
 	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[DbgStackGet()]; it->type = x

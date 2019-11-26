@@ -227,7 +227,7 @@ class d912pxy_replay;
 
 typedef void (d912pxy_replay::*d912pxy_replay_handler_func)(void*, ID3D12GraphicsCommandList* cl, d912pxy_replay_thread_context*);
 
-class d912pxy_replay : public d912pxy_replay_base	
+class d912pxy_replay : public d912pxy_noncom
 {
 public:
 	d912pxy_replay();
