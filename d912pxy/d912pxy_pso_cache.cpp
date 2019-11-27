@@ -587,7 +587,6 @@ UINT d912pxy_pso_cache::Use()
 		dirty = 0;		
 	} 
 
-
 	return 1;
 }
 

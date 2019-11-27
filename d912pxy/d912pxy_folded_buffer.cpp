@@ -40,7 +40,7 @@ void d912pxy_folded_buffer<base_element, sub_element>::Init(UINT maxElements, UI
 	lastElements = 0;
 
 	for (UINT i = 0; i != activeThreads; ++i)
-		unfoldRanges[0].Init(&ctl);
+		unfoldRanges[i].Init(&ctl);
 
 	InitUnfoldCS();
 }
@@ -56,7 +56,7 @@ void d912pxy_folded_buffer<base_element, sub_element>::UnInit()
 	delete unfolded;
 
 	for (UINT i = 0; i != activeThreads; ++i)
-		unfoldRanges[0].UnInit();
+		unfoldRanges[i].UnInit();
 
 	unfoldPSO->Release();
 	unfoldRS->Release();

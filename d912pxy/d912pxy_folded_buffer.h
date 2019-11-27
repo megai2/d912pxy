@@ -184,6 +184,7 @@ public:
 				FinishUnfold(obj->dltRefFirstElement[i], i);
 
 				dltRefs[i] = obj->dltRefs[i];
+				obj->dltRefs[i] = nullptr;
 			}
 		}		
 	}
