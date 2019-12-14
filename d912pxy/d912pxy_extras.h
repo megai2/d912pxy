@@ -40,9 +40,13 @@ public:
 
 	void WaitForTargetFrameTime();
 
+	bool WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 private:
 	void ImGUI_Render_Start();
 	void ImGUI_Render_End();
+	void OnHotkeyTriggered();
+	void DrawOverlay();
 
 	//config state
 
@@ -58,14 +62,33 @@ private:
 	
 	//frame limiter & frame time
 
-	INT64 targetFrameTime;
+	INT64 activeTargetFrameTime;
+	INT64 inactiveTargetFrameTime;
+
 	INT64 targetFrameTimeDelay;
 	Stopwatch frameTime;
 	INT64 frTimeMs;
+	bool gameActive;
 
 	HANDLE waitEvent;
 
 	//fps graph
 
-	d912pxy_ringbuffer<float>* fpsGraphData;
+	struct {
+		d912pxy_ringbuffer<float>* Data;
+		UINT w, h;
+		UINT min, max;
+	} fpsGraph;
+
+	//overlay toggle controls
+	enum overlayShowModeValues {
+		eoverlay_hide = 0,
+		eoverlay_show = 1,
+		eoverlay_edit = 2,
+		eoverlay_modes_count = 3
+	};
+
+	UINT overlayShowMode;
+	bool hkDetected;
+	UINT hkVKeyCode;
 };

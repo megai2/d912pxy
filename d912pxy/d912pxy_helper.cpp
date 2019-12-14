@@ -553,3 +553,16 @@ void d912pxy_helper::SwitchFilePaths(d912pxy_file_path * newFpArray)
 {
 	currentFilePath = newFpArray;
 }
+
+bool d912pxy_helper::IsKeyDown(int vkcode)
+{
+	return (GetKeyState(vkcode) & 0x8000) != 0;
+}
+
+INT64 d912pxy_helper::SafeDiv(INT64 a, INT64 b)
+{
+	if (b)
+		return a / b;
+	else
+		return 0;
+}

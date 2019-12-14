@@ -24,9 +24,12 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_extras::d912pxy_extras()
+d912pxy_extras::d912pxy_extras() : 
+	overlayShowMode(eoverlay_show),
+	hkDetected(false),
+	gameActive(true)
 {
-
+	
 }
 
 d912pxy_extras::~d912pxy_extras()
@@ -38,9 +41,11 @@ void d912pxy_extras::Init()
 {
 	NonCom_Init(L"extras");
 
-	targetFrameTime = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_LIMIT);
-	if (targetFrameTime)
-		targetFrameTime = 1000 / targetFrameTime;
+	activeTargetFrameTime = d912pxy_helper::SafeDiv(1000, d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_LIMIT));
+	inactiveTargetFrameTime = d912pxy_helper::SafeDiv(1000, d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_LIMIT_INACTIVE));
+
+	if (activeTargetFrameTime && !inactiveTargetFrameTime)
+		inactiveTargetFrameTime = activeTargetFrameTime;
 
 	waitEvent = CreateEvent(0, 0, 0, 0);
 
@@ -55,11 +60,19 @@ void d912pxy_extras::Init()
 	bShowFpsGraph = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS_GRAPH);
 
 	if (bShowFpsGraph)
-		fpsGraphData = new d912pxy_ringbuffer<float>(PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0);
+	{
+		fpsGraph.Data = new d912pxy_ringbuffer<float>(PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0);
+		fpsGraph.h = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_H);
+		fpsGraph.w = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_W);
+		fpsGraph.max = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_MAX);
+		fpsGraph.min = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_MIN);
+	}
 
 	bShowTimings = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_TIMINGS);
 	bShowPSOCompileQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE);
 	bShowGCQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_GC_QUE);
+
+	hkVKeyCode = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY);
 
 	//imgui setup
 
@@ -85,14 +98,12 @@ void d912pxy_extras::Init()
 		srvHeap->GetDHeapHandle(srvHeapSlot),
 		srvHeap->GetGPUDHeapHandle(srvHeapSlot)
 	);
-
-
 }
 
 void d912pxy_extras::UnInit()
 {
 	if (bShowFpsGraph)
-		delete fpsGraphData;
+		delete fpsGraph.Data;
 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -110,42 +121,8 @@ static float fps_graph_buffer_transform(void* data, int idx)
 
 void d912pxy_extras::OnPresent()
 {
-	ImGUI_Render_Start();
-	
-	ImGui::Begin("d912pxy overlay");                          // Create a window called "Hello, world!" and append into it.	
-	
-	if (bShowFps)
-		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-	if (bShowTimings)
-	{
-		ImGui::Text("%4.2f ms/frame overhead", syncNexecTime.GetStopTime() / 1000.0f);
-	}
-
-	if (bShowDrawCount)
-	{
-		ImGui::Text("%6u draw batches", d912pxy_s.render.batch.GetBatchCount());		
-	}
-
-	if (bShowGCQue)
-		ImGui::Text("%6u GC", d912pxy_s.thread.cleanup.TotalWatchedItems());
-
-	if (bShowPSOCompileQue)
-		ImGui::Text("%6u PSO", d912pxy_s.render.db.pso.GetCompileQueueLength());
-
-	if (bShowFpsGraph)
-	{
-		if (!fpsGraphData->HaveFreeSpace())
-			fpsGraphData->Next();
-
-		fpsGraphData->WriteElement(1000.0f / frTimeMs);
-
-		ImGui::PlotLines("FPS", &fps_graph_buffer_transform, fpsGraphData, PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0, 0, 0, 80, ImVec2(512, 256));
-	}
-
-	ImGui::End();
-
-	ImGUI_Render_End();
+	if (overlayShowMode != eoverlay_hide)
+		DrawOverlay();
 
 	syncNexecTime.Reset();
 }
@@ -161,6 +138,8 @@ void d912pxy_extras::WaitForTargetFrameTime()
 	frameTime.Reset();
 
 	syncNexecTime.Stop();
+
+	INT64 targetFrameTime = gameActive ? activeTargetFrameTime : inactiveTargetFrameTime;
 
 	if (!targetFrameTime)
 		return;
@@ -188,6 +167,58 @@ void d912pxy_extras::WaitForTargetFrameTime()
 	WaitForSingleObject(waitEvent, (DWORD)targetFrameTimeDelay);
 }
 
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+bool d912pxy_extras::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (msg)
+	{
+		case WM_SYSKEYDOWN:
+		case WM_SYSKEYUP:
+		case WM_KEYUP:
+		case WM_KEYDOWN:
+		{
+			bool extraMod = 
+				//d912pxy_helper::IsKeyDown(VK_SHIFT) &&
+				d912pxy_helper::IsKeyDown(VK_MENU) &&
+				d912pxy_helper::IsKeyDown(VK_CONTROL);
+
+			bool targetKey = d912pxy_helper::IsKeyDown(hkVKeyCode);
+
+			bool hkPressed = extraMod & targetKey;
+			
+			if (hkPressed && !hkDetected)
+			{
+				hkDetected = true;
+
+				return true;
+			}
+			else if (hkDetected && !hkPressed)
+			{
+				hkDetected = false;
+				OnHotkeyTriggered();
+
+				return true;
+			}
+		}
+		break;
+		case WM_SETFOCUS:
+		{
+			gameActive = true;
+		}
+		break;
+		case WM_KILLFOCUS:
+		{
+			gameActive = false;
+		}
+		break;
+	}
+
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+		return true;
+
+	return false;
+}
+
 void d912pxy_extras::ImGUI_Render_Start()
 {
 	ImGui_ImplDX12_NewFrame();
@@ -206,4 +237,49 @@ void d912pxy_extras::ImGUI_Render_End()
 
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cl);
+}
+
+void d912pxy_extras::OnHotkeyTriggered()
+{
+	overlayShowMode = (overlayShowMode + 1) % eoverlay_modes_count;
+}
+
+void d912pxy_extras::DrawOverlay()
+{
+	ImGUI_Render_Start();
+
+	ImGui::Begin("d912pxy overlay", nullptr, (overlayShowMode == eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs));
+
+	if (bShowFps)
+		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+	if (bShowTimings)
+	{
+		ImGui::Text("%4.2f ms/frame overhead", syncNexecTime.GetStopTime() / 1000.0f);
+	}
+
+	if (bShowDrawCount)
+	{
+		ImGui::Text("%6u draw batches", d912pxy_s.render.batch.GetBatchCount());
+	}
+
+	if (bShowGCQue)
+		ImGui::Text("%6u GC", d912pxy_s.thread.cleanup.TotalWatchedItems());
+
+	if (bShowPSOCompileQue)
+		ImGui::Text("%6u PSO", d912pxy_s.render.db.pso.GetCompileQueueLength());
+
+	if (bShowFpsGraph)
+	{
+		if (!fpsGraph.Data->HaveFreeSpace())
+			fpsGraph.Data->Next();
+
+		fpsGraph.Data->WriteElement(1000.0f / frTimeMs);
+
+		ImGui::PlotLines("FPS", &fps_graph_buffer_transform, fpsGraph.Data, PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0, 0, fpsGraph.min, fpsGraph.max, ImVec2(fpsGraph.w, fpsGraph.h));
+	}
+
+	ImGui::End();
+
+	ImGUI_Render_End();
 }

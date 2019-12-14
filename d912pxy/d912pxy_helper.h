@@ -66,4 +66,8 @@ namespace d912pxy_helper {
 	d912pxy_file_path* GetFilePath(d912pxy_file_path_id fpId);	
 
 	void SwitchFilePaths(d912pxy_file_path* newFpArray);
+
+	bool IsKeyDown(int vkcode);
+
+	INT64 SafeDiv(INT64 a, INT64 b);
 }

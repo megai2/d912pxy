@@ -388,10 +388,9 @@ LRESULT d912pxy_swapchain::DXGIWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 	return ret;
 }
 
-extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT d912pxy_swapchain::DXGIWndProc_Extras(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+	if (d912pxy_s.extras.WndProc(hwnd, uMsg, wParam, lParam))
 		return true;
 
 	return DXGIWndProc(hwnd, uMsg, wParam, lParam);

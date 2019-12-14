@@ -80,12 +80,18 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_VFS_WRITE_MASK,
 	PXY_CFG_EXTRAS_ENABLE,
 	PXY_CFG_EXTRAS_FPS_LIMIT,
+	PXY_CFG_EXTRAS_FPS_LIMIT_INACTIVE,
 	PXY_CFG_EXTRAS_SHOW_FPS,
 	PXY_CFG_EXTRAS_SHOW_DRAW_COUNT,
 	PXY_CFG_EXTRAS_SHOW_FPS_GRAPH,
 	PXY_CFG_EXTRAS_SHOW_TIMINGS,
 	PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE,
 	PXY_CFG_EXTRAS_SHOW_GC_QUE,
+	PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY,
+	PXY_CFG_EXTRAS_FPS_GRAPH_MAX,
+	PXY_CFG_EXTRAS_FPS_GRAPH_MIN,
+	PXY_CFG_EXTRAS_FPS_GRAPH_W,
+	PXY_CFG_EXTRAS_FPS_GRAPH_H,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -167,12 +173,18 @@ private:
 		{L"vfs", L"write_mask", L"0"},//PXY_CFG_VFS_WRITE_MASK
 		{L"extras", L"enable", L"0"},//PXY_CFG_EXTRAS_ENABLE
 		{L"extras", L"fps_limit", L"0"},//PXY_CFG_EXTRAS_FPS_LIMIT,
+		{L"extras", L"fps_limit_inactive", L"0"},//PXY_CFG_EXTRAS_FPS_LIMIT_INACTIVE,
 		{L"extras", L"show_fps", L"0"},//PXY_CFG_EXTRAS_SHOW_FPS,
 		{L"extras", L"show_draw_count", L"0"},//PXY_CFG_EXTRAS_SHOW_DRAW_COUNT,
 		{L"extras", L"show_fps_graph", L"0"},//PXY_CFG_EXTRAS_SHOW_FPS_GRAPH,
 		{L"extras", L"show_timings", L"0"},//PXY_CFG_EXTRAS_SHOW_TIMINGS,
 		{L"extras", L"show_pso_compile_que", L"0"},//PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE,
-		{L"extras", L"show_gc_que", L"0"}//PXY_CFG_EXTRAS_SHOW_GC_QUE,
+		{L"extras", L"show_gc_que", L"0"},//PXY_CFG_EXTRAS_SHOW_GC_QUE,
+		{L"extras", L"overlay_toggle_key", L"78"},//PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY
+		{L"extras", L"fps_graph_max", L"80"},//PXY_CFG_EXTRAS_FPS_GRAPH_MAX
+		{L"extras", L"fps_graph_min", L"0"},//PXY_CFG_EXTRAS_FPS_GRAPH_MIN
+		{L"extras", L"fps_graph_w", L"512"},//PXY_CFG_EXTRAS_FPS_GRAPH_W
+		{L"extras", L"fps_graph_h", L"256"}//PXY_CFG_EXTRAS_FPS_GRAPH_H
 	};
 
 };
