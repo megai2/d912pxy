@@ -109,11 +109,7 @@ public:
 		d912pxy_mem_block::allocZero(&dltRefFirstElement, i_subElementsCount);
 	}
 
-	void UnInit()
-	{
-		PXY_FREE(dltRefs);
-		PXY_FREE(dltRefFirstElement);
-	}
+	void UnInit();
 
 	UINT Finish(UINT element, UINT* pStreamIdx)
 	{

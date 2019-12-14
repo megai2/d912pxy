@@ -188,4 +188,11 @@ void d912pxy_folded_buffer<base_element, sub_element>::InitUnfoldCS()
 		PXY_FREE(CScode.code);
 }
 
+template<class base_element, class sub_element>
+inline void d912pxy_folded_buffer_unfold_ranges<base_element, sub_element>::UnInit()
+{
+	PXY_FREE(dltRefs);
+	PXY_FREE(dltRefFirstElement);
+}
+
 template class d912pxy_folded_buffer<d912pxy_batch_buffer_element, d912pxy_batch_buffer_sub_element>;
