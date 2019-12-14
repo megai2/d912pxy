@@ -1278,11 +1278,15 @@ void d912pxy_hlsl_generator::DumpDisassembly()
 	const char* ccloser = "\n*/\n";
 	fwrite(copener, 3, 1, of);
 	ID3DXBuffer * dasm;
-	LOG_ERR_THROW2(DisassembleShader(oCode, &dasm), "shader not decompiled");
-	fwrite(dasm->GetBufferPointer(), 1, dasm->GetBufferSize()-1,of);
-	fwrite(ccloser, 4, 1, of);
-	fflush(of);
-	dasm->Release();
+	if (FAILED(DisassembleShader(oCode, &dasm)))
+	{
+		LOG_DBG_DTDM3("dbg shader not disassembled");
+	} else {
+		fwrite(dasm->GetBufferPointer(), 1, dasm->GetBufferSize() - 1, of);
+		fwrite(ccloser, 4, 1, of);
+		fflush(of);
+		dasm->Release();
+	}
 ////////////////////////	
 }
 
