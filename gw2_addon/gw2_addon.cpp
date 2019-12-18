@@ -28,8 +28,8 @@ gw2al_addon_dsc gAddonDeps[] = {
 gw2al_addon_dsc gAddonDsc = {
 	L"d912pxy",
 	L"DirectX9 to DirectX12 API proxy, designed for performance improvements",
-	1,
-	9,
+	2,
+	0,
 	BUILD_VERSION_REV,
 	gAddonDeps
 };
