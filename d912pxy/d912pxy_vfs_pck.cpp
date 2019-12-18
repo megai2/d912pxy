@@ -230,6 +230,13 @@ UINT d912pxy_vfs_pck::CreateNewPckFile(wchar_t * fn)
 	FreeChunk(headerChunk);
 	FreeChunk(indexChunk);
 
+	//megai2: close and reopen file to make sure that critical data is saved
+	if (!FS_Close())
+		return 0;
+
+	if (!FS_Open(fn))
+		return 0;
+
 	return 1;
 }
 
