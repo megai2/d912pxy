@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2019 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -25,27 +25,43 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-class d912pxy_replay_thread :
-	public d912pxy_thread, public d912pxy_noncom
+class d912pxy_replay_buffer : public d912pxy_noncom
 {
 public:
-	d912pxy_replay_thread(d912pxy_gpu_cmd_list_group iListGrp, char* threadName);
-	~d912pxy_replay_thread();
+	d912pxy_replay_buffer();
+	~d912pxy_replay_buffer();
 
-	void ThreadJob();
+	void Init();
+	void UnInit();
 
-	void ExecItems(UINT items);
+	void Reset();
 
-	void Finish();
-	void ThreadInitProc();
+	d912pxy_replay_item* getCurrentExtern();
+	d912pxy_replay_item* getCurrent();
+	d912pxy_replay_item* getBase();
+	void syncCurrent();
 
-	UINT GetId() { return listGrp - CLG_RP1; };
+	UINT getIndex() { return linearIdx; };
+
+	template<class dataType>
+	void PushAction(d912pxy_replay_item::typeName name, dataType data)
+	{
+		current->Set(name, data);
+		current = current->Next();	
+		++linearIdx;
+
+#ifdef _DEBUG
+		CheckRange();
+#endif
+	}
+
+	void CheckRange();
 
 private:
-	d912pxy_ringbuffer<UINT32>* exchRI;
+	UINT linearIdx;
 
-	d912pxy_gpu_cmd_list_group listGrp;
-
-	d912pxy_thread_lock transitLock;
+	d912pxy_replay_item* base;
+	d912pxy_replay_item* current;
+	d912pxy_replay_item* externCurrent;
+	intptr_t bufferLimit;
 };
-

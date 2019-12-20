@@ -53,6 +53,11 @@ public:
 		return iPtr;
 	}
 
+	void* block_end()
+	{
+		return (void*)((intptr_t)iPtr + iSz);
+	}
+
 	template<class T>
 	static d912pxy_mem_block use(T* ptr)
 	{

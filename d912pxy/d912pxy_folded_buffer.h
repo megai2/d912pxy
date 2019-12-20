@@ -200,7 +200,7 @@ private:
 template<class base_element, class sub_element>
 class d912pxy_folded_buffer : public d912pxy_noncom {
 public:
-	d912pxy_folded_buffer(const UINT subElementsToTransit, const d912pxy_replay_item_type replType) : transitSubElements(subElementsToTransit), replayType(replType) { };
+	d912pxy_folded_buffer(const UINT subElementsToTransit) : transitSubElements(subElementsToTransit) { };
 	~d912pxy_folded_buffer() { };
 
 	class write_info {
@@ -250,5 +250,4 @@ private:
 	D3D12_GPU_VIRTUAL_ADDRESS unfoldedDevPtrBase;
 
 	const UINT transitSubElements;
-	const d912pxy_replay_item_type replayType;
 };

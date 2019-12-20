@@ -76,7 +76,7 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 
 		queryFinished++;
 		frameIdx = g_gpuStack[g_writeStack].count;
-		d912pxy_s.render.replay.QueryMark(this, 1);		
+		d912pxy_s.render.replay.DoQueryMark(this, 1);
 		g_gpuStack[g_writeStack].stack[frameIdx] = this;
 		ThreadRef(1);
 		queryOpened = 1;
@@ -84,7 +84,7 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 	}
 	else {
 		queryOpened = 0;
-		d912pxy_s.render.replay.QueryMark(this, 0);			
+		d912pxy_s.render.replay.DoQueryMark(this, 0);
 	}
 	
 	return D3D_OK;
@@ -182,7 +182,7 @@ void d912pxy_query_occlusion::ForceClose()
 {
 	if (queryOpened)
 	{
-		d912pxy_s.render.replay.QueryMark(this, 0);
+		d912pxy_s.render.replay.DoQueryMark(this, 0);
 	}
 }
 

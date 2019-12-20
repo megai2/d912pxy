@@ -100,7 +100,7 @@ void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT Offse
 	streamBinds[StreamNumber].stride = Stride;
 
 	if (vb)		
-		d912pxy_s.render.replay.VBbind(vb, Stride, StreamNumber, OffsetInBytes);
+		d912pxy_s.render.replay.DoVBbind(vb, Stride, StreamNumber, OffsetInBytes);
 }
 
 void d912pxy_iframe::SetIBuf(d912pxy_vstream* ib)
@@ -108,7 +108,7 @@ void d912pxy_iframe::SetIBuf(d912pxy_vstream* ib)
 	indexBind = ib;	
 
 	if (ib)
-		d912pxy_s.render.replay.IBbind(ib);
+		d912pxy_s.render.replay.DoIBbind(ib);
 }
 
 void d912pxy_iframe::SetIBufIfChanged(d912pxy_vstream * ib)
@@ -213,7 +213,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	d912pxy_s.render.db.pso.Use();
 
-	d912pxy_s.render.replay.DIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
+	d912pxy_s.render.replay.DoDIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
 
 	instanceCount = 1;
 
@@ -290,10 +290,10 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 	if (PrimitiveType != cuPrimType)
 	{
 		cuPrimType = PrimitiveType;
-		d912pxy_s.render.replay.PrimTopo(cuPrimType);
+		d912pxy_s.render.replay.DoPrimTopo(cuPrimType);
 	}
 
-	d912pxy_s.render.replay.DIIP(GetIndexCount(primCount, PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
+	d912pxy_s.render.replay.DoDIIP(GetIndexCount(primCount, PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
 
 	instanceCount = 1;
 
@@ -445,13 +445,13 @@ void d912pxy_iframe::SetViewport(D3D12_VIEWPORT * pViewport)
 	main_scissor.bottom = (UINT)pViewport->Height + (UINT)pViewport->TopLeftY;
 	main_scissor.right = (UINT)pViewport->Width + (UINT)pViewport->TopLeftX;
 
-	d912pxy_s.render.replay.RSViewScissor(main_viewport, main_scissor);
+	d912pxy_s.render.replay.DoRSViewScissor(main_viewport, main_scissor);
 }
 
 void d912pxy_iframe::SetScissors(D3D12_RECT * pRect)
 {
 	main_scissor = *pRect;
-	d912pxy_s.render.replay.RSViewScissor(main_viewport, main_scissor);
+	d912pxy_s.render.replay.DoRSViewScissor(main_viewport, main_scissor);
 }
 
 void d912pxy_iframe::SetViewportIfChanged(D3D12_VIEWPORT * pViewport)
@@ -473,7 +473,7 @@ void d912pxy_iframe::SetScissorsIfChanged(D3D12_RECT * pRect)
 void d912pxy_iframe::RestoreScissor()
 {
 	//megai2: it will work only if app do zero modification to scissor rect when it disabled
-	d912pxy_s.render.replay.RSViewScissor(main_viewport, main_scissor);
+	d912pxy_s.render.replay.DoRSViewScissor(main_viewport, main_scissor);
 }
 
 void d912pxy_iframe::IgnoreScissor()
@@ -484,7 +484,7 @@ void d912pxy_iframe::IgnoreScissor()
 	r.bottom = (UINT)main_viewport.Height + (UINT)main_viewport.TopLeftY;
 	r.right = (UINT)main_viewport.Width + (UINT)main_viewport.TopLeftX;
 
-	d912pxy_s.render.replay.RSViewScissor(main_viewport, r);
+	d912pxy_s.render.replay.DoRSViewScissor(main_viewport, r);
 }
 
 void d912pxy_iframe::SetSwapper(d912pxy_swapchain * iSwp)
@@ -661,7 +661,7 @@ void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
 	if (bindedSurfaces[1])
 	{
 		d912pxy_s.render.db.pso.RTVFormat(bindedSurfaces[1]->GetSRVFormat(), 0);
-		d912pxy_s.render.replay.StateTransit(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
+		d912pxy_s.render.replay.DoBarrier(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
 		bindedRTVcount = 1;
 	}
 	else {
@@ -673,7 +673,7 @@ void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
 	if (bindedSurfaces[0])
 	{
 		d912pxy_s.render.db.pso.DSVFormat(bindedSurfaces[0]->GetDSVFormat());
-		d912pxy_s.render.replay.StateTransit(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		d912pxy_s.render.replay.DoBarrier(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	}
 	else {
 		bindedDSV = 0;
@@ -684,11 +684,11 @@ void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
 	if (!psoOnly)
 	{
 		if (bindedRTV && bindedDSV)
-			d912pxy_s.render.replay.RT(bindedSurfaces[1], bindedSurfaces[0]);
+			d912pxy_s.render.replay.DoRT(bindedSurfaces[1], bindedSurfaces[0]);
 		else if (bindedRTV)
-			d912pxy_s.render.replay.RT(bindedSurfaces[1], 0);
+			d912pxy_s.render.replay.DoRT(bindedSurfaces[1], 0);
 		else if (bindedDSV)
-			d912pxy_s.render.replay.RT(0, bindedSurfaces[0]);
+			d912pxy_s.render.replay.DoRT(0, bindedSurfaces[0]);
 	}
 }
 

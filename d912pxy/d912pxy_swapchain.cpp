@@ -140,7 +140,7 @@ HRESULT d912pxy_swapchain::GetFrontBufferData(IDirect3DSurface9 * pDestSurface)
 
 	d912pxy_surface * dst = d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pDestSurface));
 
-	d912pxy_s.render.replay.StretchRect(backBufferSurface, dst);
+	d912pxy_s.render.replay.DoStretchRect(backBufferSurface, dst);
 
 	dst->CopySurfaceDataToCPU();
 

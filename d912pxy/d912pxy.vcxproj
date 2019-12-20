@@ -361,6 +361,8 @@
     <ClInclude Include="d912pxy_query.h" />
     <ClInclude Include="d912pxy_query_occlusion.h" />
     <ClInclude Include="d912pxy_replay.h" />
+    <ClInclude Include="d912pxy_replay_buffer.h" />
+    <ClInclude Include="d912pxy_replay_item.h" />
     <ClInclude Include="d912pxy_replay_thread.h" />
     <ClInclude Include="d912pxy_resource.h" />
     <ClInclude Include="d912pxy_ringbuffer.h" />
@@ -464,6 +466,9 @@
     <ClCompile Include="d912pxy_query.cpp" />
     <ClCompile Include="d912pxy_query_occlusion.cpp" />
     <ClCompile Include="d912pxy_replay.cpp" />
+    <ClCompile Include="d912pxy_replay_actions.cpp" />
+    <ClCompile Include="d912pxy_replay_buffer.cpp" />
+    <ClCompile Include="d912pxy_replay_handlers.cpp" />
     <ClCompile Include="d912pxy_replay_thread.cpp" />
     <ClCompile Include="d912pxy_resource.cpp" />
     <ClCompile Include="d912pxy_ringbuffer.cpp" />

@@ -296,6 +296,15 @@
     <ClCompile Include="d912pxy_folded_buffer.cpp">
       <Filter>d3d9_impl\device\iframe\batch</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_replay_buffer.cpp">
+      <Filter>d3d9_impl\device\iframe\replay</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_replay_actions.cpp">
+      <Filter>d3d9_impl\device\iframe\replay</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_replay_handlers.cpp">
+      <Filter>d3d9_impl\device\iframe\replay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -578,6 +587,12 @@
     </ClInclude>
     <ClInclude Include="d912pxy_swap_list.h">
       <Filter>base\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_replay_item.h">
+      <Filter>d3d9_impl\device\iframe\replay</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_replay_buffer.h">
+      <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

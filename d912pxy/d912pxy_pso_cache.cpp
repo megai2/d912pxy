@@ -220,12 +220,12 @@ void d912pxy_pso_cache::State(D3DRENDERSTATETYPE State, DWORD Value)
 	case D3DRS_BLENDFACTOR:
 	{
 		DX9RSvalues[State] = Value;
-		d912pxy_s.render.replay.OMBlendFac(TransformBlendFactor(Value).val);				
+		d912pxy_s.render.replay.DoOMBlendFac(TransformBlendFactor(Value).val);
 	}
 	break; //193,   /* D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR */
 	case D3DRS_STENCILREF:
 		DX9RSvalues[State] = Value;
-		d912pxy_s.render.replay.OMStencilRef(Value);		
+		d912pxy_s.render.replay.DoOMStencilRef(Value);
 		break; //57,   /* Reference value used in stencil test */
 	case D3DRS_SCISSORTESTENABLE:
 		DX9RSvalues[State] = Value;
@@ -582,7 +582,7 @@ UINT d912pxy_pso_cache::Use()
 {
 	if (dirty)
 	{
-		d912pxy_s.render.replay.PSORaw(&cDsc);
+		d912pxy_s.render.replay.DoPSORaw(&cDsc);
 
 		dirty = 0;		
 	} 
@@ -594,7 +594,7 @@ UINT d912pxy_pso_cache::UseCompiled(d912pxy_pso_cache_item * it)
 {	
 	if (it)
 	{
-		d912pxy_s.render.replay.PSOCompiled(it);
+		d912pxy_s.render.replay.DoPSOCompiled(it);
 		cCPSO = it;
 
 		dirty = 0;
@@ -614,7 +614,7 @@ UINT d912pxy_pso_cache::UseWithFeedbackPtr(void ** feedback)
 	cDsc.PS->ThreadRef(1);
 	cDsc.InputLayout->ThreadRef(1);*/
 
-	d912pxy_s.render.replay.PSORawFeedback(&cDsc, feedback);
+	d912pxy_s.render.replay.DoPSORawFeedback(&cDsc, feedback);
 
 	//megai2: force dirty to reset PSO to current state data 
 	dirty = 1;	

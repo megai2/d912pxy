@@ -67,7 +67,7 @@ void d912pxy_folded_buffer<base_element, sub_element>::AddWrite(write_info info,
 {
 	data.Push(src, info.i_subCount);
 
-	d912pxy_s.render.replay.GPUW2(replayType, curStreamIdx, info.i_subOffset, info.i_subCount, info.i_element);
+	d912pxy_s.render.replay.DoGPUW(curStreamIdx, info.i_subOffset, info.i_subCount, info.i_element);
 
 	curStreamIdx += info.i_subCount;
 }

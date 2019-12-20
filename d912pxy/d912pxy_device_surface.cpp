@@ -91,7 +91,7 @@ HRESULT d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTarget, ID
 	d912pxy_surface* src = PXY_COM_LOOKUP(pRenderTarget, surface);
 	d912pxy_surface* dst = d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pDestSurface));
 	   
-	d912pxy_s.render.replay.StretchRect(src, dst);
+	d912pxy_s.render.replay.DoStretchRect(src, dst);
 	
 	dst->CopySurfaceDataToCPU();
 
@@ -100,7 +100,7 @@ HRESULT d912pxy_device::GetRenderTargetData(IDirect3DSurface9* pRenderTarget, ID
 
 HRESULT d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
 {	
-	d912pxy_s.render.replay.StretchRect(
+	d912pxy_s.render.replay.DoStretchRect(
 		d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pSourceSurface)),
 		d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pDestSurface))				
 	);
@@ -130,7 +130,7 @@ HRESULT d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D
 		d912pxy_surface* surf = d912pxy_s.render.iframe.GetBindedSurface(1);
 
 		if (surf)
-			d912pxy_s.render.replay.RTClear(surf, fvColor, d912pxy_s.render.iframe.GetViewport());
+			d912pxy_s.render.replay.DoRTClear(surf, fvColor, d912pxy_s.render.iframe.GetViewport());
 	}
 
 	if (Flags & (D3DCLEAR_STENCIL | D3DCLEAR_ZBUFFER))
@@ -140,7 +140,7 @@ HRESULT d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D
 		d912pxy_surface* surf = d912pxy_s.render.iframe.GetBindedSurface(0);
 
 		if (surf)
-			d912pxy_s.render.replay.DSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf, d912pxy_s.render.iframe.GetViewport());
+			d912pxy_s.render.replay.DoDSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf, d912pxy_s.render.iframe.GetViewport());
 	}
 
 	return D3D_OK;
@@ -154,7 +154,7 @@ HRESULT d912pxy_device::UpdateSurface(IDirect3DSurface9* pSourceSurface, CONST R
 	d912pxy_surface* src = d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pSourceSurface));
 	d912pxy_surface* dst = d912pxy_surface::CorrectLayerRepresent(PXY_COM_CAST(d912pxy_com_object, pDestinationSurface));
 
-	d912pxy_s.render.replay.StretchRect(src, dst);
+	d912pxy_s.render.replay.DoStretchRect(src, dst);
 
 	return D3D_OK;
 }
@@ -164,7 +164,7 @@ HRESULT d912pxy_device::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDi
 	d912pxy_surface* src = PXY_COM_CAST(d912pxy_com_object, pSourceTexture)->basetex.GetBaseSurface();
 	d912pxy_surface* dst = PXY_COM_CAST(d912pxy_com_object, pDestinationTexture)->basetex.GetBaseSurface();
 
-	d912pxy_s.render.replay.StretchRect(src, dst);
+	d912pxy_s.render.replay.DoStretchRect(src, dst);
 
 	return D3D_OK;
 }

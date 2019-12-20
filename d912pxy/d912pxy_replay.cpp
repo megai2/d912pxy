@@ -24,16 +24,6 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-#ifdef _DEBUG
-	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[DbgStackGet()]; it->type = x
-	#define REPLAY_STACK_INCREMENT DbgStackIncrement()
-	#define REPLAY_STACK_IGNORE return DbgStackIgnore()
-#else
-	#define REPLAY_STACK_GET(x) d912pxy_replay_item* it = &stack[stackTop]; it->type = x	
-	#define REPLAY_STACK_INCREMENT ++stackTop
-	#define REPLAY_STACK_IGNORE return 0
-#endif
-
 d912pxy_replay::d912pxy_replay() 
 {
 
@@ -46,14 +36,8 @@ d912pxy_replay::~d912pxy_replay()
 void d912pxy_replay::Init()
 {
 	NonCom_Init(L"replay mt");
-	
-	stack = 0;
-	
-	maxReplayItems = PXY_INNER_MAX_IFRAME_BATCH_COUNT * d912pxy_s.config.GetValueUI32(PXY_CFG_REPLAY_ITEMS_PER_BATCH);
+	buffer.Init();	
 
-	PXY_MALLOC(stack, (sizeof(d912pxy_replay_item)*maxReplayItems), d912pxy_replay_item*);
-
-	stackTop = 0;
 	stopMarker = 0;
 
 	numThreads = d912pxy_s.config.GetValueUI32(PXY_CFG_REPLAY_THREADS);
@@ -66,12 +50,9 @@ void d912pxy_replay::Init()
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_RAW_GPUW))
 	{
-		LOG_WARN_DTDM("Raw gpu write is removed from code due cuz it is useless, delta batching used");
+		LOG_WARN_DTDM("Raw gpu write is removed from code cuz it is useless, delta batching used");
 	}
 	
-	replay_handlers[DRPL_DIIP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DIIP;
-	replay_handlers[DRPL_GPUW] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_GPUW;
-
 	d912pxy_s.dev.AddActiveThreads(numThreads);
 
 	for (int i = 0; i != numThreads; ++i)
@@ -84,400 +65,152 @@ void d912pxy_replay::Init()
 		d912pxy_s.dx12.que.EnableGID(clg, PXY_INNER_CLG_PRIO_REPLAY + i);
 
 		threads[i] = new d912pxy_replay_thread(clg, thrdName);
-
-		transitData[i].saved = 0;
 	}
 
-	ReRangeThreads(maxReplayItems);
+	ReRangeThreads(0);
 
 	for (int i = 0; i != numThreads; ++i)
 		threads[i]->Resume();
 
-	replay_handlers[DRPL_TRAN] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_TRAN;
-	replay_handlers[DRPL_OMSR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMSR;
-	replay_handlers[DRPL_OMBF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMBF;
-	replay_handlers[DRPL_RSVP] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RSVP;
-	replay_handlers[DRPL_RSSR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RSSR;
-	replay_handlers[DRPL_OMRT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_OMRT;
-	replay_handlers[DRPL_IFVB] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_IFVB;
-	replay_handlers[DRPL_IFIB] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_IFIB;
-	replay_handlers[DRPL_RCLR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RCLR;
-	replay_handlers[DRPL_DCLR] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_DCLR;
-	replay_handlers[DRPL_RPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSO;
-	replay_handlers[DRPL_RPSF] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RPSF;
-	replay_handlers[DRPL_CPSO] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_CPSO;
-	replay_handlers[DRPL_RECT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_RECT;
-	replay_handlers[DRPL_PRMT] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_PRMT;
-	replay_handlers[DRPL_QUMA] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_QUMA;
-
+#define RHA_ASSIGN(a) replay_handlers[(UINT)d912pxy_replay_item::typeName::a] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_##a
+	RHA_ASSIGN(barrier);
+	RHA_ASSIGN(om_stencilref);
+	RHA_ASSIGN(om_blendfactor);
+	RHA_ASSIGN(view_scissor);
+	RHA_ASSIGN(draw_indexed);
+	RHA_ASSIGN(om_render_targets);
+	RHA_ASSIGN(vbuf_bind);
+	RHA_ASSIGN(ibuf_bind);
+	RHA_ASSIGN(clear_rt);
+	RHA_ASSIGN(clear_ds);
+	RHA_ASSIGN(pso_raw);
+	RHA_ASSIGN(pso_raw_feedback);
+	RHA_ASSIGN(pso_compiled);
+	RHA_ASSIGN(rect_copy);
+	RHA_ASSIGN(gpu_write_ctl);
+	RHA_ASSIGN(ia_prim_topo);
+	RHA_ASSIGN(query_mark);
+#undef RHA_ASSIGN
 	
-}
-
-UINT d912pxy_replay::StateTransit(d912pxy_resource * res, D3D12_RESOURCE_STATES to)
-{
-	REPLAY_STACK_GET(DRPL_TRAN);
-
-	D3D12_RESOURCE_STATES cstate = res->GetCurrentState();
-
-	if (to == cstate)
-		REPLAY_STACK_IGNORE;
-
-	it->transit.res = res;
-	it->transit.to = to;
-	it->transit.from = cstate;
-
-	res->ATransit(to);
-
-	REPLAY_STACK_INCREMENT;
-
-	return 1;
-}
-
-void d912pxy_replay::PSOCompiled(d912pxy_pso_cache_item * dsc)
-{
-	REPLAY_STACK_GET(DRPL_CPSO);
-
-	it->compiledPso.psoItem = dsc;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::PSORaw(d912pxy_trimmed_dx12_pso * dsc)
-{
-	REPLAY_STACK_GET(DRPL_RPSO);
-
-	it->rawPso.rawState = *dsc;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::PSORawFeedback(d912pxy_trimmed_dx12_pso * dsc, void ** ptr)
-{
-	REPLAY_STACK_GET(DRPL_RPSF);
-
-	it->rawPsoFeedback.rawState = *dsc;
-	it->rawPsoFeedback.feedbackPtr = ptr;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::OMStencilRef(DWORD ref)
-{
-	REPLAY_STACK_GET(DRPL_OMSR);
-
-	it->omsr.dRef = ref;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::OMBlendFac(float * color)
-{
-	REPLAY_STACK_GET(DRPL_OMBF);
-
-	it->ombf.color[0] = color[0];
-	it->ombf.color[1] = color[1];
-	it->ombf.color[2] = color[2];
-	it->ombf.color[3] = color[3];
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::RSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor)
-{
-	REPLAY_STACK_GET(DRPL_RSVP);
-
-	it->rs.scissor = scissor;
-	it->rs.viewport = viewport;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::DIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation, UINT batchId)
-{
-	REPLAY_STACK_GET(DRPL_DIIP);
-
-	it->dip.IndexCountPerInstance = IndexCountPerInstance;
-	it->dip.InstanceCount = InstanceCount;
-	it->dip.StartIndexLocation = StartIndexLocation;
-	it->dip.BaseVertexLocation = BaseVertexLocation;
-	it->dip.StartInstanceLocation = StartInstanceLocation;
-	it->dip.batchId = batchId;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::RT(d912pxy_surface * rtv, d912pxy_surface * dsv)
-{
-	REPLAY_STACK_GET(DRPL_OMRT);
-
-	it->rt.dsv = dsv;
-	it->rt.rtv = rtv;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::VBbind(d912pxy_vstream * buf, UINT stride, UINT slot, UINT offset)
-{
-	REPLAY_STACK_GET(DRPL_IFVB);
-
-	it->vb.buf = buf;
-	it->vb.stride = stride;
-	it->vb.slot = slot;
-	it->vb.offset = offset;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::IBbind(d912pxy_vstream * buf)
-{
-	REPLAY_STACK_GET(DRPL_IFIB);
-
-	it->ib.buf = buf;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::StretchRect(d912pxy_surface * src, d912pxy_surface * dst)
-{
-	REPLAY_STACK_GET(DRPL_RECT);
-
-	it->srect.src = src;
-	it->srect.dst = dst;
-	it->srect.prevS = src->GetCurrentState();
-	it->srect.prevD = dst->GetCurrentState();
-	
-	REPLAY_STACK_INCREMENT;	
-}
-
-void d912pxy_replay::GPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
-{
-	REPLAY_STACK_GET(DRPL_GPUW);
-
-	it->gpuw_ctl.bn = bn;
-	it->gpuw_ctl.size = cnt;
-	it->gpuw_ctl.offset = of;
-	it->gpuw_ctl.streamIdx = si;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::GPUW2(d912pxy_replay_item_type ev, UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn)
-{
-	REPLAY_STACK_GET(ev);
-
-	it->gpuw_ctl.bn = bn;
-	it->gpuw_ctl.size = cnt;
-	it->gpuw_ctl.offset = of;
-	it->gpuw_ctl.streamIdx = si;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::QueryMark(d912pxy_query * va, UINT start)
-{
-	REPLAY_STACK_GET(DRPL_QUMA);
-
-	it->queryMark.obj = va;
-	it->queryMark.start = start;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::PrimTopo(D3DPRIMITIVETYPE primType)
-{
-	REPLAY_STACK_GET(DRPL_PRMT);
-
-	it->topo.newTopo = primType;
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::RTClear(d912pxy_surface * tgt, float * clr, D3D12_VIEWPORT* currentVWP)
-{
-	REPLAY_STACK_GET(DRPL_RCLR);
-
-	it->clrRt.clr[0] = clr[3];
-	it->clrRt.clr[1] = clr[2];
-	it->clrRt.clr[2] = clr[1];
-	it->clrRt.clr[3] = clr[0];
-	it->clrRt.tgt = tgt;
-	it->clrRt.cuState = tgt->GetCurrentState();
-
-	it->clrRt.clearRect.left = (LONG)currentVWP->TopLeftX;
-	it->clrRt.clearRect.top = (LONG)currentVWP->TopLeftY;
-	it->clrRt.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
-	it->clrRt.clearRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
-
-	REPLAY_STACK_INCREMENT;
-}
-
-void d912pxy_replay::DSClear(d912pxy_surface * tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP)
-{
-	REPLAY_STACK_GET(DRPL_DCLR);
-
-	it->clrDs.depth = depth;
-	it->clrDs.flag = flag;
-	it->clrDs.stencil = stencil;
-	it->clrDs.tgt = tgt;
-	it->clrDs.cuState = tgt->GetCurrentState();
-
-	it->clrDs.clearRect.left = (LONG)currentVWP->TopLeftX;
-	it->clrDs.clearRect.top = (LONG)currentVWP->TopLeftY;
-	it->clrDs.clearRect.right = (LONG)(currentVWP->TopLeftX + currentVWP->Width);
-	it->clrDs.clearRect.bottom = (LONG)(currentVWP->TopLeftY + currentVWP->Height);
-
-	REPLAY_STACK_INCREMENT;	
 }
 
 void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
 {	
-	(this->*replay_handlers[it->type])(&it->ptr, cl, context);
+	(this->*replay_handlers[(UINT)it->GetTypeName()])(it->GetData<void*>(), cl, context);
 }
 
-void d912pxy_replay::Replay(UINT start, UINT end, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd)
+void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread* thrd)
 {
-	LOG_DBG_DTDM2("replay range [%u , %u, %u]", start, end, stackTop);
-	
-	UINT i = start;		
-	UINT maxRI = 0;
-
+	LOG_DBG_DTDM2("replay %u items", items);
+		
 	d912pxy_replay_thread_context context;
 	context.pso = 0;
 	context.tid = thrd->GetId();
 
-	//megai2: wait for actual stack to be filled	
-	maxRI = WaitForData(i, maxRI, end, thrd);
-
-	if (!maxRI)
-		return;
-
-	PIXBeginEvent(cl, 0x88888888, "RP%u", thrd->GetId());
-
-	if (start > 0)
+	d912pxy_replay_item* item_iter;
+	//megai2: wait for actual data
+	if (context.tid > 0)
 	{		
-		PIXBeginEvent(cl, 0x88888888, "RPT%u", thrd->GetId());
-		TransitCLState(cl, start, thrd->GetId(), &context);
-		PIXEndEvent(cl);
+		auto transit = &transitData[context.tid];
+
+		while (!transit->IsSaved())
+		{
+			if (!WaitForWake(thrd))
+				return;
+		}
+		transit->Apply(cl, &context);
+
+		item_iter = transit->GetBaseItem();
+	}
+	else 
+	{
+		item_iter = buffer.getBase();
 	}
 
-	PIXBeginEvent(cl, 0x88888888, "OMRT");
-	PIXBeginEvent(cl, 0x88888888, "B");
+	d912pxy_replay_item* item_end = item_iter;
 	
 	//execute operations
-	while (i != end)
+	while (items)
 	{
-		while (i < maxRI)
+		while (item_iter < item_end)
 		{
-			LOG_DBG_DTDM("RP TY %u %s", i, d912pxy_replay_item_type_dsc[stack[i].type]);
+			LOG_DBG_DTDM("RP TY %s", item_iter->GetTypeNameStr());
 
-			PlayId(&stack[i], cl, &context);
+			PlayId(item_iter, cl, &context);
 
-#ifdef _DEBUG
-			if (stack[i].type == DRPL_DIIP)
-			{
-				PIXEndEvent(cl);
-				PIXBeginEvent(cl, 0x88888888, "B%u", stack[i].dip.batchId);
-			}
-			else if (stack[i].type == DRPL_OMRT)
-			{
-				PIXEndEvent(cl);
-				PIXEndEvent(cl);
-				PIXBeginEvent(cl, 0x88888888, "OMRT");
-				PIXBeginEvent(cl, 0x88888888, "B");
-			}
-#endif
-			++i;
+			item_iter = item_iter->Next();
+
+			--items;		
 		}
 		
-		maxRI = WaitForData(i, maxRI, end, thrd);			
+		item_end = WaitForData(item_iter, thrd);			
 
-		if (!maxRI)
+		if (!item_end)
 		{
-			PIXEndEvent(cl);
 			return;
 		}
 	}
 
 	//megai2: unlock thread only when stopMarker is set
-	while (!InterlockedAdd(&stopMarker, 0))	
-		thrd->WaitForJob();	
-
-	PIXEndEvent(cl);
+	while (!WaitForWake(thrd))
+		;	
 }
 
-UINT d912pxy_replay::WaitForData(UINT idx, UINT maxRI, UINT end, d912pxy_replay_thread * thrd)
+d912pxy_replay_item* d912pxy_replay::WaitForData(d912pxy_replay_item* from, d912pxy_replay_thread * thrd)
 {	
-	while (idx >= maxRI)
+	d912pxy_replay_item* ret = buffer.getCurrentExtern();
+	while (ret <= from)
 	{
-		maxRI = GetStackTop();
-		if (InterlockedAdd(&stopMarker, 0))
-		{			
-			//megai2: be sure to have the last one value
-			maxRI = GetStackTop();
-			if (idx >= maxRI)
-				return 0;
-			else
-				break;
-		}		
-		PIXBeginEvent(0xAA0000, "rp thread wait");
-		thrd->WaitForJob();
-		PIXEndEvent();
+		if (WaitForWake(thrd))
+		{
+			ret = buffer.getCurrentExtern();
+		}
+		else
+			return nullptr;
 	}
 
-	if (maxRI > end)
-		maxRI = end;
+	return ret;
+}
 
-	return maxRI;
+bool d912pxy_replay::WaitForWake(d912pxy_replay_thread* thrd)
+{
+	if (InterlockedAdd(&stopMarker, 0))
+		return false;
+
+	thrd->WaitForJob();
+
+	return true;
 }
 
 void d912pxy_replay::Finish()
 {
-#ifdef ENABLE_METRICS
-	d912pxy_s.log.metrics.TrackReplayItems(stackTop);
-#endif
+	buffer.CheckRange();
+	buffer.syncCurrent();
 
-	if (stackTop >= maxReplayItems)
-	{
-		LOG_ERR_THROW2(-1, "too many replay items");
-	}
-	
-	SyncStackTop();
 	InterlockedIncrement(&stopMarker);	
 	
 	for (int i = 0; i != numThreads; ++i)
 		threads[i]->Finish();	
 
-	LOG_DBG_DTDM("FSTK %u", stackTop);
-
-	ReRangeThreads((UINT32)stackTop);
+	ReRangeThreads(buffer.getIndex());
 }
 
 void d912pxy_replay::IssueWork(UINT batch)
 {
-	if (stackTop > switchPoint)
+	if (buffer.getIndex() > switchPoint)
 	{	
-		SyncStackTop();
+		buffer.syncCurrent();
 
-		//megai2: skip workers if they don't have DIIP calls and transit state to proper one
-		while (stackTop > rangeEnds[cWorker + 1])
-		{
-			//megai2: wake threads so they do their job
-			threads[cWorker]->SignalWork();
-			++cWorker;
-		}
-
-		SaveCLState(cWorker+1);
-
+		transitData[cWorker + 1].Gather(buffer.getCurrent());
 		threads[cWorker]->SignalWork();
-		
+	
 		++cWorker;
-		switchPoint = rangeEnds[cWorker];	
-				
+		switchPoint = rangeEnds[cWorker];				
 		threads[cWorker]->SignalWork();
 		
 	}
 	else if ((batch % PXY_WAKE_FACTOR_REPLAY) == 0) {
-		SyncStackTop();
+		buffer.syncCurrent();
 		threads[cWorker]->SignalWork();
 	}
 }
@@ -494,12 +227,10 @@ void d912pxy_replay::ReRangeThreads(UINT maxRange)
 		rangeEnds[i] = switchRange * (i + 1);
 
 		if (i == (numThreads - 1))
-			rangeEnds[i] = maxReplayItems;		
+			rangeEnds[i] = 0xFFFFFFFF;		
 
-		threads[i]->ExecRange(switchRange * i, rangeEnds[i]);
+		threads[i]->ExecItems(rangeEnds[i] - switchRange * i);
 	}
-
-	//threads[0]->ExecRange(0, rangeEnds[0]);
 
 	switchPoint = rangeEnds[0];
 	cWorker = 0;
@@ -514,30 +245,16 @@ void d912pxy_replay::Free()
 		delete threads[i];
 	}
 
-	PXY_FREE(stack);
-
-	this->~d912pxy_replay();
-}
-
-UINT d912pxy_replay::GetStackTop()
-{
-	return InterlockedAdd(&stackTopMT, 0);
-}
-
-void d912pxy_replay::SyncStackTop()
-{
-	InterlockedExchange(&stackTopMT, stackTop);
+	buffer.UnInit();
+	
+	d912pxy_noncom::UnInit();
 }
 
 void d912pxy_replay::Start()
 {
 	LOG_DBG_DTDM("RP START");
 
-	stackTop = 0;
-	lastBFactorStk = -1;
-	lastSRefStk = -1;
-
-	SyncStackTop();
+	buffer.Reset();
 
 	InterlockedDecrement(&stopMarker);
 }
@@ -546,549 +263,92 @@ void d912pxy_replay::IFrameStart()
 {
 }
 
-d912pxy_replay_item * d912pxy_replay::BacktraceItemType(d912pxy_replay_item_type type, UINT depth, UINT base)
+void d912pxy_replay::thread_transit_data::Reset()
 {
-	if (stackTop == 0)
-		return nullptr;
-
-	for (int i = base - 1; i >= 0; --i)
-	{
-		if (stack[i].type == type)
-		{
-			if (!depth)
-			{
-				return &stack[i];
-			}
-			else
-				--depth;
-		}
-	}
-
-	return nullptr;
+	saved.SetValue(0);
 }
 
-d912pxy_replay_item * d912pxy_replay::FindItemType(d912pxy_replay_item_type type, UINT depth, UINT base, UINT endpoint)
+void d912pxy_replay::thread_transit_data::Gather(d912pxy_replay_item* threadStartingItem)
 {
-	if (stackTop == 0)
-		return nullptr;
+	bfacVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
+	srefVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
-	for (int i = base; i != endpoint; ++i)
-	{
-		if (stack[i].type == type)
-		{
-			if (!depth)
-			{
-				return &stack[i];
-			}
-			else
-				--depth;
-		}
-	}
+	surfBind[0] = d912pxy_s.render.iframe.GetBindedSurface(0);
+	surfBind[1] = d912pxy_s.render.iframe.GetBindedSurface(1);
 
-	return nullptr;
-}
+	indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
-UINT d912pxy_replay::FindItemIdType(d912pxy_replay_item_type type, UINT depth, UINT base, UINT endpoint)
-{
-	if (stackTop == 0)
-		return -1;
-
-	for (int i = base; i != endpoint; ++i)
-	{
-		if (stack[i].type == type)
-		{
-			if (!depth)
-			{
-				return i;
-			}
-			else
-				--depth;
-		}
-	}	
-
-	return -1;
-}
-
-
-
-void d912pxy_replay::TransitBacktrace(d912pxy_replay_item_type type, UINT depth, ID3D12GraphicsCommandList* cl, UINT base, d912pxy_replay_thread_context* context)
-{
-	d912pxy_replay_item * it = BacktraceItemType(type, depth, base);
-
-	if (it)
-		PlayId(it, cl, context);
-}
-
-void d912pxy_replay::SaveCLState(UINT thread)
-{
-	d912pxy_replay_thread_transit_data* trd = &transitData[thread];
-
-	trd->bfacVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
-	trd->srefVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF);
-
-	trd->surfBind[0] = d912pxy_s.render.iframe.GetBindedSurface(0);
-	trd->surfBind[1] = d912pxy_s.render.iframe.GetBindedSurface(1);
-
-	trd->indexBuf = d912pxy_s.render.iframe.GetIBuf();
-
-	trd->activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
-	trd->scissorEnabled = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
-
-	for (int i = 0; i!= PXY_INNER_MAX_VBUF_STREAMS;++i)
-		trd->streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
-
-	trd->pso = *d912pxy_s.render.db.pso.GetCurrentDsc();
-
-	trd->main_viewport = *d912pxy_s.render.iframe.GetViewport();
-	trd->main_scissor = *d912pxy_s.render.iframe.GetScissorRect();
-
-	trd->primType = d912pxy_s.render.iframe.GetCurrentPrimType();
-
-	trd->saved = 1;
-
-#ifdef _DEBUG
-	trd->base = stackTop-1;
-#endif
-	
-
-	trd->cpso = d912pxy_s.render.db.pso.GetCurrentCPSO();
-}
-
-#ifdef _DEBUG
-
-UINT d912pxy_replay::DbgStackGet()
-{
-	if (!simThreadAcc.TryHold())
-	{
-		LOG_ERR_THROW2(-1, "replay stack mt corruption");
-	}
-
-	return stackTop;
-}
-
-void d912pxy_replay::DbgStackIncrement()
-{
-	++stackTop;
-	simThreadAcc.Release();	
-}
-
-UINT d912pxy_replay::DbgStackIgnore()
-{
-	simThreadAcc.Release();
-	return 0;
-}
-
-#endif 
-
-void d912pxy_replay::TransitCLState(ID3D12GraphicsCommandList * cl, UINT base, UINT thread, d912pxy_replay_thread_context* context)
-{
-	d912pxy_replay_thread_transit_data* trd = &transitData[thread];
-
-	if (!trd->saved)
-	{
-		LOG_DBG_DTDM2("zero transition CL %u", thread);
-		return;
-	}
-
-#ifdef _DEBUG
-	{
-		if (base > trd->base)
-		{
-			LOG_ERR_DTDM("thread ranges broken! transit save item = %u ; threadStart = %u", rangeEnds[thread - 1], base);
-		}
-		
-		UINT syncBase = FindItemIdType(DRPL_DIIP, 0, base, stackTopMT);
-
-		if (syncBase == -1)
-			syncBase = base;
-		else {
-			if (trd->base != syncBase)
-			{
-				LOG_ERR_DTDM("CL %u transit base item %u but first DIIP item after base %u index is at %u", thread, trd->base, base, syncBase);
-			}							
-		}
-			
-
-		d912pxy_replay_item* btItem = BacktraceItemType(DRPL_OMRT, 0, syncBase);
-
-		if (!btItem)
-		{
-			LOG_ERR_DTDM("OMRT bt fail on CL %u", thread);
-		}
-		else {												
-
-			if (btItem->rt.dsv != trd->surfBind[0])
-			{				
-				LOG_ERR_DTDM("CL %u transit rt.dsv mismatched %016llX != %016llX", thread, btItem->rt.dsv, trd->surfBind[0]);
-			}
-
-			if (btItem->rt.rtv != trd->surfBind[1])
-			{
-				LOG_ERR_DTDM("CL %u transit rt.rtv mismatched %016llX != %016llX", thread, btItem->rt.rtv, trd->surfBind[1]);
-			}
-		}
-
-
-		if (trd->indexBuf)
-		{
-			btItem = BacktraceItemType(DRPL_IFIB, 0, syncBase);
-
-			if (!btItem)
-			{
-				LOG_ERR_DTDM("IFIB bt fail on CL %u", thread);
-			}
-
-			if (btItem->ib.buf != trd->indexBuf)
-			{
-				LOG_ERR_DTDM("CL %u transit ib.buf mismatched %016llX != %016llX", thread, btItem->ib.buf, trd->indexBuf);
-			}
-		}
-
-		UINT trdAStreams = 0;
-
-		for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
-		{
-			if (!trd->streams[i].buffer)
-				continue;
-
-			++trdAStreams;				
-		}
-
-		if (trdAStreams != trd->activeStreams)
-		{
-			LOG_ERR_DTDM("CL %u transit active streams miscalculation %u != %u", thread, trdAStreams, trd->activeStreams);
-		}
-		
-		for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
-		{
-			UINT btDepth = 0;
-		btNextIFVB:
-			btItem = BacktraceItemType(DRPL_IFVB, btDepth, syncBase);
-
-			if (!btItem)
-			{
-				if (trd->streams[i].buffer)
-					LOG_ERR_DTDM("CL %u trd have stream %u but bt not found it even at depth %u", thread, i, btDepth);
-				else
-					continue;
-			}
-
-			if (btItem->vb.slot != i)
-			{
-				++btDepth;
-				goto btNextIFVB;
-			}
-
-			//megai2: iframe does not call replay if api sets null buffer
-			if (!trd->streams[i].buffer)
-				continue;
-
-
-			if (btItem->vb.buf != trd->streams[i].buffer)
-			{
-				LOG_ERR_DTDM("CL %u transit vb[%u].buf mismatched %016llX != %016llX", thread, i, btItem->vb.buf, trd->streams[i].buffer);
-			}
-
-			if (btItem->vb.offset != trd->streams[i].offset)
-			{
-				LOG_ERR_DTDM("CL %u transit vb[%u].offset mismatched %08lX != %08lX", thread, i, btItem->vb.offset, trd->streams[i].offset);
-			}
-
-			if (btItem->vb.stride != trd->streams[i].stride)
-			{
-				LOG_ERR_DTDM("CL %u transit vb[%u].stride mismatched %08lX != %08lX", thread, i, btItem->vb.stride, trd->streams[i].stride);
-			}
-		}
-
-		btItem = BacktraceItemType(DRPL_OMSR, 0, syncBase);
-
-		if (btItem->omsr.dRef != trd->srefVal)
-		{
-			LOG_ERR_DTDM("CL %u transit omsr.dRef mismatched %08lX != %08lX", thread, btItem->omsr.dRef, trd->srefVal);
-		}		
-
-		btItem = BacktraceItemType(DRPL_OMBF, 0, syncBase);
-		fv4Color bfColor = d912pxy_s.render.db.pso.TransformBlendFactor(trd->bfacVal);
-
-		if (memcmp(&btItem->ombf.color, &bfColor, 4 * 4) != 0)
-		{
-			LOG_ERR_DTDM("CL %u transit ombf.color mismatched", thread);
-		}		
-
-		btItem = BacktraceItemType(DRPL_PRMT, 0, syncBase);
-
-		if (btItem)
-		{
-			if (btItem->topo.newTopo != trd->primType)
-			{
-				LOG_ERR_DTDM("CL %u transit topo.newTopo mismatched %u != %u", thread, btItem->topo.newTopo, trd->primType);
-			}
-		}
-		else {
-			if (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST != trd->primType)
-			{
-				LOG_ERR_DTDM("CL %u transit topo.newTopo is %u but not trianglelist while it should be it", thread, trd->primType);
-			}
-		}
-	}
-
-#endif
-
-	d912pxy_replay_item surfBind;
-	surfBind.type = DRPL_OMRT;
-	surfBind.rt.dsv = trd->surfBind[0];
-	surfBind.rt.rtv = trd->surfBind[1];
-	PlayId(&surfBind, cl, context);
-
-	d912pxy_replay_item streamBind;
-	streamBind.type = DRPL_IFVB;
+	activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
+	scissorEnabled = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
 
 	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
-	{		
-		if (!trd->streams[i].buffer)
+		streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
+
+	pso = *d912pxy_s.render.db.pso.GetCurrentDsc();
+
+	main_viewport = *d912pxy_s.render.iframe.GetViewport();
+	main_scissor = *d912pxy_s.render.iframe.GetScissorRect();
+
+	primType = d912pxy_s.render.iframe.GetCurrentPrimType();
+	cpso = d912pxy_s.render.db.pso.GetCurrentCPSO();	
+	startPoint = threadStartingItem;
+	
+	saved.SetValue(1);
+}
+
+bool d912pxy_replay::thread_transit_data::Apply(ID3D12GraphicsCommandList* cl, d912pxy_replay_thread_context* context)
+{
+	if (!saved.GetValue())
+		return false;
+
+	d912pxy_replay_item item;
+
+#define ITEM_TRANSIT(a,b) \
+	item.Set( \
+		d912pxy_replay_item::typeName::a, \
+		d912pxy_replay_item::dt_##a b \
+	); \
+	d912pxy_s.render.replay.PlayId(&item, cl, context) \
+
+	ITEM_TRANSIT(om_render_targets, ({ surfBind[0], surfBind[1] }));	
+
+	for (UINT i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
+	{
+		if (!streams[i].buffer)
 			continue;
 
-		streamBind.vb.buf = trd->streams[i].buffer;
-		streamBind.vb.offset = trd->streams[i].offset;
-		streamBind.vb.slot = i;
-		streamBind.vb.stride = trd->streams[i].stride;
-		
-		PlayId(&streamBind, cl, context);
+		ITEM_TRANSIT(vbuf_bind, ({ streams[i].buffer, streams[i].stride, i, streams[i].offset }));
 	}
 
-	
-	if (trd->indexBuf)
+	if (indexBuf)
 	{
-		streamBind.type = DRPL_IFIB;
-		streamBind.ib.buf = trd->indexBuf;
-		PlayId(&streamBind, cl, context);
+		ITEM_TRANSIT(ibuf_bind, ({ indexBuf }));
 	}
 
-	d912pxy_replay_item sbVal;
+	ITEM_TRANSIT(om_stencilref, ({ srefVal }));
 
-	sbVal.type = DRPL_OMSR;
-	sbVal.omsr.dRef = trd->srefVal;
+	fv4Color bfColor = d912pxy_s.render.db.pso.TransformBlendFactor(bfacVal);
+	ITEM_TRANSIT(om_blendfactor, ({ { bfColor.val[0], bfColor.val[1], bfColor.val[2], bfColor.val[3]} }));
 
-	PlayId(&sbVal, cl, context);
+	ITEM_TRANSIT(ia_prim_topo, ({ (UINT8)primType }));
 
-	sbVal.type = DRPL_OMBF;
-
-	fv4Color bfColor = d912pxy_s.render.db.pso.TransformBlendFactor(trd->bfacVal);
-	memcpy(sbVal.ombf.color, bfColor.val, 16);
-
-	PlayId(&sbVal, cl, context);
-
-	sbVal.type = DRPL_PRMT;
-
-	sbVal.topo.newTopo = trd->primType;
-
-	PlayId(&sbVal, cl, context);
-
-	d912pxy_replay_item psoSet;
-
-	if (trd->cpso)
+	if (cpso)
 	{
-		psoSet.type = DRPL_CPSO;
-		psoSet.compiledPso.psoItem = trd->cpso;
+		ITEM_TRANSIT(pso_compiled, ({ cpso }));
 	}
 	else {
-		psoSet.type = DRPL_RPSO;
-		psoSet.rawPso.rawState = trd->pso;
-	}
-	PlayId(&psoSet, cl, context);
-
-	cl->RSSetViewports(1, &trd->main_viewport);
-
-	if (trd->scissorEnabled)
-		cl->RSSetScissorRects(1, &trd->main_scissor);
-	   
-	trd->saved = 0;	
-}
-
-
-void d912pxy_replay::RHA_TRAN(d912pxy_replay_state_transit * it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	it->res->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->to, it->from, cl);
-}
-
-void d912pxy_replay::RHA_OMSR(d912pxy_replay_om_sr* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	cl->OMSetStencilRef(it->dRef);	
-}
-
-void d912pxy_replay::RHA_OMBF(d912pxy_replay_om_bf* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	cl->OMSetBlendFactor(it->color);
-}
-
-void d912pxy_replay::RHA_RSVP(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	cl->RSSetViewports(1, &it->viewport);
-	cl->RSSetScissorRects(1, &it->scissor);
-}
-
-void d912pxy_replay::RHA_RSSR(d912pxy_replay_rs_viewscissor* it, ID3D12GraphicsCommandList * cl, void* unused)
-{	
-	cl->RSSetScissorRects(1, &it->scissor);	
-}
-
-void d912pxy_replay::RHA_DIIP(d912pxy_replay_draw_indexed_instanced* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
-{
-	if (!context->pso)
-		return;
-
-	d912pxy_s.render.batch.Bind(cl, it->batchId);
-
-	cl->DrawIndexedInstanced(
-		it->IndexCountPerInstance,
-		it->InstanceCount,
-		it->StartIndexLocation,
-		it->BaseVertexLocation,
-		it->StartInstanceLocation
-	);	
-}
-
-void d912pxy_replay::RHA_OMRT(d912pxy_replay_om_render_target* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[2];
-	D3D12_CPU_DESCRIPTOR_HANDLE* bindedRTV = 0;
-	D3D12_CPU_DESCRIPTOR_HANDLE* bindedDSV = 0;
-
-	if (it->rtv)
-	{
-		bindedRTV = &bindedSurfacesDH[0];
-		bindedSurfacesDH[0] = it->rtv->GetDHeapHandle();
+		ITEM_TRANSIT(pso_raw, ({ pso }));
 	}
 
-	if (it->dsv)
-	{
-		bindedDSV = &bindedSurfacesDH[1];
-		bindedSurfacesDH[1] = it->dsv->GetDHeapHandle();
-	}
+	cl->RSSetViewports(1, &main_viewport);
 
-	if (it->rtv)
-	{		
-		cl->OMSetRenderTargets(1, bindedRTV, 0, bindedDSV);
-	}
-	else {		
-		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);		
-	}
+	if (scissorEnabled)
+		cl->RSSetScissorRects(1, &main_scissor);
+
+	Reset();
+
+	return true;
+
+#undef ITEM_TRANSIT
 }
 
-void d912pxy_replay::RHA_IFVB(d912pxy_replay_vbuf_bind* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	it->buf->IFrameBindVB(it->stride, it->slot, it->offset, cl);
-}
-
-void d912pxy_replay::RHA_IFIB(d912pxy_replay_ibuf_bind* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	it->buf->IFrameBindIB(cl);
-}
-
-void d912pxy_replay::RHA_RCLR(d912pxy_replay_clear_rt* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	LOG_DBG_DTDM("RCLR tgt %llX", it->tgt);
-
-	if (it->cuState != D3D12_RESOURCE_STATE_RENDER_TARGET)
-		it->tgt->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, it->cuState, cl);
-
-	it->tgt->ClearAsRTV(it->clr, cl, &it->clearRect);
-
-	if (it->cuState != D3D12_RESOURCE_STATE_RENDER_TARGET)
-		it->tgt->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->cuState, D3D12_RESOURCE_STATE_RENDER_TARGET, cl);
-}
-
-void d912pxy_replay::RHA_DCLR(d912pxy_replay_clear_ds* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	if (it->cuState != D3D12_RESOURCE_STATE_DEPTH_WRITE)
-		it->tgt->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_DEPTH_WRITE, it->cuState, cl);
-
-	it->tgt->ClearAsDSV(it->depth, it->stencil, it->flag, cl, &it->clearRect);
-
-	if (it->cuState != D3D12_RESOURCE_STATE_DEPTH_WRITE)
-		it->tgt->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, it->cuState, D3D12_RESOURCE_STATE_DEPTH_WRITE, cl);
-}
-
-void d912pxy_replay::RHA_RPSO(d912pxy_replay_pso_raw* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
-{
-	ID3D12PipelineState * pso = d912pxy_s.render.db.pso.UseByDescMT(&it->rawState, 0);
-
-	/*
-	//megai2: debug mode busy wait for pso compile
-	while (!pso)
-		pso = d912pxy_s.render.db.pso.UseByDescMT(&it->rawState, 0);
-	*/
-		
-	if (pso && (context->pso != pso))					
-		cl->SetPipelineState(pso);	
-
-	context->pso = pso;
-}
-
-void d912pxy_replay::RHA_CPSO(d912pxy_replay_pso_compiled* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
-{	
-	ID3D12PipelineState* pso = it->psoItem->GetPtr();
-
-	if (pso)
-		cl->SetPipelineState(pso);
-
-	context->pso = pso;
-}
-
-void d912pxy_replay::RHA_RPSF(d912pxy_replay_pso_raw_feedback* it, ID3D12GraphicsCommandList * cl, void* unused)
-{	
-	*it->feedbackPtr = d912pxy_s.render.db.pso.GetByDescMT(&it->rawState, 0);	
-
-	//megai2: looks like this is overdo after all
-/*	it->rawState.VS->ThreadRef(-1);
-	it->rawState.PS->ThreadRef(-1);
-	it->rawState.InputLayout->ThreadRef(-1);*/
-}
-
-void d912pxy_replay::RHA_RECT(d912pxy_replay_rect* it, ID3D12GraphicsCommandList * cl, void* unused)
-{
-	d912pxy_surface* sSrc = it->src;
-	d912pxy_surface* sDst = it->dst;
-
-	D3DSURFACE_DESC dSrc, dDst;
-
-	dSrc = sSrc->GetDX9DescAtLevel(0);
-	dDst = sDst->GetDX9DescAtLevel(0);
-	
-	if (
-		(dSrc.Height == dDst.Height) &&
-		(dSrc.Width == dDst.Width) &&
-		(dSrc.Format == dDst.Format)
-		)
-	{
-		if (!sSrc->GetD12Obj())
-			sSrc->ConstructResource();
-
-		if (!sDst->GetD12Obj())
-			sDst->ConstructResource();
-
-		sSrc->BCopyToWStates(sDst, 0x3, cl, it->prevD, it->prevS);
-	} else {
-		//megai2: TODO allow non similar texture copy via custom pass
-		LOG_DBG_DTDM3("rha rect with different textures");
-	}
-}
-
-void d912pxy_replay::RHA_GPUW(d912pxy_replay_gpu_write_control * it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
-{
-	d912pxy_s.render.batch.ReplayWrite(
-		context->tid, 
-		it->streamIdx, 
-		d912pxy_batch_buffer::write_info(it->bn, it->offset, it->size)
-	);
-}
-
-void d912pxy_replay::RHA_PRMT(d912pxy_replay_primitive_topology * it, ID3D12GraphicsCommandList * cl, void * unused)
-{
-	cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)it->newTopo);
-}
-
-void d912pxy_replay::RHA_QUMA(d912pxy_replay_query_mark * it, ID3D12GraphicsCommandList * cl, void * unused)
-{
-	it->obj->QueryMark(it->start, cl);
-}

@@ -27,7 +27,7 @@ SOFTWARE.
 d912pxy_replay_thread::d912pxy_replay_thread(d912pxy_gpu_cmd_list_group iListGrp, char* threadName) : d912pxy_noncom( L"replay thread"), d912pxy_thread()
 {
 	InitThread(threadName, 1);
-	exchRI = new d912pxy_ringbuffer<UINT32>(5, 0);
+	exchRI = new d912pxy_ringbuffer<UINT32>(3, 0);
 	listGrp = iListGrp;	
 }
 
@@ -44,7 +44,7 @@ void d912pxy_replay_thread::ThreadJob()
 
 		ID3D12GraphicsCommandList* cl = d912pxy_s.dx12.cl->GID(listGrp);
 
-		d912pxy_s.render.replay.Replay(exchRI->PopElement(), exchRI->PopElement(), cl, this);
+		d912pxy_s.render.replay.Replay(exchRI->PopElement(), cl, this);
 	}
 	else {
 		LOG_ERR_THROW2(-1, "RI exchange buffer is empty on replay thread wake");
@@ -58,10 +58,9 @@ void d912pxy_replay_thread::ThreadJob()
 //	IgnoreJob();
 }
 
-void d912pxy_replay_thread::ExecRange(UINT start, UINT end)
+void d912pxy_replay_thread::ExecItems(UINT items)
 {
-	exchRI->WriteElement(end);
-	exchRI->WriteElement(start);	
+	exchRI->WriteElement(items);
 }
 
 void d912pxy_replay_thread::Finish()

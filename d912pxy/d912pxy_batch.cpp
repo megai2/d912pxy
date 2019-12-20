@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_batch_buffer::d912pxy_batch_buffer() : d912pxy_folded_buffer<d912pxy_batch_buffer_element, d912pxy_batch_buffer_sub_element>(PXY_BATCH_GPU_TRANSIT_ELEMENTS, DRPL_GPUW)
+d912pxy_batch_buffer::d912pxy_batch_buffer() : d912pxy_folded_buffer<d912pxy_batch_buffer_element, d912pxy_batch_buffer_sub_element>(PXY_BATCH_GPU_TRANSIT_ELEMENTS)
 {
 }
 
