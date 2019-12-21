@@ -28,7 +28,7 @@ SOFTWARE.
 class d912pxy_replay_item {
 
 public:
-	typedef enum class typeName : BYTE {
+	typedef enum class typeName : UINT32 {
 		barrier = 0,
 		om_stencilref = 1,
 		om_blendfactor,
@@ -51,6 +51,8 @@ public:
 	
 	static const UINT maxDataSize = 256 - sizeof(typeName);
 	static const UINT dataAligment = 8;
+
+#pragma pack(push,4)
 
 	typedef struct dt_barrier {
 		d912pxy_resource* res;
@@ -87,6 +89,7 @@ public:
 	typedef struct dt_om_render_targets {
 		d912pxy_surface* rtv;
 		d912pxy_surface* dsv;
+		UINT32 aligment;
 	} dt_om_render_targets;
 
 	typedef struct dt_vbuf_bind {
@@ -152,26 +155,37 @@ public:
 		UINT8 start;
 	} dt_query_mark;
 
+#pragma pack(pop)
+
+	template<class dataType>
+	static constexpr UINT GetDataAlignedSize()
+	{
+		constexpr auto origSize = sizeof(dataType) + sizeof(typeName);
+		constexpr bool isMisaligned = (origSize & (dataAligment - 1)) != 0;
+		return isMisaligned ? (origSize & (~(dataAligment - 1))) + dataAligment : origSize;
+			
+	}
+
 	static const UINT GetSize(typeName name)
 	{
 		static const UINT dataTypeSize[(UINT)typeName::_count] = {
-			sizeof(dt_barrier),
-			sizeof(dt_om_stencilref),
-			sizeof(dt_om_blendfactor),
-			sizeof(dt_view_scissor),
-			sizeof(dt_draw_indexed),
-			sizeof(dt_om_render_targets),
-			sizeof(dt_vbuf_bind),
-			sizeof(dt_ibuf_bind),
-			sizeof(dt_clear_rt),
-			sizeof(dt_clear_ds),
-			sizeof(dt_pso_raw),
-			sizeof(dt_pso_raw_feedback),
-			sizeof(dt_pso_compiled),
-			sizeof(dt_rect_copy),
-			sizeof(dt_gpu_write_ctl),
-			sizeof(dt_ia_prim_topo),
-			sizeof(dt_query_mark)
+			GetDataAlignedSize<dt_barrier>(),
+			GetDataAlignedSize<dt_om_stencilref>(),
+			GetDataAlignedSize<dt_om_blendfactor>(),
+			GetDataAlignedSize<dt_view_scissor>(),
+			GetDataAlignedSize<dt_draw_indexed>(),
+			GetDataAlignedSize<dt_om_render_targets>(),
+			GetDataAlignedSize<dt_vbuf_bind>(),
+			GetDataAlignedSize<dt_ibuf_bind>(),
+			GetDataAlignedSize<dt_clear_rt>(),
+			GetDataAlignedSize<dt_clear_ds>(),
+			GetDataAlignedSize<dt_pso_raw>(),
+			GetDataAlignedSize<dt_pso_raw_feedback>(),
+			GetDataAlignedSize<dt_pso_compiled>(),
+			GetDataAlignedSize<dt_rect_copy>(),
+			GetDataAlignedSize<dt_gpu_write_ctl>(),
+			GetDataAlignedSize<dt_ia_prim_topo>(),
+			GetDataAlignedSize<dt_query_mark>()
 		};
 
 		return sizeof(typeName) + dataTypeSize[(UINT)name];
@@ -204,13 +218,11 @@ public:
 
 	template<class dataType>
 	void Set(const typeName name, dataType data)
-	{
-		//megai2: TODO
-		/*static_assert(
-			(((sizeof(dataType) + sizeof(typeName)) & (dataAligment - 1)) == 0) ||
-			(sizeof(dataType) < maxDataSize)
-			, "replay item is not alignd to cache or too big"
-		);*/
+	{	
+		static_assert(
+			GetDataAlignedSize<dataType>() < maxDataSize
+			, "replay item is too big"
+		);
 
 		*(dataType*)storage = data;
 		iName = name;
