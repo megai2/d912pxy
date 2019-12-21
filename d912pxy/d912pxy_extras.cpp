@@ -157,9 +157,14 @@ void d912pxy_extras::WaitForTargetFrameTime()
 	else {
 		if (targetFrameTimeDelay > 1)
 		{
-			if ((targetDelta > 10) && (targetDelta < targetFrameTimeDelay))
-				targetFrameTimeDelay -= targetDelta;
-			else
+			if (targetDelta > 10)
+			{	
+				if (targetDelta < targetFrameTimeDelay)
+					targetFrameTimeDelay -= targetDelta;
+				else
+					targetFrameTimeDelay = targetFrameTimeDelay >> 1;
+
+			} else
 				targetFrameTimeDelay -= 1;
 		}
 	}
