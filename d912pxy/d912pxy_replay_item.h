@@ -28,7 +28,7 @@ SOFTWARE.
 class d912pxy_replay_item {
 
 public:
-	typedef enum class typeName : UINT32 {
+	typedef enum class typeName : UINT64 {
 		barrier = 0,
 		om_stencilref = 1,
 		om_blendfactor,
@@ -159,9 +159,9 @@ public:
 	template<class dataType>
 	static constexpr UINT GetDataAlignedSize()
 	{
-		constexpr auto origSize = sizeof(dataType) + sizeof(typeName);
+		constexpr auto origSize = sizeof(dataType);
 		constexpr bool isMisaligned = (origSize & (dataAligment - 1)) != 0;
-		return isMisaligned ? (origSize & (~(dataAligment - 1))) + dataAligment : origSize;
+		return (isMisaligned ? (origSize & (~(dataAligment - 1))) + dataAligment : origSize) + sizeof(typeName);
 			
 	}
 
