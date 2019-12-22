@@ -89,7 +89,6 @@ public:
 	typedef struct dt_om_render_targets {
 		d912pxy_surface* rtv;
 		d912pxy_surface* dsv;
-		UINT32 aligment;
 	} dt_om_render_targets;
 
 	typedef struct dt_vbuf_bind {
