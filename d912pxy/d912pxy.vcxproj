@@ -143,6 +143,9 @@
       <AdditionalOptions>
       </AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <ControlFlowGuard>false</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -180,6 +183,9 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ControlFlowGuard>false</ControlFlowGuard>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -469,6 +475,7 @@
     <ClCompile Include="d912pxy_replay_actions.cpp" />
     <ClCompile Include="d912pxy_replay_buffer.cpp" />
     <ClCompile Include="d912pxy_replay_handlers.cpp" />
+    <ClCompile Include="d912pxy_replay_item.cpp" />
     <ClCompile Include="d912pxy_replay_thread.cpp" />
     <ClCompile Include="d912pxy_resource.cpp" />
     <ClCompile Include="d912pxy_ringbuffer.cpp" />
