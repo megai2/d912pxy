@@ -50,7 +50,7 @@ public:
 	} typeNames;
 	
 	static const UINT maxDataSize = 256 - sizeof(typeName);
-	static const UINT dataAligment = 8;
+	static const UINT dataAligment = 16;
 
 #pragma pack(push,4)
 
@@ -141,9 +141,9 @@ public:
 
 	typedef struct dt_gpu_write_ctl {
 		UINT32 streamIdx;
-		UINT16 offset;
-		UINT16 size;
-		UINT16 bn;
+		UINT32 offset;
+		UINT32 size;
+		UINT32 bn;
 	} dt_gpu_write_ctl;
 
 	typedef struct dt_ia_prim_topo {
@@ -166,29 +166,14 @@ public:
 			
 	}
 
-	static const UINT GetSize(typeName name)
+	const UINT GetSizeConst(const typeName name)
 	{
-		static const UINT dataTypeSize[(UINT)typeName::_count] = {
-			GetDataAlignedSize<dt_barrier>(),
-			GetDataAlignedSize<dt_om_stencilref>(),
-			GetDataAlignedSize<dt_om_blendfactor>(),
-			GetDataAlignedSize<dt_view_scissor>(),
-			GetDataAlignedSize<dt_draw_indexed>(),
-			GetDataAlignedSize<dt_om_render_targets>(),
-			GetDataAlignedSize<dt_vbuf_bind>(),
-			GetDataAlignedSize<dt_ibuf_bind>(),
-			GetDataAlignedSize<dt_clear_rt>(),
-			GetDataAlignedSize<dt_clear_ds>(),
-			GetDataAlignedSize<dt_pso_raw>(),
-			GetDataAlignedSize<dt_pso_raw_feedback>(),
-			GetDataAlignedSize<dt_pso_compiled>(),
-			GetDataAlignedSize<dt_rect_copy>(),
-			GetDataAlignedSize<dt_gpu_write_ctl>(),
-			GetDataAlignedSize<dt_ia_prim_topo>(),
-			GetDataAlignedSize<dt_query_mark>()
-		};
+		return dataTypeSize[(UINT)name];
+	}
 
-		return sizeof(typeName) + dataTypeSize[(UINT)name];
+	const UINT GetSize(typeName name)
+	{
+		return dataTypeSize[(UINT)name];
 	}
 
 	const wchar_t* GetTypeNameStr()
@@ -217,6 +202,14 @@ public:
 	}
 
 	template<class dataType>
+	d912pxy_replay_item* SetAndAdvance(const typeName name, dataType data)
+	{
+		Set(name, data);
+		return ((d912pxy_replay_item*)((intptr_t)this + GetSizeConst(name)));
+	}
+
+
+	template<class dataType>
 	void Set(const typeName name, dataType data)
 	{	
 		static_assert(
@@ -224,8 +217,11 @@ public:
 			, "replay item is too big"
 		);
 
-		*(dataType*)storage = data;
+
 		iName = name;
+		*(dataType*)storage = data;
+		//new (storage) dataType(data);
+
 	}
 
 	template<class dataType>
@@ -248,6 +244,8 @@ public:
 	~d912pxy_replay_item() { };
 	   	
 private:
+	static const UINT dataTypeSize[(UINT)typeName::_count];
+
 	typeName iName;
 	BYTE storage[maxDataSize];
 };

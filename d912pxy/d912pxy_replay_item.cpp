@@ -22,45 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#pragma once
 #include "stdafx.h"
 
-class d912pxy_replay_buffer : public d912pxy_noncom
-{
-public:
-	d912pxy_replay_buffer();
-	~d912pxy_replay_buffer();
-
-	void Init();
-	void UnInit();
-
-	void Reset();
-
-	d912pxy_replay_item* getCurrentExtern();
-	d912pxy_replay_item* getCurrent();
-	d912pxy_replay_item* getBase();
-	void syncCurrent();
-
-	UINT getIndex() { return linearIdx; };
-
-	template<class dataType>
-	void PushAction(d912pxy_replay_item::typeName name, dataType data)
-	{
-		current = current->SetAndAdvance(name, data);
-		++linearIdx;
-
-#ifdef _DEBUG
-		CheckRange();
-#endif
-	}
-
-	void CheckRange();
-
-private:
-	UINT linearIdx;
-
-	d912pxy_replay_item* base;
-	d912pxy_replay_item* current;
-	d912pxy_replay_item* externCurrent;
-	intptr_t bufferLimit;
+const UINT d912pxy_replay_item::dataTypeSize[(UINT)typeName::_count] = {
+	GetDataAlignedSize<dt_barrier>(),
+	GetDataAlignedSize<dt_om_stencilref>(),
+	GetDataAlignedSize<dt_om_blendfactor>(),
+	GetDataAlignedSize<dt_view_scissor>(),
+	GetDataAlignedSize<dt_draw_indexed>(),
+	GetDataAlignedSize<dt_om_render_targets>(),
+	GetDataAlignedSize<dt_vbuf_bind>(),
+	GetDataAlignedSize<dt_ibuf_bind>(),
+	GetDataAlignedSize<dt_clear_rt>(),
+	GetDataAlignedSize<dt_clear_ds>(),
+	GetDataAlignedSize<dt_pso_raw>(),
+	GetDataAlignedSize<dt_pso_raw_feedback>(),
+	GetDataAlignedSize<dt_pso_compiled>(),
+	GetDataAlignedSize<dt_rect_copy>(),
+	GetDataAlignedSize<dt_gpu_write_ctl>(),
+	GetDataAlignedSize<dt_ia_prim_topo>(),
+	GetDataAlignedSize<dt_query_mark>()
 };
