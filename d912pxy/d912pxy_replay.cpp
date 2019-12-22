@@ -70,7 +70,10 @@ void d912pxy_replay::Init()
 	ReRangeThreads(0);
 
 	for (int i = 0; i != numThreads; ++i)
+	{
 		threads[i]->Resume();
+		transitData[i].Reset();
+	}
 
 #define RHA_ASSIGN(a) replay_handlers[(UINT)d912pxy_replay_item::typeName::a] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_##a
 	RHA_ASSIGN(barrier);
@@ -96,6 +99,7 @@ void d912pxy_replay::Init()
 
 void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
 {	
+	LOG_DBG_DTDM("RP I: %llX T: %u", it, context->tid);
 	(this->*replay_handlers[(UINT)it->GetTypeName()])(it->GetData<void*>(), cl, context);
 }
 
@@ -121,6 +125,7 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 		transit->Apply(cl, &context);
 
 		item_iter = transit->GetBaseItem();
+		items -= transit->GetTailedItems();
 	}
 	else 
 	{
@@ -134,26 +139,38 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 	{
 		while (item_iter < item_end)
 		{
-			LOG_DBG_DTDM("RP TY %s", item_iter->GetTypeNameStr());
-
 			PlayId(item_iter, cl, &context);
 
 			item_iter = item_iter->Next();
-
 			--items;		
+
+			if (!items)
+				break;
 		}
 		
 		item_end = WaitForData(item_iter, thrd);			
 
 		if (!item_end)
-		{
-			return;
-		}
+			break;
 	}
 
 	//megai2: unlock thread only when stopMarker is set
-	while (!WaitForWake(thrd))
+	while (WaitForWake(thrd))
 		;	
+
+	if (!items) //megai2: we can't put correct starting item on next thread, so we have to play things to next draw call as switch occuring right in that place
+	{
+		item_end = buffer.getCurrentExtern();
+		while (item_iter < item_end)
+		{
+			PlayId(item_iter, cl, &context);
+
+			if (item_iter->GetTypeName() == d912pxy_replay_item::typeName::draw_indexed)
+				break;
+
+			item_iter = item_iter->Next();
+		}
+	}
 }
 
 d912pxy_replay_item* d912pxy_replay::WaitForData(d912pxy_replay_item* from, d912pxy_replay_thread * thrd)
@@ -201,7 +218,16 @@ void d912pxy_replay::IssueWork(UINT batch)
 	{	
 		buffer.syncCurrent();
 
-		transitData[cWorker + 1].Gather(buffer.getCurrent());
+		//megai2: skip workers if they don't have DIIP calls and transit state to proper one
+		while (buffer.getIndex() > rangeEnds[cWorker + 1])
+		{
+			//megai2: wake threads so they do their job
+			threads[cWorker]->SignalWork();
+			switchPoint = rangeEnds[cWorker];
+			++cWorker;
+		}
+
+		transitData[cWorker + 1].Gather(buffer.getCurrent(), buffer.getIndex() - switchPoint);
 		threads[cWorker]->SignalWork();
 	
 		++cWorker;
@@ -268,7 +294,7 @@ void d912pxy_replay::thread_transit_data::Reset()
 	saved.SetValue(0);
 }
 
-void d912pxy_replay::thread_transit_data::Gather(d912pxy_replay_item* threadStartingItem)
+void d912pxy_replay::thread_transit_data::Gather(d912pxy_replay_item* threadStartingItem, UINT in_tailItems)
 {
 	bfacVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
 	srefVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF);
@@ -292,6 +318,7 @@ void d912pxy_replay::thread_transit_data::Gather(d912pxy_replay_item* threadStar
 	primType = d912pxy_s.render.iframe.GetCurrentPrimType();
 	cpso = d912pxy_s.render.db.pso.GetCurrentCPSO();	
 	startPoint = threadStartingItem;
+	tailItems = in_tailItems;
 	
 	saved.SetValue(1);
 }
@@ -310,7 +337,7 @@ bool d912pxy_replay::thread_transit_data::Apply(ID3D12GraphicsCommandList* cl, d
 	); \
 	d912pxy_s.render.replay.PlayId(&item, cl, context) \
 
-	ITEM_TRANSIT(om_render_targets, ({ surfBind[0], surfBind[1] }));	
+	ITEM_TRANSIT(om_render_targets, ({ surfBind[1], surfBind[0] }));	
 
 	for (UINT i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 	{
@@ -344,6 +371,15 @@ bool d912pxy_replay::thread_transit_data::Apply(ID3D12GraphicsCommandList* cl, d
 
 	if (scissorEnabled)
 		cl->RSSetScissorRects(1, &main_scissor);
+	else {
+		D3D12_RECT r;
+		r.left = (UINT)main_viewport.TopLeftX;
+		r.top = (UINT)main_viewport.TopLeftY;
+		r.bottom = (UINT)main_viewport.Height + (UINT)main_viewport.TopLeftY;
+		r.right = (UINT)main_viewport.Width + (UINT)main_viewport.TopLeftX;
+
+		cl->RSSetScissorRects(1, &r);
+	}
 
 	Reset();
 

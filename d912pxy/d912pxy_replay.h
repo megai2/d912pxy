@@ -88,12 +88,17 @@ private:
 		~thread_transit_data() { };
 
 		void Reset();
-		void Gather(d912pxy_replay_item* threadStartingItem);
+		void Gather(d912pxy_replay_item* threadStartingItem, UINT in_tailItems);
 		bool Apply(ID3D12GraphicsCommandList* cl, d912pxy_replay_thread_context* context);
 
 		d912pxy_replay_item* GetBaseItem() {
 			return startPoint;
 		};
+
+		UINT GetTailedItems()
+		{
+			return tailItems;
+		}
 		
 		bool IsSaved() {
 			return saved.GetValue() != 0;
@@ -102,6 +107,7 @@ private:
 	private:
 		d912pxy_thread_lock saved;
 		d912pxy_replay_item* startPoint;
+		UINT tailItems;
 
 		d912pxy_surface* surfBind[2];
 		DWORD srefVal;
