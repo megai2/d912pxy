@@ -62,10 +62,10 @@ void d912pxy_extras::Init()
 	if (bShowFpsGraph)
 	{
 		fpsGraph.Data = new d912pxy_ringbuffer<float>(PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0);
-		fpsGraph.h = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_H);
-		fpsGraph.w = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_W);
-		fpsGraph.max = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_MAX);
-		fpsGraph.min = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_MIN);
+		fpsGraph.h = (float)d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_H);
+		fpsGraph.w = (float)d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_W);
+		fpsGraph.max = (float)d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_MAX);
+		fpsGraph.min = (float)d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_MIN);
 	}
 
 	bShowTimings = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_TIMINGS);

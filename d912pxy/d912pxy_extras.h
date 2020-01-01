@@ -76,8 +76,8 @@ private:
 
 	struct {
 		d912pxy_ringbuffer<float>* Data;
-		UINT w, h;
-		UINT min, max;
+		float w, h;
+		float min, max;
 	} fpsGraph;
 
 	//overlay toggle controls
