@@ -331,10 +331,7 @@ bool d912pxy_replay::thread_transit_data::Apply(ID3D12GraphicsCommandList* cl, d
 	d912pxy_replay_item item;
 
 #define ITEM_TRANSIT(a,b) \
-	item.Set( \
-		d912pxy_replay_item::typeName::a, \
-		d912pxy_replay_item::dt_##a b \
-	); \
+	item.Set(d912pxy_replay_item::dt_##a b); \
 	d912pxy_s.render.replay.PlayId(&item, cl, context) \
 
 	ITEM_TRANSIT(om_render_targets, ({ surfBind[1], surfBind[0] }));	

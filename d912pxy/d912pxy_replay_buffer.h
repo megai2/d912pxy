@@ -44,14 +44,16 @@ public:
 	UINT getIndex() { return linearIdx; };
 
 	template<class dataType>
-	void PushAction(d912pxy_replay_item::typeName name, dataType data)
+	dataType* PushAction()
 	{
-		current = current->SetAndAdvance(name, data);
+		dataType* ret;
+		current = current->Advance(&ret);
 		++linearIdx;
 
 #ifdef _DEBUG
 		CheckRange();
 #endif
+		return ret;
 	}
 
 	void CheckRange();

@@ -58,23 +58,27 @@ public:
 		d912pxy_resource* res;
 		D3D12_RESOURCE_STATES to;
 		D3D12_RESOURCE_STATES from;
-	} dt_barrier;
 
-	typedef struct dt_pso_cached {
-		d912pxy_pso_cache_item* cachedPSO;
-	} dt_pso_cached;
+		static constexpr typeName GetTypeName() { return typeName::barrier; };
+	} dt_barrier;
 
 	typedef struct dt_om_stencilref {
 		DWORD dRef;
+
+		static constexpr typeName GetTypeName() { return typeName::om_stencilref; };
 	} dt_om_stencilref;
 
 	typedef struct dt_om_blendfactor {
 		float color[4];
+
+		static constexpr typeName GetTypeName() { return typeName::om_blendfactor; };
 	} dt_om_blendfactor;
 
 	typedef struct dt_view_scissor {
 		D3D12_VIEWPORT viewport;
 		D3D12_RECT scissor;
+
+		static constexpr typeName GetTypeName() { return typeName::view_scissor; };
 	} dt_view_scissor;
 
 	typedef struct dt_draw_indexed {
@@ -84,11 +88,15 @@ public:
 		INT BaseVertexLocation;
 		UINT StartInstanceLocation;
 		UINT batchId;
+
+		static constexpr typeName GetTypeName() { return typeName::draw_indexed; };
 	} dt_draw_indexed;
 
 	typedef struct dt_om_render_targets {
 		d912pxy_surface* rtv;
 		d912pxy_surface* dsv;
+
+		static constexpr typeName GetTypeName() { return typeName::om_render_targets; };
 	} dt_om_render_targets;
 
 	typedef struct dt_vbuf_bind {
@@ -96,10 +104,14 @@ public:
 		UINT stride;
 		UINT slot;
 		UINT offset;
+
+		static constexpr typeName GetTypeName() { return typeName::vbuf_bind; };
 	} dt_vbuf_bind;
 
 	typedef struct dt_ibuf_bind {
 		d912pxy_vstream* buf;
+
+		static constexpr typeName GetTypeName() { return typeName::ibuf_bind; };
 	} dt_ibuf_bind;
 
 	typedef struct dt_clear_rt {
@@ -107,6 +119,8 @@ public:
 		float clr[4];
 		D3D12_RECT clearRect;
 		D3D12_RESOURCE_STATES cuState;
+
+		static constexpr typeName GetTypeName() { return typeName::clear_rt; };
 	} dt_clear_rt;
 
 	typedef struct dt_clear_ds {
@@ -116,15 +130,21 @@ public:
 		D3D12_CLEAR_FLAGS flag;
 		D3D12_RECT clearRect;
 		D3D12_RESOURCE_STATES cuState;
+
+		static constexpr typeName GetTypeName() { return typeName::clear_ds; };
 	} dt_clear_ds;
 
 	typedef struct dt_pso_raw {
 		d912pxy_trimmed_dx12_pso rawState;
+
+		static constexpr typeName GetTypeName() { return typeName::pso_raw; };
 	} dt_pso_raw;
 
 	typedef struct dt_pso_raw_feedback {
 		d912pxy_trimmed_dx12_pso rawState;
 		void** feedbackPtr;
+
+		static constexpr typeName GetTypeName() { return typeName::pso_raw_feedback; };
 	} dt_pso_raw_feedback;
 
 	typedef struct dt_rect_copy {
@@ -132,10 +152,14 @@ public:
 		d912pxy_surface* dst;
 		D3D12_RESOURCE_STATES prevS;
 		D3D12_RESOURCE_STATES prevD;
+
+		static constexpr typeName GetTypeName() { return typeName::rect_copy; };
 	} dt_rect_copy;
 
 	typedef struct dt_pso_compiled {
 		d912pxy_pso_cache_item* psoItem;
+
+		static constexpr typeName GetTypeName() { return typeName::pso_compiled; };
 	} dt_pso_compiled;
 
 	typedef struct dt_gpu_write_ctl {
@@ -143,15 +167,21 @@ public:
 		UINT32 offset;
 		UINT32 size;
 		UINT32 bn;
+
+		static constexpr typeName GetTypeName() { return typeName::gpu_write_ctl; };
 	} dt_gpu_write_ctl;
 
 	typedef struct dt_ia_prim_topo {
 		UINT8 newTopo;
+
+		static constexpr typeName GetTypeName() { return typeName::ia_prim_topo; };
 	} dt_ia_prim_topo;
 
 	typedef struct dt_query_mark {
 		d912pxy_query* obj;
 		UINT8 start;
+
+		static constexpr typeName GetTypeName() { return typeName::query_mark; };
 	} dt_query_mark;
 
 #pragma pack(pop)
@@ -201,26 +231,30 @@ public:
 	}
 
 	template<class dataType>
-	d912pxy_replay_item* SetAndAdvance(const typeName name, dataType data)
+	d912pxy_replay_item* Advance(dataType** data)
 	{
-		Set(name, data);
-		return ((d912pxy_replay_item*)((intptr_t)this + GetSizeConst(name)));
+		*data = SetType<dataType>();
+		return ((d912pxy_replay_item*)((intptr_t)this + GetSizeConst(dataType::GetTypeName())));
+	}
+
+	template<class dataType>
+	void Set(dataType data)
+	{
+		dataType* dst = SetType<dataType>();
+		*dst = data;
 	}
 
 
 	template<class dataType>
-	void Set(const typeName name, dataType data)
+	dataType* SetType()
 	{	
 		static_assert(
 			GetDataAlignedSize<dataType>() < maxDataSize
 			, "replay item is too big"
 		);
-
-
-		iName = name;
-		*(dataType*)storage = data;
-		//new (storage) dataType(data);
-
+		
+		iName = dataType::GetTypeName();
+		return GetData<dataType>();
 	}
 
 	template<class dataType>
