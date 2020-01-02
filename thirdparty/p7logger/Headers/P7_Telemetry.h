@@ -60,6 +60,12 @@ public:
     virtual tBOOL Add(tUINT16 i_bID, tDOUBLE i_llValue)                     = 0;
 
     ////////////////////////////////////////////////////////////////////////////
+    //Add - add counter sample 
+    //      See documentation for details.
+    //      UINT64 value type
+    virtual tBOOL         AddU64(tUINT16 i_bID, tUINT64 i_llValue)          = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
     //Find - find counter ID by name (case sensitive)
     //       See documentation for details.
     virtual tBOOL Find(const tXCHAR *i_pName, tUINT16 *o_pID)               = 0;

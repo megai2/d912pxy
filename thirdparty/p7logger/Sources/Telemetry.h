@@ -190,6 +190,7 @@ public:
                           
     virtual tBOOL         Find(const tXCHAR *i_pName, tUINT16 *o_pID);
     virtual tBOOL         Add(tUINT16 i_bID, tDOUBLE i_llValue);
+    virtual tBOOL         AddU64(tUINT16 i_bID, tUINT64 i_llValue);
     virtual tBOOL         Set_Enable(tUINT16 i_wID, tBOOL i_bEnable);
     virtual tBOOL         Get_Enable(tUINT16 i_wID);
     virtual tDOUBLE       Get_Min(tUINT16 i_wID);

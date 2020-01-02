@@ -735,6 +735,12 @@ tBOOL CP7Telemetry::Find(const tXCHAR *i_pName, tUINT16 *o_pID)
     return l_bReturn;
 }// Find
 
+////////////////////////////////////////////////////////////////////////////////
+// Add uint64 version
+tBOOL CP7Telemetry::AddU64(tUINT16 i_bID, tUINT64 i_dbValue)
+{
+    return Add(i_bID, (tDOUBLE)i_dbValue);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Add  
