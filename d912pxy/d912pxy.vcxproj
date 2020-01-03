@@ -118,7 +118,7 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetName>d3d9</TargetName>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\debug\</OutDir>
-    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -128,7 +128,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_avx2|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\bin\d912pxy\dll\release\</OutDir>
+    <OutDir>$(SolutionDir)\bin\d912pxy\dll\release_avx2\</OutDir>
     <TargetName>d3d9</TargetName>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
@@ -183,7 +183,7 @@
       <ObjectFileOutput>$(OutDir)\cso\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)\bin\d912pxy\dll\debug\d3d9.dll "D:\games\Guild Wars 2\bin64"</Command>
+      <Command>copy $(SolutionDir)\bin\d912pxy\dll\debug\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>debug dll copy</Message>
