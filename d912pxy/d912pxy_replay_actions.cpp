@@ -166,7 +166,10 @@ void d912pxy_replay::DoRTClear(d912pxy_surface* tgt, float* clr, D3D12_VIEWPORT*
 	ITEM_PUSH(clear_rt);
 
 	it->tgt = tgt;
-	memcpy(it->clr, clr, sizeof(it->clr));
+	it->clr[0] = clr[3];
+	it->clr[1] = clr[2];
+	it->clr[2] = clr[1];
+	it->clr[3] = clr[0];
 	it->clearRect = {
 				(LONG)currentVWP->TopLeftX,
 				(LONG)currentVWP->TopLeftY,
