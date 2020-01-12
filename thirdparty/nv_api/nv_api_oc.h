@@ -130,7 +130,7 @@ typedef struct nvapi_fptrs {
 			NvAPI_GPU_EnableDynamicPstates_t EnableDynamicPstates;
 			NvAPI_GPU_GetDynamicPstatesInfoEx_t GetDynamicPstatesInfoEx;
 		};
-		void* ptrs[14];
+		void* ptrs[15];
 	};
 } nvapi_fptrs;
 
