@@ -386,8 +386,10 @@
     <ClInclude Include="d912pxy_com_object.h" />
     <ClInclude Include="d912pxy_com_routing.h" />
     <ClInclude Include="d912pxy_config.h" />
+    <ClInclude Include="d912pxy_d3dx9.h" />
     <ClInclude Include="d912pxy_device_state.h" />
     <ClInclude Include="d912pxy_draw_up.h" />
+    <ClInclude Include="d912pxy_dxbc9.h" />
     <ClInclude Include="d912pxy_dynamic_imports.h" />
     <ClInclude Include="d912pxy_extras.h" />
     <ClInclude Include="d912pxy_folded_buffer.h" />
@@ -480,6 +482,7 @@
     <ClCompile Include="d912pxy_com_route_overhead_tracked.cpp" />
     <ClCompile Include="d912pxy_com_routing.cpp" />
     <ClCompile Include="d912pxy_config.cpp" />
+    <ClCompile Include="d912pxy_d3dx9.cpp" />
     <ClCompile Include="d912pxy_device_clipping.cpp" />
     <ClCompile Include="d912pxy_device_drawing.cpp" />
     <ClCompile Include="d912pxy_device_constructors.cpp" />
@@ -493,6 +496,7 @@
     <ClCompile Include="d912pxy_device_texstate.cpp" />
     <ClCompile Include="d912pxy_device_unimpl.cpp" />
     <ClCompile Include="d912pxy_draw_up.cpp" />
+    <ClCompile Include="d912pxy_dxbc9.cpp" />
     <ClCompile Include="d912pxy_dynamic_imports.cpp" />
     <ClCompile Include="d912pxy_extras.cpp" />
     <ClCompile Include="d912pxy_folded_buffer.cpp" />

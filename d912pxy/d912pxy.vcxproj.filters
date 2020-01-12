@@ -281,9 +281,6 @@
     <ClCompile Include="..\thirdparty\imgui\imgui_widgets.cpp">
       <Filter>base\utils\3rd_party\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_extras.cpp">
-      <Filter>d3d9_impl\device\dx12</Filter>
-    </ClCompile>
     <ClCompile Include="..\thirdparty\imgui\imgui_impl_win32.cpp">
       <Filter>base\utils\3rd_party\imgui</Filter>
     </ClCompile>
@@ -308,6 +305,11 @@
     <ClCompile Include="d912pxy_replay_item.cpp">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_dxbc9.cpp" />
+    <ClCompile Include="d912pxy_extras.cpp">
+      <Filter>d3d9_impl\device\dx12\extras</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_d3dx9.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -570,9 +572,6 @@
     <ClInclude Include="..\thirdparty\imgui\imstb_truetype.h">
       <Filter>base\utils\3rd_party\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="d912pxy_extras.h">
-      <Filter>d3d9_impl\device\dx12</Filter>
-    </ClInclude>
     <ClInclude Include="..\thirdparty\imgui\imgui_impl_win32.h">
       <Filter>base\utils\3rd_party\imgui</Filter>
     </ClInclude>
@@ -596,6 +595,13 @@
     </ClInclude>
     <ClInclude Include="d912pxy_replay_buffer.h">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_dxbc9.h" />
+    <ClInclude Include="d912pxy_d3dx9.h">
+      <Filter>base\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_extras.h">
+      <Filter>d3d9_impl\device\dx12\extras</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -685,6 +691,9 @@
     </Filter>
     <Filter Include="base\utils\3rd_party\imgui">
       <UniqueIdentifier>{d9a4b233-60c9-4fb5-a394-8053cddf40ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\device\dx12\extras">
+      <UniqueIdentifier>{325acb17-80c2-4acb-8793-9f16048a908a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

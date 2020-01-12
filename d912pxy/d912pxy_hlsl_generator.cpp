@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -23,141 +23,6 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
-
-struct ID3DXBuffer : public IUnknown {
-	virtual LPVOID STDMETHODCALLTYPE GetBufferPointer(void) = 0;
-	virtual DWORD  STDMETHODCALLTYPE GetBufferSize(void) = 0;
-};
-
-typedef HRESULT
-(WINAPI *PD3DXDISASSEMBLESHADER)(
-	CONST DWORD *pShader,
-	BOOL EnableColorCode,
-	LPCSTR pComments,
-	ID3DXBuffer **ppDisassembly
-	);
-
-typedef HRESULT 
-(WINAPI *PD3DXAssembleShaderFromFile) (
-	_In_        LPCTSTR       pSrcFile,
-	_In_		void* pDefines,
-	_In_        void* pInclude,
-	_In_        DWORD         Flags,
-	_Out_       ID3DXBuffer** ppShader,
-	_Out_       ID3DXBuffer** ppErrorMsgs
-);
-
-HRESULT
-AssembleShader(const wchar_t* file)
-{
-	static BOOL firsttime = TRUE;
-
-	/*
-	* TODO: Consider using d3dcompile_xx.dll per
-	* http://msdn.microsoft.com/en-us/library/windows/desktop/ee663275.aspx
-	*/
-
-	static HMODULE hD3DXModule = NULL;
-	static PD3DXAssembleShaderFromFile pfnD3DXAssembleShaderFromFile = NULL;
-
-	if (firsttime) {
-		if (!hD3DXModule) {
-			unsigned release;
-			int version;
-			for (release = 0; release <= 1; ++release) {
-				/* Version 41 corresponds to Mar 2009 version of DirectX Runtime / SDK */
-				for (version = 41; version >= 0; --version) {
-					char filename[256];
-					_snprintf(filename, sizeof(filename),
-						"d3dx9%s%s%u.dll", release ? "" : "d", version ? "_" : "", version);
-					hD3DXModule = LoadLibraryA(filename);
-					if (hD3DXModule)
-						goto found;
-				}
-			}
-		found:
-			;
-		}
-
-		if (hD3DXModule) {
-			if (!pfnD3DXAssembleShaderFromFile) {
-				pfnD3DXAssembleShaderFromFile = (PD3DXAssembleShaderFromFile)GetProcAddress(hD3DXModule, "D3DXAssembleShaderFromFileW");
-			}
-		}
-
-		firsttime = FALSE;
-	}
-
-	ID3DXBuffer* pAssembly;
-	ID3DXBuffer** ppAssembly = &pAssembly;
-
-	HRESULT hr = E_FAIL;
-	if (pfnD3DXAssembleShaderFromFile) {
-		hr = pfnD3DXAssembleShaderFromFile(file, NULL, NULL, 0, reinterpret_cast<ID3DXBuffer **>(ppAssembly), NULL);
-
-		int len = pAssembly->GetBufferSize();
-
-		FILE* f = fopen("tmp.dxbc", "wb");
-
-		fwrite(pAssembly->GetBufferPointer(), len, 1, f);
-
-		fflush(f);
-		fclose(f);
-
-		pAssembly->Release();
-	}
-	return hr;
-}
-
-
-HRESULT
-DisassembleShader(const DWORD *tokens, ID3DXBuffer**ppDisassembly)
-{
-	static BOOL firsttime = TRUE;
-
-	/*
-	* TODO: Consider using d3dcompile_xx.dll per
-	* http://msdn.microsoft.com/en-us/library/windows/desktop/ee663275.aspx
-	*/
-
-	static HMODULE hD3DXModule = NULL;
-	static PD3DXDISASSEMBLESHADER pfnD3DXDisassembleShader = NULL;
-
-	if (firsttime) {
-		if (!hD3DXModule) {
-			unsigned release;
-			int version;
-			for (release = 0; release <= 1; ++release) {
-				/* Version 41 corresponds to Mar 2009 version of DirectX Runtime / SDK */
-				for (version = 41; version >= 0; --version) {
-					char filename[256];
-					_snprintf(filename, sizeof(filename),
-						"d3dx9%s%s%u.dll", release ? "" : "d", version ? "_" : "", version);
-					hD3DXModule = LoadLibraryA(filename);
-					if (hD3DXModule)
-						goto found;
-				}
-			}
-		found:
-			;
-		}
-
-		if (hD3DXModule) {
-			if (!pfnD3DXDisassembleShader) {
-				pfnD3DXDisassembleShader = (PD3DXDISASSEMBLESHADER)GetProcAddress(hD3DXModule, "D3DXDisassembleShader");
-			}
-		}
-
-		firsttime = FALSE;
-	}
-
-	HRESULT hr = E_FAIL;
-	if (pfnD3DXDisassembleShader) {
-		hr = pfnD3DXDisassembleShader(tokens, FALSE, NULL,
-			reinterpret_cast<ID3DXBuffer **>(ppDisassembly));
-	}
-	return hr;
-}
 
 const char* d912pxy_hlsl_generator_reg_names[20] = {
 	"reg_t", // Temporary Register File
@@ -236,10 +101,9 @@ UINT32 d912pxy_hlsl_generator::sRGB_alphatest_bits = 0;
 
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : 
 	d912pxy_noncom(L"hlsl generator"),
-	genProfile(d912pxy_shader_profile::load(uid))
+	genProfile(d912pxy_shader_profile::load(uid)),
+	code(src)
 {
-	oCode = src;
-	oLen = len;
 	PSpositionUsed = 0;
 	procIdent = 0;
 	mUID = uid;
@@ -260,6 +124,7 @@ d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * 
 	ZeroMemory(regDefinedAsC, 8 * ((D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN));
 	relLookupDefined = 0;
 	isDepthOutUsed = 0;
+	writeMaskOverride = 0;
 }
 
 d912pxy_hlsl_generator::~d912pxy_hlsl_generator()
@@ -279,427 +144,296 @@ d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::Process(UINT toMemory)
 	DumpDisassembly();
 #endif
 
-	UINT sioTableOffset = LoadSMBlock();
+	INT sioTableOffset = LoadSMBlock();
+	if (sioTableOffset == -1)
+		return 0;
 
 	WriteShaderHeadData();
 	WriteExtraUnusedRegs();
 	
-	UINT ocIdx=1;
-	while (ocIdx != oLen)
-	{
-		UINT16 sioID = oCode[ocIdx] & 0xFFFF;
+	do {
 
-		//skip comments
-		if (sioID == 0xFFFE)
-		{
-			ocIdx += ((oCode[ocIdx] >> 16) & 0xFFFF) + 1;
-			continue;
-		}
-		else if (sioID == 0xFFFF)
-		{
-			break;
-		}
+		d912pxy_dxbc9::token* tok = code.Current();
 
-		(this->*SIOhandlers[sioID + sioTableOffset])(&oCode[ocIdx]);
+		if (tok->iType == d912pxy_dxbc9::token_type::instruction)
+			(this->*SIOhandlers[tok->ins.operation + sioTableOffset])(tok);
 
-		//[27:24] For pixel and vertex shader versions earlier than 2_0, bits 24 through 27 are reserved and set to 0x0.
-		//For pixel and vertex shader versions 2_0 and later, bits 24 through 27 specify the size in DWORDs of the instruction 
-		//excluding the instruction token itself(that is, the number of tokens that comprise the instruction excluding the instruction token).
-
-		if (majVer < 2)
-			ocIdx += 1 + SM_1_X_SIO_SIZE[sioID];
-		else
-			ocIdx += 1 + (oCode[ocIdx] >> 24) & 0xF;
-	}
+	} while (code.Next());
 
 	WriteShaderTailData();
 	return WriteOutput(toMemory);
 }
 
-UINT d912pxy_hlsl_generator::GetRegType(DWORD dst)
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatDstRegister(d912pxy_dxbc9::token_register* reg)
 {
-	return ((dst & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT) | ((dst & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2);
-}
+	d912pxy_hlsl_generator_regtext ret = { 0 };
 
-UINT d912pxy_hlsl_generator::GetRegNumber(DWORD op)
-{
-	return op & 0x3FF;
-}
-
-UINT d912pxy_hlsl_generator::GetWriteMask(DWORD op)
-{
-	return (0xF0000 & op) >> 16;
-}
-
-D3DSHADER_PARAM_SRCMOD_TYPE d912pxy_hlsl_generator::GetSrcMod(DWORD op)
-{
-	return (D3DSHADER_PARAM_SRCMOD_TYPE)(op & D3DSP_SRCMOD_MASK);
-}
-
-d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatDstRegister(DWORD* regA)
-{
-	DWORD reg = regA[1];
-
-	CheckRegDefinition(reg, 1);
-
-	UINT64 writeMask = GetWriteMaskStr(reg);
-
-	d912pxy_hlsl_generator_regtext ret;
-
-	if (reg & 0x2000)
-	{
+	if (reg->target.relative)
 		LOG_ERR_THROW2(-1, "hlsl generator got dst relative addresing, which is not done yet");
-	}
 	else {
+		UINT64 wmask = reg->target.dst.getWriteMaskStr(writeMaskOverride);
+
 		sprintf(ret.t, "%s%u%s",
-			GetRegTypeStr(reg, 1),
-			GetRegNumber(reg),
-			(char*)&writeMask
+			GetRegTypeStr(reg->regType, 1),
+			reg->regNum,
+			(char*)&wmask
 		);
 	}
 
 	return ret;
 }
 
-d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatSrcRegister(DWORD* regA, UINT8 wm, UINT id, UINT haveDst, UINT allowFmtConvert)
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRegister(bool isDst, bool haveDst, UINT idx)
 {
-	UINT wOfs = 1;
+	if (isDst)
+		return FormatRegister(code.FindDstRegTokenIdx());
+	else 
+		return FormatRegister(code.FindSrcRegTokenIdx(haveDst, idx));
+}
 
-	if (haveDst)
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRegister(UINT tokOffset)
+{
+	auto tok = code.SubToken(tokOffset);
+
+	RegEnsureDefined(&tok->reg);
+
+	if (tok->iType == d912pxy_dxbc9::token_type::destination)
 	{
-		wOfs = 2;
-		if (regA[1] & 0x2000)
-			wOfs = 3;
+		return FormatDstRegister(&tok->reg);
 	}
-
-	for (int i = 0; i != id; ++i)
-	{
-		if (regA[wOfs] & 0x2000)
-			wOfs += 2;
-		else
-			wOfs += 1;
+	else {
+		return FormatSrcRegister(
+			&tok->reg,
+			(code.FindDstRegToken()->iType == d912pxy_dxbc9::token_type::destination) ? &code.FindDstRegToken()->reg : nullptr,
+			tok->reg.target.relative ? &code.SubToken(tokOffset + 1, d912pxy_dxbc9::token_type::relative)->reg : nullptr
+		);
 	}
+}
 
-	DWORD reg = regA[wOfs];
-	
-	CheckRegDefinition(reg, 0);
-
-	UINT64 swizzle = GetSwizzleStr(reg, wm);
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatSrcRegister(d912pxy_dxbc9::token_register* reg, d912pxy_dxbc9::token_register* dstReg, d912pxy_dxbc9::token_register* adrReg)
+{
+	UINT64 swizzle = reg->target.src.getSwizzleStr((dstReg && !writeMaskOverride) ? dstReg->target.dst.mask : writeMaskOverride);
 		
 	d912pxy_hlsl_generator_regtext ret;
 
-	if (reg & 0x2000)
+	if (reg->target.relative)
 	{
-		if (GetRegType(reg) != D3DSPR_CONST)
-		{
-			LOG_ERR_THROW2(-1, "relative adressing for registers other then constants are not supported yet");
-		}
-
-		char constType[2] = "V";
-		if (isPS)
-			constType[0] = 'P';
-
-		DWORD regAdr = regA[wOfs+1];
-		UINT64 swizzleAdr = GetSwizzleStr(regAdr, 1);
-
-		//megai2: base index of relative adressed register is defined in constants
-		//so we need to make copy of constants from zero rel. index to max found in code (at least)
-		if (IsRegDefined(reg, 0) == 2)
-		{	
-			UINT baseRelNum = GetRegNumber(reg);
-			if (!relLookupDefined)
-			{				
-				UINT relArrSz = 0;
-				for (int i = 0; i != 255 - baseRelNum; ++i)
-				{
-					if (IsRegDefined(reg, i))
-						++relArrSz;
-					else
-						break;//megai2: stop on first fail for now
-				}
-
-				HLSL_GEN_WRITE_PROC("float4 reg_consts_rel[%u] = { ", relArrSz);
-
-				for (int i = 0; i != relArrSz; ++i)
-				{
-					if (i + 1 == relArrSz)
-						HLSL_GEN_WRITE_PROC("	%s%u };", GetRegTypeStr(reg, 1), i + baseRelNum);
-					else
-						HLSL_GEN_WRITE_PROC("	%s%u,", GetRegTypeStr(reg, 1), i + baseRelNum);
-				}
-
-				relLookupDefined = baseRelNum;
-			}			
-
-			if (relLookupDefined != baseRelNum)
-				LOG_ERR_THROW2(-1, "reg_consts_rel go wrong 1");
-
-			switch (GetSrcMod(reg))
-			{
-			case D3DSPSM_NONE:
-				//c23[a0.x].swizzle => getPassedVSFv(23 + a0.x).swizzle
-				sprintf(ret.t, "reg_consts_rel[%s%u%s]%s",
-					GetRegTypeStr(regAdr, 1),
-					GetRegNumber(regAdr),
-					(char*)&swizzleAdr,
-					(char*)&swizzle
-				);
-				break;
-			case D3DSPSM_NEG:
-				sprintf(ret.t, "-reg_consts_rel[%s%u%s]%s",
-					GetRegTypeStr(regAdr, 1),
-					GetRegNumber(regAdr),
-					(char*)&swizzleAdr,
-					(char*)&swizzle
-				);
-				break;
-			case D3DSPSM_ABS:
-				sprintf(ret.t, "abs(reg_consts_rel[%s%u%s]%s)",
-					GetRegTypeStr(regAdr, 1),
-					GetRegNumber(regAdr),
-					(char*)&swizzleAdr,
-					(char*)&swizzle
-				);
-				break;
-			case D3DSPSM_ABSNEG:
-				sprintf(ret.t, "-abs(reg_consts_rel[%s%u%s]%s)",
-					GetRegTypeStr(regAdr, 1),
-					GetRegNumber(regAdr),
-					(char*)&swizzleAdr,
-					(char*)&swizzle
-				);
-				break;
-			default:
-				LOG_ERR_DTDM("hlsl generator not support %08lX src modifier", GetSrcMod(reg));
-				LOG_ERR_THROW2(-1, "hlsl generator not support passed src modifier");
-				break;
-			}
-		}
-		else {
-
-			switch (GetSrcMod(reg))
-			{
-			case D3DSPSM_NONE:
-				//c23[a0.x].swizzle => getPassedVSFv(23 + a0.x).swizzle
-				sprintf(ret.t, "getPassed%sSFv(%u+%s%u%s)%s",
-					constType,
-					GetRegNumber(reg),
-					GetRegTypeStr(regAdr, 1),
-					GetRegNumber(regAdr),
-					(char*)&swizzleAdr,
-					(char*)&swizzle
-				);
-				break;
-			case D3DSPSM_NEG:
-				sprintf(ret.t, "-getPassed%sSFv(%u+%s%u%s)%s",
-					constType,
-					GetRegNumber(reg),
-					GetRegTypeStr(regAdr, 1),
-					GetRegNumber(regAdr),
-					(char*)&swizzleAdr,
-					(char*)&swizzle
-				);
-				break;
-			case D3DSPSM_ABS:
-				sprintf(ret.t, "abs(getPassed%sSFv(%u+%s%u%s)%s)",
-					constType,
-					GetRegNumber(reg),
-					GetRegTypeStr(regAdr, 1),
-					GetRegNumber(regAdr),
-					(char*)&swizzleAdr,
-					(char*)&swizzle
-				);
-				break;
-			case D3DSPSM_ABSNEG:
-				sprintf(ret.t, "-abs(getPassed%sSFv(%u+%s%u%s)%s)",
-					constType,
-					GetRegNumber(reg),
-					GetRegTypeStr(regAdr, 1),
-					GetRegNumber(regAdr),
-					(char*)&swizzleAdr,
-					(char*)&swizzle
-				);
-				break;
-			default:
-				LOG_ERR_DTDM("hlsl generator not support %08lX src modifier", GetSrcMod(reg));
-				LOG_ERR_THROW2(-1, "hlsl generator not support passed src modifier");
-				break;
-			}
-		}
+		ret = FormatRelativeSrcRegister(reg, adrReg, swizzle);
 	}
 	else {
-
-		switch (GetSrcMod(reg))
-		{
-		case D3DSPSM_NONE:
-			sprintf(ret.t, "%s%u%s",
-				GetRegTypeStr(reg, 1),
-				GetRegNumber(reg),
-				(char*)&swizzle
-			);
-			break;
-		case D3DSPSM_NEG:
-			sprintf(ret.t, "(-%s%u%s)",
-				GetRegTypeStr(reg, 1),
-				GetRegNumber(reg),
-				(char*)&swizzle
-			);
-			break;
-		case D3DSPSM_ABS:
-			sprintf(ret.t, "abs(%s%u%s)",
-				GetRegTypeStr(reg, 1),
-				GetRegNumber(reg),
-				(char*)&swizzle
-			);
-			break;
-		case D3DSPSM_ABSNEG:
-			sprintf(ret.t, "(-abs(%s%u%s))",
-				GetRegTypeStr(reg, 1),
-				GetRegNumber(reg),
-				(char*)&swizzle
-			);
-			break;
-		default:
-			LOG_ERR_DTDM("hlsl generator not support %08lX src modifier", GetSrcMod(reg));
-			LOG_ERR_THROW2(-1, "hlsl generator not support passed src modifier");
-			break;
-		}
+		sprintf(ret.t, "%s%u%s",
+			GetRegTypeStr(reg->regType, 1),
+			reg->regNum,
+			(char*)&swizzle
+		);
 	}
 
-	if (haveDst & allowFmtConvert)
-		ret = FormatDstModifierForSrc(ret, regA[1], GetDstLenByWriteMask2(wm));
+	ret = FormatSrcModifier(ret, &reg->target.src);
+
+	if (dstReg && dstReg->target.dst.allowDstModForSrc)
+		ret = FormatDstModifierForSrc(ret, &dstReg->target);
 
 	return ret;
 }
 
-d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatDstModifier(d912pxy_hlsl_generator_regtext statement, DWORD dstOp, UINT8 dstLen)
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRelativeSrcRegister(d912pxy_dxbc9::token_register* reg, d912pxy_dxbc9::token_register* adrReg, UINT64 swizzle)
+{
+	d912pxy_hlsl_generator_regtext ret = { 0 };
+
+	if (!adrReg)
+	{
+		LOG_ERR_THROW2(-1, "relative adressing is marked, but no relative adress token found");
+		return ret;
+	}
+
+	if (reg->regType != D3DSPR_CONST)
+		LOG_ERR_THROW2(-1, "relative adressing for registers other then constants are not supported yet");
+
+	UINT64 adrComponent = adrReg->address.getComponent();
+
+	//megai2: base index of relative adressed register is defined in constants
+	//so we need to make copy of constants from zero rel. index to max found in code (at least)
+	if (RegIsDefined(reg, 0) == 2)
+	{
+		UINT baseRelNum = reg->regNum;
+		if (!relLookupDefined)
+		{
+			UINT relArrSz = 0;
+			for (int i = 0; i != 255 - baseRelNum; ++i)
+			{
+				if (RegIsDefined(reg, 0))
+					++relArrSz;
+				else
+					break;//megai2: stop on first fail for now
+			}
+
+			HLSL_GEN_WRITE_PROC("float4 reg_consts_rel[%u] = { ", relArrSz);
+
+			for (int i = 0; i != relArrSz; ++i)
+			{
+				if (i + 1 == relArrSz)
+					HLSL_GEN_WRITE_PROC("	%s%u };", GetRegTypeStr(reg->regType, 1), i + baseRelNum);
+				else
+					HLSL_GEN_WRITE_PROC("	%s%u,", GetRegTypeStr(reg->regType, 1), i + baseRelNum);
+			}
+
+			relLookupDefined = baseRelNum;
+		}
+
+		if (relLookupDefined != baseRelNum)
+			LOG_ERR_THROW2(-1, "reg_consts_rel go wrong 1");
+
+		//c23[a0.x].swizzle => getPassedVSFv(23 + a0.x).swizzle
+		sprintf(ret.t, "reg_consts_rel[%s%u%s]%s",
+			GetRegTypeStr(adrReg->regType, 1),
+			adrReg->regNum,
+			(char*)&adrComponent,
+			(char*)&swizzle
+		);
+	}
+	else {
+		char constType[2] = "V";
+		if (verToken.isPS)
+			constType[0] = 'P';
+
+		//c23[a0.x].swizzle => getPassedVSFv(23 + a0.x).swizzle
+		sprintf(ret.t, "getPassed%sSFv(%u+%s%u%s)%s",
+			constType,
+			reg->regNum,
+			GetRegTypeStr(adrReg->regType, 1),
+			adrReg->regNum,
+			(char*)&adrComponent,
+			(char*)&swizzle
+		);
+	}
+
+	return ret;
+}
+
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatSrcModifier(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target_source* reg)
 {
 	d912pxy_hlsl_generator_regtext ret;
 
-	switch (GetDstModifier(dstOp))
+	const char* srcModFmt = "%s";
+
+	switch (reg->mod)
 	{
-	case 0x0:
+	case D3DSPSM_NONE:
+		break;
+	case D3DSPSM_NEG:
+		srcModFmt = "(-%s)";
+		break;
+	case D3DSPSM_ABS:
+		srcModFmt = "abs(%s)";
+		break;
+	case D3DSPSM_ABSNEG:
+		srcModFmt = "(-abs(%s))";
+		break;
+	default:
+		LOG_ERR_DTDM("hlsl generator not support %08lX src modifier", reg->mod);
+		LOG_ERR_THROW2(-1, "hlsl generator not support passed src modifier");
+		break;
+	}
+
+	sprintf(ret.t, srcModFmt, statement.t);
+
+	return ret;
+}
+
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatDstModifier(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target* dstReg)
+{
+	d912pxy_hlsl_generator_regtext ret;
+
+	if (!dstReg)
+	{
+		sprintf(ret.t, "%s", statement.t);
+		return ret;
+	}
+
+	UINT dstLen = dstReg->dst.dstLength(writeMaskOverride);
+
+	switch (dstReg->dst.mod)
+	{
+	case D3DSPDM_NONE:
 		sprintf(ret.t, "%s", statement.t);
 		break;
-	case 0x1:
+	case D3DSPDM_SATURATE:
 		sprintf(ret.t, "saturate(%s)", statement.t);
 		break;
-	case 0x2:
+	case D3DSPDM_PARTIALPRECISION:
 		if (dstLen > 1)
 			sprintf(ret.t, "(half%u)(%s)", dstLen, statement.t);
 		else
 			sprintf(ret.t, "(half)(%s)", statement.t);
 		break;
-	case 0x3:
+	case D3DSPDM_PARTIALPRECISION | D3DSPDM_SATURATE:
 		if (dstLen > 1)
 			sprintf(ret.t, "saturate((half%u)(%s))", dstLen, statement.t);
 		else
 			sprintf(ret.t, "saturate((half)(%s))", statement.t);
 		break;
 	default:
-		LOG_ERR_DTDM("hlsl generator not support %08lX dst mod", (dstOp >> 20) & 0xF);
+		LOG_ERR_DTDM("hlsl generator not support %08lX dst mod", dstReg->dst.mod);
 		LOG_ERR_THROW2(-1, "hlsl generator not support passed dst modifier");
+		sprintf(ret.t, "failure");
 	}
 	return ret;
 }
 
-d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatDstModifierForSrc(d912pxy_hlsl_generator_regtext statement, DWORD dstOp, UINT8 dstLen)
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatDstModifierForSrc(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target* dstReg)
 {
 	d912pxy_hlsl_generator_regtext ret;
 
-	switch (GetDstModifier(dstOp))
+	switch (dstReg->dst.mod)
 	{
-	case 0x0:
-	case 0x1:
+	case D3DSPDM_NONE:
+	case D3DSPDM_SATURATE:
 		sprintf(ret.t, "%s", statement.t);
-		break;	
-	case 0x3:
-	case 0x2:
-		if (dstLen > 1)
-			sprintf(ret.t, "((half%u)(%s))", dstLen, statement.t);
+		break;
+	case D3DSPDM_PARTIALPRECISION | D3DSPDM_SATURATE:
+	case D3DSPDM_PARTIALPRECISION:
+	{
+		UINT dLen = dstReg->dst.dstLength(writeMaskOverride);
+		if (dLen > 1)
+			sprintf(ret.t, "((half%u)(%s))", dLen, statement.t);
 		else
 			sprintf(ret.t, "((half)(%s))", statement.t);
+	}
 		break;	
 	default:
-		LOG_ERR_DTDM("hlsl generator not support %08lX dst mod", (dstOp >> 20) & 0xF);
+		LOG_ERR_DTDM("hlsl generator not support %08lX dst mod", dstReg->dst.mod);
 		LOG_ERR_THROW2(-1, "hlsl generator not support passed dst modifier");
+		sprintf(ret.t, "failure");
 	}
 	return ret;
 }
 
-d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRightSide1(DWORD dstOp, const char * pre, const char * post, d912pxy_hlsl_generator_regtext op1, UINT8 dstLen)
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRightSide1(const char * pre, const char * post, d912pxy_hlsl_generator_regtext op1)
 {
-	d912pxy_hlsl_generator_regtext ret;
+	d912pxy_hlsl_generator_regtext empty = { 0 };
 
-	sprintf(ret.t, "%s%s%s", pre, op1.t, post);
-
-	return FormatDstModifier(ret, dstOp, dstLen);
+	return FormatRightSide2(pre, post, "", op1, empty);
 }
 
-d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRightSide2(DWORD dstOp, const char * pre, const char * post, const char * mid, d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, UINT8 dstLen)
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRightSide2(const char * pre, const char * post, const char * mid, d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2)
 {
-	d912pxy_hlsl_generator_regtext ret;
+	d912pxy_hlsl_generator_regtext empty = { 0 };
 
-	sprintf(ret.t, "%s%s%s%s%s", pre, op1.t, mid, op2.t, post);
-
-	return FormatDstModifier(ret, dstOp, dstLen);
+	const char* midA[2]{
+		mid,
+		""
+	};
+	
+	return FormatRightSide3(pre, post, midA, op1, op2, empty);
 }
 
-d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRightSide3(DWORD dstOp, const char * pre, const char * post, const char * mid[2], d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, d912pxy_hlsl_generator_regtext op3, UINT8 dstLen)
+d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRightSide3(const char * pre, const char * post, const char * mid[2], d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, d912pxy_hlsl_generator_regtext op3)
 {
 	d912pxy_hlsl_generator_regtext ret;
 
 	sprintf(ret.t, "%s%s%s%s%s%s%s", pre, op1.t, mid[0], op2.t, mid[1], op3.t, post);
 
-	return FormatDstModifier(ret, dstOp, dstLen);
-}
-
-UINT64 d912pxy_hlsl_generator::FormatCmpString(DWORD op)
-{
-	UINT64 retV = 0;
-
-	char* ret = (char*)&retV;
-
-	/*D3DSPC_GT = 1, // 0 0 1
-	D3DSPC_EQ = 2, // 0 1 0
-	D3DSPC_GE = 3, // 0 1 1
-	D3DSPC_LT = 4, // 1 0 0
-	D3DSPC_NE = 5, // 1 0 1
-	D3DSPC_LE = 6, // 1 1 0*/
-
-	switch ((op & D3DSHADER_COMPARISON_MASK) >> D3DSHADER_COMPARISON_SHIFT)
-	{
-	case 1://GT
-		sprintf(ret, " > ");
-		break;
-	case 2://EQ
-		sprintf(ret, " == ");
-		break;
-	case 3://GE
-		sprintf(ret, " >= ");
-		break;
-	case 4://LT
-		sprintf(ret, " < ");
-		break;
-	case 5://NE
-		sprintf(ret, " != ");
-		break;
-	case 6://LE
-		sprintf(ret, " <= ");
-		break;
-	}
-
-	return retV;
-}
-
-UINT d912pxy_hlsl_generator::GetDstModifier(DWORD op)
-{
-	UINT ret = (op >> 20) & 0xF;
-
-	if (!allowPP_suffix)	
-		ret &= 1;	
-
-	return ret;
+	return FormatDstModifier(ret, (code.FindDstRegToken()->iType == d912pxy_dxbc9::token_type::destination) ? &code.FindDstRegToken()->reg.target : nullptr);
 }
 
 int d912pxy_hlsl_generator::WriteProcLinePredef(const char * fmt, ...)
@@ -746,7 +480,7 @@ void d912pxy_hlsl_generator::WriteHeadILine(UINT prio, const char * fmt, ...)
 
 	UINT idx = headerOffsetI;
 
-	if (isPS)
+	if (verToken.isPS)
 	{
 		idx += prio;
 	}
@@ -761,7 +495,7 @@ void d912pxy_hlsl_generator::WriteHeadILine(UINT prio, const char * fmt, ...)
 	vsprintf(lines[idx], fmt, args);
 	va_end(args);
 
-	if (!isPS || prio == 0)
+	if (!verToken.isPS || prio == 0)
 		++headerOffsetI;	
 }
 
@@ -771,7 +505,7 @@ void d912pxy_hlsl_generator::WriteHeadOLine(UINT prio, const char * fmt, ...)
 
 	UINT idx = headerOffsetO;
 
-	if (!isPS)
+	if (!verToken.isPS)
 	{
 		idx += prio;
 	}
@@ -786,39 +520,19 @@ void d912pxy_hlsl_generator::WriteHeadOLine(UINT prio, const char * fmt, ...)
 	vsprintf(lines[idx], fmt, args);
 	va_end(args);
 
-	if (isPS || prio == 0)
+	if (verToken.isPS || prio == 0)
 		++headerOffsetO;
 }
 
-UINT d912pxy_hlsl_generator::GetDstLenByWriteMask(DWORD op)
-{
-	UINT wm = GetWriteMask(op);
-
-	return GetDstLenByWriteMask2(wm);
-}
-
-UINT d912pxy_hlsl_generator::GetDstLenByWriteMask2(DWORD wmask)
-{
-	UINT ret = 0;
-	for (int i = 0; i != 4; ++i)
-	{
-		if (wmask & (1 << i))
-		{
-			++ret;
-		}
-	}
-	return ret;
-}
-
-const char * d912pxy_hlsl_generator::GetRegTypeStr(DWORD op, UINT8 proc)
+const char * d912pxy_hlsl_generator::GetRegTypeStr(DWORD regType, UINT8 proc)
 {
 	if (proc)
-		if (isPS)
-			return d912pxy_hlsl_generator_reg_names_proc_ps[GetRegType(op)];
+		if (verToken.isPS)
+			return d912pxy_hlsl_generator_reg_names_proc_ps[regType];
 		else
-			return d912pxy_hlsl_generator_reg_names_proc_vs[GetRegType(op)];
+			return d912pxy_hlsl_generator_reg_names_proc_vs[regType];
 	else
-		return d912pxy_hlsl_generator_reg_names[GetRegType(op)];
+		return d912pxy_hlsl_generator_reg_names[regType];
 }
 
 const char * d912pxy_hlsl_generator::GetUsageString(UINT usage, UINT type)
@@ -925,248 +639,153 @@ const char * d912pxy_hlsl_generator::GetUsageString(UINT usage, UINT type)
 	return "ERRUSAGE";
 }
 
-UINT64 d912pxy_hlsl_generator::GetWriteMaskStr(DWORD op)
+void d912pxy_hlsl_generator::RegEnsureDefined(d912pxy_dxbc9::token_register* reg)
 {
-	UINT64 retV;
-	char* ret = (char*)&retV;
-
-	ret[0] = '.';
-	int wp = 1;
-	UINT wm = GetWriteMask(op);
-
-	if (wm == 0xF)	
-		return 0;
-
-	char maskCh[4] = { 'x', 'y', 'z', 'w' };
-	
-	for (int i = 0; i != 4; ++i)
+	if (!RegIsDefined(reg, 0))
 	{
-		if ((1 << i) & wm)
-		{
-			ret[wp] = maskCh[i];
-			++wp;
-		}
+		RegDefine(reg, false, false);
 	}
-	ret[wp] = 0;
-
-	return retV;
 }
 
-UINT64 d912pxy_hlsl_generator::GetSwizzleStr(DWORD opSrc, DWORD wm)
+void d912pxy_hlsl_generator::RegDefine(d912pxy_dxbc9::token_register* reg, bool asConstant, bool isIOreg)
 {
-	UINT64 retV;
-	char* ret = (char*)&retV;
-
-	char swCh[4] = {
-		(char)((opSrc >> 16) & 0x3),//x
-		(char)((opSrc >> 18) & 0x3),//y
-		(char)((opSrc >> 20) & 0x3),//z
-		(char)((opSrc >> 22) & 0x3)//w
-	};
-
-	ret[0] = '.';
-	int wp = 1;
-
-	for (int i = 0; i != 4; ++i)
-	{		
-		if (!((1 << i) & wm))
-			continue;
-		
-		switch (swCh[i])
-		{
-			case 0: //x
-				swCh[i] = 'x';
-				break;
-			case 1: //y
-				swCh[i] = 'y';
-				break;
-			case 2: //z
-				swCh[i] = 'z';
-				break;
-			case 3: //w
-				swCh[i] = 'w';
-				break;
-		}
-
-		ret[wp] = swCh[i];
-		++wp;
-	}
-	ret[wp] = 0;
-
-	//megai2: means ".xyzw", so we can skip this safely
-	if ((retV & 0x000000777a79782e) == 0x000000777a79782e)
-	{
-		return 0;
-	}
-
-	return retV;
-}
-
-void d912pxy_hlsl_generator::CheckRegDefinition(DWORD op, UINT isDst)
-{
-	UINT type = GetRegType(op);
-	UINT num = GetRegNumber(op);
-
-	UINT64 ai = type * (D3DSPR_PREDICATE + 1) + (num >> 6);
+	UINT num = reg->regNum;
+	UINT ai = reg->regType * (D3DSPR_PREDICATE + 1) + (num >> 6);
 	UINT64 rm = 1ULL << (num & 0x3F);
 
-	//HLSL_GEN_WRITE_PROC("//check reg %u - %u on %u - %016llX by %016llX", type, num, ai, rm, regDefined[ai]);
-	if ((regDefined[ai] & rm) == 0ULL)
-	{
-		switch (type)
-		{
-			case D3DSPR_CONST:
-			{
-				if (isPS)
-				{		
-					HLSL_GEN_WRITE_PROC_PD("float4 %s%u = getPassedPSFv(%u);",
-						GetRegTypeStr(op, 1),
-						num, 
-						num
-					);
-				}
-				else {
-					HLSL_GEN_WRITE_PROC_PD("float4 %s%u = getPassedVSFv(%u);",
-						GetRegTypeStr(op, 1),
-						num,
-						num
-					);
-				}
-				break;
-			}
-			case D3DSPR_CONSTINT:
-			{
-				HLSL_GEN_WRITE_PROC_PD("uint4 %s%u = { 0, 0, 0, 0 };",
-					GetRegTypeStr(op, 1),
-					num
-				);
-				break;
-			}
-			case D3DSPR_COLOROUT:
-			{
-				HLSL_GEN_WRITE_HEADO(0, "	float4 %s%u: SV_TARGET;",
-					GetRegTypeStr(op, 0),
-					num
-				);
-				HLSL_GEN_WRITE_PROC_PD("#define dx9_ret_color_reg_ac %s%u",
-					GetRegTypeStr(op, 1),
-					num
-				);
-				/*HLSL_GEN_WRITE_PROC_PD("%s%u = float4(1,1,1,1);",
-					GetRegTypeStr(op, 1),
-					num
-				);*/
-				break;
-			}
-			case D3DSPR_TEXCRDOUT:
-			{
-				if (majVer <= 2)
-				{
-					HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_TEXC, num), "	float4 %s%u: TEXCOORD%u;",
-						GetRegTypeStr(op, 0),
-						num,
-						num
-					);
-				}
-				break;
-			}
-			case D3DSPR_RASTOUT:
-			{
-				if (majVer <= 2)
-				{
-					if (num == 0)
-					{
-						HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "	float4 %s%u: SV_POSITION;",
-							GetRegTypeStr(op, 0),
-							num
-						);
-						HLSL_GEN_WRITE_PROC_PD("#define dx9_halfpixel_pos_reg_ac %s%u",
-							GetRegTypeStr(op, 1),
-							num
-						);
-					}
-					else {
-						//megai2: i think this is fog & point size registers, that are not routed to PS, so we need to emulate them or just ignore
-						HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "	float4 %s%u: FIXPIPE_UNIMPL%u;",
-							GetRegTypeStr(op, 0),
-							num, num
-						);
-					}
-				}
-				break;
-			}
-			case D3DSPR_DEPTHOUT:
-			{
-				lines[mainFunctionDeclStrIdx][strlen(lines[mainFunctionDeclStrIdx]) - 1] = 0;
-				strcat(lines[mainFunctionDeclStrIdx], ", out float glob_depthOut: SV_Depth)");
-
-				isDepthOutUsed = 1;
-				//megai2: drop to default case from here
-			}
-			default:
-				if (isDst)
-				{
-					switch (GetDstModifier(op))
-					{
-						case 0x0:
-						case 0x1:
-						{
-							HLSL_GEN_WRITE_PROC_PD("float4 %s%u = { 0, 0, 0, 0 };",
-								GetRegTypeStr(op, 1),
-								num
-							);
-						}
-						break;
-						case 0x3:
-						case 0x2:
-						{
-							HLSL_GEN_WRITE_PROC_PD("half4 %s%u = { 0, 0, 0, 0 };",
-								GetRegTypeStr(op, 1),
-								num
-							);
-						}
-						break;
-						default:
-							LOG_ERR_DTDM("hlsl generator not support %08lX dst mod", GetDstModifier(op));
-							LOG_ERR_THROW2(-1, "hlsl generator not support passed dst modifier");						
-					}
-				}
-				else {
-					HLSL_GEN_WRITE_PROC_PD("float4 %s%u = { 0, 0, 0, 0 };",
-						GetRegTypeStr(op, 1),
-						num
-					);
-				}
-				break;
-		}
-		regDefined[ai] |= rm;		
-	}
-}
-
-void d912pxy_hlsl_generator::DefineIOReg(DWORD op, UINT asConstant)
-{
-	UINT type = GetRegType(op);
-	UINT num = GetRegNumber(op);
-
-	UINT ai = type * (D3DSPR_PREDICATE + 1) + (num >> 6);
-	UINT64 rm = 1ULL << (num & 0x3F);
 	regDefined[ai] |= rm;
 	regDefinedAsC[ai] |= (rm * asConstant);
+
+	if (isIOreg || asConstant)
+		return;
+
+	switch (reg->regType)
+	{
+	case D3DSPR_CONST:
+	{
+		HLSL_GEN_WRITE_PROC_PD("float4 %s%u = getPassed%sSFv(%u);",
+			GetRegTypeStr(reg->regType, 1),
+			num,
+			verToken.isPS ? "P" : "V",
+			num
+		);
+		break;
+	}
+	case D3DSPR_CONSTINT:
+	{
+		HLSL_GEN_WRITE_PROC_PD("uint4 %s%u = { 0, 0, 0, 0 };",
+			GetRegTypeStr(reg->regType, 1),
+			num
+		);
+		break;
+	}
+	case D3DSPR_COLOROUT:
+	{
+		HLSL_GEN_WRITE_HEADO(0, "	float4 %s%u: SV_TARGET;",
+			GetRegTypeStr(reg->regType, 0),
+			num
+		);
+		HLSL_GEN_WRITE_PROC_PD("#define dx9_ret_color_reg_ac %s%u",
+			GetRegTypeStr(reg->regType, 1),
+			num
+		);
+		break;
+	}
+	case D3DSPR_TEXCRDOUT:
+	{
+		if (verToken.major <= 2)
+		{
+			HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_TEXC, num), "	float4 %s%u: TEXCOORD%u;",
+				GetRegTypeStr(reg->regType, 0),
+				num,
+				num
+			);
+		}
+		break;
+	}
+	case D3DSPR_RASTOUT:
+	{
+		if (verToken.major <= 2)
+		{
+			if (num == 0)
+			{
+				HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "	float4 %s%u: SV_POSITION;",
+					GetRegTypeStr(reg->regType, 0),
+					num
+				);
+				HLSL_GEN_WRITE_PROC_PD("#define dx9_halfpixel_pos_reg_ac %s%u",
+					GetRegTypeStr(reg->regType, 1),
+					num
+				);
+			}
+			else {
+				//megai2: i think this is fog & point size registers, that are not routed to PS, so we need to emulate them or just ignore
+				HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "	float4 %s%u: FIXPIPE_UNIMPL%u;",
+					GetRegTypeStr(reg->regType, 0),
+					num, num
+				);
+			}
+		}
+		break;
+	}
+	case D3DSPR_DEPTHOUT:
+	{
+		lines[mainFunctionDeclStrIdx][strlen(lines[mainFunctionDeclStrIdx]) - 1] = 0;
+		strcat(lines[mainFunctionDeclStrIdx], ", out float glob_depthOut: SV_Depth)");
+
+		isDepthOutUsed = 1;
+		//megai2: drop to default case from here
+	}
+	default:
+		/*if (isDst)
+		{
+			switch (reg->target.dst.mod)
+			{
+			case D3DSPDM_NONE:
+			case D3DSPDM_SATURATE:
+			{
+				HLSL_GEN_WRITE_PROC_PD("float4 %s%u = { 0, 0, 0, 0 };",
+					GetRegTypeStr(reg->regType, 1),
+					num
+				);
+			}
+			break;
+			case D3DSPDM_PARTIALPRECISION:
+			case D3DSPDM_PARTIALPRECISION | D3DSPDM_SATURATE:
+			{
+				HLSL_GEN_WRITE_PROC_PD("half4 %s%u = { 0, 0, 0, 0 };",
+					GetRegTypeStr(reg->regType, 1),
+					num
+				);
+			}
+			break;
+			default:
+				LOG_ERR_DTDM("hlsl generator not support %08lX dst mod", reg->target.dst.mod);
+				LOG_ERR_THROW2(-1, "hlsl generator not support passed dst modifier");
+			}
+		}
+		else {*/
+			HLSL_GEN_WRITE_PROC_PD("float4 %s%u = { 0, 0, 0, 0 };",
+				GetRegTypeStr(reg->regType, 1),
+				num
+			);
+		/*}
+		break;*/
+	}
 }
 
-int d912pxy_hlsl_generator::IsRegDefined(DWORD op, UINT numOffset)
+int d912pxy_hlsl_generator::RegIsDefined(d912pxy_dxbc9::token_register* reg, UINT numOffset)
 {
-	UINT type = GetRegType(op);
-	UINT num = GetRegNumber(op) + numOffset;
-
-	UINT ai = type * (D3DSPR_PREDICATE + 1) + (num >> 6);
+	UINT num = reg->regNum + numOffset;
+	UINT ai = reg->regType * (D3DSPR_PREDICATE + 1) + (num >> 6);
 	UINT64 rm = 1ULL << (num & 0x3F);
+
 	return ((regDefined[ai] & rm) != 0) * (1 + ((regDefinedAsC[ai] & rm) != 0));
 }
 
 UINT d912pxy_hlsl_generator::IsNaNGuardEnabled(UINT bit)
 {
-	return ((NaNguard_flag >> (isPS * PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT)) & bit) > 0;	
+	return ((NaNguard_flag >> (verToken.isPS * PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT)) & bit) > 0;	
 }
 
 void d912pxy_hlsl_generator::LoadGenProfile()
@@ -1183,16 +802,16 @@ void d912pxy_hlsl_generator::LoadGenProfile()
 	genProfile.ignoreChanges();
 }
 
-void d912pxy_hlsl_generator::ProcSIO_DOTX(DWORD * op, UINT sz)
+void d912pxy_hlsl_generator::ProcSIO_DOTX(d912pxy_dxbc9::token * op, UINT sz)
 {
-	UINT64 writeMask = GetWriteMaskStr(op[1]);
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
 
-	UINT32 srcComps = (1 << sz)-1;
+	OverrideWriteMask(((1 << sz) - 1));
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(0, 1, 0);
+	d912pxy_hlsl_generator_regtext sSrc2 = FormatRegister(0, 1, 1);
+	OverrideWriteMask(0);
 
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatSrcRegister(op, srcComps, 0, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc2 = FormatSrcRegister(op, srcComps, 1, 1, 1);
-	d912pxy_hlsl_generator_regtext rSide = FormatRightSide2(op[1], "dot(", ")", ",", sSrc1, sSrc2, 1);
+	d912pxy_hlsl_generator_regtext rSide = FormatRightSide2("dot(", ")", ",", sSrc1, sSrc2);
 
 	HLSL_GEN_WRITE_PROC("%s = %s;",
 		sDst.t,
@@ -1200,15 +819,13 @@ void d912pxy_hlsl_generator::ProcSIO_DOTX(DWORD * op, UINT sz)
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_3OP(DWORD * op, const char * pre, const char * mid[2], const char * post)
+void d912pxy_hlsl_generator::ProcSIO_3OP(d912pxy_dxbc9::token* op, const char * pre, const char * mid[2], const char * post)
 {
-	UINT64 writeMask = GetWriteMaskStr(op[1]);
-
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatSrcRegister(op, GetWriteMask(op[1]),0, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc2 = FormatSrcRegister(op, GetWriteMask(op[1]),1, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc3 = FormatSrcRegister(op, GetWriteMask(op[1]),2, 1, 1);
-	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3(op[1], pre, post, mid, sSrc1, sSrc2, sSrc3, GetDstLenByWriteMask(op[1]));
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(0, 1, 0);
+	d912pxy_hlsl_generator_regtext sSrc2 = FormatRegister(0, 1, 1);
+	d912pxy_hlsl_generator_regtext sSrc3 = FormatRegister(0, 1, 2);
+	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3(pre, post, mid, sSrc1, sSrc2, sSrc3);
 
 	HLSL_GEN_WRITE_PROC("%s = %s;",
 		sDst.t,
@@ -1216,14 +833,12 @@ void d912pxy_hlsl_generator::ProcSIO_3OP(DWORD * op, const char * pre, const cha
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_2OP(DWORD * op, const char * pre, const char * mid, const char * post)
+void d912pxy_hlsl_generator::ProcSIO_2OP(d912pxy_dxbc9::token* op, const char * pre, const char * mid, const char * post)
 {
-	UINT64 writeMask = GetWriteMaskStr(op[1]);
-
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatSrcRegister(op, GetWriteMask(op[1]),0, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc2 = FormatSrcRegister(op, GetWriteMask(op[1]),1, 1, 1);
-	d912pxy_hlsl_generator_regtext rSide = FormatRightSide2(op[1], pre, post, mid, sSrc1, sSrc2, GetDstLenByWriteMask(op[1]));
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(0, 1, 0);
+	d912pxy_hlsl_generator_regtext sSrc2 = FormatRegister(0, 1, 1);
+	d912pxy_hlsl_generator_regtext rSide = FormatRightSide2(pre, post, mid, sSrc1, sSrc2);
 
 	HLSL_GEN_WRITE_PROC("%s = %s;",
 		sDst.t,
@@ -1231,12 +846,11 @@ void d912pxy_hlsl_generator::ProcSIO_2OP(DWORD * op, const char * pre, const cha
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_1OP(DWORD * op, const char * pre, const char * post)
+void d912pxy_hlsl_generator::ProcSIO_1OP(d912pxy_dxbc9::token* op, const char * pre, const char * post)
 {
-	UINT64 writeMask = GetWriteMaskStr(op[1]);
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatSrcRegister(op, GetWriteMask(op[1]),0, 1, 1);
-	d912pxy_hlsl_generator_regtext rSide = FormatRightSide1(op[1],pre, post, sSrc1, GetDstLenByWriteMask(op[1]));
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(0, 1, 0);
+	d912pxy_hlsl_generator_regtext rSide = FormatRightSide1(pre, post, sSrc1);
 
 	HLSL_GEN_WRITE_PROC("%s = %s;",
 		sDst.t,
@@ -1244,31 +858,29 @@ void d912pxy_hlsl_generator::ProcSIO_1OP(DWORD * op, const char * pre, const cha
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_ADD(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_ADD(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_2OP(op, "", " + ", "");
 }
 
-UINT d912pxy_hlsl_generator::LoadSMBlock()
+INT d912pxy_hlsl_generator::LoadSMBlock()
 {
-	majVer = (oCode[0] & 0xFF00) >> 8;
-	minVer = oCode[0] & 0xFF;
-	isPS = (oCode[0] & 0x10000) != 0;
+	verToken = code.Current()->ver;
 
-
-	UINT sioTableOffset = 0;
-	if (majVer == 3)
-		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x;
-	else if (majVer == 2)
-		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x;
-	else if (majVer == 1)
-		sioTableOffset = d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x;
-	else {
-		LOG_ERR_DTDM("hlsl generator not support %u_%u shader model", majVer, minVer);
-		LOG_ERR_THROW2(-1, "hlsl generator not support shader model specified");
+	switch (verToken.major)
+	{
+	case 3:
+		return d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x;
+	case 2:
+		return d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x;
+	case 1:
+		return d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x;
+	default:
+		LOG_ERR_DTDM("hlsl generator not support %u_%u shader model", verToken.major, verToken.minor);
 	}
 
-	return sioTableOffset;
+	return -1;
+	
 }
 
 void d912pxy_hlsl_generator::DumpDisassembly()
@@ -1277,8 +889,8 @@ void d912pxy_hlsl_generator::DumpDisassembly()
 	const char* copener = "/*\n";
 	const char* ccloser = "\n*/\n";
 	fwrite(copener, 3, 1, of);
-	ID3DXBuffer * dasm;
-	if (FAILED(DisassembleShader(oCode, &dasm)))
+	ID3DXBuffer * dasm = code.getDisassembly();
+	if (!dasm)
 	{
 		LOG_DBG_DTDM3("dbg shader not disassembled");
 	} else {
@@ -1337,497 +949,387 @@ d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::WriteOutput(UINT toMemory
 	}
 }
 
-void d912pxy_hlsl_generator::ProcSIO_DEF(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_DEF(d912pxy_dxbc9::token* op)
 {
-	UINT reg = GetRegType(op[1]);
-	UINT wm = GetWriteMask(op[1]);
-	UINT num = GetRegNumber(op[1]);
+	d912pxy_dxbc9::token_register* dstReg = &code.FindDstRegToken()->reg;
+	UINT dstRegOffset = code.FindDstRegTokenIdx()+1;
 
-	LOG_DBG_DTDM("def regt = %u wm = %X num = %u", reg, wm, num);
+	LOG_DBG_DTDM("def regt = %u wm = %X num = %u", dstReg->regType, dstReg->target.dst.mask, dstReg->regNum);
 	
-	if (wm != 0xF)
-		LOG_ERR_THROW2(-1, "hlsl gen stuck");
+	if (dstReg->target.dst.mask != 0xF)
+		LOG_ERR_THROW2(-1, "hlsl gen stuck due to def dst reg being masked");
 
-	DefineIOReg(op[1], 1);
+	RegDefine(dstReg, true, false);
 
-	switch (reg)
+	d912pxy_dxbc9::token_raw v4[4];
+
+	for (int i = 0; i != 4; ++i)
+		v4[i] = code.SubToken(dstRegOffset + i, d912pxy_dxbc9::token_type::raw)->raw;
+
+	switch (dstReg->regType)
 	{
 		case D3DSPR_CONST:
-		{
-			float fv4[4];
-
-			fv4[0] = *((float*)&op[1 + 1]);
-			fv4[1] = *((float*)&op[1 + 2]);
-			fv4[2] = *((float*)&op[1 + 3]);
-			fv4[3] = *((float*)&op[1 + 4]);
-
 			HLSL_GEN_WRITE_PROC(
 				"float4 %s%u = { %.9f , %.9f , %.9f , %.9f };",
-				d912pxy_hlsl_generator_reg_names[reg],
-				num,
-				fv4[0], fv4[1], fv4[2], fv4[3]
+				GetRegTypeStr(dstReg->regType, 1),
+				dstReg->regNum,
+				v4[0].f, v4[1].f, v4[2].f, v4[3].f
 			);
-		}
-		break;
+			break;
 		case D3DSPR_CONSTINT:
-		{
-			INT32 iv4[4];
-
-			iv4[0] = *((INT32*)&op[1 + 1]);
-			iv4[1] = *((INT32*)&op[1 + 2]);
-			iv4[2] = *((INT32*)&op[1 + 3]);
-			iv4[3] = *((INT32*)&op[1 + 4]);
-
 			HLSL_GEN_WRITE_PROC(
 				"int4 %s%u = { %li , %li , %li , %li };",
-				d912pxy_hlsl_generator_reg_names[reg],
-				num,
-				iv4[0], iv4[1], iv4[2], iv4[3]
+				GetRegTypeStr(dstReg->regType, 1),
+				dstReg->regNum,
+				v4[0].i32, v4[1].i32, v4[2].i32, v4[3].i32
 			);
-		}
-		break;
+			break;
 		default:
-			LOG_ERR_THROW2(-1, "hlsl gen stuck on def sio");
+			LOG_ERR_THROW2(-1, "hlsl gen stuck on def sio due to wrong regType");
 			break;
 	}		
 }
 
-void d912pxy_hlsl_generator::ProcSIO_DCL(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_DCL_sm1(d912pxy_dxbc9::token* op)
 {
-	//ProcSIO_UNK(op);
+	ProcSIO_DCL_sm2(op);//megai2: TODO ... -_-
+}
 
-	//1 is DCL instruct token
-	//2 is DST token
+void d912pxy_hlsl_generator::ProcSIO_DCL_sm2(d912pxy_dxbc9::token* op)
+{
+	d912pxy_dxbc9::token* dstTok;
+	d912pxy_dxbc9::token* dclTok;
+	ProcSIO_DCL_shared(op, &dstTok, &dclTok);
 
-	UINT dstReg = GetRegType(op[2]);
-	UINT regNum = GetRegNumber(op[2]);
-	
-	LOG_DBG_DTDM("DCL of %S%u", d912pxy_hlsl_generator_reg_names[dstReg], regNum);
+	UINT usageType = dclTok->dcl.usage;
+	UINT dclId = dclTok->dcl.id;
+	const char* regNameStr = GetRegTypeStr(dstTok->reg.regType, 0);
+	UINT regNum = dstTok->reg.regNum;
 
-	DefineIOReg(op[2], 0);
-	
-	if (isPS)
+	if (verToken.isPS)
 	{
-		if (majVer >= 3)
+		switch (dstTok->reg.regType)
 		{
-			switch (dstReg)
+			case D3DSPR_SAMPLER:
 			{
-				case D3DSPR_SAMPLER:
-				{
-					D3DSAMPLER_TEXTURE_TYPE texType = (D3DSAMPLER_TEXTURE_TYPE)(D3DSP_TEXTURETYPE_MASK & op[1]);
-
-					UINT texTypeO = texType >> D3DSP_TEXTURETYPE_SHIFT;
-
-					const char* samplerType[] = {
-						"unk",
-						"unk",
-						"tex2d",
-						"texCube",
-						"texVolume",
-						"depth"
-					};
-					
-					if (genProfile.entryStageSelected(d912pxy_shader_profile::entry::pcf_sampler, regNum))
-						texTypeO = 5;
-
-					if ((texTypeO == 0) || (texTypeO > 5))
-					{
-						LOG_ERR_THROW2(-1, "hlsl gen wrong sampler type");
-					}
-
-					if (texTypeO == 3)
-					{
-						HLSL_GEN_WRITE_PROC(
-							"TextureCube %s%ut = textureBindsCubed[texState.texture_s%u];",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
-						);
-					}
-					else {
-						HLSL_GEN_WRITE_PROC(
-							"Texture2DArray %s%ut = textureBinds[texState.texture_s%u];",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
-						);
-					}
-					HLSL_GEN_WRITE_PROC(
-						"sampler %s%us = samplerBinds[texState.sampler_s%u];",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
-					);
-					HLSL_GEN_WRITE_PROC(
-						"#define %s%u_deftype %s",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, samplerType[texTypeO]
-					);
-					HLSL_GEN_WRITE_PROC(
-						"#define %s%u_srgb_flag %u",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, 1 << regNum
-					);
-					HLSL_GEN_WRITE_PROC(" ");
-				}
-				break;
-				case D3DSPR_INPUT:
-				case D3DSPR_TEXTURE:
-				{
-					UINT dclId = ((op[1] >> 16) & 0xF);
-					UINT usageType = op[1] & 0x1F;
-					HLSL_GEN_WRITE_HEADI(
-						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId),
-						"/*default*/    float4 %s%u: %s%u;",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(usageType,1), dclId
-					);
-					
-					if ((dclId > 0) && (!d912pxy_pso_cache::allowRealtimeChecks))
-					{
-						UINT itr = (HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId) + headerOffsetI);
-						do
-						{
-							--itr;
-							--dclId;
-
-							if (lines[itr] == 0)
-							{
-								HLSL_GEN_WRITE_HEADI(
-									itr - headerOffsetI,
-									"/*default*/    float4 %s%u_s%u: %s%u;",
-									"unused_ireg_", regNum, dclId, GetUsageString(op[1] & 0x1F, 1), dclId
-								);
-							}							
-						} while (dclId != 0);
-					}
-				}
-				break;
-				case D3DSPR_MISCTYPE:
-				{
-					if (regNum == D3DSMO_POSITION)
-					{
-						HLSL_GEN_WRITE_HEADI(
-							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
-							"/*default*/    float4 %s%u: SV_POSITION;",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum
-						);
-
-						HLSL_GEN_WRITE_PROC_PD("float4 %s%u = inp.%s%u;", d912pxy_hlsl_generator_reg_names[dstReg], regNum, d912pxy_hlsl_generator_reg_names[dstReg], regNum);
-
-						if (isPS)
-						{
-							PSpositionUsed = 1;
-							HLSL_GEN_WRITE_PROC("%s%u = %s%u - 0.5f;", 
-								GetRegTypeStr(op[2], 1),
-								regNum,
-								GetRegTypeStr(op[2], 1),
-								regNum
-							);
-
-							HLSL_GEN_WRITE_PROC("#define ps_ros_reg_ac %s%u",
-								GetRegTypeStr(op[2], 1),
-								regNum
-							);
-						}
-					}
-					else if (regNum == D3DSMO_FACE)
-					{
-						lines[mainFunctionDeclStrIdx][strlen(lines[mainFunctionDeclStrIdx])-1] = 0;
-						strcat(lines[mainFunctionDeclStrIdx], ", bool glob_isFrontFace: SV_IsFrontFace)");
-
-						HLSL_GEN_WRITE_PROC_PD("float4 glob_vecOne = { 1, 1, 1, 1 };");
-						HLSL_GEN_WRITE_PROC_PD("float4 glob_vecMinusOne = { -1, -1, -1, -1 };");
-
-						HLSL_GEN_WRITE_PROC_PD("float4 %s%u = glob_isFrontFace ? glob_vecOne : glob_vecMinusOne;", d912pxy_hlsl_generator_reg_names[dstReg], regNum);						
-					} else 
-						LOG_ERR_THROW2(-1, "hlsl reg type misc unk");
-				}
-				break;
-				default:
-					LOG_ERR_DTDM("hlsl gen dcl ps_3 reg type is %u", dstReg);
-					LOG_ERR_THROW2(-1, "hlsl reg type");
-					break;
+				DeclareSampler(op, dclTok, dstTok);
 			}
-		}
-		else {
-			switch (dstReg)
+			break;
+			case D3DSPR_INPUT:
 			{
-				case D3DSPR_SAMPLER:
-				{
-					D3DSAMPLER_TEXTURE_TYPE texType = (D3DSAMPLER_TEXTURE_TYPE)(D3DSP_TEXTURETYPE_MASK & op[1]);
-
-					UINT texTypeO = texType >> D3DSP_TEXTURETYPE_SHIFT;
-
-					const char* samplerType[] = {
-						"unk",
-						"unk",
-						"tex2d",
-						"texCube",
-						"texVolume",
-						"depth"
-					};
-					
-					if (genProfile.entryStageSelected(d912pxy_shader_profile::entry::pcf_sampler, regNum))
-						texTypeO = 5;
-
-					if ((texTypeO == 0) || (texTypeO > 5))
-					{
-						LOG_ERR_THROW2(-1, "hlsl gen wrong sampler type");
-					}
-
-					if (texTypeO == 3)
-					{
-						HLSL_GEN_WRITE_PROC(
-							"TextureCube %s%ut = textureBindsCubed[texState.texture_s%u];",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
-						);
-					}
-					else {
-						HLSL_GEN_WRITE_PROC(
-							"Texture2DArray %s%ut = textureBinds[texState.texture_s%u];",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
-						);
-					}
-					HLSL_GEN_WRITE_PROC(
-						"sampler %s%us = samplerBinds[texState.sampler_s%u];",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
-					);
-					HLSL_GEN_WRITE_PROC(
-						"#define %s%u_deftype %s",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, samplerType[texTypeO]
-					);
-					HLSL_GEN_WRITE_PROC(
-						"#define %s%u_srgb_flag %u",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, 1 << regNum
-					);
-					HLSL_GEN_WRITE_PROC(" ");
-				}
-				break;
-				case D3DSPR_INPUT:
-				{
-					HLSL_GEN_WRITE_HEADI(
-						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_NC, regNum),
-						"/*default*/    float4 %s%u: INPUT_REG%u;",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
-					);
-				}
-				break;
-				case D3DSPR_TEXTURE:
-				{
-					HLSL_GEN_WRITE_HEADI(
-						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_TEXC, regNum),
-						"/*default*/    float4 %s%u: TEXCOORD%u;",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum
-					);
-				}
-				break;
-				case D3DSPR_MISCTYPE:
-				{   
-					if (regNum == D3DSMO_POSITION)
-					{
-						HLSL_GEN_WRITE_HEADI(
-							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
-							"/*default*/    float4 %s%u: SV_POSITION;",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum
-						);
-
-						HLSL_GEN_WRITE_PROC_PD("float4 %s%u = inp.%s%u;", d912pxy_hlsl_generator_reg_names[dstReg], regNum, d912pxy_hlsl_generator_reg_names[dstReg], regNum);
-
-						if (isPS)
-						{
-							PSpositionUsed = 1;
-							HLSL_GEN_WRITE_PROC("%s%u = %s%u - 0.5f;",
-								GetRegTypeStr(op[2], 1),
-								regNum,
-								GetRegTypeStr(op[2], 1),
-								regNum
-							);
-
-							HLSL_GEN_WRITE_PROC("#define ps_ros_reg_ac %s%u",
-								GetRegTypeStr(op[2], 1),
-								regNum
-							);
-						}
-					}
-					else if (regNum == D3DSMO_FACE)
-					{
-						lines[mainFunctionDeclStrIdx][strlen(lines[mainFunctionDeclStrIdx])-1] = 0;
-						strcat(lines[mainFunctionDeclStrIdx], ", bool glob_isFrontFace: SV_IsFrontFace)");
-
-						HLSL_GEN_WRITE_PROC_PD("float4 glob_vecOne = { 1, 1, 1, 1 };");
-						HLSL_GEN_WRITE_PROC_PD("float4 glob_vecMinusOne = { -1, -1, -1, -1 };");
-
-						HLSL_GEN_WRITE_PROC_PD("float4 %s%u = glob_isFrontFace ? glob_vecOne : glob_vecMinusOne;", d912pxy_hlsl_generator_reg_names[dstReg], regNum);
-					}
-					else
-						LOG_ERR_THROW2(-1, "hlsl reg type misc unk");
-				}
-				break;
-				default:
-					LOG_ERR_THROW2(-1, "hlsl reg type");
-				break;
+				HLSL_GEN_WRITE_HEADI(
+					HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_NC, regNum),
+					"/*default*/    float4 %s%u: INPUT_REG%u;",
+					regNameStr, regNum, regNum
+				);
 			}
+			break;
+			case D3DSPR_TEXTURE:
+			{
+				HLSL_GEN_WRITE_HEADI(
+					HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_TEXC, regNum),
+					"/*default*/    float4 %s%u: TEXCOORD%u;",
+					regNameStr, regNum, regNum
+				);
+			}
+			break;
+			case D3DSPR_MISCTYPE:
+				DeclareMisc(op, dclTok, dstTok);
+				break;
+			default:
+				LOG_ERR_DTDM("hlsl gen dcl ps_2 reg type is %u", dstTok->reg.regType);
+				LOG_ERR_THROW2(-1, "hlsl reg type");
+				break;
 		}
 	}
 	else {
-		if (majVer >= 3)
+		switch (dstTok->reg.regType)
 		{
-			switch (dstReg)
+			case D3DSPR_SAMPLER:
 			{
-				case D3DSPR_SAMPLER:
-				{
-					D3DSAMPLER_TEXTURE_TYPE texType = (D3DSAMPLER_TEXTURE_TYPE)(D3DSP_TEXTURETYPE_MASK & op[1]);
-
-					UINT texTypeO = texType >> D3DSP_TEXTURETYPE_SHIFT;
-
-					const char* samplerType[] = {
-						"unk",
-						"unk",
-						"tex2d",
-						"texCube",
-						"texVolume",
-						"depth"
-					};
-					
-					if (genProfile.entryStageSelected(d912pxy_shader_profile::entry::pcf_sampler, regNum + HLSL_GEN_VTEXTURE_OFFSET))					
-						texTypeO = 5;
-
-					if ((texTypeO == 0) || (texTypeO > 5))
-					{
-						LOG_ERR_THROW2(-1, "hlsl gen wrong sampler type");
-					}
-
-					HLSL_GEN_WRITE_PROC(
-						"Texture2DArray %s%ut = textureBinds[texState.texture_s%u];",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum + HLSL_GEN_VTEXTURE_OFFSET
-					);
-					HLSL_GEN_WRITE_PROC(
-						"sampler %s%us = samplerBinds[texState.sampler_s%u];",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, regNum + HLSL_GEN_VTEXTURE_OFFSET
-					);
-					HLSL_GEN_WRITE_PROC(
-						"#define %s%u_deftype %s",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, samplerType[texTypeO]
-					);
-					HLSL_GEN_WRITE_PROC(
-						"#define %s%u_srgb_flag %u",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, 1 << (regNum + HLSL_GEN_VTEXTURE_OFFSET)
-					);
-					HLSL_GEN_WRITE_PROC(" ");
-				}
-				break;
-				case D3DSPR_OUTPUT:
-				{
-					if (((op[1] & 0x1F) == D3DDECLUSAGE_POSITION) && ((op[1] >> 16) & 0xF) == 0)
-					{
-						HLSL_GEN_WRITE_HEADO(
-							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0),
-							"	float4 %s%u: SV_POSITION;",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum
-						);
-						HLSL_GEN_WRITE_PROC_PD("#define dx9_halfpixel_pos_reg_ac %s%u", GetRegTypeStr(op[2], 1), regNum);
-					}
-					else {
-						UINT dclId = (op[1] >> 16) & 0xF;
-						UINT usageType = op[1] & 0x1F;
-						HLSL_GEN_WRITE_HEADO(							
-							HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId),
-							"	float4 %s%u: %s%u;",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(usageType, 1), dclId
-						);
-
-					/*	if (dclId > 0)
-						{
-							UINT itr = (HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId) + headerOffsetO);
-							do
-							{
-								--itr;
-								--dclId;
-
-								if (lines[itr] == 0)
-								{
-									HLSL_GEN_WRITE_HEADO(
-										itr - headerOffsetO,
-										"	float4 %s%u_s%u: %s%u;",
-										"unused_oreg_", regNum, dclId, GetUsageString(op[1] & 0x1F, 1), dclId
-									);
-								}
-							} while (dclId != 0);
-						}*/
-					}
-				}
-				break;
-				case D3DSPR_INPUT:
-				{
-					if ((op[1] & 0x1F) == D3DDECLUSAGE_BLENDINDICES)
-					{
-						HLSL_GEN_WRITE_HEADI(
-							0,
-							"/*default*/     uint4 %s%u: %s%uE;",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(op[1] & 0x1F, 0), (op[1] >> 16) & 0xF
-						);
-					} else {
-						HLSL_GEN_WRITE_HEADI(
-							0,
-							"/*default*/    float4 %s%u: %s%uE;",
-							d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(op[1] & 0x1F, 0), (op[1] >> 16) & 0xF
-						);
-					}
-				}
-				break;
-				default:
-					LOG_ERR_THROW2(-1, "hlsl reg type");
-					break;
+				LOG_ERR_THROW2(-1, "no samplers in vertex shaders for sm < 3");
 			}
-		}
-		else {
-			switch (dstReg)
+			break;
+			case D3DSPR_INPUT:
 			{
-				case D3DSPR_SAMPLER:
-				{
-					LOG_ERR_THROW2(-1, "no samplers in vertex shaders for sm < 3");
-				}
-				break;
-				case D3DSPR_INPUT:
-				{
-					HLSL_GEN_WRITE_HEADI(
-						0,
-						"/*default*/    float4 %s%u: %s%uE;",
-						d912pxy_hlsl_generator_reg_names[dstReg], regNum, GetUsageString(op[1] & 0x1F, 0), (op[1] >> 16) & 0xF
-					);
-				}
-				break;
-				default:
-					LOG_ERR_THROW2(-1, "hlsl reg type");
-					break;
+				HLSL_GEN_WRITE_HEADI(
+					0,
+					"/*default*/    float4 %s%u: %s%uE;",
+					regNameStr, regNum, GetUsageString(usageType, 0), dclId
+				);
 			}
+			break;
+			default:
+				LOG_ERR_THROW2(-1, "sm2 vs dcl op wrong regtype");
+				break;
 		}
 	}
+}
+
+void d912pxy_hlsl_generator::DeclareSampler(d912pxy_dxbc9::token* op, d912pxy_dxbc9::token* dclTok, d912pxy_dxbc9::token* dstTok)
+{
+	const char* samplerType[] = {
+		"unk",
+		"unk",
+		"tex2d",
+		"texCube",
+		"texVolume",
+		"depth"
+	};
+
+	UINT texTypeO = dclTok->dcl.samplerTexType;
+	UINT regNum = dstTok->reg.regNum;
+	const char* texTypeFmt = "Texture2DArray %s%ut = textureBinds[texState.texture_s%u];";
+	const char* regTypeStr = GetRegTypeStr(dstTok->reg.regType, 1);
+	UINT samplerIdx = regNum + (verToken.isPS ? 0 : HLSL_GEN_VTEXTURE_OFFSET);
+
+	///
+
+	if (genProfile.entryStageSelected(d912pxy_shader_profile::entry::pcf_sampler, samplerIdx))
+		texTypeO = 5;
+
+	if ((texTypeO == 0) || (texTypeO > 5))
+	{
+		LOG_ERR_THROW2(-1, "hlsl gen wrong sampler type");
+	}	
+
+	if (texTypeO == 3)
+		texTypeFmt = "TextureCube %s%ut = textureBindsCubed[texState.texture_s%u];";	
+
+	////
+
+	HLSL_GEN_WRITE_PROC(
+		texTypeFmt,
+		regTypeStr, regNum, samplerIdx
+	);
+
+	HLSL_GEN_WRITE_PROC(
+		"sampler %s%us = samplerBinds[texState.sampler_s%u];",
+		regTypeStr, regNum, samplerIdx
+	);
+	HLSL_GEN_WRITE_PROC(
+		"#define %s%u_deftype %s",
+		regTypeStr, regNum, samplerType[texTypeO]
+	);
+	HLSL_GEN_WRITE_PROC(
+		"#define %s%u_srgb_flag %u",
+		regTypeStr, regNum, 1 << samplerIdx
+	);
+	HLSL_GEN_WRITE_PROC(" ");
+}
+
+void d912pxy_hlsl_generator::DeclareMisc(d912pxy_dxbc9::token* op, d912pxy_dxbc9::token* dclTok, d912pxy_dxbc9::token* dstTok)
+{
+	UINT regNum = dstTok->reg.regNum;
+	const char* regNameStr = GetRegTypeStr(dstTok->reg.regType, 0);
+
+	if (regNum == D3DSMO_POSITION)
+	{
+		HLSL_GEN_WRITE_HEADI(
+			HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, regNum),
+			"/*default*/    float4 %s%u: SV_POSITION;",
+			regNameStr, regNum
+		);
+
+		HLSL_GEN_WRITE_PROC_PD("float4 %s%u = inp.%s%u;", regNameStr, regNum, regNameStr, regNum);
+
+		if (verToken.isPS)
+		{
+			const char* regNameStrProc = GetRegTypeStr(dstTok->reg.regType, 1);
+
+			PSpositionUsed = 1;
+			HLSL_GEN_WRITE_PROC("%s%u = %s%u - 0.5f;",
+				regNameStrProc,
+				regNum,
+				regNameStrProc,
+				regNum
+			);
+
+			HLSL_GEN_WRITE_PROC("#define ps_ros_reg_ac %s%u",
+				regNameStrProc,
+				regNum
+			);
+		}
+	}
+	else if (regNum == D3DSMO_FACE)
+	{
+		lines[mainFunctionDeclStrIdx][strlen(lines[mainFunctionDeclStrIdx]) - 1] = 0;
+		strcat(lines[mainFunctionDeclStrIdx], ", bool glob_isFrontFace: SV_IsFrontFace)");
+
+		HLSL_GEN_WRITE_PROC_PD("float4 glob_vecOne = { 1, 1, 1, 1 };");
+		HLSL_GEN_WRITE_PROC_PD("float4 glob_vecMinusOne = { -1, -1, -1, -1 };");
+
+		HLSL_GEN_WRITE_PROC_PD("float4 %s%u = glob_isFrontFace ? glob_vecOne : glob_vecMinusOne;", regNameStr, regNum);
+	}
+	else
+		LOG_ERR_THROW2(-1, "hlsl reg type misc unk");
+}
+
+void d912pxy_hlsl_generator::ProcSIO_DCL_sm3(d912pxy_dxbc9::token* op)
+{	
+	d912pxy_dxbc9::token* dstTok;
+	d912pxy_dxbc9::token* dclTok;
+	ProcSIO_DCL_shared(op, &dstTok, &dclTok);
+
+	if (verToken.isPS)
+	{
+		switch (dstTok->reg.regType)
+		{
+			case D3DSPR_SAMPLER:
+			{
+				DeclareSampler(op, dclTok, dstTok);
+			}
+			break;
+			case D3DSPR_INPUT:
+			case D3DSPR_TEXTURE:
+			{
+				UINT regNum = dstTok->reg.regNum;
+				UINT priority = HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[dclTok->dcl.usage], dclTok->dcl.id);
+				const char* usageStr = GetUsageString(dclTok->dcl.usage, 1);
+				
+				HLSL_GEN_WRITE_HEADI(
+					priority,
+					"/*default*/    float4 %s%u: %s%u;",
+					GetRegTypeStr(dstTok->reg.regType, 0), regNum, usageStr, dclTok->dcl.id
+				);
+
+				if ((dclTok->dcl.id > 0) && (!d912pxy_pso_cache::allowRealtimeChecks))
+				{
+					UINT itr = priority + headerOffsetI;
+					do
+					{
+						--itr;
+						--dclTok->dcl.id;
+
+						if (lines[itr] == 0)
+						{
+							HLSL_GEN_WRITE_HEADI(
+								itr - headerOffsetI,
+								"/*default*/    float4 %s%u_s%u: %s%u;",
+								"unused_ireg_", regNum, dclTok->dcl.id, usageStr, dclTok->dcl.id
+							);
+						}
+					} while (dclTok->dcl.id != 0);
+				}
+			}
+			break;
+			case D3DSPR_MISCTYPE:
+				DeclareMisc(op, dclTok, dstTok);
+				break;
+			default:
+				LOG_ERR_DTDM("hlsl gen dcl ps_3 reg type is %u", dstTok->reg.regType);
+				LOG_ERR_THROW2(-1, "hlsl reg type");
+				break;
+		}
+	}
+	else {
+		UINT usageType = dclTok->dcl.usage;
+		UINT dclId = dclTok->dcl.id;
+		const char* regNameStr = GetRegTypeStr(dstTok->reg.regType, 0);
+		UINT regNum = dstTok->reg.regNum;
+
+		switch (dstTok->reg.regType)
+		{
+			case D3DSPR_SAMPLER:
+			{
+				DeclareSampler(op, dclTok, dstTok);
+			}
+			break;
+			case D3DSPR_OUTPUT:
+			{
+				if ((usageType == D3DDECLUSAGE_POSITION) && (dclId == 0))
+				{
+					HLSL_GEN_WRITE_HEADO(
+						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0),
+						"	float4 %s%u: SV_POSITION;",
+						regNameStr, regNum
+					);
+					HLSL_GEN_WRITE_PROC_PD("#define dx9_halfpixel_pos_reg_ac %s%u", GetRegTypeStr(dstTok->reg.regType, 1), regNum);
+				}
+				else {
+					HLSL_GEN_WRITE_HEADO(
+						HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[usageType], dclId),
+						"	float4 %s%u: %s%u;",
+						regNameStr, regNum, GetUsageString(usageType, 1), dclId
+					);
+				}
+			}
+			break;
+			case D3DSPR_INPUT:
+			{
+				const char* inputFmt[2] = {
+					"/*default*/     uint4 %s%u: %s%uE;",
+					"/*default*/    float4 %s%u: %s%uE;"
+				};
+
+				HLSL_GEN_WRITE_HEADI(
+					0,
+					inputFmt[usageType != D3DDECLUSAGE_BLENDINDICES],
+					regNameStr, regNum, GetUsageString(usageType, 0), dclId
+				);
+			}
+			break;
+			default:
+				LOG_ERR_THROW2(-1, "sm3 vs dcl op wrong regtype");
+				break;
+		}
+	}
+}
+
+void d912pxy_hlsl_generator::ProcSIO_DCL_shared(d912pxy_dxbc9::token* op, d912pxy_dxbc9::token** o_dstTok, d912pxy_dxbc9::token** o_dclTok)
+{
+	//1 is DCL instruct token
+	//2 is DST token
+
+	d912pxy_dxbc9::token* dstTok = code.SubToken(2, d912pxy_dxbc9::token_type::destination);
+	d912pxy_dxbc9::token* dclTok = code.SubToken(1, d912pxy_dxbc9::token_type::dcl);
+
+	LOG_DBG_DTDM("DCL of %S%u", GetRegTypeStr(dstTok->reg.regType, 0), dstTok->reg.regNum);
+
+	RegDefine(&dstTok->reg, false, true);
+
+	*o_dstTok = dstTok;
+	*o_dclTok = dclTok;
 }
 
 //FormatRightSide2(DWORD dstOp, char* pre, char* post, char* mid, d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2)
 
-void d912pxy_hlsl_generator::ProcSIO_DP2(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_DP2(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_DOTX(op, 2);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_DP3(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_DP3(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_DOTX(op, 3);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_DP4(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_DP4(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_DOTX(op, 4);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_TEXLD(DWORD * op)
-{
-	UINT64 writeMask = GetWriteMaskStr(op[1]);
+void d912pxy_hlsl_generator::ProcSIO_TEXLD(d912pxy_dxbc9::token* op)
+{	
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
 
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatSrcRegister(op, 0xF,0, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc2 = FormatSrcRegister(op, 0xF,1, 1, 0);
+	d912pxy_dxbc9::token_register* dstReg = &code.FindDstRegToken()->reg;
+
+	OverrideWriteMask(0xF);
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(0, 1, 0);
+	
+	dstReg->target.dst.allowDstModForSrc = false;
+	d912pxy_hlsl_generator_regtext sSrc2 = FormatRegister(0, 1, 1);
+
+	OverrideWriteMask(0);
+	dstReg->target.dst.allowDstModForSrc = true;
 
 	d912pxy_hlsl_generator_regtext pre;
 	sprintf(pre.t, "dx9texld(%s_deftype, %s_srgb_flag, ", sSrc2.t, sSrc2.t);
 
 	d912pxy_hlsl_generator_regtext mid;
 	sprintf(mid.t, "t, %ss, ", sSrc2.t);
-	d912pxy_hlsl_generator_regtext rSide = FormatRightSide2(op[1], pre.t, ")", mid.t, sSrc2, sSrc1, GetDstLenByWriteMask(op[1]));
+	d912pxy_hlsl_generator_regtext rSide = FormatRightSide2(pre.t, ")", mid.t, sSrc2, sSrc1);
 
 	HLSL_GEN_WRITE_PROC("%s = %s;",
 		sDst.t,
@@ -1835,14 +1337,24 @@ void d912pxy_hlsl_generator::ProcSIO_TEXLD(DWORD * op)
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_TEXLDL(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_TEXLDL(d912pxy_dxbc9::token* op)
 {
-	UINT64 writeMask = GetWriteMaskStr(op[1]);
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
 
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatSrcRegister(op, 0xF, 0, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc1W = FormatSrcRegister(op, 0x8, 0, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc2 = FormatSrcRegister(op, 0xF, 1, 1, 0);
+	d912pxy_dxbc9::token_register* dstReg = &code.FindDstRegToken()->reg;
+	UINT actualMask = dstReg->target.dst.mask;
+
+	OverrideWriteMask(0xF);
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(0, 1, 0);
+	OverrideWriteMask(0x8);
+	d912pxy_hlsl_generator_regtext sSrc1W = FormatRegister(0, 1, 0);
+
+	OverrideWriteMask(0xF);
+	dstReg->target.dst.allowDstModForSrc = false;
+	d912pxy_hlsl_generator_regtext sSrc2 = FormatRegister(0, 1, 1);
+
+	OverrideWriteMask(0);
+	dstReg->target.dst.allowDstModForSrc = true;
 
 	d912pxy_hlsl_generator_regtext pre;
 	sprintf(pre.t, "dx9texldl(%s_deftype, %s_srgb_flag, ", sSrc2.t, sSrc2.t);
@@ -1852,36 +1364,35 @@ void d912pxy_hlsl_generator::ProcSIO_TEXLDL(DWORD * op)
 	sprintf(mid0.t, "t, %ss, ", sSrc2.t);
 	mid[0] = mid0.t;
 	
-	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3(op[1], pre.t, ")", mid, sSrc2, sSrc1, sSrc1W, GetDstLenByWriteMask(op[1]));
+	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3(pre.t, ")", mid, sSrc2, sSrc1, sSrc1W);
 	
-	/*if (!isPS)
-		rSide = FormatRightSide3(op[1], "", ")", mid, sSrc2, sSrc1, sSrc1W, GetDstLenByWriteMask(op[1]));*/
-
 	HLSL_GEN_WRITE_PROC("%s = %s;",
 		sDst.t,
 		rSide.t
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_MUL(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_MUL(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_2OP(op, "", " * ", "");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_MAD(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_MAD(d912pxy_dxbc9::token* op)
 {
 	const char* mid[2] = { " * ", " ) + " };
 	ProcSIO_3OP(op, "(", mid, "");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_MOV(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_MOV(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_1OP(op, "", "");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_REP(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_REP(d912pxy_dxbc9::token* op)
 {
-	d912pxy_hlsl_generator_regtext counter = FormatSrcRegister(op, 1, 0, 0, 1);
+	OverrideWriteMask(0x1);
+	d912pxy_hlsl_generator_regtext counter = FormatRegister(0, 0, 0);
+	OverrideWriteMask(0);
 	HLSL_GEN_WRITE_PROC(" ");
 	HLSL_GEN_WRITE_PROC("{ ");
 	++procIdent;
@@ -1894,7 +1405,7 @@ void d912pxy_hlsl_generator::ProcSIO_REP(DWORD * op)
 	HLSL_GEN_WRITE_PROC(" ");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_ENDREP(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_ENDREP(d912pxy_dxbc9::token* op)
 {
 	--procIdent;
 	HLSL_GEN_WRITE_PROC("");
@@ -1904,17 +1415,17 @@ void d912pxy_hlsl_generator::ProcSIO_ENDREP(DWORD * op)
 	HLSL_GEN_WRITE_PROC("}");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_MAX(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_MAX(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_2OP(op, "dx9_max(", ", ", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_MIN(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_MIN(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_2OP(op, "dx9_min(", ", ", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_RCP(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_RCP(d912pxy_dxbc9::token* op)
 {
 	if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_RCP))	
 		ProcSIO_1OP(op, "dx9_rcp_guarded(", ")");
@@ -1922,21 +1433,21 @@ void d912pxy_hlsl_generator::ProcSIO_RCP(DWORD * op)
 		ProcSIO_1OP(op, "dx9_rcp(", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_CMP(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_CMP(d912pxy_dxbc9::token* op)
 {
 	const char* mid[2] = { " >= tmpCmpVec) ? ", " : " };
 
 	//megai2: ensure that all regs are defined, to not bug out their defs in subblock
 
-	FormatDstRegister(op);
-	FormatSrcRegister(op, 1, 0, 1, 1);
-	FormatSrcRegister(op, 1, 1, 1, 1);
-	FormatSrcRegister(op, 1, 2, 1, 1);
+	RegEnsureDefined(&code.FindDstRegToken()->reg);
+	RegEnsureDefined(&code.SubToken(code.FindSrcRegTokenIdx(true, 0))->reg);
+	RegEnsureDefined(&code.SubToken(code.FindSrcRegTokenIdx(true, 1))->reg);
+	RegEnsureDefined(&code.SubToken(code.FindSrcRegTokenIdx(true, 2))->reg);
 
 	HLSL_GEN_WRITE_PROC("{");
 	++procIdent;
 
-	UINT wLen = GetDstLenByWriteMask(op[1]);
+	UINT wLen = code.FindDstRegToken()->reg.target.dst.dstLength(writeMaskOverride);
 	switch (wLen)
 	{
 		case 1:
@@ -1961,19 +1472,21 @@ void d912pxy_hlsl_generator::ProcSIO_CMP(DWORD * op)
 	HLSL_GEN_WRITE_PROC("}");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_DP2ADD(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_DP2ADD(d912pxy_dxbc9::token* op)
 {
-	UINT64 writeMask = GetWriteMaskStr(op[1]);
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
 
-	UINT32 srcComps = 3;
+	OverrideWriteMask(0x3);
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(0, 1, 0);
+	d912pxy_hlsl_generator_regtext sSrc2 = FormatRegister(0, 1, 1);
 
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatSrcRegister(op, srcComps, 0, 1,1);
-	d912pxy_hlsl_generator_regtext sSrc2 = FormatSrcRegister(op, srcComps, 1, 1,1);
-	d912pxy_hlsl_generator_regtext sSrc3 = FormatSrcRegister(op, 1, 2, 1, 1);
+	OverrideWriteMask(0x1);
+	d912pxy_hlsl_generator_regtext sSrc3 = FormatRegister(0, 1, 2);
+
+	OverrideWriteMask(0);
 
 	const char* mid[2] = { ", ", ") + " };
-	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3(op[1], "dot(", "", mid, sSrc1, sSrc2, sSrc3, 1);
+	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3("dot(", "", mid, sSrc1, sSrc2, sSrc3);
 
 	HLSL_GEN_WRITE_PROC("%s = %s;",
 		sDst.t,
@@ -1981,17 +1494,17 @@ void d912pxy_hlsl_generator::ProcSIO_DP2ADD(DWORD * op)
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_FRC(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_FRC(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_1OP(op, "dx9_frac(", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_POW(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_POW(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_2OP(op, "dx9_pow(", ", ", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_RSQ(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_RSQ(d912pxy_dxbc9::token* op)
 {
 	if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_RSQ))	
 		ProcSIO_1OP(op, "dx9_rsqrt_guarded(", ")");
@@ -2001,7 +1514,7 @@ void d912pxy_hlsl_generator::ProcSIO_RSQ(DWORD * op)
 
 
 
-void d912pxy_hlsl_generator::ProcSIO_NRM(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_NRM(d912pxy_dxbc9::token* op)
 {
 	if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_NRM))
 		ProcSIO_1OP(op, "dx9_normalize_guarded(", ")");
@@ -2009,36 +1522,38 @@ void d912pxy_hlsl_generator::ProcSIO_NRM(DWORD * op)
 		ProcSIO_1OP(op, "dx9_normalize(", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_LOG(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_LOG(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_1OP(op, "dx9_log(", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_EXP(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_EXP(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_1OP(op, "dx9_exp(", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_EXPP(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_EXPP(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_1OP(op, "dx9_expp(", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_TEXKILL(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_TEXKILL(d912pxy_dxbc9::token* op)
 {
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatDstRegister(op);
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(1,0,0);
 	
 	HLSL_GEN_WRITE_PROC("clip(%s);",
 		sSrc1.t
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_IF(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_IF(d912pxy_dxbc9::token* op)
 {
+	UINT64 cmpStr = code.Current()->ins.formatCmpString();
 
-	UINT64 cmpStr = FormatCmpString(op[0]);
-	d912pxy_hlsl_generator_regtext lOp = FormatSrcRegister(op, 1, 0, 0, 1);
-	d912pxy_hlsl_generator_regtext rOp = FormatSrcRegister(op, 1, 1, 0, 1);
+	OverrideWriteMask(0x1);
+	d912pxy_hlsl_generator_regtext lOp = FormatRegister(0, 0, 0);
+	d912pxy_hlsl_generator_regtext rOp = FormatRegister(0, 0, 1);
+	OverrideWriteMask(0);
 
 	HLSL_GEN_WRITE_PROC(" ");
 	HLSL_GEN_WRITE_PROC("if (%s%s%s)",
@@ -2051,7 +1566,7 @@ void d912pxy_hlsl_generator::ProcSIO_IF(DWORD * op)
 	++procIdent;
 }
 
-void d912pxy_hlsl_generator::ProcSIO_ELSE(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_ELSE(d912pxy_dxbc9::token* op)
 {
 	--procIdent;
 	HLSL_GEN_WRITE_PROC(" ");
@@ -2060,7 +1575,7 @@ void d912pxy_hlsl_generator::ProcSIO_ELSE(DWORD * op)
 	++procIdent;
 }
 
-void d912pxy_hlsl_generator::ProcSIO_ENDIF(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_ENDIF(d912pxy_dxbc9::token* op)
 {
 	--procIdent;
 	HLSL_GEN_WRITE_PROC(" ");
@@ -2068,38 +1583,24 @@ void d912pxy_hlsl_generator::ProcSIO_ENDIF(DWORD * op)
 	HLSL_GEN_WRITE_PROC(" ");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_BREAK(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_BREAK(d912pxy_dxbc9::token* op)
 {
-	UINT64 cmpStr = FormatCmpString(op[0]);
-	d912pxy_hlsl_generator_regtext lOp = FormatSrcRegister(op, 1, 0, 0, 1);
-	d912pxy_hlsl_generator_regtext rOp = FormatSrcRegister(op, 1, 1, 0, 1);
-
-	HLSL_GEN_WRITE_PROC(" ");
-	HLSL_GEN_WRITE_PROC("if (%s%s%s)",
-		lOp.t,
-		(char*)&cmpStr,
-		rOp.t
-	);
-	++procIdent;
+	ProcSIO_IF(op);
 	HLSL_GEN_WRITE_PROC("	break;");
-	--procIdent;
-	HLSL_GEN_WRITE_PROC(" ");	
+	ProcSIO_ENDIF(op);
 
 }
 
-void d912pxy_hlsl_generator::ProcSIO_LRP(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_LRP(d912pxy_dxbc9::token* op)
 {
 //#define asm_lrp(ret,s0,s1,s2) ret = lerp(s2,s1,s0) 
-	UINT64 writeMask = GetWriteMaskStr(op[1]);
-	
-
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
-	d912pxy_hlsl_generator_regtext sSrc0 = FormatSrcRegister(op, GetWriteMask(op[1]), 0, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc1 = FormatSrcRegister(op, GetWriteMask(op[1]), 1, 1, 1);
-	d912pxy_hlsl_generator_regtext sSrc2 = FormatSrcRegister(op, GetWriteMask(op[1]), 2, 1, 1);
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
+	d912pxy_hlsl_generator_regtext sSrc0 = FormatRegister(0, 1, 0);
+	d912pxy_hlsl_generator_regtext sSrc1 = FormatRegister(0, 1, 1);
+	d912pxy_hlsl_generator_regtext sSrc2 = FormatRegister(0, 1, 2);
 
 	const char* mid[2] = { ", ", ", " };
-	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3(op[1], "dx9_lerp(", ")", mid, sSrc2, sSrc1, sSrc0, GetDstLenByWriteMask(op[1]));
+	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3("dx9_lerp(", ")", mid, sSrc2, sSrc1, sSrc0);
 
 	HLSL_GEN_WRITE_PROC("%s = %s;",
 		sDst.t,
@@ -2107,33 +1608,37 @@ void d912pxy_hlsl_generator::ProcSIO_LRP(DWORD * op)
 	);
 }
 
-void d912pxy_hlsl_generator::ProcSIO_SLT(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_SLT(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_2OP(op, "(", " < ", ") ? 1.0f : 0.0f");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_ABS(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_ABS(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_1OP(op, "abs(", ")");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_SGE(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_SGE(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_2OP(op, "(", " >= ", ") ? 1 : 0");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_SGN(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_SGN(d912pxy_dxbc9::token* op)
 {
 	//megai2: TODO
 	ProcSIO_2OP(op, "(", " < ", ") ? -1 : 1");
 }
 
-void d912pxy_hlsl_generator::ProcSIO_SINCOS(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_SINCOS(d912pxy_dxbc9::token* op)
 {
-	UINT64 writeMask = GetWriteMask(op[1]);
-	d912pxy_hlsl_generator_regtext sDst = FormatDstRegister(op);
+	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
 
-	d912pxy_hlsl_generator_regtext sSrc0 = FormatSrcRegister(op, 0x1, 0, 1, 1);
+	d912pxy_dxbc9::token_register* dstReg = &code.FindDstRegToken()->reg;
+
+	DWORD writeMask = dstReg->target.dst.mask;
+	OverrideWriteMask(0x1);
+
+	d912pxy_hlsl_generator_regtext sSrc0 = FormatRegister(0, 1, 0);
 
 	HLSL_GEN_WRITE_PROC("{ // sincos");
 	++procIdent;
@@ -2142,7 +1647,7 @@ void d912pxy_hlsl_generator::ProcSIO_SINCOS(DWORD * op)
 
 	if (writeMask & 0x1)
 	{
-		d912pxy_hlsl_generator_regtext rSide = FormatRightSide1(op[1], "cos(", ")", sSrc0, 1);
+		d912pxy_hlsl_generator_regtext rSide = FormatRightSide1("cos(", ")", sSrc0);
 	
 
 		HLSL_GEN_WRITE_PROC("tmp.x = %s;",			
@@ -2152,12 +1657,14 @@ void d912pxy_hlsl_generator::ProcSIO_SINCOS(DWORD * op)
 
 	if (writeMask & 0x2)
 	{
-		d912pxy_hlsl_generator_regtext rSide = FormatRightSide1(op[1], "sin(", ")", sSrc0, 1);
+		d912pxy_hlsl_generator_regtext rSide = FormatRightSide1("sin(", ")", sSrc0);
 
 		HLSL_GEN_WRITE_PROC("tmp.y = %s;",			
 			rSide.t
 		);
 	}
+
+	OverrideWriteMask(0);
 
 	HLSL_GEN_WRITE_PROC("%s = tmp;", sDst.t);
 
@@ -2165,16 +1672,16 @@ void d912pxy_hlsl_generator::ProcSIO_SINCOS(DWORD * op)
 	HLSL_GEN_WRITE_PROC("}");	
 }
 
-void d912pxy_hlsl_generator::ProcSIO_UNK(DWORD * op)
+void d912pxy_hlsl_generator::ProcSIO_UNK(d912pxy_dxbc9::token* op)
 {
-	UINT ilen = (op[0] >> 24) & 0xF;
-	LOG_DBG_DTDM("unknown opcode %u length %u", op[0] & 0xFFFF, ilen);
-	HLSL_GEN_WRITE_PROC("error //UNK OP %u length %u", op[0] & 0xFFFF, ilen);
+	LOG_DBG_DTDM("unknown opcode %u length %u", op->ins.operation, op->ins.length);
+	HLSL_GEN_WRITE_PROC("error //UNK OP %u length %u", op->ins.operation, op->ins.length);
 
-	for (int i = 1; i != ilen+1; ++i)
+	for (int i = 1; i != op->ins.length + 1; ++i)
 	{
-		LOG_DBG_DTDM("op par %u = %08lX", i - 1, op[i]);
-		HLSL_GEN_WRITE_PROC("error //op par %u = %08lX", i - 1, op[i]);
+		DWORD opVal = code.SubToken(i, d912pxy_dxbc9::token_type::raw)->raw.ui32;
+		LOG_DBG_DTDM("op par %u = %08lX", i - 1, opVal);
+		HLSL_GEN_WRITE_PROC("error //op par %u = %08lX", i - 1, opVal);
 	}
 	
 }
@@ -2190,8 +1697,6 @@ void d912pxy_hlsl_generator::WriteShaderHeadData()
 		HLSL_GEN_WRITE_HEADI(0, "#define srgb_write_color_lin2s(color) color_lin2s_cond(color, texState.texture_s31 >> 13)");
 	else
 		HLSL_GEN_WRITE_HEADI(0, "#define srgb_write_color_lin2s(color) color_lin2s_thru(color)");
-		
-
 
 	HLSL_GEN_WRITE_HEADI(0, "#include \"../common.hlsli\"");
 	HLSL_GEN_WRITE_HEADI(0, "	");
@@ -2199,7 +1704,7 @@ void d912pxy_hlsl_generator::WriteShaderHeadData()
 	HLSL_GEN_WRITE_PROC("	");
 	HLSL_GEN_WRITE_PROC_PD(" ");
 
-	if (isPS)
+	if (verToken.isPS)
 	{
 		HLSL_GEN_WRITE_HEADI(0, "struct PS_INPUT");
 		HLSL_GEN_WRITE_HEADI(0, "{");
@@ -2237,7 +1742,7 @@ void d912pxy_hlsl_generator::WriteShaderHeadData()
 
 void d912pxy_hlsl_generator::WriteShaderTailData()
 {
-	if (isPS)
+	if (verToken.isPS)
 	{
 		if (!PSpositionUsed)
 		{
@@ -2257,7 +1762,7 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 		HLSL_GEN_WRITE_PROC("glob_depthOut = reg_depth_out0.x;");
 	}
 
-	if (isPS)
+	if (verToken.isPS)
 	{
 		//		HLSL_GEN_WRITE_PROC("*/");
 		if (IsNaNGuardEnabled(PXY_SDB_HLSL_NAN_GUARD_RET))
@@ -2311,7 +1816,7 @@ void d912pxy_hlsl_generator::WriteExtraUnusedRegs()
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_FORCE_UNUSED_REGS))
 	{
 		//megai2: force define not used registers to align vs-ps io properly
-		if (isPS)
+		if (verToken.isPS)
 		{
 			UINT dclId = 15;
 
@@ -2363,7 +1868,7 @@ void d912pxy_hlsl_generator::FillHandlers()
 #define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x
 	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
-	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;
+	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL_sm1;
 	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
 	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
 	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;
@@ -2404,7 +1909,7 @@ void d912pxy_hlsl_generator::FillHandlers()
 #define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x
 	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
-	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;
+	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL_sm2;
 	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
 	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
 	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;
@@ -2446,7 +1951,7 @@ void d912pxy_hlsl_generator::FillHandlers()
 #define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x
 	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
-	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL;
+	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL_sm3;
 	SIOhandlers[__SIOtOF + D3DSIO_DP3] = &d912pxy_hlsl_generator::ProcSIO_DP3;
 	SIOhandlers[__SIOtOF + D3DSIO_DP4] = &d912pxy_hlsl_generator::ProcSIO_DP4;
 	SIOhandlers[__SIOtOF + D3DSIO_TEX] = &d912pxy_hlsl_generator::ProcSIO_TEXLD;

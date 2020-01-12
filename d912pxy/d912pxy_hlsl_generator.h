@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -73,17 +73,9 @@ typedef struct d912pxy_hlsl_generator_regtext {
 	char t[512];
 } d912pxy_hlsl_generator_regtext;
 
-static const UINT SM_1_X_SIO_SIZE[] = {
-	0, 	2,	3,	0,	4,	3,	2,	2,	3,	3,	3,	3,	3,	3,	2,	2,	0,	0,	4,	2,	0,	0,
-	0,	0,	0,	0,	0,	0,	0,	0,	0,	2,	3,	0,	0,	2,	2,	2,	1,	0,	0,	2,	0,	0,
-	0,	2,	2,	0,	5,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,
-	3,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	2,	0,	0,	5,	0,	0,	0,	0,	0,	0,
-	4,	0,	4,	0,	0,	0,	0,	3,	0
-};
-
 class d912pxy_hlsl_generator;
 
-typedef void (d912pxy_hlsl_generator::*d912pxy_hlsl_generator_sio_handler)(DWORD* op);
+typedef void (d912pxy_hlsl_generator::*d912pxy_hlsl_generator_sio_handler)(d912pxy_dxbc9::token* op);
 
 #pragma pack(push, 1)
 typedef struct d912pxy_hlsl_generator_memout {
@@ -111,30 +103,23 @@ public:
 	
 	d912pxy_hlsl_generator_memout* Process(UINT toMemory);
 
-	//dxbc lookups
-
-	UINT GetRegType(DWORD dst);
-	UINT GetRegNumber(DWORD op);
-	UINT GetWriteMask(DWORD op);
-	D3DSHADER_PARAM_SRCMOD_TYPE GetSrcMod(DWORD op);
-	UINT GetDstLenByWriteMask(DWORD op);
-	UINT GetDstLenByWriteMask2(DWORD wmask);
-	const char* GetRegTypeStr(DWORD op, UINT8 proc);
+	const char* GetRegTypeStr(DWORD regType, UINT8 proc);
 	const char* GetUsageString(UINT usage, UINT type);
-	UINT64 GetWriteMaskStr(DWORD op);
-	UINT64 GetSwizzleStr(DWORD op, DWORD opDst);
-	UINT64 FormatCmpString(DWORD op);
-	UINT GetDstModifier(DWORD op);
 
 	//dxbc reg access formatters
 
-	d912pxy_hlsl_generator_regtext FormatDstRegister(DWORD* reg);
-	d912pxy_hlsl_generator_regtext FormatSrcRegister(DWORD* reg, UINT8 wm, UINT id, UINT haveDst, UINT allowFmtConvert);
-	d912pxy_hlsl_generator_regtext FormatDstModifier(d912pxy_hlsl_generator_regtext statement, DWORD dstOp, UINT8 dstLen);
-	d912pxy_hlsl_generator_regtext FormatDstModifierForSrc(d912pxy_hlsl_generator_regtext statement, DWORD dstOp, UINT8 dstLen);
-	d912pxy_hlsl_generator_regtext FormatRightSide1(DWORD dstOp, const char* pre, const char* post, d912pxy_hlsl_generator_regtext op1, UINT8 dstLen);
-	d912pxy_hlsl_generator_regtext FormatRightSide2(DWORD dstOp, const char* pre, const char* post, const char* mid, d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, UINT8 dstLen);
-	d912pxy_hlsl_generator_regtext FormatRightSide3(DWORD dstOp, const char* pre, const char* post, const char* mid[2], d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, d912pxy_hlsl_generator_regtext op3, UINT8 dstLen);
+	d912pxy_hlsl_generator_regtext FormatRegister(bool isDst, bool haveDst, UINT idx);
+	d912pxy_hlsl_generator_regtext FormatRegister(UINT tokOffset);
+	d912pxy_hlsl_generator_regtext FormatDstRegister(d912pxy_dxbc9::token_register* reg);
+	d912pxy_hlsl_generator_regtext FormatSrcRegister(d912pxy_dxbc9::token_register* reg, d912pxy_dxbc9::token_register* dstReg, d912pxy_dxbc9::token_register* adrReg);
+	d912pxy_hlsl_generator_regtext FormatRelativeSrcRegister(d912pxy_dxbc9::token_register* reg, d912pxy_dxbc9::token_register* adrReg, UINT64 swizzle);
+
+	d912pxy_hlsl_generator_regtext FormatSrcModifier(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target_source* reg);
+	d912pxy_hlsl_generator_regtext FormatDstModifier(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target* dstReg);
+	d912pxy_hlsl_generator_regtext FormatDstModifierForSrc(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target* dstReg);
+	d912pxy_hlsl_generator_regtext FormatRightSide1(const char* pre, const char* post, d912pxy_hlsl_generator_regtext op1);
+	d912pxy_hlsl_generator_regtext FormatRightSide2(const char* pre, const char* post, const char* mid, d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2);
+	d912pxy_hlsl_generator_regtext FormatRightSide3(const char* pre, const char* post, const char* mid[2], d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, d912pxy_hlsl_generator_regtext op3);
 		
 	static void FillHandlers();
 	static UINT allowPP_suffix;
@@ -143,50 +128,58 @@ public:
 
 private:
 	//sio handlers
-	void ProcSIO_DEF(DWORD* op);
-	void ProcSIO_DCL(DWORD* op);	
-	void ProcSIO_DP2(DWORD* op);
-	void ProcSIO_DP3(DWORD* op);
-	void ProcSIO_DP4(DWORD* op);
-	void ProcSIO_TEXLD(DWORD* op);
-	void ProcSIO_TEXLDL(DWORD* op);
-	void ProcSIO_MUL(DWORD* op);
-	void ProcSIO_MAD(DWORD* op);
-	void ProcSIO_MOV(DWORD* op);
-	void ProcSIO_REP(DWORD* op);
-	void ProcSIO_ENDREP(DWORD* op);
-	void ProcSIO_MAX(DWORD* op);
-	void ProcSIO_MIN(DWORD* op);
-	void ProcSIO_RCP(DWORD* op);
-	void ProcSIO_CMP(DWORD* op);
-	void ProcSIO_DP2ADD(DWORD* op);
-	void ProcSIO_FRC(DWORD* op);
-	void ProcSIO_POW(DWORD* op);
-	void ProcSIO_RSQ(DWORD* op);
-	void ProcSIO_NRM(DWORD* op);
-	void ProcSIO_LOG(DWORD* op);
-	void ProcSIO_EXP(DWORD* op);
-	void ProcSIO_EXPP(DWORD* op);	
-	void ProcSIO_TEXKILL(DWORD* op);
-	void ProcSIO_IF(DWORD* op);
-	void ProcSIO_ELSE(DWORD* op);
-	void ProcSIO_ENDIF(DWORD* op);
-	void ProcSIO_BREAK(DWORD* op);
-	void ProcSIO_LRP(DWORD* op);
-	void ProcSIO_SLT(DWORD* op);
-	void ProcSIO_ABS(DWORD* op);
-	void ProcSIO_SGE(DWORD* op);
-	void ProcSIO_SGN(DWORD* op);
-	void ProcSIO_SINCOS(DWORD* op);
-	void ProcSIO_ADD(DWORD* op);
+	void ProcSIO_DEF(d912pxy_dxbc9::token* op);
+	void ProcSIO_DCL_sm1(d912pxy_dxbc9::token* op);
+	void ProcSIO_DCL_sm2(d912pxy_dxbc9::token* op);
+	void ProcSIO_DCL_sm3(d912pxy_dxbc9::token* op);
+	void ProcSIO_DCL_shared(d912pxy_dxbc9::token* op, d912pxy_dxbc9::token** o_dstTok, d912pxy_dxbc9::token** o_dclTok);
+	void ProcSIO_DP2(d912pxy_dxbc9::token* op);
+	void ProcSIO_DP3(d912pxy_dxbc9::token* op);
+	void ProcSIO_DP4(d912pxy_dxbc9::token* op);
+	void ProcSIO_TEXLD(d912pxy_dxbc9::token* op);
+	void ProcSIO_TEXLDL(d912pxy_dxbc9::token* op);
+	void ProcSIO_MUL(d912pxy_dxbc9::token* op);
+	void ProcSIO_MAD(d912pxy_dxbc9::token* op);
+	void ProcSIO_MOV(d912pxy_dxbc9::token* op);
+	void ProcSIO_REP(d912pxy_dxbc9::token* op);
+	void ProcSIO_ENDREP(d912pxy_dxbc9::token* op);
+	void ProcSIO_MAX(d912pxy_dxbc9::token* op);
+	void ProcSIO_MIN(d912pxy_dxbc9::token* op);
+	void ProcSIO_RCP(d912pxy_dxbc9::token* op);
+	void ProcSIO_CMP(d912pxy_dxbc9::token* op);
+	void ProcSIO_DP2ADD(d912pxy_dxbc9::token* op);
+	void ProcSIO_FRC(d912pxy_dxbc9::token* op);
+	void ProcSIO_POW(d912pxy_dxbc9::token* op);
+	void ProcSIO_RSQ(d912pxy_dxbc9::token* op);
+	void ProcSIO_NRM(d912pxy_dxbc9::token* op);
+	void ProcSIO_LOG(d912pxy_dxbc9::token* op);
+	void ProcSIO_EXP(d912pxy_dxbc9::token* op);
+	void ProcSIO_EXPP(d912pxy_dxbc9::token* op);
+	void ProcSIO_TEXKILL(d912pxy_dxbc9::token* op);
+	void ProcSIO_IF(d912pxy_dxbc9::token* op);
+	void ProcSIO_ELSE(d912pxy_dxbc9::token* op);
+	void ProcSIO_ENDIF(d912pxy_dxbc9::token* op);
+	void ProcSIO_BREAK(d912pxy_dxbc9::token* op);
+	void ProcSIO_LRP(d912pxy_dxbc9::token* op);
+	void ProcSIO_SLT(d912pxy_dxbc9::token* op);
+	void ProcSIO_ABS(d912pxy_dxbc9::token* op);
+	void ProcSIO_SGE(d912pxy_dxbc9::token* op);
+	void ProcSIO_SGN(d912pxy_dxbc9::token* op);
+	void ProcSIO_SINCOS(d912pxy_dxbc9::token* op);
+	void ProcSIO_ADD(d912pxy_dxbc9::token* op);
 
 	//generic sio handlers
-	void ProcSIO_DOTX(DWORD* op, UINT sz);
-	void ProcSIO_3OP(DWORD * op, const char * pre, const char * mid[2], const char * post);
-	void ProcSIO_2OP(DWORD * op, const char * pre, const char * mid, const char * post);
-	void ProcSIO_1OP(DWORD* op, const char* pre, const char* post);
+	void ProcSIO_DOTX(d912pxy_dxbc9::token * op, UINT sz);
+	void ProcSIO_3OP(d912pxy_dxbc9::token * op, const char * pre, const char * mid[2], const char * post);
+	void ProcSIO_2OP(d912pxy_dxbc9::token * op, const char * pre, const char * mid, const char * post);
+	void ProcSIO_1OP(d912pxy_dxbc9::token * op, const char* pre, const char* post);
 	
-	void ProcSIO_UNK(DWORD* op);
+	void ProcSIO_UNK(d912pxy_dxbc9::token* op);
+
+	//declaration subhandlers
+
+	void DeclareSampler(d912pxy_dxbc9::token* op, d912pxy_dxbc9::token* dclTok, d912pxy_dxbc9::token* dstTok);
+	void DeclareMisc(d912pxy_dxbc9::token* op, d912pxy_dxbc9::token* dclTok, d912pxy_dxbc9::token* dstTok);
 
 	//process sub funcs
 	void WriteShaderHeadData();
@@ -197,18 +190,23 @@ private:
 	UINT8 PSpositionUsed;
 	UINT8 relLookupDefined;
 	UINT8 isDepthOutUsed;
+
+	//write mask override
+	DWORD writeMaskOverride;
+
+	void OverrideWriteMask(DWORD wmask)
+	{
+		writeMaskOverride = wmask;
+	}
 		
 	//sm block data
-	UINT8 minVer;
-	UINT8 majVer;
-	UINT8 isPS;
+	d912pxy_dxbc9::token_version verToken;
 
-	UINT LoadSMBlock();
+	INT LoadSMBlock();
 	void DumpDisassembly();
 
-	//source dxbc data
-	DWORD * oCode;
-	UINT oLen;
+	//dxbc stream
+	d912pxy_dxbc9 code;
 	d912pxy_shader_uid mUID;
 
 	//output file
@@ -236,10 +234,10 @@ private:
 	//megai2: register definition and tracking
 	UINT64 regDefined[(D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN];
 	UINT64 regDefinedAsC[(D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN];
-
-	void CheckRegDefinition(DWORD op, UINT isDst);
-	void DefineIOReg(DWORD op, UINT asConstant);
-	int IsRegDefined(DWORD op, UINT numOffset);
+	
+	void RegEnsureDefined(d912pxy_dxbc9::token_register* reg);
+	void RegDefine(d912pxy_dxbc9::token_register* reg, bool asConstant, bool isIOreg);
+	int RegIsDefined(d912pxy_dxbc9::token_register* reg, UINT numOffset);
 	
 	//misc
 
