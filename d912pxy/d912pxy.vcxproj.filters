@@ -131,9 +131,6 @@
     <ClCompile Include="d912pxy_cbuffer.cpp">
       <Filter>d3d9_impl\device\iframe\batch</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_hlsl_generator.cpp">
-      <Filter>d3d9_impl\shaders</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_shader.cpp">
       <Filter>d3d9_impl\shaders</Filter>
     </ClCompile>
@@ -305,11 +302,24 @@
     <ClCompile Include="d912pxy_replay_item.cpp">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_dxbc9.cpp" />
     <ClCompile Include="d912pxy_extras.cpp">
       <Filter>d3d9_impl\device\dx12\extras</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_d3dx9.cpp" />
+    <ClCompile Include="d912pxy_dxbc9.cpp">
+      <Filter>d3d9_impl\shaders\hlsl_gen</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_d3dx9.cpp">
+      <Filter>base\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_hlsl_gen.cpp">
+      <Filter>d3d9_impl\shaders\hlsl_gen</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_hlsl_gen_sio_handlers.cpp">
+      <Filter>d3d9_impl\shaders\hlsl_gen</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_hlsl_gen_tables.cpp">
+      <Filter>d3d9_impl\shaders\hlsl_gen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -415,9 +425,6 @@
     </ClInclude>
     <ClInclude Include="d912pxy_cbuffer.h">
       <Filter>d3d9_impl\device\iframe\batch</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_hlsl_generator.h">
-      <Filter>d3d9_impl\shaders</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_shader.h">
       <Filter>d3d9_impl\shaders</Filter>
@@ -596,12 +603,17 @@
     <ClInclude Include="d912pxy_replay_buffer.h">
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClInclude>
-    <ClInclude Include="d912pxy_dxbc9.h" />
     <ClInclude Include="d912pxy_d3dx9.h">
       <Filter>base\utils</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_extras.h">
       <Filter>d3d9_impl\device\dx12\extras</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_dxbc9.h">
+      <Filter>d3d9_impl\shaders\hlsl_gen</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_hlsl_gen.h">
+      <Filter>d3d9_impl\shaders\hlsl_gen</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -694,6 +706,9 @@
     </Filter>
     <Filter Include="d3d9_impl\device\dx12\extras">
       <UniqueIdentifier>{325acb17-80c2-4acb-8793-9f16048a908a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\shaders\hlsl_gen">
+      <UniqueIdentifier>{00fb539a-23f1-4ddb-988f-accaa523116d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

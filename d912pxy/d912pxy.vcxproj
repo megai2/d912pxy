@@ -408,7 +408,7 @@
     <ClInclude Include="d912pxy_gpu_cmd_list.h" />
     <ClInclude Include="d912pxy_gpu_que.h" />
     <ClInclude Include="d912pxy_helper.h" />
-    <ClInclude Include="d912pxy_hlsl_generator.h" />
+    <ClInclude Include="d912pxy_hlsl_gen.h" />
     <ClInclude Include="d912pxy_iframe.h" />
     <ClInclude Include="d912pxy_log.h" />
     <ClInclude Include="d912pxy_memtree.h" />
@@ -501,6 +501,8 @@
     <ClCompile Include="d912pxy_extras.cpp" />
     <ClCompile Include="d912pxy_folded_buffer.cpp" />
     <ClCompile Include="d912pxy_fwdecl.cpp" />
+    <ClCompile Include="d912pxy_hlsl_gen_sio_handlers.cpp" />
+    <ClCompile Include="d912pxy_hlsl_gen_tables.cpp" />
     <ClCompile Include="d912pxy_linked_list.cpp" />
     <ClCompile Include="d912pxy_basetexture.cpp" />
     <ClCompile Include="d912pxy_batch.cpp" />
@@ -515,7 +517,7 @@
     <ClCompile Include="d912pxy_gpu_cmd_list.cpp" />
     <ClCompile Include="d912pxy_gpu_que.cpp" />
     <ClCompile Include="d912pxy_helper.cpp" />
-    <ClCompile Include="d912pxy_hlsl_generator.cpp" />
+    <ClCompile Include="d912pxy_hlsl_gen.cpp" />
     <ClCompile Include="d912pxy_iframe.cpp" />
     <ClCompile Include="d912pxy_log.cpp" />
     <ClCompile Include="d912pxy_memtree.cpp" />

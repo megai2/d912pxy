@@ -113,7 +113,7 @@ SOFTWARE.
 #include "d912pxy_d3dx9.h"
 #include "d912pxy_dxbc9.h"
 #include "d912pxy_shader_profile.h"
-#include "d912pxy_hlsl_generator.h"
+#include "d912pxy_hlsl_gen.h"
 #include "d912pxy_shader_replacer.h"
 #include "d912pxy_shader.h"
 #include "d912pxy_shader_db.h"

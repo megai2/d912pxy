@@ -102,7 +102,13 @@ public:
 	~d912pxy_hlsl_generator();
 	
 	d912pxy_hlsl_generator_memout* Process(UINT toMemory);
+		
+	static void FillHandlers();
+	static UINT allowPP_suffix;
+	static UINT32 NaNguard_flag;
+	static UINT32 sRGB_alphatest_bits;
 
+private:
 	const char* GetRegTypeStr(DWORD regType, UINT8 proc);
 	const char* GetUsageString(UINT usage, UINT type);
 
@@ -120,13 +126,8 @@ public:
 	d912pxy_hlsl_generator_regtext FormatRightSide1(const char* pre, const char* post, d912pxy_hlsl_generator_regtext op1);
 	d912pxy_hlsl_generator_regtext FormatRightSide2(const char* pre, const char* post, const char* mid, d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2);
 	d912pxy_hlsl_generator_regtext FormatRightSide3(const char* pre, const char* post, const char* mid[2], d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, d912pxy_hlsl_generator_regtext op3);
-		
-	static void FillHandlers();
-	static UINT allowPP_suffix;
-	static UINT32 NaNguard_flag;
-	static UINT32 sRGB_alphatest_bits;
 
-private:
+
 	//sio handlers
 	void ProcSIO_DEF(d912pxy_dxbc9::token* op);
 	void ProcSIO_DCL_sm1(d912pxy_dxbc9::token* op);
@@ -184,7 +185,6 @@ private:
 	//process sub funcs
 	void WriteShaderHeadData();
 	void WriteShaderTailData();
-	void WriteExtraUnusedRegs();
 	
 	//extra conditional flags
 	UINT8 PSpositionUsed;
