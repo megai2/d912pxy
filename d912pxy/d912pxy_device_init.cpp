@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -264,7 +264,7 @@ void d912pxy_device::InitComPatches()
 			stageFormatsTrack[i] = D3DFMT_UNKNOWN;
 
 		LOG_INFO_DTDM("Profiling enabled, only profile data will be saved to vfs");
-		d912pxy_s.vfs.SetWriteMask(~(1 << PXY_VFS_BID_SHADER_PROFILE));
+		d912pxy_s.vfs.SetWriteMask(~(1 << (UINT)d912pxy_vfs_bid::shader_profile));
 
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETTEXTURE, &d912pxy_device::com_SetTexture_PS);
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_PS);		

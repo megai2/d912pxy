@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -37,7 +37,7 @@ HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 		srvId = PXY_COM_LOOKUP_(pTexture, basetex).GetSRVHeapId((intptr_t)pTexture & PXY_COM_OBJ_SIGNATURE_TEXTURE_RTDS);
 	}
 
-	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
+	d912pxy_s.render.state.tex.SetTexture(Stage, (UINT32)srvId);
 
 	return D3D_OK; 
 }
@@ -53,7 +53,7 @@ HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTextu
 		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId((intptr_t)pTexture & PXY_COM_OBJ_SIGNATURE_TEXTURE_RTDS);
 	}
 
-	d912pxy_s.render.tex.SetTexture(Stage, (UINT32)srvId);
+	d912pxy_s.render.state.tex.SetTexture(Stage, (UINT32)srvId);
 
 	if (pTexture)
 	{
@@ -71,7 +71,7 @@ HRESULT d912pxy_device::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE Type,
 { 	
 	Sampler = (Sampler & 0xF) + 16 * (Sampler >= D3DDMAPSAMPLER);
 
-	d912pxy_s.render.tex.ModSampler(Sampler, Type, Value);
+	d912pxy_s.render.state.tex.ModSampler(Sampler, Type, Value);
 	
 	return D3D_OK;
 }
@@ -80,7 +80,7 @@ HRESULT d912pxy_device::SetSamplerState_Tracked(DWORD Sampler, D3DSAMPLERSTATETY
 {
 	Sampler = (Sampler & 0xF) + 16 * (Sampler >= D3DDMAPSAMPLER);
 
-	d912pxy_s.render.tex.ModSampler(Sampler, Type, Value);
+	d912pxy_s.render.state.tex.ModSampler(Sampler, Type, Value);
 
 	return D3D_OK;
 }

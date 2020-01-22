@@ -135,13 +135,13 @@ public:
 	} dt_clear_ds;
 
 	typedef struct dt_pso_raw {
-		d912pxy_trimmed_dx12_pso rawState;
+		d912pxy_trimmed_pso_desc rawState;
 
 		static constexpr typeName GetTypeName() { return typeName::pso_raw; };
 	} dt_pso_raw;
 
 	typedef struct dt_pso_raw_feedback {
-		d912pxy_trimmed_dx12_pso rawState;
+		d912pxy_trimmed_pso_desc rawState;
 		void** feedbackPtr;
 
 		static constexpr typeName GetTypeName() { return typeName::pso_raw_feedback; };
@@ -157,7 +157,7 @@ public:
 	} dt_rect_copy;
 
 	typedef struct dt_pso_compiled {
-		d912pxy_pso_cache_item* psoItem;
+		d912pxy_pso_item* psoItem;
 
 		static constexpr typeName GetTypeName() { return typeName::pso_compiled; };
 	} dt_pso_compiled;

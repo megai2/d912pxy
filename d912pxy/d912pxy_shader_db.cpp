@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -39,8 +39,6 @@ void d912pxy_shader_db::Init()
 	NonCom_Init(L"shader database");
 
 	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_pair_hash_type), 0xFF, 2);
-
-	precompileFlag = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_SDB_USE_PSO_PRECOMPILE);
 }
 
 void d912pxy_shader_db::UnInit()

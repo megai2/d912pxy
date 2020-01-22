@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -25,14 +25,10 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-#define PXY_SDB_PAIR_MAX_PSO_ENTRY_ID 4096
-
 typedef struct d912pxy_shader_pair_cache_entry {
 	d912pxy_shader_uid ps;
 	d912pxy_shader_uid vs;
-	
-	UINT64 compiled[PXY_SDB_PAIR_MAX_PSO_ENTRY_ID / 64];
-
+	d912pxy_trimmed_pso_desc_hash pso;
 } d912pxy_shader_pair_cache_entry;
 
 class d912pxy_shader_pair : public d912pxy_noncom
@@ -41,15 +37,15 @@ public:
 	d912pxy_shader_pair(d912pxy_shader_pair_hash_type hash, d912pxy_shader_uid* shd);
 	~d912pxy_shader_pair();
 
-	void PrecompilePSO(UINT32 idx, d912pxy_trimmed_dx12_pso* dsc);
+	void PrecompilePSO(UINT32 idx, d912pxy_trimmed_pso_desc* dsc);
 	void CheckArrayAllocation(UINT32 idx);
 
-	d912pxy_pso_cache_item* GetPSOCacheData(UINT32 idx, d912pxy_trimmed_dx12_pso* dsc);
-	d912pxy_pso_cache_item* GetPSOCacheDataMT(UINT32 idx, d912pxy_trimmed_dx12_pso* dsc);
+	d912pxy_pso_item* GetPSOItem(UINT32 idx, d912pxy_trimmed_pso_desc* dsc);
+	d912pxy_pso_item* GetPSOItemMT(UINT32 idx, d912pxy_trimmed_pso_desc* dsc);
 
 private:
 	
-	d912pxy_pso_cache_item** psoItems;
+	d912pxy_pso_item** psoItems;
 	UINT32 maxPsoId;
 
 	d912pxy_shader_pair_hash_type node;

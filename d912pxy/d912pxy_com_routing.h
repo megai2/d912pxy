@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2019 megai2
+Copyright(c) 2019-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -41,6 +41,7 @@ typedef enum d912pxy_com_route_table {
 	PXY_COM_ROUTE_SWAPCHAIN,
 	PXY_COM_ROUTE_SURFACE_LAYER,
 	PXY_COM_ROUTE_SBLOCK,
+	PXY_COM_ROUTE_EMPTY,
 	PXY_COM_ROUTE_COUNT
 } d912pxy_com_route_table;
 
@@ -247,6 +248,10 @@ typedef enum d912pxy_com_route_method_sblock {
 	PXY_COM_METHOD_SBLOCK_CAPTURE = 4,
 	PXY_COM_METHOD_SBLOCK_APPLY
 } d912pxy_com_route_method_sblock;
+
+typedef enum d912pxy_com_route_empty {
+	PXY_COM_METHOD_EMPTY_NON_USED = 3
+} d912pxy_com_route_empty;
 
 void d912pxy_com_route_set(d912pxy_com_route_table table, UINT32 index, void* func);
 void* d912pxy_com_route_get_vtable(d912pxy_com_route_table table);

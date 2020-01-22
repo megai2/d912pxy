@@ -552,7 +552,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL_sm3(d912pxy_dxbc9::token* op)
 				GetRegTypeStr(dstTok->reg.regType, 0), regNum, usageStr, dclTok->dcl.id
 			);
 
-			if ((dclTok->dcl.id > 0) && (!d912pxy_pso_cache::allowRealtimeChecks))
+			if ((dclTok->dcl.id > 0) && (!d912pxy_pso_db::allowRealtimeChecks))
 			{
 				UINT itr = priority + headerOffsetI;
 				do

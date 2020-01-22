@@ -25,26 +25,46 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-#define PXY_SDB_PSO_PRECOMPILE_SAVE 1
-#define PXY_SDB_PSO_PRECOMPILE_LOAD 2
+#pragma pack(push, 1)
 
-class d912pxy_shader_db : public d912pxy_noncom
+#define PXY_PSO_CACHE_KEYFILE_NAME 1
+
+class d912pxy_pso_db : public d912pxy_noncom, public d912pxy_thread
 {
 public:
-	d912pxy_shader_db();
-	~d912pxy_shader_db();
+	d912pxy_pso_db();
+	~d912pxy_pso_db();
 
 	void Init();
 	void UnInit();
 
-	d912pxy_shader_uid GetUID(DWORD* code, UINT32* len);		
+	d912pxy_pso_item* GetByDescMT(d912pxy_trimmed_pso_desc* desc);
 
-	d912pxy_shader_pair_hash_type GetPairUID(d912pxy_shader* vs, d912pxy_shader* ps);
+	//compiler thread
 
-	d912pxy_shader_pair* GetPair(d912pxy_shader* vs, d912pxy_shader* ps);
-	void DeletePair(d912pxy_shader_pair_hash_type ha);
+	void EnqueueCompile(d912pxy_pso_item* item);
+	UINT GetCompileQueueLength();
+	void LockCompileQue(UINT lock);
+	void ThreadJob();
+
+	//precompile 
+	void LoadCachedData();
+	bool IsCacheSavingEnabled()
+	{
+		return saveCache;
+	}
+
+	static bool allowRealtimeChecks;
 
 private:
-	d912pxy_memtree2* shaderPairs;
+	d912pxy_memtree2* cacheIndexes;
+	UINT32 cacheIncID;
+	bool saveCache;
+
+	d912pxy_ringbuffer<d912pxy_pso_item*>* psoCompileQue;
+	d912pxy_thread_lock compileQueLock;
+	void CheckCompileQueueLock();
+	void SaveKeyToCache(d912pxy_trimmed_pso_desc_hash key, d912pxy_trimmed_pso_desc * desc);
 };
 
+#pragma pack(pop)

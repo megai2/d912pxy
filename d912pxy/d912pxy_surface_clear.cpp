@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright(c) 2019-2020 megai2
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
 #include "stdafx.h"
 
 d912pxy_surface_clear::d912pxy_surface_clear(d912pxy_device * dev) : d912pxy_noncom( L"surface_clear")
@@ -56,20 +80,22 @@ d912pxy_surface_clear::~d912pxy_surface_clear()
 
 void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
+	//TODO obsolete, remove
+
 	//megai2: save current pso & related
-	d912pxy_trimmed_dx12_pso* psoDsc = d912pxy_s.render.db.pso.GetCurrentDsc();
-	d912pxy_trimmed_dx12_pso oldDsc = *psoDsc;
+/*	d912pxy_trimmed_pso_desc psoDsc = d912pxy_s.render.state.pso.GetCurrentDsc();
+	d912pxy_trimmed_pso_desc oldDsc = psoDsc;
 
 	d912pxy_vstream* oi = d912pxy_s.render.iframe.GetIBuf();
 	d912pxy_device_streamsrc oss = d912pxy_s.render.iframe.GetStreamSource(0);
 	d912pxy_device_streamsrc ossi = d912pxy_s.render.iframe.GetStreamSource(1);
-	d912pxy_vdecl* oldVDecl = d912pxy_s.render.db.pso.GetIAFormat();
+	d912pxy_vdecl* oldVDecl = d912pxy_s.render.state.pso.GetIAFormat();
 
 	UINT oldStencilRef;
 	if (Flags & D3DCLEAR_STENCIL)	
-		oldStencilRef = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF);
+		oldStencilRef = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
-	UINT restoreScissor = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
+	UINT restoreScissor = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
 
 	//set needed things
 
@@ -79,20 +105,20 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 	d912pxy_s.render.iframe.SetIBuf(iBuf);
 	d912pxy_s.render.iframe.SetVBuf(vBuf, 0, 0, 4 * 4);
 
-	d912pxy_s.render.db.pso.IAFormat(vdcl);
-	psoDsc->PS = ps;
-	psoDsc->VS = vs;
+	d912pxy_s.render.state.pso.IAFormat(vdcl);
+	psoDsc->ref.PS = ps;
+	psoDsc->ref.VS = vs;
 
 	d912pxy_s.dev.SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 	d912pxy_s.dev.SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, false);
 	d912pxy_s.dev.SetRenderState(D3DRS_SCISSORTESTENABLE, 0);
 
-	psoDsc->RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	psoDsc->val.rast.cullMode = D3D12_CULL_MODE_NONE;
 
 	if (Flags & D3DCLEAR_TARGET)
-		psoDsc->BlendStateRT0.RenderTargetWriteMask = 0xF;
+		psoDsc->val.rt0.blend.writeMask = 0xF;
 	else
-		psoDsc->BlendStateRT0.RenderTargetWriteMask = 0;
+		psoDsc->val.rt0.blend.writeMask = 0;
 
 	if (Flags & D3DCLEAR_ZBUFFER)
 	{
@@ -172,7 +198,7 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 
 	*psoDsc = oldDsc;
 
-	d912pxy_s.render.db.pso.IAFormat(oldVDecl);
+	d912pxy_s.render.state.pso.IAFormat(oldVDecl);
 
 	d912pxy_s.render.iframe.ProcessSurfaceBinds(1);
 
@@ -180,9 +206,9 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 		d912pxy_s.dev.SetRenderState(D3DRS_STENCILREF, oldStencilRef);	
 
 	if (restoreScissor)
-		d912pxy_s.render.db.pso.State(D3DRS_SCISSORTESTENABLE, 1);
+		d912pxy_s.render.state.pso.SetDX9RS(D3DRS_SCISSORTESTENABLE, 1);
 
-	d912pxy_s.render.db.pso.MarkDirty(1);
+	d912pxy_s.render.state.pso.MarkDirty();*/
 
 }
 

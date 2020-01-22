@@ -2,7 +2,7 @@
 MIT License
 
 Copyright(c) 2018 Jeremiah van Oosten
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -33,6 +33,10 @@ SOFTWARE.
 #define D3DFMT_NULL 0x4C4C554E
 
 using namespace Microsoft::WRL;
+
+typedef struct fv4Color {
+	float val[4];
+} fv4Color;
 
 namespace d912pxy_helper {
 

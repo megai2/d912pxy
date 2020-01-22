@@ -126,7 +126,11 @@ RHA_DECL(clear_ds, void* unused)
 
 RHA_DECL(pso_raw, d912pxy_replay_thread_context* context)
 {
-	ID3D12PipelineState* pso = d912pxy_s.render.db.pso.UseByDescMT(&it->rawState, 0);
+	auto psoItem = d912pxy_s.render.db.pso.GetByDescMT(&it->rawState);
+	if (!psoItem)
+		return;
+
+	ID3D12PipelineState* pso = psoItem->GetPtr();
 
 	/*
 	//megai2: debug mode busy wait for pso compile
@@ -142,7 +146,7 @@ RHA_DECL(pso_raw, d912pxy_replay_thread_context* context)
 
 RHA_DECL(pso_raw_feedback, void* unused)
 {
-	*it->feedbackPtr = d912pxy_s.render.db.pso.GetByDescMT(&it->rawState, 0);
+	*it->feedbackPtr = d912pxy_s.render.db.pso.GetByDescMT(&it->rawState);
 }
 
 RHA_DECL(pso_compiled, d912pxy_replay_thread_context* context)

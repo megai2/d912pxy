@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -76,7 +76,7 @@ HRESULT d912pxy_device::SetIndices(IDirect3DIndexBuffer9* pIndexData)
 
 HRESULT d912pxy_device::SetVertexDeclaration(IDirect3DVertexDeclaration9* pDecl)
 {
-	d912pxy_s.render.db.pso.IAFormat(PXY_COM_LOOKUP(pDecl, vdecl));
+	d912pxy_s.render.state.pso.IAFormat(PXY_COM_LOOKUP(pDecl, vdecl));
 
 	return D3D_OK;
 }

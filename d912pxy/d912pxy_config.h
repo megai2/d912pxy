@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -39,8 +39,8 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_CLEANUP_PERIOD,
 	PXY_CFG_CLEANUP_SUBSLEEP,	
 	PXY_CFG_SDB_KEEP_PAIRS,
-	PXY_CFG_SDB_USE_PSO_PRECOMPILE,
-	PXY_CFG_SDB_USE_PSO_KEY_CACHE,
+	PXY_CFG_SDB_LOAD_PSO_CACHE,
+	PXY_CFG_SDB_SAVE_PSO_CACHE,
 	PXY_CFG_SDB_ALLOW_PP_SUFFIX,
 	PXY_CFG_SDB_ENABLE_PROFILING,
 	PXY_CFG_SDB_FORCE_UNUSED_REGS,
@@ -96,9 +96,13 @@ typedef enum d912pxy_config_value {
 } d912pxy_config_value;
 
 typedef struct d912pxy_config_value_dsc {
-	wchar_t section[256];
-	wchar_t name[256];
-	wchar_t value[256];
+	wchar_t section[255];
+	wchar_t name[255];
+	wchar_t value[255];
+	const wchar_t* limitation;
+	const wchar_t* shortDescription;
+	const wchar_t* longDescription;
+	wchar_t* newValue;
 } d912pxy_config_value_dsc;
 
 class d912pxy_config 
@@ -112,14 +116,25 @@ public:
 	UINT64 GetValueXI64(d912pxy_config_value val);
 	UINT64 GetValueUI64(d912pxy_config_value val);
 	UINT32 GetValueUI32(d912pxy_config_value val);
+	bool GetValueB(d912pxy_config_value val);
 	wchar_t* GetValueRaw(d912pxy_config_value val);
+	wchar_t* GetNewValueBuffer(d912pxy_config_value val);
+	void SaveNewValues();
 
 	d912pxy_config_value_dsc* GetEntryRaw(d912pxy_config_value val);
 
 private:
 
 	d912pxy_config_value_dsc data[PXY_CFG_CNT] = {
-		{L"pooling", L"upload_alloc_step", L"16"},//PXY_CFG_POOLING_UPLOAD_ALLOC_STEP
+		{
+			L"pooling", 
+			L"upload_alloc_step", 
+			L"16"
+			L"u r:0,1024",
+			L"upload segment allocation step",
+			L"controls how much space will be allocated for segment that is used to take upload memory from",
+			nullptr
+		},//PXY_CFG_POOLING_UPLOAD_ALLOC_STEP
 		{L"pooling", L"upload_limit", L"128"},//PXY_CFG_POOLING_UPLOAD_LIMITS		
 		{L"pooling", L"vstream_alloc_step", L"16"},//PXY_CFG_POOLING_VSTREAM_ALLOC_STEP
 		{L"pooling", L"vstream_limit", L"256"},//PXY_CFG_POOLING_VSTREAM_LIMITS
@@ -132,8 +147,8 @@ private:
 		{L"cleanup", L"period",L"10000"},//PXY_CFG_CLEANUP_PERIOD
 		{L"cleanup", L"subsleep",L"50"},//PXY_CFG_CLEANUP_SUBSLEEP	
 		{L"sdb", L"keep_pairs", L"1"},//PXY_CFG_SDB_KEEP_PAIRS
-		{L"sdb", L"use_pso_precompile", L"0"},//PXY_CFG_SDB_USE_PSO_PRECOMPILE
-		{L"sdb", L"use_pso_key_cache", L"0"},//PXY_CFG_SDB_USE_PSO_KEY_CACHE
+		{L"sdb", L"load_pso_cache", L"0"},//PXY_CFG_SDB_LOAD_PSO_CACHE
+		{L"sdb", L"save_pso_cache", L"0"},//PXY_CFG_SDB_SAVE_PSO_CACHE
 		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX
 		{L"sdb", L"enable_profiling", L"0"},//PXY_CFG_SDB_ENABLE_PROFILING
 		{L"sdb", L"force_unused_regs", L"0"},//PXY_CFG_SDB_FORCE_UNUSED_REGS
@@ -168,7 +183,7 @@ private:
 		{L"compat",L"unsafe_dup",L"0"},//PXY_CFG_COMPAT_DUP_UNSAFE
 		{L"compat",L"dheap_mode",L"0"},//PXY_CFG_COMPAT_DHEAP_MODE
 		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
-		{L"vfs", L"memcache_mask", L"6F"},//PXY_CFG_VFS_MEMCACHE_MASK
+		{L"vfs", L"memcache_mask", L"63"},//PXY_CFG_VFS_MEMCACHE_MASK
 		{L"vfs", L"pack_data", L"0"},//PXY_CFG_VFS_PACK_DATA
 		{L"vfs", L"write_mask", L"0"},//PXY_CFG_VFS_WRITE_MASK
 		{L"extras", L"enable", L"0"},//PXY_CFG_EXTRAS_ENABLE

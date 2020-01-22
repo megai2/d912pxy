@@ -152,9 +152,6 @@
     <ClCompile Include="d912pxy_vdecl.cpp">
       <Filter>d3d9_impl</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_pso_cache.cpp">
-      <Filter>d3d9_impl\device\iframe\pso_cache</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_gpu_cmd_list.cpp">
       <Filter>d3d9_impl\device\dx12</Filter>
     </ClCompile>
@@ -320,6 +317,18 @@
     <ClCompile Include="d912pxy_hlsl_gen_tables.cpp">
       <Filter>d3d9_impl\shaders\hlsl_gen</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_trimmed_pso.cpp">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_dx9_pipeline_state.cpp">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_pso_item.cpp">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_pso_db.cpp">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -446,9 +455,6 @@
     </ClInclude>
     <ClInclude Include="d912pxy_vdecl.h">
       <Filter>d3d9_impl</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_pso_cache.h">
-      <Filter>d3d9_impl\device\iframe\pso_cache</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_gpu_cleanup_thread.h">
       <Filter>d3d9_impl\device\dx12</Filter>
@@ -615,6 +621,18 @@
     <ClInclude Include="d912pxy_hlsl_gen.h">
       <Filter>d3d9_impl\shaders\hlsl_gen</Filter>
     </ClInclude>
+    <ClInclude Include="d912pxy_trimmed_pso.h">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_pso_db.h">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_dx9_pipeline_state.h">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_pso_item.h">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />
@@ -655,9 +673,6 @@
     </Filter>
     <Filter Include="d3d9_impl\device\iframe\batch">
       <UniqueIdentifier>{80c8033e-6d1c-40c2-923d-0808ea83cd89}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="d3d9_impl\device\iframe\pso_cache">
-      <UniqueIdentifier>{1405e705-a9d9-48f8-b695-16176f6cd8e8}</UniqueIdentifier>
     </Filter>
     <Filter Include="d3d9_impl\resource">
       <UniqueIdentifier>{04de4f88-0e01-41cb-90bb-98256c3016cc}</UniqueIdentifier>
@@ -709,6 +724,9 @@
     </Filter>
     <Filter Include="d3d9_impl\shaders\hlsl_gen">
       <UniqueIdentifier>{00fb539a-23f1-4ddb-988f-accaa523116d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\device\iframe\pso">
+      <UniqueIdentifier>{1405e705-a9d9-48f8-b695-16176f6cd8e8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

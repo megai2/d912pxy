@@ -49,9 +49,9 @@ public:
 	void DoOMStencilRef(DWORD ref);
 	void DoOMBlendFac(float* color);
 	void DoRSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor);
-	void DoPSOCompiled(d912pxy_pso_cache_item* dsc);
-	void DoPSORaw(d912pxy_trimmed_dx12_pso* dsc);
-	void DoPSORawFeedback(d912pxy_trimmed_dx12_pso* dsc, void** ptr);
+	void DoPSOCompiled(d912pxy_pso_item* dsc);
+	void DoPSORaw(d912pxy_trimmed_pso_desc* dsc);
+	void DoPSORawFeedback(d912pxy_trimmed_pso_desc* dsc, void** ptr);
 	void DoVBbind(d912pxy_vstream* buf, UINT stride,	UINT slot, UINT offset);
 	void DoIBbind(d912pxy_vstream* buf);
 	void DoDIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation, UINT batchId);
@@ -118,8 +118,8 @@ private:
 		d912pxy_device_streamsrc streams[PXY_INNER_MAX_VBUF_STREAMS];
 		d912pxy_vstream* indexBuf;
 
-		d912pxy_trimmed_dx12_pso pso;
-		d912pxy_pso_cache_item* cpso;
+		d912pxy_trimmed_pso_desc pso;
+		d912pxy_pso_item* cpso;
 
 		D3D12_VIEWPORT main_viewport;
 		D3D12_RECT main_scissor;

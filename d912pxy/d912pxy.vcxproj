@@ -389,6 +389,7 @@
     <ClInclude Include="d912pxy_d3dx9.h" />
     <ClInclude Include="d912pxy_device_state.h" />
     <ClInclude Include="d912pxy_draw_up.h" />
+    <ClInclude Include="d912pxy_dx9_pipeline_state.h" />
     <ClInclude Include="d912pxy_dxbc9.h" />
     <ClInclude Include="d912pxy_dynamic_imports.h" />
     <ClInclude Include="d912pxy_extras.h" />
@@ -421,7 +422,8 @@
     <ClInclude Include="d912pxy_performance_graph.h" />
     <ClInclude Include="d912pxy_pool.h" />
     <ClInclude Include="d912pxy_pool_memcat.h" />
-    <ClInclude Include="d912pxy_pso_cache.h" />
+    <ClInclude Include="d912pxy_pso_db.h" />
+    <ClInclude Include="d912pxy_pso_item.h" />
     <ClInclude Include="d912pxy_query.h" />
     <ClInclude Include="d912pxy_query_occlusion.h" />
     <ClInclude Include="d912pxy_replay.h" />
@@ -448,6 +450,7 @@
     <ClInclude Include="d912pxy_texture_state.h" />
     <ClInclude Include="d912pxy_thread.h" />
     <ClInclude Include="d912pxy_thread_lock.h" />
+    <ClInclude Include="d912pxy_trimmed_pso.h" />
     <ClInclude Include="d912pxy_upload_pool.h" />
     <ClInclude Include="d912pxy_vdecl.h" />
     <ClInclude Include="d912pxy_vfs.h" />
@@ -496,6 +499,7 @@
     <ClCompile Include="d912pxy_device_texstate.cpp" />
     <ClCompile Include="d912pxy_device_unimpl.cpp" />
     <ClCompile Include="d912pxy_draw_up.cpp" />
+    <ClCompile Include="d912pxy_dx9_pipeline_state.cpp" />
     <ClCompile Include="d912pxy_dxbc9.cpp" />
     <ClCompile Include="d912pxy_dynamic_imports.cpp" />
     <ClCompile Include="d912pxy_extras.cpp" />
@@ -530,7 +534,8 @@
     <ClCompile Include="d912pxy_performance_graph.cpp" />
     <ClCompile Include="d912pxy_pool.cpp" />
     <ClCompile Include="d912pxy_pool_memcat.cpp" />
-    <ClCompile Include="d912pxy_pso_cache.cpp" />
+    <ClCompile Include="d912pxy_pso_db.cpp" />
+    <ClCompile Include="d912pxy_pso_item.cpp" />
     <ClCompile Include="d912pxy_query.cpp" />
     <ClCompile Include="d912pxy_query_occlusion.cpp" />
     <ClCompile Include="d912pxy_replay.cpp" />
@@ -558,6 +563,7 @@
     <ClCompile Include="d912pxy_texture_state.cpp" />
     <ClCompile Include="d912pxy_thread.cpp" />
     <ClCompile Include="d912pxy_thread_lock.cpp" />
+    <ClCompile Include="d912pxy_trimmed_pso.cpp" />
     <ClCompile Include="d912pxy_upload_pool.cpp" />
     <ClCompile Include="d912pxy_vdecl.cpp" />
     <ClCompile Include="d912pxy_vfs.cpp" />

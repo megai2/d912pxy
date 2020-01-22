@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2019 megai2
+Copyright(c) 2019-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -2099,5 +2099,12 @@ void d912pxy_com_route_init_default()
 	d912pxy_com_route_set(PXY_COM_ROUTE_SBLOCK, PXY_COM_METHOD_SBLOCK_GETDEVICE, &d912pxy_noncom::com_GetDevice);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SBLOCK, PXY_COM_METHOD_SBLOCK_APPLY, &d912pxy_sblock::com_Apply);
 	d912pxy_com_route_set(PXY_COM_ROUTE_SBLOCK, PXY_COM_METHOD_SBLOCK_CAPTURE, &d912pxy_sblock::com_Capture);
+
+	//empty
+
+	d912pxy_com_route_set(PXY_COM_ROUTE_EMPTY, PXY_COM_METHOD_UNK_QUERY_INTERFACE, &d912pxy_comhandler::com_QueryInterface);
+	d912pxy_com_route_set(PXY_COM_ROUTE_EMPTY, PXY_COM_METHOD_UNK_ADDREF, &d912pxy_comhandler::com_AddRef);
+	d912pxy_com_route_set(PXY_COM_ROUTE_EMPTY, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_comhandler::com_Release);
+	d912pxy_com_route_set(PXY_COM_ROUTE_EMPTY, PXY_COM_METHOD_EMPTY_NON_USED, nullptr);
 }
 

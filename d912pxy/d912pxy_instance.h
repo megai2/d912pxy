@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -52,14 +52,18 @@ typedef struct d912pxy_instance {
 	struct render {
 
 		d912pxy_iframe iframe;
-		d912pxy_texture_state tex;
-		d912pxy_batch_buffer batch;
 
+		struct state {
+			d912pxy_texture_state tex;
+			d912pxy_dx9_pipeline_state pso;
+		} state;
+
+		d912pxy_batch_buffer batch;
 		d912pxy_draw_up draw_up;
 		d912pxy_replay replay;
 
 		struct db {
-			d912pxy_pso_cache pso;
+			d912pxy_pso_db pso;
 			d912pxy_shader_db shader;
 		} db;
 	} render;

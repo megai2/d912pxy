@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2019 megai2
+Copyright(c) 2019-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -44,6 +44,6 @@ typedef struct d912pxy_com_object {
 		d912pxy_query_occlusion query_occ;
 		d912pxy_swapchain swapchain;
 		d912pxy_sblock sblock;
-		d912pxy_pso_cache_item pso_item;
+		d912pxy_pso_item pso_item;
 	};
 } d912pxy_com_object;

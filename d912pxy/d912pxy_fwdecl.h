@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -343,7 +343,7 @@ class d912pxy_config;
 class d912pxy_log;
 class d912pxy_mem_mgr;
 class d912pxy_StackWalker;
-struct d912pxy_trimmed_dx12_pso;
+class d912pxy_trimmed_pso_desc;
 class d912pxy_query_occlusion;
 class d912pxy_com_mgr;
 class d912pxy_comhandler;

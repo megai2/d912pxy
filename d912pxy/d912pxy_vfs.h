@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -27,15 +27,6 @@ SOFTWARE.
 
 #define PXY_VFS_MAX_BID 256
 
-#define PXY_VFS_BID_CSO 0
-#define PXY_VFS_BID_SHADER_PROFILE 1
-#define PXY_VFS_BID_PSO_CACHE_KEYS 2
-#define PXY_VFS_BID_PSO_PRECOMPILE_LIST 3
-#define PXY_VFS_BID_SHADER_SOURCES 4
-#define PXY_VFS_BID_DERIVED_CSO_VS 5
-#define PXY_VFS_BID_DERIVED_CSO_PS 6
-#define PXY_VFS_BID_END 7
-
 #define PXY_VFS_LATEST_PCK L"latest.pck"
 
 static const wchar_t* d912pxy_vfs_entry_name_str[] = {
@@ -44,8 +35,10 @@ static const wchar_t* d912pxy_vfs_entry_name_str[] = {
 	L"PSO cache keys",
 	L"PSO precompile list",
 	L"Shader sources",
-	L"PSO derived VS cache",
-	L"PSO derived PS cache"
+	L"PSO derived VS code",
+	L"PSO derived PS code",
+	L"PSO derived alias refs",
+	L"VFS original paths"
 };
 
 enum class d912pxy_vfs_bid : UINT32 {
@@ -56,7 +49,9 @@ enum class d912pxy_vfs_bid : UINT32 {
 	shader_sources = 4,
 	derived_cso_vs = 5,
 	derived_cso_ps = 6,
-	end = 7
+	derived_cso_refs = 7,
+	vfs_paths = 8,
+	end = 9
 };
 
 typedef UINT64 d912pxy_vfs_path_hash;
@@ -92,7 +87,8 @@ private:
 	d912pxy_vfs_bid i_bid;
 };
 
-class d912pxy_vfs_locked_entry {
+class d912pxy_vfs_locked_entry 
+{
 public:
 	d912pxy_vfs_locked_entry(d912pxy_vfs_bid bid, d912pxy_vfs_entry** itemArray) :
 		i_bid(static_cast<UINT32>(bid))
@@ -135,6 +131,8 @@ public:
 	d912pxy_mem_block ReadFile(d912pxy_vfs_path path);
 	void WriteFile(d912pxy_vfs_path path, d912pxy_mem_block data);		
 		
+	d912pxy_ringbuffer<d912pxy_vfs_path_hash>* GetFileList(d912pxy_vfs_bid bid);
+
 	UINT32 IsWriteAllowed() { return writeAllowed; };		
 	void SetWriteMask(UINT32 val);
 	void TakeOutWriteAccess();

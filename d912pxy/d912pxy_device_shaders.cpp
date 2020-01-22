@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -28,14 +28,14 @@ SOFTWARE.
 
 HRESULT d912pxy_device::SetVertexShader(IDirect3DVertexShader9* pShader)
 {
-	d912pxy_s.render.db.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
+	d912pxy_s.render.state.pso.VShader(PXY_COM_LOOKUP(pShader, shader));
 		
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::SetPixelShader(IDirect3DPixelShader9* pShader) 
 {
-	d912pxy_s.render.db.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
+	d912pxy_s.render.state.pso.PShader(PXY_COM_LOOKUP(pShader, shader));
 		
 	return D3D_OK;
 }
@@ -99,16 +99,16 @@ ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATUR
 
 void d912pxy_device::TrackVSProfile()
 {	
-	auto sProfile = d912pxy_shader_profile::unknown(d912pxy_s.render.db.pso.GetVShader());
+	auto sProfile = d912pxy_shader_profile::unknown(d912pxy_s.render.state.pso.GetVShader());
 
 	if (!sProfile.isValid())
 		return;
 
-	DWORD cp = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_CLIPPLANEENABLE);
+	DWORD cp = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_CLIPPLANEENABLE);
 	if (cp & 1)	
 		sProfile.entryEnable(d912pxy_shader_profile::entry::clipplane0);			
 
-	d912pxy_vdecl* vdcl = d912pxy_s.render.db.pso.GetIAFormat();
+	d912pxy_vdecl* vdcl = d912pxy_s.render.state.pso.GetIAFormat();
 	if (vdcl)
 	{
 		UINT numElms = 0;
@@ -127,7 +127,7 @@ void d912pxy_device::TrackVSProfile()
 
 void d912pxy_device::TrackPSProfile()
 {
-	auto sProfile = d912pxy_shader_profile::unknown(d912pxy_s.render.db.pso.GetPShader());
+	auto sProfile = d912pxy_shader_profile::unknown(d912pxy_s.render.state.pso.GetPShader());
 
 	if (!sProfile.isValid())
 		return;
@@ -138,13 +138,13 @@ void d912pxy_device::TrackPSProfile()
 			sProfile.entryStageSelect(d912pxy_shader_profile::entry::pcf_sampler, i);			
 		}
 
-	UINT srgbState = d912pxy_s.render.tex.GetTexStage(30);
+	UINT srgbState = d912pxy_s.render.state.tex.GetTexStage(30);
 	if (srgbState)
 		for (int i = 0; i != 30; ++i)
 		{
 			if (srgbState & 1)
 			{
-				if (d912pxy_s.render.tex.GetTexStage(i) != mNullTextureSRV)
+				if (d912pxy_s.render.state.tex.GetTexStage(i) != mNullTextureSRV)
 				{
 					sProfile.entryEnable(d912pxy_shader_profile::entry::srgb_read);						
 					break;
@@ -153,10 +153,10 @@ void d912pxy_device::TrackPSProfile()
 			srgbState = srgbState >> 1;
 		}
 
-	if (d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_SRGBWRITEENABLE))
+	if (d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SRGBWRITEENABLE))
 		sProfile.entryEnable(d912pxy_shader_profile::entry::srgb_write);			
 
-	if (d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_ALPHATESTENABLE))
+	if (d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_ALPHATESTENABLE))
 		sProfile.entryEnable(d912pxy_shader_profile::entry::alpha_test);		
 }
 

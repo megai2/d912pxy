@@ -45,21 +45,21 @@ UINT d912pxy_replay::DoBarrier(d912pxy_resource* res, D3D12_RESOURCE_STATES to)
 	return 1;
 }
 
-void d912pxy_replay::DoPSOCompiled(d912pxy_pso_cache_item* dsc)
+void d912pxy_replay::DoPSOCompiled(d912pxy_pso_item* dsc)
 {
 	ITEM_PUSH(pso_compiled);
 
 	it->psoItem = dsc;
 }
 
-void d912pxy_replay::DoPSORaw(d912pxy_trimmed_dx12_pso* dsc)
+void d912pxy_replay::DoPSORaw(d912pxy_trimmed_pso_desc* dsc)
 {
 	ITEM_PUSH(pso_raw);
 
 	it->rawState = *dsc;
 }
 
-void d912pxy_replay::DoPSORawFeedback(d912pxy_trimmed_dx12_pso* dsc, void** ptr)
+void d912pxy_replay::DoPSORawFeedback(d912pxy_trimmed_pso_desc* dsc, void** ptr)
 {
 	ITEM_PUSH(pso_raw_feedback);
 

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2019 megai2
+Copyright(c) 2019-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -54,7 +54,7 @@ void d912pxy_com_mgr::Init()
 		sizeof(d912pxy_swapchain) + addedSize,
 		sizeof(d912pxy_surface_layer) + addedSize,
 		sizeof(d912pxy_sblock) + addedSize,
-		sizeof(d912pxy_pso_cache_item) + addedSize
+		sizeof(d912pxy_pso_item) + addedSize
 	};
 
 	table.Init(va_objSizes, PXY_INNER_COM_MGR_VA_MASK_BITS, PXY_COM_OBJ_COUNT);

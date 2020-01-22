@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -51,18 +51,18 @@ void d912pxy_vfs::Init(const char * lockPath)
 		writeAllowed = 1;
 	}
 
-	if (cuWriteMask == ((1 << PXY_VFS_BID_END) - 1))
+	if (cuWriteMask == ((1 << (UINT)d912pxy_vfs_bid::end) - 1))
 	{
 		TakeOutWriteAccess();
 	}
 	
-	for (int i = 0; i != PXY_VFS_BID_END; ++i)
+	for (int i = 0; i != (UINT)d912pxy_vfs_bid::end; ++i)
 		items[i] = new d912pxy_vfs_entry(i);
 }
 
 void d912pxy_vfs::UnInit()
 {
-	for (int i = 0; i != PXY_VFS_BID_END; ++i)
+	for (int i = 0; i != (UINT)d912pxy_vfs_bid::end; ++i)
 		delete items[i];
 
 	if (writeAllowed)
@@ -132,6 +132,29 @@ void d912pxy_vfs::WriteFile(d912pxy_vfs_path path, d912pxy_mem_block data)
 		return;
 
 	GetBidLocked(path)->WriteFileH(path.pathHash(), data.ptr(), data.size());
+}
+
+d912pxy_ringbuffer<d912pxy_vfs_path_hash>* d912pxy_vfs::GetFileList(d912pxy_vfs_bid bid)
+{
+	d912pxy_ringbuffer<d912pxy_vfs_path_hash>* ret = new d912pxy_ringbuffer<d912pxy_vfs_path_hash>(20, 2);
+
+	d912pxy_memtree2* cuTree = GetBidLocked(bid)->GetChunkTree();
+
+	cuTree->Begin();
+
+	while (!cuTree->IterEnd())
+	{
+		d912pxy_vfs_pck_chunk* chunk = (d912pxy_vfs_pck_chunk*)cuTree->CurrentCID();
+
+		if (chunk && (chunk->dsc.type == CHU_FILE_INFO))
+		{
+			ret->WriteElement(chunk->data.file_info.name);
+		}
+
+		cuTree->Next();
+	}
+
+	return ret;
 }
 
 bool d912pxy_vfs::IsFilePresent(d912pxy_vfs_path path)
@@ -270,12 +293,30 @@ void d912pxy_vfs::LoadPckFromRootPath()
 
 	//megai2: load actual data from disk after we collect/overwrite listing from all pck files
 	//if precache specified
-	for (int i = 0; i != PXY_VFS_BID_END; ++i)
+	for (int i = 0; i != (UINT)d912pxy_vfs_bid::end; ++i)
 		if (memCache & (1ULL << i))
 			items[i]->LoadFilesFromDisk();
 }
 
 d912pxy_vfs_path_hash d912pxy_vfs_path::HashFromName(const char * fnpath)
 {
-	return d912pxy_memtree2::memHash64s((void*)fnpath, (UINT32)strlen(fnpath));
+	UINT len = (UINT32)strlen(fnpath);
+	d912pxy_vfs_path_hash ret = d912pxy_memtree2::memHash64s((void*)fnpath, len);
+
+	auto checkPath = d912pxy_vfs_path(ret, d912pxy_vfs_bid::vfs_paths);
+	if (d912pxy_s.vfs.IsFilePresent(checkPath))
+	{
+		auto savedPath = d912pxy_s.vfs.ReadFile(checkPath);
+		if ((savedPath.size() != len) || (memcmp(savedPath.ptr(), fnpath, savedPath.size()) != 0))
+		{
+			abort();
+		}
+		savedPath.Delete();
+	}
+	else
+		d912pxy_s.vfs.WriteFile(checkPath, d912pxy_mem_block::use((void*)fnpath, len));
+
+	//TODO also add check for string based path & hash based path conflicts
+
+	return ret;
 }

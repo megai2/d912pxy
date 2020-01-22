@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -262,7 +262,7 @@ void d912pxy_comhandler::DeAllocateBase()
 		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_PSO_ITEM:
-		dtor_call(d912pxy_pso_cache_item);
+		dtor_call(d912pxy_pso_item);
 		d912pxy_s.com.DeAllocateComObj(comBase);
 		break;
 	case PXY_COM_OBJ_NOVTABLE:

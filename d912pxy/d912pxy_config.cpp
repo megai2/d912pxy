@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -182,6 +182,11 @@ UINT64 d912pxy_config::GetValueUI64(d912pxy_config_value val)
 UINT32 d912pxy_config::GetValueUI32(d912pxy_config_value val)
 {
 	return (UINT32)GetValueUI64(val);
+}
+
+bool d912pxy_config::GetValueB(d912pxy_config_value val)
+{
+	return GetValueUI32(val) >= 1;
 }
 
 wchar_t * d912pxy_config::GetValueRaw(d912pxy_config_value val)

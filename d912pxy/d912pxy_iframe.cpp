@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -39,15 +39,18 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 
 	mHeaps = heaps;
 	
-	d912pxy_s.render.tex.Init();
+	d912pxy_s.render.state.tex.Init();
 	d912pxy_s.render.batch.Init();
+	d912pxy_s.render.state.pso.Init();
+
+	InitRootSignature();
+
 	d912pxy_s.render.db.pso.Init();
 
 	streamsActive = 0;
 	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 		streamBinds[i].buffer = 0;
 
-	InitRootSignature();
 
 	mSetHeapArrCnt = 0;
 
@@ -67,9 +70,6 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 	mCurrentFrameIndex = 0;
 
 	cuPrimType = (D3DPRIMITIVETYPE)-1;
-
-	d912pxy_s.render.db.pso.LoadCachedData();
-
 	zeroWriteRT = NULL;
 }
 
@@ -78,8 +78,8 @@ void d912pxy_iframe::UnInit()
 	mRootSignature->Release();
 
 	d912pxy_s.render.batch.UnInit();
-	d912pxy_s.render.tex.UnInit();
-	d912pxy_s.render.db.pso.UnInit();
+	d912pxy_s.render.state.tex.UnInit();
+	d912pxy_s.render.state.pso.UnInit();
 
 	d912pxy_noncom::UnInit();
 }
@@ -182,7 +182,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	UINT32 batchDF = batchCommisionDF;
 	batchCommisionDF = 0;
 	
-	d912pxy_s.render.tex.Use();
+	d912pxy_s.render.state.tex.Use();
 
 	//bind vb/ib
 	
@@ -197,10 +197,10 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 			if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
 			{
-				d912pxy_vdecl* useInstanced = d912pxy_s.render.db.pso.GetIAFormat()->GetInstancedModification();
+				d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification();
 				//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
 				useInstanced->ModifyStreamElementType(i, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-				d912pxy_s.render.db.pso.IAFormatInstanced(useInstanced);
+				d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
 				batchDF |= 8;
 			}						
 		}
@@ -211,7 +211,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 		ProcessSurfaceBinds(0);
 	}
 
-	d912pxy_s.render.db.pso.Use();
+	d912pxy_s.render.state.pso.Use();
 
 	d912pxy_s.render.replay.DoDIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
 
@@ -221,7 +221,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 	if (batchDF & 8)
 	{
-		d912pxy_s.render.db.pso.IAFormat(d912pxy_s.render.db.pso.GetIAFormat());
+		d912pxy_s.render.state.pso.IAFormat(d912pxy_s.render.state.pso.GetIAFormat());
 	}
 }
 
@@ -235,13 +235,13 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 	UINT32 batchDF = batchCommisionDF;
 	batchCommisionDF = 0;
 
-	d912pxy_s.render.tex.Use();
+	d912pxy_s.render.state.tex.Use();
 
 	DWORD usedStreams = 0xFF;
 
-	if (!d912pxy_s.render.db.pso.GetCurrentCPSO())
+	if (!d912pxy_s.render.state.pso.GetCurrentCPSO())
 	{
-		d912pxy_vdecl* vdecl = d912pxy_s.render.db.pso.GetIAFormat();
+		d912pxy_vdecl* vdecl = d912pxy_s.render.state.pso.GetIAFormat();
 		usedStreams = vdecl->GetUsedStreams();
 	}
 
@@ -262,10 +262,10 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 
 			if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
 			{
-				d912pxy_vdecl* useInstanced = d912pxy_s.render.db.pso.GetIAFormat()->GetInstancedModification();
+				d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification();
 				//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
 				useInstanced->ModifyStreamElementType(i, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-				d912pxy_s.render.db.pso.IAFormatInstanced(useInstanced);
+				d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
 				batchDF |= 8;
 			}
 		}
@@ -285,7 +285,7 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 		ProcessSurfaceBinds(0);
 	}
 
-	d912pxy_s.render.db.pso.Use();
+	d912pxy_s.render.state.pso.Use();
 
 	if (PrimitiveType != cuPrimType)
 	{
@@ -301,7 +301,7 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 
 	if (batchDF & 8)
 	{
-		d912pxy_s.render.db.pso.IAFormat(d912pxy_s.render.db.pso.GetIAFormat());
+		d912pxy_s.render.state.pso.IAFormat(d912pxy_s.render.state.pso.GetIAFormat());
 	}
 }
 
@@ -346,7 +346,7 @@ void d912pxy_iframe::InstancedVDecl(d912pxy_vdecl * src)
 		src = useInstanced;
 	}
 	
-	d912pxy_s.render.db.pso.IAFormat(src);	
+	d912pxy_s.render.state.pso.IAFormat(src);	
 }
 
 void d912pxy_iframe::Start()
@@ -356,7 +356,7 @@ void d912pxy_iframe::Start()
 	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
 		mHeaps[i]->CleanupSlots(PXY_INNER_MAX_DHEAP_CLEANUP_PER_SYNC);
 
-	d912pxy_s.render.db.pso.MarkDirty(0);
+	d912pxy_s.render.state.pso.MarkDirty();
 
 	LOG_DBG_DTDM("CMDreplay iframe start called");
 
@@ -375,8 +375,8 @@ void d912pxy_iframe::Start()
 	//SetScissors(&main_scissor);
 
 	//megai2: restore RS & blendfactor on replay thread command list
-	d912pxy_s.render.db.pso.State(D3DRS_STENCILREF, d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF));
-	d912pxy_s.render.db.pso.State(D3DRS_BLENDFACTOR, d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_BLENDFACTOR));
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_STENCILREF, d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF));
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_BLENDFACTOR, d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_BLENDFACTOR));
 
 	SetRSigOnList(CLG_TOP);
 	SetRSigOnList(CLG_SEQ);
@@ -526,7 +526,7 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 	D3D12_VIEWPORT transVW = main_viewport;
 	D3D12_RECT transSR = main_scissor;
 
-	DWORD transSRef = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF);
+	DWORD transSRef = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
 	if (indexBind)
 		indexBind->ThreadRef(1);
@@ -660,26 +660,26 @@ void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
 
 	if (bindedSurfaces[1])
 	{
-		d912pxy_s.render.db.pso.RTVFormat(bindedSurfaces[1]->GetSRVFormat(), 0);
+		d912pxy_s.render.state.pso.RTVFormat(bindedSurfaces[1]->GetSRVFormat(), 0);
 		d912pxy_s.render.replay.DoBarrier(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
 		bindedRTVcount = 1;
 	}
 	else {
-		d912pxy_s.render.db.pso.RTVFormat(DXGI_FORMAT_UNKNOWN, 0);
+		d912pxy_s.render.state.pso.RTVFormat(DXGI_FORMAT_UNKNOWN, 0);
 		bindedRTVcount = 0;
 		bindedRTV = 0;
 	}
 
 	if (bindedSurfaces[0])
 	{
-		d912pxy_s.render.db.pso.DSVFormat(bindedSurfaces[0]->GetDSVFormat());
+		d912pxy_s.render.state.pso.DSVFormat(bindedSurfaces[0]->GetDSVFormat());
 		d912pxy_s.render.replay.DoBarrier(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	}
 	else {
 		bindedDSV = 0;
 	}
 
-	d912pxy_s.render.db.pso.OMReflect(bindedRTVcount, bindedDSV);
+	d912pxy_s.render.state.pso.OMReflect(bindedRTVcount, bindedDSV);
 
 	if (!psoOnly)
 	{
@@ -754,5 +754,5 @@ void d912pxy_iframe::InitRootSignature()
 
 	mRootSignature = d912pxy_s.dev.ConstructRootSignature(&rootSignatureDesc);
 	
-	d912pxy_s.render.db.pso.SetRootSignature(mRootSignature);
+	d912pxy_trimmed_pso_desc::defaultRootSignature = mRootSignature;
 }

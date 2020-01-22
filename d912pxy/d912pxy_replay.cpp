@@ -296,8 +296,8 @@ void d912pxy_replay::thread_transit_data::Reset()
 
 void d912pxy_replay::thread_transit_data::Gather(d912pxy_replay_item* threadStartingItem, UINT in_tailItems)
 {
-	bfacVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
-	srefVal = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_STENCILREF);
+	bfacVal = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
+	srefVal = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
 	surfBind[0] = d912pxy_s.render.iframe.GetBindedSurface(0);
 	surfBind[1] = d912pxy_s.render.iframe.GetBindedSurface(1);
@@ -305,18 +305,18 @@ void d912pxy_replay::thread_transit_data::Gather(d912pxy_replay_item* threadStar
 	indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
 	activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
-	scissorEnabled = d912pxy_s.render.db.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
+	scissorEnabled = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
 
 	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 		streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
 
-	pso = *d912pxy_s.render.db.pso.GetCurrentDsc();
+	pso = d912pxy_s.render.state.pso.GetCurrentDesc();
 
 	main_viewport = *d912pxy_s.render.iframe.GetViewport();
 	main_scissor = *d912pxy_s.render.iframe.GetScissorRect();
 
 	primType = d912pxy_s.render.iframe.GetCurrentPrimType();
-	cpso = d912pxy_s.render.db.pso.GetCurrentCPSO();	
+	cpso = d912pxy_s.render.state.pso.GetCurrentCPSO();
 	startPoint = threadStartingItem;
 	tailItems = in_tailItems;
 	
@@ -351,7 +351,7 @@ bool d912pxy_replay::thread_transit_data::Apply(ID3D12GraphicsCommandList* cl, d
 
 	ITEM_TRANSIT(om_stencilref, ({ srefVal }));
 
-	fv4Color bfColor = d912pxy_s.render.db.pso.TransformBlendFactor(bfacVal);
+	fv4Color bfColor = d912pxy_s.render.state.pso.TransformBlendFactor(bfacVal);
 	ITEM_TRANSIT(om_blendfactor, ({ { bfColor.val[0], bfColor.val[1], bfColor.val[2], bfColor.val[3]} }));
 
 	ITEM_TRANSIT(ia_prim_topo, ({ (UINT8)primType }));

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2019 megai2
+Copyright(c) 2019-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -65,9 +65,17 @@ public:
 	}
 
 	template<class T>
-	static d912pxy_mem_block alloc(T** target)
+	static d912pxy_mem_block alloc()
 	{
 		auto ret = alloc(sizeof(T));
+
+		return ret;
+	}
+
+	template<class T>
+	static d912pxy_mem_block alloc(T** target)
+	{
+		auto ret = alloc<T>();
 
 		*target = (T*)ret.ptr();
 
