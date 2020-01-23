@@ -177,7 +177,7 @@ wchar_t * d912pxy_config::GetValueRaw(d912pxy_config_value val)
 wchar_t* d912pxy_config::GetNewValueBuffer(d912pxy_config_value val)
 {
 	if (!data[val].newValue)
-		PXY_MALLOC(data[val].newValue, 255, wchar_t);
+		PXY_MALLOC(data[val].newValue, 255, wchar_t*);
 
 	return data[val].newValue;
 }
