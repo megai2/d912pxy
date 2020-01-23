@@ -174,6 +174,8 @@ void d912pxy_pso_db::LoadCachedData()
 		delete keyList;
 	}
 
+	UINT psoItemsTotal = 0;
+
 	{
 		auto precompList = d912pxy_s.vfs.GetFileList(d912pxy_vfs_bid::pso_precompile_list);
 		d912pxy_memtree2* shaderBuffer = new d912pxy_memtree2(sizeof(d912pxy_shader_uid), 100, 2);
@@ -217,7 +219,8 @@ void d912pxy_pso_db::LoadCachedData()
 				psoDesc->ref.PS = ps;
 				psoDesc->ref.VS = vs;
 
-				pair->PrecompilePSO((UINT32)cacheIndexes->CurrentCID(), psoDesc);
+				if (pair->PrecompilePSO((UINT32)cacheIndexes->CurrentCID(), psoDesc))
+					++psoItemsTotal;
 			}
 
 			PXY_FREE(pairEntry);
@@ -244,6 +247,8 @@ void d912pxy_pso_db::LoadCachedData()
 		psoDescs->PopElement().ref.InputLayout->Release();		
 	}
 	delete psoDescs;
+
+	LOG_INFO_DTDM("Compiled %u PSO items", psoItemsTotal);
 }
 
 void d912pxy_pso_db::CheckCompileQueueLock()

@@ -52,7 +52,7 @@ d912pxy_shader_pair::~d912pxy_shader_pair()
 	PXY_FREE(psoItems);
 }
 
-void d912pxy_shader_pair::PrecompilePSO(UINT32 idx, d912pxy_trimmed_pso_desc* dsc)
+bool d912pxy_shader_pair::PrecompilePSO(UINT32 idx, d912pxy_trimmed_pso_desc* dsc)
 {
 	CheckArrayAllocation(idx);
 
@@ -62,6 +62,8 @@ void d912pxy_shader_pair::PrecompilePSO(UINT32 idx, d912pxy_trimmed_pso_desc* ds
 	ret->Compile();
 
 	psoItems[idx] = ret;
+
+	return ret->GetPtr() != nullptr;
 }
 
 void d912pxy_shader_pair::CheckArrayAllocation(UINT32 idx)
