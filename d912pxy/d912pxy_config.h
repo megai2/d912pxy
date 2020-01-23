@@ -119,9 +119,10 @@ public:
 	bool GetValueB(d912pxy_config_value val);
 	wchar_t* GetValueRaw(d912pxy_config_value val);
 	wchar_t* GetNewValueBuffer(d912pxy_config_value val);
-	void SaveNewValues();
+	void SaveConfig();
 
 	d912pxy_config_value_dsc* GetEntryRaw(d912pxy_config_value val);
+	void ClearNewValueBuffers();
 
 private:
 
@@ -129,7 +130,7 @@ private:
 		{
 			L"pooling", 
 			L"upload_alloc_step", 
-			L"16"
+			L"16",
 			L"u r:0,1024",
 			L"upload segment allocation step",
 			L"controls how much space will be allocated for segment that is used to take upload memory from",

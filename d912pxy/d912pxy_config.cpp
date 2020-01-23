@@ -38,27 +38,7 @@ void d912pxy_config::Init()
 	FILE* f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "rb");
 
 	if (!f) {
-		f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "wb");
-
-		wchar_t csection[256] = L"0";
-
-
-		for (int i = 0; i != PXY_CFG_CNT; ++i)
-		{
-			if (lstrcmpW(csection, data[i].section))
-			{
-				fwprintf(f, L"\r\n[%s]\r\n", data[i].section);
-				lstrcpyW(csection, data[i].section);
-			}
-
-			fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].value);
-		}
-
-		fwprintf(f, L"\r\n[end] \r\n");
-
-		fflush(f);
-		fclose(f);
-
+		SaveConfig();
 		return;
 	}
 
@@ -194,7 +174,48 @@ wchar_t * d912pxy_config::GetValueRaw(d912pxy_config_value val)
 	return &data[val].value[0];
 }
 
+wchar_t* d912pxy_config::GetNewValueBuffer(d912pxy_config_value val)
+{
+	if (!data[val].newValue)
+		PXY_MALLOC(data[val].newValue, 255, wchar_t);
+
+	return data[val].newValue;
+}
+
+void d912pxy_config::SaveConfig()
+{
+	FILE* f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "wb");
+
+	wchar_t csection[256] = L"0";
+
+
+	for (int i = 0; i != PXY_CFG_CNT; ++i)
+	{
+		if (lstrcmpW(csection, data[i].section))
+		{
+			fwprintf(f, L"\r\n[%s]\r\n", data[i].section);
+			lstrcpyW(csection, data[i].section);
+		}
+
+		fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].newValue ? data[i].newValue : data[i].value);
+	}
+
+	fwprintf(f, L"\r\n[end] \r\n");
+
+	fflush(f);
+	fclose(f);
+}
+
 d912pxy_config_value_dsc * d912pxy_config::GetEntryRaw(d912pxy_config_value val)
 {
 	return &data[val];
+}
+
+void d912pxy_config::ClearNewValueBuffers()
+{
+	for (int i = 0; i != PXY_CFG_CNT; ++i)
+	{
+		if (data[i].newValue)
+			PXY_FREE(data[i].newValue);
+	}
 }
