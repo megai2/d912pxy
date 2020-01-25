@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-typedef UINT32 d912pxy_trimmed_pso_desc_hash;
+typedef UINT32 d912pxy_trimmed_pso_desc_key;
 
 #pragma pack(push, 1)
 
@@ -106,7 +106,7 @@ public:
 	d912pxy_trimmed_pso_desc();
 	~d912pxy_trimmed_pso_desc();
 	
-	d912pxy_trimmed_pso_desc_hash GetHash();	 
+	d912pxy_trimmed_pso_desc_key GetKey();	 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC GetPSODesc();
 	d912pxy_shader_pair_hash_type GetShaderPairUID();
 

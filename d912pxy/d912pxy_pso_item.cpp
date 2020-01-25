@@ -99,7 +99,7 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 
 			entryData.vs = desc->ref.VS->GetID();
 			entryData.ps = desc->ref.PS->GetID();
-			entryData.pso = desc->GetHash();
+			entryData.pso = desc->GetKey();
 
 			char fullPsoName[255];
 			sprintf(fullPsoName, "%016llX_%016llX_%08lX", entryData.vs, entryData.ps, entryData.pso);
@@ -391,7 +391,7 @@ ID3D12PipelineState* d912pxy_pso_item::GetPtr()
 void d912pxy_pso_item::RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 {
 	d912pxy_shader_pair_hash_type pairUID = desc->GetShaderPairUID();
-	UINT32 psoKey = desc->GetHash();
+	UINT32 psoKey = desc->GetKey();
 	char derivedAlias[255];
 	sprintf(derivedAlias, "%016llX_%08lX", pairUID, psoKey);
 

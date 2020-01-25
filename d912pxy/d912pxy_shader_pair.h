@@ -28,7 +28,7 @@ SOFTWARE.
 typedef struct d912pxy_shader_pair_cache_entry {
 	d912pxy_shader_uid ps;
 	d912pxy_shader_uid vs;
-	d912pxy_trimmed_pso_desc_hash pso;
+	d912pxy_trimmed_pso_desc_key pso;
 } d912pxy_shader_pair_cache_entry;
 
 class d912pxy_shader_pair : public d912pxy_noncom

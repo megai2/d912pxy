@@ -37,7 +37,7 @@ d912pxy_trimmed_pso_desc::~d912pxy_trimmed_pso_desc()
 {
 }
 
-d912pxy_trimmed_pso_desc_hash d912pxy_trimmed_pso_desc::GetHash()
+d912pxy_trimmed_pso_desc_key d912pxy_trimmed_pso_desc::GetKey()
 {
 	val.vdeclHash = ref.InputLayout->GetHash();
 

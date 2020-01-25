@@ -64,7 +64,7 @@ private:
 	d912pxy_ringbuffer<d912pxy_pso_item*>* psoCompileQue;
 	d912pxy_thread_lock compileQueLock;
 	void CheckCompileQueueLock();
-	void SaveKeyToCache(d912pxy_trimmed_pso_desc_hash key, d912pxy_trimmed_pso_desc * desc);
+	void SaveKeyToCache(d912pxy_trimmed_pso_desc_key key, d912pxy_trimmed_pso_desc * desc);
 };
 
 #pragma pack(pop)

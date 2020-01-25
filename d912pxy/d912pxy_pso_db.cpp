@@ -39,7 +39,7 @@ void d912pxy_pso_db::Init()
 	NonCom_Init(L"pso db");
 	InitThread("d912pxy pso compile", 0);
 
-	cacheIndexes = new d912pxy_memtree2(sizeof(d912pxy_trimmed_pso_desc_hash), PXY_INNER_MAX_PSO_CACHE_NODES, 2);
+	cacheIndexes = new d912pxy_memtree2(sizeof(d912pxy_trimmed_pso_desc_key), PXY_INNER_MAX_PSO_CACHE_NODES, 2);
 	cacheIncID = 0;
 	
 	allowRealtimeChecks = d912pxy_s.config.GetValueB(PXY_CFG_SDB_ALLOW_REALTIME_CHECKS);
@@ -75,7 +75,7 @@ d912pxy_pso_item* d912pxy_pso_db::GetByDescMT(d912pxy_trimmed_pso_desc* desc)
 		return NULL;
 	}
 
-	UINT32 key = desc->GetHash();
+	UINT32 key = desc->GetKey();
 	UINT64 id = cacheIndexes->PointAtMemMTR(&key, 4);
 
 	if (id == 0)
@@ -160,12 +160,30 @@ void d912pxy_pso_db::LoadCachedData()
 				psoDesc.DeSerialize(data);
 				data.Delete();
 
-				psoDescs->WriteElement(psoDesc);
+				if (psoDesc.ref.InputLayout->GetHash() != psoDesc.val.vdeclHash)
+				{
+					LOG_ERR_DTDM("PSO IA ref hash differs from saved in desc (%08lX != %08lX)", 
+						psoDesc.ref.InputLayout->GetHash(), psoDesc.val.vdeclHash);
+					continue;
+				}
 
-				auto psoHash = psoDesc.GetHash();
-				cacheIndexes->PointAtMem(&psoHash, sizeof(psoHash));
+				auto psoKey = psoDesc.GetKey();
+
+				if (psoKey != keyName)
+				{
+					LOG_ERR_DTDM("PSO keyname %lX differs from %lX that defined by data in PSO", keyName, psoKey);
+					continue;
+				}
+
+				psoDescs->WriteElement(psoDesc);
+				cacheIndexes->PointAtMem(&psoKey, sizeof(psoKey));
 				cacheIndexes->SetValue(keyIdx);
 				++keyIdx;
+
+
+			}
+			else {
+				LOG_ERR_DTDM("can't read PSO data with key %lX ", keyName);
 			}
 		}
 
@@ -175,6 +193,7 @@ void d912pxy_pso_db::LoadCachedData()
 	}
 
 	UINT psoItemsTotal = 0;
+	UINT psoItemsCompiled = 0;
 
 	{
 		auto precompList = d912pxy_s.vfs.GetFileList(d912pxy_vfs_bid::pso_precompile_list);
@@ -188,9 +207,8 @@ void d912pxy_pso_db::LoadCachedData()
 			if (!pairEntry)
 				continue;
 
-			cacheIndexes->PointAtMem(&pairEntry->pso, sizeof(d912pxy_trimmed_pso_desc_hash));
+			cacheIndexes->PointAtMem(&pairEntry->pso, sizeof(d912pxy_trimmed_pso_desc_key));
 
-			//TODO: keep them alive in some temporary buffer
 			shaderBuffer->PointAtMem(&pairEntry->vs, 8);
 			d912pxy_shader* vs = (d912pxy_shader*)shaderBuffer->CurrentCID();
 			if (!vs)
@@ -207,9 +225,16 @@ void d912pxy_pso_db::LoadCachedData()
 				shaderBuffer->SetValue((UINT64)ps);
 			}
 
-			if (!cacheIndexes->CurrentCID() || !vs->GetCode()->pShaderBytecode || !ps->GetCode()->pShaderBytecode)
+			bool missingItems[3] = {
+				!cacheIndexes->CurrentCID(),
+				!vs->GetCode()->pShaderBytecode,
+				!ps->GetCode()->pShaderBytecode
+			};
+
+			if (missingItems[0] || missingItems[1] || missingItems[2])
 			{
-				LOG_ERR_DTDM("Can't precompile PSO with VS: %llX PS: %llX DSC KEY: %lX due to missing CSO/custom HLSL data/pso description", pairEntry->vs, pairEntry->ps, pairEntry->pso);
+				LOG_ERR_DTDM("Can't precompile PSO with VS: %llX PS: %llX DSC KEY: %lX due to missing %S %S %S", pairEntry->vs, pairEntry->ps, pairEntry->pso,
+					missingItems[0] ? "PSO desc" : "", missingItems[1] ? "VS code" : "", missingItems[2] ? "PS code" : "");
 			}
 			else {
 				d912pxy_shader_pair* pair = d912pxy_s.render.db.shader.GetPair(vs, ps);
@@ -220,8 +245,10 @@ void d912pxy_pso_db::LoadCachedData()
 				psoDesc->ref.VS = vs;
 
 				if (pair->PrecompilePSO((UINT32)cacheIndexes->CurrentCID(), psoDesc))
-					++psoItemsTotal;
+					++psoItemsCompiled;
 			}
+
+			++psoItemsTotal;
 
 			PXY_FREE(pairEntry);
 		}
@@ -248,7 +275,7 @@ void d912pxy_pso_db::LoadCachedData()
 	}
 	delete psoDescs;
 
-	LOG_INFO_DTDM("Compiled %u PSO items", psoItemsTotal);
+	LOG_INFO_DTDM("Compiled %u out of %u PSO items", psoItemsCompiled, psoItemsTotal);
 }
 
 void d912pxy_pso_db::CheckCompileQueueLock()
@@ -264,7 +291,7 @@ void d912pxy_pso_db::CheckCompileQueueLock()
 	}
 }
 
-void d912pxy_pso_db::SaveKeyToCache(d912pxy_trimmed_pso_desc_hash key, d912pxy_trimmed_pso_desc* desc)
+void d912pxy_pso_db::SaveKeyToCache(d912pxy_trimmed_pso_desc_key key, d912pxy_trimmed_pso_desc* desc)
 {
 	d912pxy_mem_block data = desc->Serialize();
 
