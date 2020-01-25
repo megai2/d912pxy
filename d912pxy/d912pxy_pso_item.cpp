@@ -104,7 +104,10 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 			char fullPsoName[255];
 			sprintf(fullPsoName, "%016llX_%016llX_%08lX", entryData.vs, entryData.ps, entryData.pso);
 
-			d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(fullPsoName, d912pxy_vfs_bid::pso_precompile_list), d912pxy_mem_block::use(&entryData));
+			auto cacheFn = d912pxy_vfs_path(fullPsoName, d912pxy_vfs_bid::pso_precompile_list);
+
+			if (!d912pxy_s.vfs.IsFilePresent(cacheFn))
+				d912pxy_s.vfs.WriteFile(cacheFn, d912pxy_mem_block::use(&entryData));
 		}
 	}
 
