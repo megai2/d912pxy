@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-ID3D12RootSignature* d912pxy_trimmed_pso_desc::defaultRootSignature = nullptr;
+D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_trimmed_pso_desc::singleFullPSO = { 0 };
 
 d912pxy_trimmed_pso_desc::d912pxy_trimmed_pso_desc() :
 	val(),
@@ -44,56 +44,54 @@ d912pxy_trimmed_pso_desc_key d912pxy_trimmed_pso_desc::GetKey()
 	return d912pxy_memtree2::memHash32s(&val, sizeof(value_part));
 }
 
-D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_trimmed_pso_desc::GetPSODesc()
+D3D12_GRAPHICS_PIPELINE_STATE_DESC* d912pxy_trimmed_pso_desc::GetPSODesc()
 {
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC ret = GetBaseFullPSO();
-
-	ret.VS = *ref.VS->GetCode();
-	ret.PS = *ref.PS->GetCode();
-	ret.InputLayout = *ref.InputLayout->GetD12IA_InputElementFmt();
-	ret.NumRenderTargets = val.NumRenderTargets;
+	singleFullPSO.VS = *ref.VS->GetCode();
+	singleFullPSO.PS = *ref.PS->GetCode();
+	singleFullPSO.InputLayout = *ref.InputLayout->GetD12IA_InputElementFmt();
+	singleFullPSO.NumRenderTargets = val.NumRenderTargets;
 
 	//for (numrt)
 	{
-		ret.BlendState.RenderTarget[0].SrcBlend = (D3D12_BLEND)val.rt0.blend.src;
-		ret.BlendState.RenderTarget[0].SrcBlendAlpha = (D3D12_BLEND)val.rt0.blend.srcAlpha;
-		ret.BlendState.RenderTarget[0].DestBlend = (D3D12_BLEND)val.rt0.blend.dest;
-		ret.BlendState.RenderTarget[0].DestBlendAlpha = (D3D12_BLEND)val.rt0.blend.destAlpha;
-		ret.BlendState.RenderTarget[0].BlendEnable = val.rt0.blend.enable;
-		ret.BlendState.RenderTarget[0].RenderTargetWriteMask = val.rt0.blend.writeMask;
-		ret.BlendState.RenderTarget[0].BlendOp = (D3D12_BLEND_OP)val.rt0.blend.op;
-		ret.BlendState.RenderTarget[0].BlendOpAlpha = (D3D12_BLEND_OP)val.rt0.blend.opAlpha;
-		ret.RTVFormats[0] = (DXGI_FORMAT)val.rt0.format;
+		singleFullPSO.BlendState.RenderTarget[0].SrcBlend = (D3D12_BLEND)val.rt0.blend.src;
+		singleFullPSO.BlendState.RenderTarget[0].SrcBlendAlpha = (D3D12_BLEND)val.rt0.blend.srcAlpha;
+		singleFullPSO.BlendState.RenderTarget[0].DestBlend = (D3D12_BLEND)val.rt0.blend.dest;
+		singleFullPSO.BlendState.RenderTarget[0].DestBlendAlpha = (D3D12_BLEND)val.rt0.blend.destAlpha;
+		singleFullPSO.BlendState.RenderTarget[0].BlendEnable = val.rt0.blend.enable;
+		singleFullPSO.BlendState.RenderTarget[0].RenderTargetWriteMask = val.rt0.blend.writeMask;
+		singleFullPSO.BlendState.RenderTarget[0].BlendOp = (D3D12_BLEND_OP)val.rt0.blend.op;
+		singleFullPSO.BlendState.RenderTarget[0].BlendOpAlpha = (D3D12_BLEND_OP)val.rt0.blend.opAlpha;
+		singleFullPSO.RTVFormats[0] = (DXGI_FORMAT)val.rt0.format;
 	}
 
-	ret.RasterizerState.FillMode = (D3D12_FILL_MODE)val.rast.fillMode;
+	singleFullPSO.RasterizerState.FillMode = (D3D12_FILL_MODE)val.rast.fillMode;
 
-	ret.RasterizerState.FrontCounterClockwise = val.rast.cullMode == D3DCULL_CW;
-	ret.RasterizerState.CullMode = val.rast.cullMode != D3DCULL_NONE ? D3D12_CULL_MODE_BACK : D3D12_CULL_MODE_NONE;
+	singleFullPSO.RasterizerState.FrontCounterClockwise = val.rast.cullMode == D3DCULL_CW;
+	singleFullPSO.RasterizerState.CullMode = val.rast.cullMode != D3DCULL_NONE ? D3D12_CULL_MODE_BACK : D3D12_CULL_MODE_NONE;
 
-	ret.RasterizerState.SlopeScaledDepthBias = val.rast.slopeScaledDepthBias;
-	ret.RasterizerState.AntialiasedLineEnable = val.rast.antialiasedLineEnable;
-	ret.RasterizerState.DepthBias = val.rast.depthBias;
+	singleFullPSO.RasterizerState.SlopeScaledDepthBias = val.rast.slopeScaledDepthBias;
+	singleFullPSO.RasterizerState.AntialiasedLineEnable = val.rast.antialiasedLineEnable;
+	singleFullPSO.RasterizerState.DepthBias = val.rast.depthBias;
 
-	//ret.DepthStencilState = desc->DepthStencilState;
+	//singleFullPSO.DepthStencilState = desc->DepthStencilState;
 
-	ret.DepthStencilState.DepthEnable = val.ds.enable;
-	ret.DepthStencilState.DepthWriteMask = (D3D12_DEPTH_WRITE_MASK)val.ds.writeMask;
-	ret.DepthStencilState.DepthFunc = (D3D12_COMPARISON_FUNC)val.ds.func;
-	ret.DepthStencilState.StencilEnable = val.ds.stencilEnable;
-	ret.DepthStencilState.FrontFace.StencilFailOp = (D3D12_STENCIL_OP)val.ds.frontFace.failOp;
-	ret.DepthStencilState.FrontFace.StencilPassOp = (D3D12_STENCIL_OP)val.ds.frontFace.passOp;
-	ret.DepthStencilState.FrontFace.StencilDepthFailOp = (D3D12_STENCIL_OP)val.ds.frontFace.depthFailOp;
-	ret.DepthStencilState.FrontFace.StencilFunc = (D3D12_COMPARISON_FUNC)val.ds.frontFace.func;
-	ret.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)val.ds.backFace.failOp;
-	ret.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)val.ds.backFace.passOp;
-	ret.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)val.ds.backFace.depthFailOp;
-	ret.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)val.ds.backFace.func;
-	ret.DepthStencilState.StencilReadMask = val.ds.stencilReadMask;
-	ret.DepthStencilState.StencilWriteMask = val.ds.stencilWriteMask;
-	ret.DSVFormat = (DXGI_FORMAT)val.ds.format;
+	singleFullPSO.DepthStencilState.DepthEnable = val.ds.enable;
+	singleFullPSO.DepthStencilState.DepthWriteMask = (D3D12_DEPTH_WRITE_MASK)val.ds.writeMask;
+	singleFullPSO.DepthStencilState.DepthFunc = (D3D12_COMPARISON_FUNC)val.ds.func;
+	singleFullPSO.DepthStencilState.StencilEnable = val.ds.stencilEnable;
+	singleFullPSO.DepthStencilState.FrontFace.StencilFailOp = (D3D12_STENCIL_OP)val.ds.frontFace.failOp;
+	singleFullPSO.DepthStencilState.FrontFace.StencilPassOp = (D3D12_STENCIL_OP)val.ds.frontFace.passOp;
+	singleFullPSO.DepthStencilState.FrontFace.StencilDepthFailOp = (D3D12_STENCIL_OP)val.ds.frontFace.depthFailOp;
+	singleFullPSO.DepthStencilState.FrontFace.StencilFunc = (D3D12_COMPARISON_FUNC)val.ds.frontFace.func;
+	singleFullPSO.DepthStencilState.BackFace.StencilFailOp = (D3D12_STENCIL_OP)val.ds.backFace.failOp;
+	singleFullPSO.DepthStencilState.BackFace.StencilPassOp = (D3D12_STENCIL_OP)val.ds.backFace.passOp;
+	singleFullPSO.DepthStencilState.BackFace.StencilDepthFailOp = (D3D12_STENCIL_OP)val.ds.backFace.depthFailOp;
+	singleFullPSO.DepthStencilState.BackFace.StencilFunc = (D3D12_COMPARISON_FUNC)val.ds.backFace.func;
+	singleFullPSO.DepthStencilState.StencilReadMask = val.ds.stencilReadMask;
+	singleFullPSO.DepthStencilState.StencilWriteMask = val.ds.stencilWriteMask;
+	singleFullPSO.DSVFormat = (DXGI_FORMAT)val.ds.format;
 
-	return ret;
+	return &singleFullPSO;
 }
 
 d912pxy_shader_pair_hash_type d912pxy_trimmed_pso_desc::GetShaderPairUID()
@@ -133,20 +131,13 @@ void d912pxy_trimmed_pso_desc::DeSerialize(d912pxy_mem_block data)
 	ref.InputLayout = d912pxy_vdecl::d912pxy_vdecl_com(input->declData);
 }
 
-const D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_trimmed_pso_desc::GetBaseFullPSO()
+void d912pxy_trimmed_pso_desc::SetupBaseFullPSO(ID3D12RootSignature* defaultRootSignature)
 {
-	//TODO: check if this compiles to optimal no write-repat code
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC ret = { 0 };
-
-	ret.SampleDesc.Count = 1;
-	ret.SampleDesc.Quality = 0;
-	ret.SampleMask = 0xFFFFFFFF;
-	ret.RasterizerState.DepthBiasClamp = 0;
-	ret.RasterizerState.DepthClipEnable = 1;
-	ret.GS.pShaderBytecode = NULL;
-	ret.DS.pShaderBytecode = NULL;
-	ret.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	ret.pRootSignature = defaultRootSignature;
-
-	return ret;
+	singleFullPSO.SampleDesc.Count = 1;
+	singleFullPSO.SampleDesc.Quality = 0;
+	singleFullPSO.SampleMask = 0xFFFFFFFF;
+	singleFullPSO.RasterizerState.DepthBiasClamp = 0;
+	singleFullPSO.RasterizerState.DepthClipEnable = 1;
+	singleFullPSO.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	singleFullPSO.pRootSignature = defaultRootSignature;
 }

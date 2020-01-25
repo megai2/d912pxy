@@ -44,6 +44,7 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 	d912pxy_s.render.state.pso.Init();
 
 	InitRootSignature();
+	d912pxy_trimmed_pso_desc::SetupBaseFullPSO(mRootSignature);
 
 	d912pxy_s.render.db.pso.Init();
 
@@ -753,6 +754,4 @@ void d912pxy_iframe::InitRootSignature()
 	rootSignatureDesc.pStaticSamplers = &staticPCF;
 
 	mRootSignature = d912pxy_s.dev.ConstructRootSignature(&rootSignatureDesc);
-	
-	d912pxy_trimmed_pso_desc::defaultRootSignature = mRootSignature;
 }

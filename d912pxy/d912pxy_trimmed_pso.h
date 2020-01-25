@@ -101,14 +101,14 @@ public:
 	value_part val;
 	ref_part ref;
 
-	static ID3D12RootSignature* defaultRootSignature;
-
 	d912pxy_trimmed_pso_desc();
 	~d912pxy_trimmed_pso_desc();
 	
 	d912pxy_trimmed_pso_desc_key GetKey();	 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC GetPSODesc();
 	d912pxy_shader_pair_hash_type GetShaderPairUID();
+
+	//megai2: this function is not thread safe
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC* GetPSODesc();
 
 	void HoldRefs(const bool yes);
 	bool haveValidRefs();
@@ -116,8 +116,11 @@ public:
 	d912pxy_mem_block Serialize();
 	void DeSerialize(d912pxy_mem_block data);
 
+	static void SetupBaseFullPSO(ID3D12RootSignature* defaultRootSignature);
+
 private:
-	const D3D12_GRAPHICS_PIPELINE_STATE_DESC GetBaseFullPSO();
+	static D3D12_GRAPHICS_PIPELINE_STATE_DESC singleFullPSO;
+
 };
 
 #pragma pack(pop)
