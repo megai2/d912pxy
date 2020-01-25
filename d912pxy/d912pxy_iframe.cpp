@@ -182,6 +182,7 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	
 	UINT32 batchDF = batchCommisionDF;
 	batchCommisionDF = 0;
+	UINT32 instancedModMask = 0;
 	
 	d912pxy_s.render.state.tex.Use();
 
@@ -198,13 +199,16 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 
 			if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
 			{
-				d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification();
-				//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
-				useInstanced->ModifyStreamElementType(i, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-				d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
+				instancedModMask |= 1 << i;
 				batchDF |= 8;
 			}						
 		}
+	}
+
+	if (batchDF & 8)
+	{
+		d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification(instancedModMask, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
+		d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
 	}
 
 	if (batchDF & 4)
@@ -235,6 +239,7 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 
 	UINT32 batchDF = batchCommisionDF;
 	batchCommisionDF = 0;
+	UINT32 instancedModMask = 0;
 
 	d912pxy_s.render.state.tex.Use();
 
@@ -263,10 +268,7 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 
 			if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
 			{
-				d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification();
-				//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
-				useInstanced->ModifyStreamElementType(i, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-				d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
+				instancedModMask |= 1 << i;
 				batchDF |= 8;
 			}
 		}
@@ -279,6 +281,12 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 			instanceCount = 1;
 			batchDF &= ~8;
 		}
+	}
+
+	if (batchDF & 8)
+	{
+		d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification(instancedModMask, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
+		d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
 	}
 
 	if (batchDF & 4)
@@ -334,20 +342,6 @@ void d912pxy_iframe::ClearBindedSurfaces()
 {
 	bindedSurfaces[0] = 0;
 	bindedSurfaces[1] = 0;
-}
-
-void d912pxy_iframe::InstancedVDecl(d912pxy_vdecl * src)
-{
-	if (instanceCount)
-	{
-		d912pxy_vdecl* useInstanced = src->GetInstancedModification();
-		//i belive that unmasked value must be equal to binded stream stride, so we just check that our vdecl is ready for this call
-		//useInstanced->ModifyStreamElementType(instanceDataStream, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-
-		src = useInstanced;
-	}
-	
-	d912pxy_s.render.state.pso.IAFormat(src);	
 }
 
 void d912pxy_iframe::Start()

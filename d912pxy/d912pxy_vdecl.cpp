@@ -26,10 +26,8 @@ SOFTWARE.
 
 d912pxy_vdecl::d912pxy_vdecl(const D3DVERTEXELEMENT9* data) : d912pxy_comhandler(PXY_COM_OBJ_VDECL, L"vdecl")
 {
-	mHash = 0;
-
 	usedStreamSlots = 0;
-	instancedDecl = 0;
+	instancedDecl = nullptr;
 
 	for (int i = 0; i != PXY_INNER_MAX_VDECL_LEN; ++i)
 	{
@@ -174,6 +172,8 @@ d912pxy_vdecl::d912pxy_vdecl(const D3DVERTEXELEMENT9* data) : d912pxy_comhandler
 
 	inputEleFmt.NumElements = declLen - 1;
 	inputEleFmt.pInputElementDescs = declData12;
+
+	UpdateHash();
 }
 
 d912pxy_vdecl * d912pxy_vdecl::d912pxy_vdecl_com(const D3DVERTEXELEMENT9 * data)
@@ -213,10 +213,6 @@ void d912pxy_vdecl::ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICAT
 			if (newMode == declData12[i].InputSlotClass)
 				break;
 			else {
-				if (mHash)
-				{
-					LOG_ERR_DTDM("instanced vdecl modified after hash calculation");
-				}
 				declData12[i].InputSlotClass = newMode;
 				declData12[i].InstanceDataStepRate = 1;
 				declData[i].Method = D3DDECLMETHOD_PER_INSTANCE_CONSTANT;
@@ -225,11 +221,34 @@ void d912pxy_vdecl::ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICAT
 	}
 }
 
-d912pxy_vdecl * d912pxy_vdecl::GetInstancedModification()
+void d912pxy_vdecl::UpdateHash()
+{
+	void* mem = declData;
+	mHash = d912pxy_memtree2::memHash32s(mem, declLen * sizeof(D3DVERTEXELEMENT9));
+}
+
+d912pxy_vdecl * d912pxy_vdecl::GetInstancedModification(UINT streamMask, D3D12_INPUT_CLASSIFICATION newMode)
 {
 	if (!instancedDecl)
 	{
-		instancedDecl = d912pxy_vdecl::d912pxy_vdecl_com(declData);		
+		instancedDecl = d912pxy_vdecl::d912pxy_vdecl_com(declData);	
+		mInstancedModificationMask = streamMask;
+
+		UINT i = 0;
+		while (streamMask)
+		{
+			if (streamMask & 1)
+				instancedDecl->ModifyStreamElementType(i, newMode);
+
+			++i;
+			streamMask = streamMask >> 1;
+		}
+		
+		instancedDecl->UpdateHash();
+	}
+	else if (mInstancedModificationMask != streamMask)
+	{	
+		LOG_ERR_THROW2(-1, "API stream need extended instanced vdecl handling");
 	}
 
 	return instancedDecl;
@@ -237,11 +256,6 @@ d912pxy_vdecl * d912pxy_vdecl::GetInstancedModification()
 
 UINT32 d912pxy_vdecl::GetHash()
 {
-	if (!mHash)
-	{
-		void* mem = declData;
-		mHash = d912pxy_memtree2::memHash32s(mem, declLen * sizeof(D3DVERTEXELEMENT9));		
-	}
 	return mHash;
 }
 

@@ -57,8 +57,6 @@ public:
 	void ClearBindedSurfaces();
 	d912pxy_surface* GetBindedSurface(UINT index) { return bindedSurfaces[index]; };
 
-	void InstancedVDecl(d912pxy_vdecl* src);
-	
 	UINT GetInstanceCount() { return instanceCount; };
 
 	void Start();

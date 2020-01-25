@@ -45,14 +45,15 @@ public:
 	D3DVERTEXELEMENT9* GetDeclarationPtr(UINT* pNumElements);
 	D3D12_INPUT_LAYOUT_DESC* GetD12IA_InputElementFmt();
 
-	void ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICATION newMode);
-	d912pxy_vdecl* GetInstancedModification();
+	d912pxy_vdecl* GetInstancedModification(UINT stream, D3D12_INPUT_CLASSIFICATION newMode);
 
 	UINT32 GetHash();
 	UINT GetUsedStreams();
 	
 private:
 	d912pxy_vdecl(const D3DVERTEXELEMENT9* data);
+	void ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICATION newMode);
+	void UpdateHash();
 
 	D3DVERTEXELEMENT9 declData[PXY_INNER_MAX_VDECL_LEN];
 	D3D12_INPUT_ELEMENT_DESC declData12[PXY_INNER_MAX_VDECL_LEN];
@@ -62,6 +63,7 @@ private:
 	DWORD declLen;
 	DWORD usedStreamSlots;
 	UINT32 mHash;
+	UINT32 mInstancedModificationMask;
 
 	d912pxy_vdecl* instancedDecl;
 };
