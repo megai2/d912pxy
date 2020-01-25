@@ -213,6 +213,10 @@ void d912pxy_vdecl::ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICAT
 			if (newMode == declData12[i].InputSlotClass)
 				break;
 			else {
+				if (mHash)
+				{
+					LOG_ERR_DTDM("instanced vdecl modified after hash calculation");
+				}
 				declData12[i].InputSlotClass = newMode;
 				declData12[i].InstanceDataStepRate = 1;
 				declData[i].Method = D3DDECLMETHOD_PER_INSTANCE_CONSTANT;
