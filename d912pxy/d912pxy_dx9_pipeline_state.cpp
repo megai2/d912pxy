@@ -37,6 +37,7 @@ void d912pxy_dx9_pipeline_state::Init()
 	NonCom_Init(L"dx9_pso");
 
 	cCPSO = NULL;
+	cVDecl = NULL;
 
 	psoDesc.val.NumRenderTargets = 1;
 	psoDesc.val.rt0.format = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -280,7 +281,19 @@ d912pxy_trimmed_pso_desc d912pxy_dx9_pipeline_state::GetCurrentDesc()
 
 DWORD d912pxy_dx9_pipeline_state::GetDX9RsValue(D3DRENDERSTATETYPE State)
 {
-	return DX9RSvalues[State];
+	switch (State)
+	{
+	case D3DRS_ALPHABLENDENABLE:
+		return psoDesc.val.rt0.blend.enable;
+		break;
+	case D3DRS_DESTBLEND:
+		return psoDesc.val.rt0.blend.dest;
+		break;
+	default:
+		return DX9RSvalues[State];
+	}
+
+	return 0;
 }
 
 void d912pxy_dx9_pipeline_state::Use()
