@@ -164,6 +164,7 @@ void d912pxy_pso_db::LoadCachedData()
 				{
 					LOG_ERR_DTDM("PSO IA ref hash differs from saved in desc (%08lX != %08lX)", 
 						psoDesc.ref.InputLayout->GetHash(), psoDesc.val.vdeclHash);
+					psoDesc.ref.InputLayout->Release();
 					continue;
 				}
 
@@ -172,6 +173,7 @@ void d912pxy_pso_db::LoadCachedData()
 				if (psoKey != keyName)
 				{
 					LOG_ERR_DTDM("PSO keyname %lX differs from %lX that defined by data in PSO", keyName, psoKey);
+					psoDesc.ref.InputLayout->Release();
 					continue;
 				}
 
