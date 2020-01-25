@@ -123,6 +123,15 @@ d912pxy_mem_block d912pxy_trimmed_pso_desc::Serialize()
 	UINT unused;
 	memcpy(output->declData, ref.InputLayout->GetDeclarationPtr(&unused), sizeof(D3DVERTEXELEMENT9) * PXY_INNER_MAX_VDECL_LEN);
 
+	d912pxy_vdecl* test = d912pxy_vdecl::d912pxy_vdecl_com(ref.InputLayout->GetDeclarationPtr(&unused));
+
+	if (test->GetHash() != ref.InputLayout->GetHash())
+	{
+		assert(0, "rehash failed");
+	}
+
+	test->Release();
+
 	return mem;
 }
 
@@ -130,7 +139,7 @@ void d912pxy_trimmed_pso_desc::DeSerialize(d912pxy_mem_block data)
 {
 	serialized_data* input = data.c_arr<serialized_data>();
 	val = input->val;
-	d912pxy_s.dev.CreateVertexDeclaration(input->declData, (IDirect3DVertexDeclaration9**)(&ref.InputLayout));
+	ref.InputLayout = d912pxy_vdecl::d912pxy_vdecl_com(input->declData);
 }
 
 const D3D12_GRAPHICS_PIPELINE_STATE_DESC d912pxy_trimmed_pso_desc::GetBaseFullPSO()
