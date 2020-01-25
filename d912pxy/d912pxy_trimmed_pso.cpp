@@ -123,15 +123,6 @@ d912pxy_mem_block d912pxy_trimmed_pso_desc::Serialize()
 	UINT unused;
 	memcpy(output->declData, ref.InputLayout->GetDeclarationPtr(&unused), sizeof(D3DVERTEXELEMENT9) * PXY_INNER_MAX_VDECL_LEN);
 
-	d912pxy_vdecl* test = d912pxy_vdecl::d912pxy_vdecl_com(ref.InputLayout->GetDeclarationPtr(&unused));
-
-	if (test->GetHash() != ref.InputLayout->GetHash())
-	{
-		assert(0, "rehash failed");
-	}
-
-	test->Release();
-
 	return mem;
 }
 
