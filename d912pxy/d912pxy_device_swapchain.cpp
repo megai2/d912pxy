@@ -75,6 +75,8 @@ HRESULT d912pxy_device::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
 	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
+
+	d912pxy_s.thread.cleanup.OnReset();
 		
 	return ret; 
 }

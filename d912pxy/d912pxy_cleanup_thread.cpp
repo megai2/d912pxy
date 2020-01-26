@@ -43,6 +43,9 @@ void d912pxy_cleanup_thread::Init()
 	iterationPeriod = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_CLEANUP_PERIOD);
 	iterationSubsleep = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_CLEANUP_SUBSLEEP);
 	lifetime = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_POOLING_LIFETIME);
+	afterResetMaidPasses = d912pxy_s.config.GetValueUI32(PXY_CFG_CLEANUP_AFTER_RESET_MAID);
+	softLimit = d912pxy_s.config.GetValueUI32(PXY_CFG_CLEANUP_SOFT_LIMIT);
+	hardLimit = d912pxy_s.config.GetValueUI32(PXY_CFG_CLEANUP_HARD_LIMIT);
 	watchCount = 0;
 
 	buffer = new d912pxy_linked_list<d912pxy_comhandler*>();
@@ -61,14 +64,23 @@ void d912pxy_cleanup_thread::ThreadJob()
 	UINT32 time = GetTickCount();
 
 	buffer->IterStart();
+
+	bool noSubsleep = afterResetMaidTriggered > 0;
+	bool ignoreLifetime = (watchCount > hardLimit) | (afterResetMaidTriggered > 0);
+
+	if (afterResetMaidTriggered)
+		--afterResetMaidTriggered;
 	
 	while (buffer->Iterating())
 	{
+		if (watchCount > softLimit)
+			noSubsleep = true;
+
 		d912pxy_comhandler* obj = buffer->Value();
 		
-		if (obj->CheckExpired(GetTickCount(), lifetime))
+		if (obj->CheckExpired(GetTickCount(), lifetime) || ignoreLifetime)
 		{
-			if (obj->PooledAction(0) && IsThreadRunning())
+			if (obj->PooledAction(0) && IsThreadRunning() && !noSubsleep)
 				Sleep(iterationSubsleep);
 
 			buffer->IterRemove();
@@ -81,7 +93,10 @@ void d912pxy_cleanup_thread::ThreadJob()
 		}
 
 		if (IsThreadRunning())
-			Sleep(0);
+		{
+			if (!noSubsleep)
+				Sleep(0);
+		}
 		else
 			return;
 	}
@@ -118,4 +133,9 @@ void d912pxy_cleanup_thread::Watch(d912pxy_comhandler * obj)
 		buffer->Insert(obj);
 		obj->Watching(1);
 	}
+}
+
+void d912pxy_cleanup_thread::OnReset()
+{
+	afterResetMaidTriggered += afterResetMaidPasses;
 }

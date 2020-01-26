@@ -39,6 +39,8 @@ public:
 
 	UINT TotalWatchedItems() { return watchCount; };
 
+	void OnReset();
+
 private:
 	d912pxy_linked_list<d912pxy_comhandler*>* buffer;
 	UINT watchCount;
@@ -46,5 +48,9 @@ private:
 	UINT iterationPeriod;
 	UINT iterationSubsleep;
 	UINT lifetime;
+	UINT softLimit;
+	UINT hardLimit;
+	UINT afterResetMaidPasses;
+	UINT afterResetMaidTriggered;
 };
 
