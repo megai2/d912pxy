@@ -298,4 +298,22 @@ void d912pxy_pso_db::SaveKeyToCache(d912pxy_trimmed_pso_desc_key key, d912pxy_tr
 
 	d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(key, d912pxy_vfs_bid::pso_cache_keys), data);
 	data.Delete();
+
+	//if pso data get corrupted on save
+	/*{
+		auto data = d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(key, d912pxy_vfs_bid::pso_cache_keys));
+
+		if (!data.isNullptr())
+		{
+			d912pxy_trimmed_pso_desc psoDesc;
+			psoDesc.DeSerialize(data);
+			data.Delete();
+
+			if (psoDesc.GetKey() != key)
+			{
+				LOG_ERR_THROW2(-1, "this is totally wrong");
+			}
+		}
+	}*/
+
 }
