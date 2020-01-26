@@ -190,6 +190,8 @@ void d912pxy_pso_db::LoadCachedData()
 
 		cacheIncID = keyIdx;
 
+		LOG_INFO_DTDM("loaded %u PSO descriptions", cacheIncID);
+
 		delete keyList;
 	}
 
