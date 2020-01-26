@@ -206,7 +206,8 @@ D3D12_INPUT_LAYOUT_DESC* d912pxy_vdecl::GetD12IA_InputElementFmt()
 
 void d912pxy_vdecl::ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICATION newMode)
 {
-	for (int i = 0; i != declLen; ++i)
+	//megai2: last one is end marker that is not populated for dx12 declData, so we need to skip it
+	for (int i = 0; i != declLen-1; ++i)
 	{
 		if (declData12[i].InputSlot == stream)
 		{
