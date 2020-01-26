@@ -189,7 +189,7 @@ d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRelativeSrcRegister
 			UINT relArrSz = 0;
 			for (int i = 0; i != 255 - baseRelNum; ++i)
 			{
-				if (RegIsDefined(reg, 0))
+				if (RegIsDefined(reg, i))
 					++relArrSz;
 				else
 					break;//megai2: stop on first fail for now
