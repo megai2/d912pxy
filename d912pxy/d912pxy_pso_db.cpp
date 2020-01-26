@@ -146,7 +146,7 @@ void d912pxy_pso_db::LoadCachedData()
 	
 	{
 		auto keyList = d912pxy_s.vfs.GetFileList(d912pxy_vfs_bid::pso_cache_keys);
-		UINT keyIdx = 1;
+		UINT keyIdx = 0;
 
 		while (keyList->HaveElements())
 		{
@@ -177,11 +177,10 @@ void d912pxy_pso_db::LoadCachedData()
 					continue;
 				}
 
+				++keyIdx;
 				psoDescs->WriteElement(psoDesc);
 				cacheIndexes->PointAtMem(&psoKey, sizeof(psoKey));
 				cacheIndexes->SetValue(keyIdx);
-				++keyIdx;
-
 
 			}
 			else {
@@ -189,7 +188,7 @@ void d912pxy_pso_db::LoadCachedData()
 			}
 		}
 
-		cacheIncID = keyIdx - 1;
+		cacheIncID = keyIdx;
 
 		delete keyList;
 	}
