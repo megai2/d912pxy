@@ -65,7 +65,7 @@ void d912pxy_cleanup_thread::ThreadJob()
 
 	buffer->IterStart();
 
-	bool noSubsleep = afterResetMaidTriggered > 0;
+	bool noSubsleep = (afterResetMaidTriggered > 0) | (watchCount > softLimit);
 	bool ignoreLifetime = (watchCount > hardLimit) | (afterResetMaidTriggered > 0);
 
 	if (afterResetMaidTriggered)
@@ -73,9 +73,6 @@ void d912pxy_cleanup_thread::ThreadJob()
 	
 	while (buffer->Iterating())
 	{
-		if (watchCount > softLimit)
-			noSubsleep = true;
-
 		d912pxy_comhandler* obj = buffer->Value();
 		
 		if (obj->CheckExpired(GetTickCount(), lifetime) || ignoreLifetime)
@@ -94,6 +91,12 @@ void d912pxy_cleanup_thread::ThreadJob()
 
 		if (IsThreadRunning())
 		{
+			if (!noSubsleep)
+				noSubsleep = (afterResetMaidTriggered > 0) | (watchCount > softLimit);
+
+			if (!ignoreLifetime)
+				ignoreLifetime = (watchCount > hardLimit) | (afterResetMaidTriggered > 0);
+
 			if (!noSubsleep)
 				Sleep(0);
 		}
