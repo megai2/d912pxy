@@ -126,6 +126,7 @@ int action_install()
 		std::cout << "1. Release_pp  - performance data collection \n";
 		std::cout << "2. Release_d   - in-depth debug logging \n";
 		std::cout << "3. Debug       - debug build\n";		
+		std::cout << "4. Release_avx2- avx2 enabled build\n";
 
 		std::cout << "\n[default: Release_pp]: ";
 
@@ -141,6 +142,9 @@ int action_install()
 			break;
 		case 3:
 			installSource = "debug\\";
+			break;
+		case 4:
+			installSource = "release_avx2\\";
 			break;
 		default:
 			std::cout << "Incorrect parameter; exiting.\n";
