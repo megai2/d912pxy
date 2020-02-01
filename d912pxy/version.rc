@@ -28,7 +28,7 @@ BEGIN
             VALUE "FileDescription", "DirectX9 to DirectX12 API proxy"
             VALUE "FileVersion", 2,0,0, BUILD_VERSION_REV
             VALUE "InternalName", "d912pxy.dll"
-            VALUE "LegalCopyright", "Copyright (c) 2018-2019 megai2"
+            VALUE "LegalCopyright", "Copyright (c) 2018-2020 megai2"
             VALUE "OriginalFilename", "d912pxy.dll"
             VALUE "ProductName", "DirectX9 to DirectX12 API proxy"
             VALUE "ProductVersion", BUILD_VERSION_NAME
