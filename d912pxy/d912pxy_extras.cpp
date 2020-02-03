@@ -270,7 +270,8 @@ void d912pxy_extras::DrawConfigEditor()
 			ImGui::Text("%S", iter->name);
 			ImGui::SameLine(250);
 
-			//Tooltip when hovered
+			/*Tooltip when hovered (DISABLED UNTIL DESCRIPTIONS ARE POPULATED)
+
 			if (ImGui::IsItemHovered())
 			{
 				ImGui::BeginTooltip();
@@ -279,6 +280,7 @@ void d912pxy_extras::DrawConfigEditor()
 				ImGui::PopTextWrapPos();
 				ImGui::EndTooltip();
 			}
+			*/
 			
 			//Render InputText box for newValues
 			ImGui::PushID(configIndex);
