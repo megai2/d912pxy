@@ -58,6 +58,7 @@ void d912pxy_extras::Init()
 	bShowFps = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS);
 	bShowDrawCount = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_DRAW_COUNT);
 	bShowFpsGraph = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS_GRAPH);
+	bEnableConfigEditor = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_CONFIG_EDITOR);
 
 	if (bShowFpsGraph)
 	{
@@ -73,6 +74,12 @@ void d912pxy_extras::Init()
 	bShowGCQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_GC_QUE);
 
 	hkVKeyCode = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY);
+
+	if (bEnableConfigEditor)
+	{
+		d912pxy_s.config.InitNewValueBuffers();
+		d912pxy_s.config.ValueToNewValueBuffers();
+	}
 
 	//imgui setup
 
@@ -108,6 +115,8 @@ void d912pxy_extras::UnInit()
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+
+	d912pxy_s.config.UnInitNewValueBuffers();
 
 	d912pxy_noncom::UnInit();
 }
@@ -249,6 +258,28 @@ void d912pxy_extras::OnHotkeyTriggered()
 	overlayShowMode = (overlayShowMode + 1) % eoverlay_modes_count;
 }
 
+void d912pxy_extras::DrawConfigEditor() 
+{
+	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
+	{
+		d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
+
+		//Render parameter name
+		ImGui::Text("%S", iter->name);
+		ImGui::SameLine(250);
+
+		//Render InputText box for newValues
+		ImGui::PushID(configIndex);
+		ImGui::PushItemWidth(-200);
+		ImGui::InputText("##On", iter->newValue, 254);
+		ImGui::PopItemWidth();
+		ImGui::PopID();
+	}
+	if (ImGui::Button("Save"))
+	{
+		d912pxy_s.config.SaveConfig();
+	}
+}
 void d912pxy_extras::DrawOverlay()
 {
 	ImGUI_Render_Start();
@@ -261,14 +292,10 @@ void d912pxy_extras::DrawOverlay()
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 	if (bShowTimings)
-	{
 		ImGui::Text("%4.2f ms/frame overhead", syncNexecTime.GetStopTime() / 1000.0f);
-	}
 
 	if (bShowDrawCount)
-	{
 		ImGui::Text("%6u draw batches", d912pxy_s.render.batch.GetBatchCount());
-	}
 
 	if (bShowGCQue)
 		ImGui::Text("%6u GC", d912pxy_s.thread.cleanup.TotalWatchedItems());
@@ -286,6 +313,9 @@ void d912pxy_extras::DrawOverlay()
 		ImGui::PlotLines("FPS", &fps_graph_buffer_transform, fpsGraph.Data, PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0, 0, fpsGraph.min, fpsGraph.max, ImVec2(fpsGraph.w, fpsGraph.h));
 	}
 
+	if(bEnableConfigEditor)
+		DrawConfigEditor();
+	
 	ImGui::End();
 
 	ImGUI_Render_End();
