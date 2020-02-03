@@ -278,9 +278,19 @@ void d912pxy_extras::DrawConfigEditor()
 			ImGui::PopID();
 		}
 
+		if (bShowConfigEditorRestartMsg) 
+		{
+			ImGui::PushStyleColor( ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::SetWindowFontScale(1.2f);
+			ImGui::Text("RESTART THE APPLICATION TO APPLY CONFIG CHANGES");
+			ImGui::SetWindowFontScale(1.0f);
+			ImGui::PopStyleColor();
+		}
+
 		if (ImGui::Button("Save"))
 		{
 			d912pxy_s.config.SaveConfig();
+			bShowConfigEditorRestartMsg = true;
 		}
 
 		ImGui::SameLine();

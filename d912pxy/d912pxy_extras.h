@@ -83,6 +83,7 @@ private:
 
 	//Config Editor
 	bool bEnableConfigEditor;
+	bool bShowConfigEditorRestartMsg = false;
 
 	//overlay toggle controls
 	enum overlayShowModeValues {
