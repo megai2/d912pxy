@@ -270,6 +270,16 @@ void d912pxy_extras::DrawConfigEditor()
 			ImGui::Text("%S", iter->name);
 			ImGui::SameLine(250);
 
+			//Tooltip when hovered
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::Text("%S", iter->longDescription);
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+			
 			//Render InputText box for newValues
 			ImGui::PushID(configIndex);
 			ImGui::PushItemWidth(-200);
