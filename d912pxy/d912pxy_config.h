@@ -105,7 +105,7 @@ typedef struct d912pxy_config_value_dsc {
 	const wchar_t* limitation;
 	const wchar_t* shortDescription;
 	const wchar_t* longDescription;
-	wchar_t* newValue;
+	char* newValue;
 } d912pxy_config_value_dsc;
 
 class d912pxy_config 
@@ -121,11 +121,10 @@ public:
 	UINT32 GetValueUI32(d912pxy_config_value val);
 	bool GetValueB(d912pxy_config_value val);
 	wchar_t* GetValueRaw(d912pxy_config_value val);
-	wchar_t* GetNewValueBuffer(d912pxy_config_value val);
+	void InitNewValueBuffers();
+	void UnInitNewValueBuffers();
 	void SaveConfig();
-
 	d912pxy_config_value_dsc* GetEntryRaw(d912pxy_config_value val);
-	void ClearNewValueBuffers();
 
 private:
 
