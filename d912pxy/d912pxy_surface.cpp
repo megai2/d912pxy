@@ -694,6 +694,17 @@ void d912pxy_surface::FreeObjAndSlot()
 {
 	if (m_res)
 	{
+#ifdef _DEBUG
+		if (dheapId > 0)
+		{
+			for (int i = 0; i != 31; ++i)
+				if (d912pxy_s.render.state.tex.GetTexStage(i) == dheapId)
+				{
+					LOG_ERR_DTDM("dheapId %u is active in tex stage %u at deletion time", dheapId, i);
+				}
+		}
+#endif
+
 		m_res->Release();
 		m_res = NULL;
 
