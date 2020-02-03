@@ -123,6 +123,7 @@ public:
 	wchar_t* GetValueRaw(d912pxy_config_value val);
 	void InitNewValueBuffers();
 	void UnInitNewValueBuffers();
+	void ValueToNewValueBuffers();
 	void SaveConfig();
 	d912pxy_config_value_dsc* GetEntryRaw(d912pxy_config_value val);
 

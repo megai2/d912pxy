@@ -177,8 +177,10 @@ wchar_t * d912pxy_config::GetValueRaw(d912pxy_config_value val)
 void d912pxy_config::InitNewValueBuffers()
 {
 	for(int i = 0; i != PXY_CFG_CNT; ++i){
+
 		if (!data[i].newValue)
 			PXY_MALLOC(data[i].newValue, 255, char*);
+
 	}
 
 }
@@ -190,6 +192,15 @@ void d912pxy_config::UnInitNewValueBuffers()
 		if (data[i].newValue)
 			PXY_FREE(data[i].newValue);
 	}
+}
+
+void d912pxy_config::ValueToNewValueBuffers() {
+
+	for (int i = 0; i != PXY_CFG_CNT; ++i)
+	{
+		wcstombs(data[i].newValue, data[i].value, 255);
+	}
+
 }
 
 void d912pxy_config::SaveConfig()
