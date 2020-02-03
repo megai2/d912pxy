@@ -209,7 +209,6 @@ void d912pxy_config::SaveConfig()
 
 	for (int i = 0; i != PXY_CFG_CNT; ++i)
 	{
-		wchar_t conversion_buffer[256];
 
 		if (lstrcmpW(csection, data[i].section))
 		{
@@ -219,6 +218,7 @@ void d912pxy_config::SaveConfig()
 
 		if (data[i].newValue) 
 		{
+			wchar_t conversion_buffer[256];
 			mbstowcs(conversion_buffer, data[i].newValue, 255);
 			fwprintf(f, L"%s=%s\r\n", data[i].name, conversion_buffer);
 		}
