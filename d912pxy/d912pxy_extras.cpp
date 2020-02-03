@@ -260,32 +260,38 @@ void d912pxy_extras::OnHotkeyTriggered()
 
 void d912pxy_extras::DrawConfigEditor() 
 {
-	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
+	if (ImGui::TreeNode("Config Editor"))
 	{
-		d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
+		for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
+		{
+			d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
 
-		//Render parameter name
-		ImGui::Text("%S", iter->name);
-		ImGui::SameLine(250);
+			//Render parameter name
+			ImGui::Text("%S", iter->name);
+			ImGui::SameLine(250);
 
-		//Render InputText box for newValues
-		ImGui::PushID(configIndex);
-		ImGui::PushItemWidth(-200);
-		ImGui::InputText("##On", iter->newValue, 254);
-		ImGui::PopItemWidth();
-		ImGui::PopID();
-	}
+			//Render InputText box for newValues
+			ImGui::PushID(configIndex);
+			ImGui::PushItemWidth(-200);
+			ImGui::InputText("##On", iter->newValue, 254);
+			ImGui::PopItemWidth();
+			ImGui::PopID();
+		}
 
-	if (ImGui::Button("Save"))
-	{
-		d912pxy_s.config.SaveConfig();
-	}
+		if (ImGui::Button("Save"))
+		{
+			d912pxy_s.config.SaveConfig();
+		}
 
-	ImGui::SameLine();
+		ImGui::SameLine();
 
-	if (ImGui::Button("Reset"))
-	{
-		d912pxy_s.config.ValueToNewValueBuffers();
+		if (ImGui::Button("Reset"))
+		{
+			d912pxy_s.config.ValueToNewValueBuffers();
+		}
+
+		ImGui::TreePop();
+		ImGui::Separator();
 	}
 }
 
