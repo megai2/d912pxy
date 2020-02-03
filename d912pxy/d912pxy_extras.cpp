@@ -275,11 +275,20 @@ void d912pxy_extras::DrawConfigEditor()
 		ImGui::PopItemWidth();
 		ImGui::PopID();
 	}
+
 	if (ImGui::Button("Save"))
 	{
 		d912pxy_s.config.SaveConfig();
 	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Reset"))
+	{
+		d912pxy_s.config.ValueToNewValueBuffers();
+	}
 }
+
 void d912pxy_extras::DrawOverlay()
 {
 	ImGUI_Render_Start();
@@ -319,4 +328,5 @@ void d912pxy_extras::DrawOverlay()
 	ImGui::End();
 
 	ImGUI_Render_End();
+
 }
