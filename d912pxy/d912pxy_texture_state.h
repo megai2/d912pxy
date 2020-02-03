@@ -66,6 +66,8 @@ public:
 
 	d912pxy_device_texture_state* GetCurrent() { return &current; };
 
+	void ClearActiveTextures();
+
 private:
 	UINT LookupSamplerId(UINT stage);
 

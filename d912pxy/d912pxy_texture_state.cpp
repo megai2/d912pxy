@@ -185,6 +185,15 @@ void d912pxy_texture_state::AddDirtyFlag(DWORD val)
 	current.dirty |= val;
 }
 
+void d912pxy_texture_state::ClearActiveTextures()
+{
+	//stage 31 is hardcoded atest value, not actual texture stage
+	for (int i = 0; i != PXY_INNER_MAX_TEXTURE_STAGES - 1; ++i)
+	{
+		SetTexture(i, 0);
+	}
+}
+
 UINT d912pxy_texture_state::LookupSamplerId(UINT stage)
 {
 	UINT ret = (UINT32)splLookup->PointAt32(&trimmedSpl[stage]);
