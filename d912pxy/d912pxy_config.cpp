@@ -217,9 +217,15 @@ void d912pxy_config::SaveConfig()
 			lstrcpyW(csection, data[i].section);
 		}
 
-		mbstowcs(conversion_buffer, data[i].newValue, 255);
-
-		fwprintf(f, L"%s=%s\r\n", data[i].name, strlen(data[i].newValue) > 0 ? conversion_buffer : data[i].value);
+		if (data[i].newValue) 
+		{
+			mbstowcs(conversion_buffer, data[i].newValue, 255);
+			fwprintf(f, L"%s=%s\r\n", data[i].name, conversion_buffer);
+		}
+		else 
+		{
+			fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].value);
+		}
 	}
 
 	fwprintf(f, L"\r\n[end] \r\n");
