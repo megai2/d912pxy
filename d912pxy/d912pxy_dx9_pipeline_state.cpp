@@ -248,7 +248,11 @@ void d912pxy_dx9_pipeline_state::DSVFormat(DXGI_FORMAT fmt)
 
 void d912pxy_dx9_pipeline_state::OMReflect(UINT RTcnt, D3D12_CPU_DESCRIPTOR_HANDLE* dsv)
 {
-	/*psoDesc.val.NumRenderTargets = RTcnt;*/
+	if (psoDesc.val.NumRenderTargets != RTcnt)
+	{
+		psoDesc.val.NumRenderTargets = RTcnt;
+		MarkDirty();
+	}
 
 	if (!dsv)
 		DSVFormat(DXGI_FORMAT_UNKNOWN);
