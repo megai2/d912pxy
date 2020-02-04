@@ -260,9 +260,8 @@ void d912pxy_extras::OnHotkeyTriggered()
 
 void d912pxy_extras::DrawConfigEditor() 
 {
-	if (!(ImGui::TreeNode("Config Editor"))) {
+	if (!(ImGui::TreeNode("Config Editor")))
 		return;
-	}
 	
 	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
 	{
