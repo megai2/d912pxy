@@ -174,12 +174,30 @@ wchar_t * d912pxy_config::GetValueRaw(d912pxy_config_value val)
 	return &data[val].value[0];
 }
 
-wchar_t* d912pxy_config::GetNewValueBuffer(d912pxy_config_value val)
+void d912pxy_config::InitNewValueBuffers()
 {
-	if (!data[val].newValue)
-		PXY_MALLOC(data[val].newValue, 255, wchar_t*);
+	for(int i = 0; i != PXY_CFG_CNT; ++i)
+	{
+		PXY_MALLOC(data[i].newValue, 255, char*);
+	}
+}
 
-	return data[val].newValue;
+void d912pxy_config::UnInitNewValueBuffers()
+{
+	for (int i = 0; i != PXY_CFG_CNT; ++i)
+	{
+		if (data[i].newValue)
+			PXY_FREE(data[i].newValue);
+	}
+}
+
+void d912pxy_config::ValueToNewValueBuffers() 
+{
+	for (int i = 0; i != PXY_CFG_CNT; ++i)
+	{
+		wcstombs(data[i].newValue, data[i].value, 255);
+	}
+
 }
 
 void d912pxy_config::SaveConfig()
@@ -191,13 +209,23 @@ void d912pxy_config::SaveConfig()
 
 	for (int i = 0; i != PXY_CFG_CNT; ++i)
 	{
+
 		if (lstrcmpW(csection, data[i].section))
 		{
 			fwprintf(f, L"\r\n[%s]\r\n", data[i].section);
 			lstrcpyW(csection, data[i].section);
 		}
 
-		fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].newValue ? data[i].newValue : data[i].value);
+		if (data[i].newValue) 
+		{
+			wchar_t conversion_buffer[256];
+			mbstowcs(conversion_buffer, data[i].newValue, 255);
+			fwprintf(f, L"%s=%s\r\n", data[i].name, conversion_buffer);
+		}
+		else 
+		{
+			fwprintf(f, L"%s=%s\r\n", data[i].name, data[i].value);
+		}
 	}
 
 	fwprintf(f, L"\r\n[end] \r\n");
@@ -209,13 +237,4 @@ void d912pxy_config::SaveConfig()
 d912pxy_config_value_dsc * d912pxy_config::GetEntryRaw(d912pxy_config_value val)
 {
 	return &data[val];
-}
-
-void d912pxy_config::ClearNewValueBuffers()
-{
-	for (int i = 0; i != PXY_CFG_CNT; ++i)
-	{
-		if (data[i].newValue)
-			PXY_FREE(data[i].newValue);
-	}
 }

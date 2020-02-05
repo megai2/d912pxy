@@ -47,6 +47,7 @@ private:
 	void ImGUI_Render_End();
 	void OnHotkeyTriggered();
 	void DrawOverlay();
+	void DrawConfigEditor();
 
 	//config state
 
@@ -79,6 +80,10 @@ private:
 		float w, h;
 		float min, max;
 	} fpsGraph;
+
+	//Config Editor
+	bool bEnableConfigEditor;
+	bool bShowConfigEditorRestartMsg = false;
 
 	//overlay toggle controls
 	enum overlayShowModeValues {

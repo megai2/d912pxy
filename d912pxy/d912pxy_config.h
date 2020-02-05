@@ -95,6 +95,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_EXTRAS_FPS_GRAPH_MIN,
 	PXY_CFG_EXTRAS_FPS_GRAPH_W,
 	PXY_CFG_EXTRAS_FPS_GRAPH_H,
+	PXY_CFG_EXTRAS_CONFIG_EDITOR,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -105,7 +106,7 @@ typedef struct d912pxy_config_value_dsc {
 	const wchar_t* limitation;
 	const wchar_t* shortDescription;
 	const wchar_t* longDescription;
-	wchar_t* newValue;
+	char* newValue;
 } d912pxy_config_value_dsc;
 
 class d912pxy_config 
@@ -121,11 +122,11 @@ public:
 	UINT32 GetValueUI32(d912pxy_config_value val);
 	bool GetValueB(d912pxy_config_value val);
 	wchar_t* GetValueRaw(d912pxy_config_value val);
-	wchar_t* GetNewValueBuffer(d912pxy_config_value val);
+	void InitNewValueBuffers();
+	void UnInitNewValueBuffers();
+	void ValueToNewValueBuffers();
 	void SaveConfig();
-
 	d912pxy_config_value_dsc* GetEntryRaw(d912pxy_config_value val);
-	void ClearNewValueBuffers();
 
 private:
 
@@ -206,7 +207,8 @@ private:
 		{L"extras", L"fps_graph_max", L"80"},//PXY_CFG_EXTRAS_FPS_GRAPH_MAX
 		{L"extras", L"fps_graph_min", L"0"},//PXY_CFG_EXTRAS_FPS_GRAPH_MIN
 		{L"extras", L"fps_graph_w", L"512"},//PXY_CFG_EXTRAS_FPS_GRAPH_W
-		{L"extras", L"fps_graph_h", L"256"}//PXY_CFG_EXTRAS_FPS_GRAPH_H
+		{L"extras", L"fps_graph_h", L"256"},//PXY_CFG_EXTRAS_FPS_GRAPH_H
+		{L"extras", L"enable_config_editor",L"0"}//PXY_CFG_EXTRAS_CONFIG_EDITOR
 	};
 
 };
