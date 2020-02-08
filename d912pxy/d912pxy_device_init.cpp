@@ -328,6 +328,15 @@ void d912pxy_device::PrintInfoBanner()
 	LOG_INFO_DTDM("d912pxy(Direct3D9 to Direct3D12 api proxy) starting up");
 	LOG_INFO_DTDM("Original project link: https://github.com/megai2/d912pxy/");
 	LOG_INFO_DTDM(BUILD_VERSION_NAME);
+#ifdef __AVX2__	
+	LOG_INFO_DTDM("CPU arch: AVX2");
+#else 
+	#ifdef __AVX__
+		LOG_INFO_DTDM("CPU arch: AVX");
+    #else
+		LOG_INFO_DTDM("CPU arch: SSE");
+	#endif	
+#endif
 	LOG_INFO_DTDM("Batch Limit: %u", PXY_INNER_MAX_IFRAME_BATCH_COUNT);
 	LOG_INFO_DTDM("Recreation Limit: %u", PXY_INNER_MAX_IFRAME_CLEANUPS);
 	LOG_INFO_DTDM("TextureBind Limit: %u", PXY_INNER_MAX_TEXTURE_STAGES);
@@ -342,8 +351,8 @@ void d912pxy_device::PrintInfoBanner()
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_ENABLE_VEH))
 	{
 		LOG_INFO_DTDM("Adding vectored exception handler");
-		LOG_INFO_DTDM("dbg messages and errors are now redirected to log file");
 		d912pxy_helper::InstallVehHandler();		
+		LOG_INFO_DTDM("dbg messages and errors are now redirected to log file");
 	}
 	
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
