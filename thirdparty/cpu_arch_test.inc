@@ -29,5 +29,7 @@ cpu_arch GetCPUArch()
 		__cpuid(info,0x00000007);
 		ret.AVX2   = (info[1] & ((int)1 <<  5)) != 0;	
 	}	
+
+	return ret;
 }
 
