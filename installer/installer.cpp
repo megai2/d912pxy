@@ -138,11 +138,11 @@ int action_install()
 
 	if (!ReadUserYN(1))
 	{
-		std::cout << "Select configuration: \n\n";		
+		std::cout << "Select configuration: \n\n";
 		std::cout << "1. Release_pp  - performance data collection \n";
 		std::cout << "2. Release_d   - in-depth debug logging \n";
-		std::cout << "3. Debug       - debug build\n";		
-		
+		std::cout << "3. Debug       - debug build\n";
+
 		std::cout << "\n[default: Release_pp]: ";
 
 		int mode = read_user_integer(1);
@@ -346,8 +346,8 @@ int action_clear_shader_cache()
 {
 	std::cout << "Deleting latest.pck in pck and pck_bns \n";
 
-	system("del /Q pck_bns\\latest.pck");			
-	system("del /Q pck\\latest.pck");		
+	system("del /Q pck_bns\\latest.pck");
+	system("del /Q pck\\latest.pck");
 
 	std::cout << "Perform additional hlsl sources cleaning? ";
 
