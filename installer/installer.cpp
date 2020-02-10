@@ -66,10 +66,26 @@ bool ReadUserYN(bool defaultY)
 
 }
 
+#include "../thirdparty/cpu_arch_test.inc"
+
 int action_install()
 {
 	std::string installPath = "..\\bin64\\";
 	std::string installSource = "release\\";
+
+	cpu_arch arch = GetCPUArch();
+
+	if (arch.AVX2)
+		installSource = "release_avx2\\";
+	else if (arch.AVX)
+		installSource = "release_avx\\";
+	else if (!arch.SSE)
+	{
+		std::cout << "Your CPU need SSE support in order to use this tool\n";
+		system("pause");
+		return -1;
+	}
+
 	std::string installFile = "d3d9.dll";
 
 	if (!install_next_to_d912pxy_folder)
@@ -122,12 +138,10 @@ int action_install()
 
 	if (!ReadUserYN(1))
 	{
-		std::cout << "Select configuration: \n\n";		
+		std::cout << "Select configuration: \n\n";
 		std::cout << "1. Release_pp  - performance data collection \n";
 		std::cout << "2. Release_d   - in-depth debug logging \n";
-		std::cout << "3. Debug       - debug build\n";		
-		std::cout << "4. Release_avx- avx enabled build\n";
-		std::cout << "5. Release_avx2- avx2 enabled build\n";
+		std::cout << "3. Debug       - debug build\n";
 
 		std::cout << "\n[default: Release_pp]: ";
 
@@ -143,12 +157,6 @@ int action_install()
 			break;
 		case 3:
 			installSource = "debug\\";
-			break;
-		case 4:
-			installSource = "release_avx\\";
-			break;
-		case 5:
-			installSource = "release_avx2\\";
 			break;
 		default:
 			std::cout << "Incorrect parameter; exiting.\n";
@@ -338,8 +346,8 @@ int action_clear_shader_cache()
 {
 	std::cout << "Deleting latest.pck in pck and pck_bns \n";
 
-	system("del /Q pck_bns\\latest.pck");			
-	system("del /Q pck\\latest.pck");		
+	system("del /Q pck_bns\\latest.pck");
+	system("del /Q pck\\latest.pck");
 
 	std::cout << "Perform additional hlsl sources cleaning? ";
 
