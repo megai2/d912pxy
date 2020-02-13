@@ -181,7 +181,7 @@ private:
 		{L"misc",L"use_dx9",L"0"},//PXY_CFG_MISC_USE_DX9
 		{L"misc",L"draw_up_buffer_length", L"FFFF"},//PXY_CFG_MISC_DRAW_UP_BUFFER_LENGTH
 		{L"misc",L"nv_disable_throttle", L"0"},//PXY_CFG_MISC_NV_DISABLE_THROTTLE		
-		{L"compat",L"occlusion",L"1"},//PXY_CFG_COMPAT_OCCLUSION
+		{L"compat",L"occlusion",L"2"},//PXY_CFG_COMPAT_OCCLUSION
 		{L"compat",L"occlusion_opt_ctor",L"0"},//PXY_CFG_COMPAT_OCCLUSION_OPT_CONSTRUCTOR
 		{L"compat",L"clear",L"0"},//PXY_CFG_COMPAT_CLEAR
 		{L"compat",L"cpu_api_reduction",L"0"},//PXY_CFG_COMPAT_CPU_API_REDUCTION
