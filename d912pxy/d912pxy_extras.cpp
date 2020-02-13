@@ -72,6 +72,7 @@ void d912pxy_extras::Init()
 	bShowTimings = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_TIMINGS);
 	bShowPSOCompileQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE);
 	bShowGCQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_GC_QUE);
+	bShowConfigEditor = false;
 
 	hkVKeyCode = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY);
 
@@ -260,35 +261,34 @@ void d912pxy_extras::OnHotkeyTriggered()
 
 void d912pxy_extras::DrawConfigEditor() 
 {
-	if (!(ImGui::TreeNode("Config Editor")))
-		return;
+	ImGui::Begin("d912pxy config editor", &bEnableConfigEditor);
 	
 	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
 	{
-			d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
+		d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
 
-			//Render parameter name
-			ImGui::Text("%S", iter->name);
-			ImGui::SameLine(250);
+		//Render parameter name
+		ImGui::Text("%S", iter->name);
+		ImGui::SameLine(250);
 
-			/*Tooltip when hovered (DISABLED UNTIL DESCRIPTIONS ARE POPULATED)
+		/*Tooltip when hovered (DISABLED UNTIL DESCRIPTIONS ARE POPULATED)
 
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::BeginTooltip();
-				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::Text("%S", iter->longDescription);
-				ImGui::PopTextWrapPos();
-				ImGui::EndTooltip();
-			}
-			*/
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::Text("%S", iter->longDescription);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+		*/
 			
-			//Render InputText box for newValues
-			ImGui::PushID(configIndex);
-			ImGui::PushItemWidth(-200);
-			ImGui::InputText("##On", iter->newValue, 254);
-			ImGui::PopItemWidth();
-			ImGui::PopID();
+		//Render InputText box for newValues
+		ImGui::PushID(configIndex);
+		ImGui::PushItemWidth(-200);
+		ImGui::InputText("##On", iter->newValue, 254);
+		ImGui::PopItemWidth();
+		ImGui::PopID();
 	}
 
 	if (bShowConfigEditorRestartMsg) 
@@ -313,8 +313,7 @@ void d912pxy_extras::DrawConfigEditor()
 		d912pxy_s.config.ValueToNewValueBuffers();
 	}
 
-	ImGui::TreePop();
-	ImGui::Separator();
+	ImGui::End();
 }
 
 void d912pxy_extras::DrawOverlay()
@@ -348,10 +347,13 @@ void d912pxy_extras::DrawOverlay()
 		ImGui::PlotLines("FPS", &fps_graph_buffer_transform, fpsGraph.Data, PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0, 0, fpsGraph.min, fpsGraph.max, ImVec2(fpsGraph.w, fpsGraph.h));
 	}
 
-	if(bEnableConfigEditor)
-		DrawConfigEditor();
-	
+	if (bEnableConfigEditor)
+		bShowConfigEditor = ImGui::Button("Edit config");
+
 	ImGui::End();
+
+	if (bShowConfigEditor)
+		DrawConfigEditor();
 
 	ImGUI_Render_End();
 
