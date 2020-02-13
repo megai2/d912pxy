@@ -321,9 +321,7 @@ void d912pxy_extras::DrawOverlay()
 {
 	ImGUI_Render_Start();
 
-#define OVERLAY_TITLE(a) "d912pxy " ## a
-	ImGui::Begin(OVERLAY_TITLE(BUILD_VERSION_NAME), nullptr, (overlayShowMode == eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs));
-#undef OVERLAY_TITLE
+	ImGui::Begin(BUILD_VERSION_NAME, nullptr, (overlayShowMode == eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs));
 
 	if (bShowFps)
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
