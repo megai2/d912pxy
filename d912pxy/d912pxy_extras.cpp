@@ -86,7 +86,6 @@ void d912pxy_extras::Init()
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	
 	ImGui::StyleColorsDark();
 
 	d912pxy_swapchain* swpc = d912pxy_s.dev.GetPrimarySwapChain();
@@ -96,6 +95,8 @@ void d912pxy_extras::Init()
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+	io.IniFilename = d912pxy_helper::GetFilePath(FP_IMGUI_INI)->s;
+	io.LogFilename = d912pxy_helper::GetFilePath(FP_IMGUI_LOG)->s;
 
 	ImGui_ImplWin32_Init(swpc->GetTargetWindow());
 	ImGui_ImplDX12_Init(

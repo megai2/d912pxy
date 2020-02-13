@@ -250,6 +250,8 @@ typedef enum d912pxy_file_path_id {
 	FP_CONFIG,
 	FP_W7_12ON7,
 	FP_VFS_PREFIX,
+	FP_IMGUI_INI,
+	FP_IMGUI_LOG,
 	FP_NO_PATH
 } d912pxy_file_path_id;
 
@@ -279,6 +281,8 @@ static const d912pxy_file_path d912pxy_file_paths_default[] = {
 	FP_DEF("./d912pxy/config.ini"),
 	FP_DEF("./d912pxy/12on7/"),
 	FP_DEF("."),
+	FP_DEF("./d912pxy/imgui.ini"),
+	FP_DEF("./d912pxy/imgui.log"),
 	FP_DEF("")
 };
 
@@ -301,6 +305,8 @@ static const d912pxy_file_path d912pxy_file_paths_addon[] = {
 	FP_DEF("./addons/d912pxy/config.ini"),
 	FP_DEF("./addons/d912pxy/12on7/"),	
 	FP_DEF("./addons/"),
+	FP_DEF("./addons/d912pxy/imgui.ini"),
+	FP_DEF("./addons/d912pxy/imgui.log"),
 	FP_DEF("")
 };
 
