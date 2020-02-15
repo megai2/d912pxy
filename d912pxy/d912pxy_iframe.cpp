@@ -393,7 +393,12 @@ void d912pxy_iframe::Start()
 
 	cuPrimType = D3DPT_TRIANGLELIST;
 
-	d912pxy_s.render.state.tex.ClearActiveTextures();
+	//reset textures to 0
+	//this is not noted in docs, but dx9 can do this by default
+	//i keep it untouched for now as it showed working fine before
+	//WARN: GPU crash here if api stream will have 3 sequental StateSafeFlushes(0) or simply frame changes
+	//and non-cleared from stage, deleted, but used in shader texture
+	//d912pxy_s.render.state.tex.ClearActiveTextures();
 
 	d912pxy_query_occlusion::OnIFrameStart();
 
@@ -548,12 +553,6 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 		if (refSurf[i])
 			refSurf[i]->ThreadRef(1);
 	}
-
-	UINT textureTransfer[PXY_INNER_MAX_TEXTURE_STAGES - 1];
-	for (int i = 0; i != PXY_INNER_MAX_TEXTURE_STAGES - 1; ++i)
-	{
-		textureTransfer[i] = d912pxy_s.render.state.tex.GetTexStage(i);
-	}
 		
 	End();
 	if (fullFlush)
@@ -592,14 +591,6 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 	//megai2: rebind scissor 
 	SetScissors(&transSR);
 	SetViewport(&transVW);	
-
-	//reset textures back in place
-	//WARN: GPU crash here if api stream will have 3 sequental StateSafeFlushes(0) 
-	//and non-cleared from stage, deleted, but used in shader texture
-	for (int i = 0; i != PXY_INNER_MAX_TEXTURE_STAGES - 1; ++i)
-	{
-		d912pxy_s.render.state.tex.SetTexture(i, textureTransfer[i]);
-	}
 	
 	ForceStateRebind();	
 }
