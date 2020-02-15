@@ -247,6 +247,9 @@ private:
 	UINT activeThreads;
 	UINT lastElements;
 
+	UINT maxControlWrites;
+	UINT maxUnfoldedElements;
+
 	D3D12_GPU_VIRTUAL_ADDRESS unfoldedDevPtrBase;
 
 	const UINT transitSubElements;

@@ -43,6 +43,9 @@ void d912pxy_folded_buffer<base_element, sub_element>::Init(UINT maxElements, UI
 		unfoldRanges[i].Init(&ctl);
 
 	InitUnfoldCS();
+
+	maxControlWrites = maxWrites;
+	maxUnfoldedElements = maxElements;
 }
 
 template<class base_element, class sub_element>
@@ -95,6 +98,12 @@ void d912pxy_folded_buffer<base_element, sub_element>::StartWrite()
 template<class base_element, class sub_element>
 void d912pxy_folded_buffer<base_element, sub_element>::EndWrite(UINT elements)
 {
+	if (elements >= maxUnfoldedElements)
+		LOG_ERR_THROW2(-1, "Too much unfolded elements are writed into folded buffer!");
+
+	if (curStreamIdx >= maxControlWrites)
+		LOG_ERR_THROW2(-1, "Too much writes performed into folded buffer!");
+
 	for (UINT i = 1; i != activeThreads; ++i)
 		unfoldRanges[0].Join(&unfoldRanges[i]);
 
