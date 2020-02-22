@@ -47,7 +47,10 @@ void d912pxy_surface_pool::Init(D3D12_HEAP_FLAGS memPoolFlag)
 
 	d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>::Init();
 
-	config = d912pxy_s.config.GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
+	UINT config = d912pxy_s.config.GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
+
+	disableGC = (config & 0x10000) > 0;
+	persistentItems = config & 0xFFFF;
 
 	table = new d912pxy_memtree2(4, 4096, 2);
 
@@ -186,11 +189,11 @@ void d912pxy_surface_pool::EarlyInitProc()
 
 void d912pxy_surface_pool::PoolUnloadProc(d912pxy_surface * val, d912pxy_ringbuffer<d912pxy_surface*>* tbl)
 {
-	if (tbl->TotalElements() > (config & 0xFFFF))
+	if ((tbl->TotalElements() > persistentItems) || !persistentItems)
 	{
 		val->NoteDeletion(GetTickCount());
 
-		if (config & 0x10000)
+		if (disableGC)
 			val->PooledAction(0);
 		else 
 			d912pxy_s.thread.cleanup.Watch(val);

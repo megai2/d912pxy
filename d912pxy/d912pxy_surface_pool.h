@@ -57,7 +57,8 @@ private:
 
 	d912pxy_thread_lock mtMutex;
 
-	UINT64 config;
+	bool disableGC;
+	UINT persistentItems;
 
 #ifdef ENABLE_METRICS
 	UINT64 poolSize;
