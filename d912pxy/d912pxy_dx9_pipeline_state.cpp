@@ -324,7 +324,7 @@ void d912pxy_dx9_pipeline_state::UseCompiled(d912pxy_pso_item* it)
 void d912pxy_dx9_pipeline_state::UseWithFeedbackPtr(void** feedback)
 {
 	//megai2: if crashes due to 3rd party mods releasing resources in wrong time will be encountered again
-	//psoDesc.HoldRefs();
+	psoDesc.HoldRefs(true);
 
 	d912pxy_s.render.replay.DoPSORawFeedback(&psoDesc, feedback);
 

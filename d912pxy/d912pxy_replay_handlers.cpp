@@ -147,6 +147,8 @@ RHA_DECL(pso_raw, d912pxy_replay_thread_context* context)
 RHA_DECL(pso_raw_feedback, void* unused)
 {
 	*it->feedbackPtr = d912pxy_s.render.db.pso.GetByDescMT(&it->rawState);
+
+	it->rawState.HoldRefs(false);
 }
 
 RHA_DECL(pso_compiled, d912pxy_replay_thread_context* context)
