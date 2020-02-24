@@ -348,7 +348,7 @@ void d912pxy_extras::DrawOverlay()
 		ImGui::PlotLines("FPS", &fps_graph_buffer_transform, fpsGraph.Data, PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0, 0, fpsGraph.min, fpsGraph.max, ImVec2(fpsGraph.w, fpsGraph.h));
 	}
 
-	if (bEnableConfigEditor)
+	if (bEnableConfigEditor && (overlayShowMode == eoverlay_edit))
 	{
 		if (ImGui::Button("Edit config"))
 			bShowConfigEditor = !bShowConfigEditor;
