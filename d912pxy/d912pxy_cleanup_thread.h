@@ -38,13 +38,14 @@ public:
 	void Watch(d912pxy_comhandler* obj);
 
 	UINT TotalWatchedItems() { return watchCount; };
-	bool isAngryCleanup() { return afterResetMaidTriggered > 30; };
+	void ForceCleanup(); 
 
 	void OnReset();
 
 private:
 	d912pxy_linked_list<d912pxy_comhandler*>* buffer;
 	UINT watchCount;
+	d912pxy_thread_lock forcedCleanup;
 	
 	UINT iterationPeriod;
 	UINT iterationSubsleep;

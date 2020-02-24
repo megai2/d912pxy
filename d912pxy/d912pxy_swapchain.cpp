@@ -429,9 +429,14 @@ void d912pxy_swapchain::ThrowCritialError(HRESULT ret, const char * msg)
 
 void d912pxy_swapchain::ResetFrameTargets()
 {	
-	while (d912pxy_s.thread.cleanup.isAngryCleanup())
+	//force gc cleanup if we change bb resolution to prevent trashing rt dheap
+	if ((oldPP.BackBufferWidth != currentPP.BackBufferWidth) || (oldPP.BackBufferHeight != currentPP.BackBufferHeight))
 	{
-		Sleep(300);
+		d912pxy_s.thread.cleanup.ForceCleanup();
+		//cleanup dheap slots fully too
+		d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_DSV)->CleanupSlots(-1);
+		d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_RTV)->CleanupSlots(-1);
+		d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_SRV)->CleanupSlots(-1);
 	}
 
 	FixPresentParameters();

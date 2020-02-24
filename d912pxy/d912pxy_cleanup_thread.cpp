@@ -38,7 +38,6 @@ d912pxy_cleanup_thread::~d912pxy_cleanup_thread()
 void d912pxy_cleanup_thread::Init()
 {
 	NonCom_Init(L"delayed cleanup thread");
-	InitThread("d912pxy pool gc", 0);
 
 	iterationPeriod = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_CLEANUP_PERIOD);
 	iterationSubsleep = (UINT)d912pxy_s.config.GetValueUI64(PXY_CFG_CLEANUP_SUBSLEEP);
@@ -47,9 +46,12 @@ void d912pxy_cleanup_thread::Init()
 	softLimit = d912pxy_s.config.GetValueUI32(PXY_CFG_CLEANUP_SOFT_LIMIT);
 	hardLimit = d912pxy_s.config.GetValueUI32(PXY_CFG_CLEANUP_HARD_LIMIT);
 	watchCount = 0;
+	forcedCleanup.SetValue(0);
 
 	buffer = new d912pxy_linked_list<d912pxy_comhandler*>();
+	InitThread("d912pxy pool gc", 0);
 	SignalWork();	
+
 }
 
 void d912pxy_cleanup_thread::UnInit()
@@ -65,8 +67,9 @@ void d912pxy_cleanup_thread::ThreadJob()
 
 	buffer->IterStart();
 
-	bool noSubsleep = (afterResetMaidTriggered > 0) | (watchCount > softLimit);
-	bool ignoreLifetime = (watchCount > hardLimit) | (afterResetMaidTriggered > 0);
+	bool isForced = forcedCleanup.GetValue() > 0; 
+	bool noSubsleep = (afterResetMaidTriggered > 0) | (watchCount > softLimit) | isForced;
+	bool ignoreLifetime = (watchCount > hardLimit) | (afterResetMaidTriggered > 0) | isForced;
 
 	if (afterResetMaidTriggered)
 		--afterResetMaidTriggered;
@@ -107,6 +110,9 @@ void d912pxy_cleanup_thread::ThreadJob()
 	//megai2: do external flush on device every wake cycle
 	d912pxy_s.dev.ExternalFlush();
 
+	if (isForced)
+		forcedCleanup.Add(-1);
+
 	UINT32 etime = GetTickCount();
 
 	if (etime > time)
@@ -117,7 +123,7 @@ void d912pxy_cleanup_thread::ThreadJob()
 
 			//Sleep(sleepTime);
 
-			while ((sleepTime > 0) && (IsThreadRunning()) && !isAngryCleanup())
+			while ((sleepTime > 0) && (IsThreadRunning()) && !forcedCleanup.GetValue())
 			{
 				Sleep(1000);
 				sleepTime -= 1000;
@@ -136,6 +142,12 @@ void d912pxy_cleanup_thread::Watch(d912pxy_comhandler * obj)
 		buffer->Insert(obj);
 		obj->Watching(1);
 	}
+}
+
+void d912pxy_cleanup_thread::ForceCleanup()
+{
+	forcedCleanup.Add(1);
+	forcedCleanup.Wait(0);
 }
 
 void d912pxy_cleanup_thread::OnReset()
