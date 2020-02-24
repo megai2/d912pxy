@@ -262,7 +262,7 @@ void d912pxy_extras::OnHotkeyTriggered()
 
 void d912pxy_extras::DrawConfigEditor() 
 {
-	ImGui::Begin("d912pxy config editor", &bEnableConfigEditor);
+	ImGui::Begin("d912pxy config editor", &bShowConfigEditor);
 	
 	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
 	{
@@ -349,7 +349,10 @@ void d912pxy_extras::DrawOverlay()
 	}
 
 	if (bEnableConfigEditor)
-		bShowConfigEditor = ImGui::Button("Edit config");
+	{
+		if (ImGui::Button("Edit config"))
+			bShowConfigEditor = !bShowConfigEditor;
+	}
 
 	ImGui::End();
 
