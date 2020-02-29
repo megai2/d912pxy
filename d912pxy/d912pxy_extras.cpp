@@ -57,10 +57,9 @@ void d912pxy_extras::Init()
 
 	//load config
 	
-	bShowFps = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS);
-	bShowDrawCount = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_DRAW_COUNT);
-	bShowFpsGraph = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS_GRAPH);
-	bEnableConfigEditor = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR);
+	bShowFps = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_FPS);
+	bShowDrawCount = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_DRAW_COUNT);
+	bShowFpsGraph = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_FPS_GRAPH);
 
 	if (bShowFpsGraph)
 	{
@@ -71,10 +70,11 @@ void d912pxy_extras::Init()
 		fpsGraph.min = (float)d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_MIN);
 	}
 
-	bShowTimings = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_TIMINGS);
-	bShowPSOCompileQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE);
-	bShowGCQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_GC_QUE);
-	bShowConfigEditor = false;
+	bShowTimings = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_TIMINGS);
+	bShowPSOCompileQue = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE);
+	bShowGCQue = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_GC_QUE);
+	bEnableConfigEditor = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR);
+
 
 	hkVKeyCode = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY);
 

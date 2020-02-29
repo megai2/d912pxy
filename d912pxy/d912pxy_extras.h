@@ -51,12 +51,12 @@ private:
 	void DrawConfigEditor();
 
 	//config state
-	UINT32 bShowFps;
-	UINT32 bShowDrawCount;
-	UINT32 bShowFpsGraph;
-	UINT32 bShowTimings;
-	UINT32 bShowPSOCompileQue;
-	UINT32 bShowGCQue;
+	bool bShowFps;
+	bool bShowDrawCount;
+	bool bShowFpsGraph;
+	bool bShowTimings;
+	bool bShowPSOCompileQue;
+	bool bShowGCQue;
 
 	//gpu exec + sync time
 	Stopwatch syncNexecTime;
@@ -82,8 +82,8 @@ private:
 	} fpsGraph;
 
 	//Config Editor
-	UINT32 bEnableConfigEditor;
-	UINT32 bShowConfigEditorRestartMsg;
+	bool bEnableConfigEditor;
+	bool bShowConfigEditorRestartMsg;
 
 	//overlay toggle controls
 	enum overlayShowModeValues {
