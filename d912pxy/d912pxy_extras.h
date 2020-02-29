@@ -50,6 +50,14 @@ private:
 	void DrawMainWindow();
 	void DrawConfigEditor();
 
+	//Overlay Window Auto-Setup
+	bool* GetOverlayWindowCloseable(bool* WindowRenderBool);
+	UINT32 GetOverlayWindowFlags(bool isMain);
+
+	//Window Render Booleans
+	bool bShowMainWindow;
+	bool bShowConfigEditor;
+
 	//config state
 	bool bShowFps;
 	bool bShowDrawCount;
@@ -92,10 +100,6 @@ private:
 		eoverlay_edit = 2,
 		eoverlay_modes_count = 3
 	};
-
-	//Window Render Booleans
-	bool bShowMainWindow;
-	bool bShowConfigEditor;
 
 	UINT overlayShowMode;
 	bool hkDetected;

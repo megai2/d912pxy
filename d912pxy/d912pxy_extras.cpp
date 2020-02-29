@@ -278,12 +278,35 @@ void d912pxy_extras::OnHotkeyTriggered()
 	overlayShowMode = (overlayShowMode + 1) % eoverlay_modes_count;
 }
 
+UINT32 d912pxy_extras::GetOverlayWindowFlags(bool isMain = false) {
+
+	UINT32 mainWindowFlags = (overlayShowMode != eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+	UINT32 childWindowFlags = ImGuiWindowFlags_None;
+	UINT32 standaloneWindowFlags = (overlayShowMode != eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+
+	if (isMain)
+		return mainWindowFlags;
+
+	if (bShowMainWindow)
+		return childWindowFlags;
+
+	return standaloneWindowFlags;			
+}
+
+bool* d912pxy_extras::GetOverlayWindowCloseable(bool* WindowRenderBool = nullptr) {
+
+	if (bShowMainWindow && WindowRenderBool)
+		return WindowRenderBool;
+
+	return nullptr;
+
+}
+
 void d912pxy_extras::DrawConfigEditor() 
 {
+	
 	ImGui::SetNextWindowSize(ImVec2(475, 600));
-	ImGui::Begin("d912pxy config editor",
-				(bShowMainWindow == false) ? nullptr : &bShowConfigEditor,
-				(overlayShowMode != eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs));
+	ImGui::Begin("d912pxy config editor", GetOverlayWindowCloseable(&bShowConfigEditor), GetOverlayWindowFlags());
 	
 	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
 	{
@@ -340,7 +363,7 @@ void d912pxy_extras::DrawConfigEditor()
 
 void d912pxy_extras::DrawMainWindow()
 {
-	ImGui::Begin(BUILD_VERSION_NAME, nullptr, (overlayShowMode != eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs));
+	ImGui::Begin(BUILD_VERSION_NAME, GetOverlayWindowCloseable(), GetOverlayWindowFlags(true));
 
 	if (bShowFps)
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
