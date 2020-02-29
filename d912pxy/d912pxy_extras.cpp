@@ -286,7 +286,7 @@ void d912pxy_extras::DrawConfigEditor()
 			
 		//Render InputText box for newValues
 		ImGui::PushID(configIndex);
-		ImGui::PushItemWidth(-200);
+		ImGui::PushItemWidth(-1);
 		ImGui::InputText("##On", iter->newValue, 254);
 		ImGui::PopItemWidth();
 		ImGui::PopID();
