@@ -47,10 +47,10 @@ private:
 	void ImGUI_Render_End();
 	void OnHotkeyTriggered();
 	void DrawOverlay();
+	void DrawMainWindow();
 	void DrawConfigEditor();
 
 	//config state
-
 	UINT32 bShowFps;
 	UINT32 bShowDrawCount;
 	UINT32 bShowFpsGraph;
@@ -82,9 +82,8 @@ private:
 	} fpsGraph;
 
 	//Config Editor
-	bool bEnableConfigEditor;
-	bool bShowConfigEditorRestartMsg = false;
-	bool bShowConfigEditor;
+	UINT32 bEnableConfigEditor;
+	UINT32 bShowConfigEditorRestartMsg;
 
 	//overlay toggle controls
 	enum overlayShowModeValues {
@@ -93,6 +92,10 @@ private:
 		eoverlay_edit = 2,
 		eoverlay_modes_count = 3
 	};
+
+	//Window Render Booleans
+	bool bShowMainWindow;
+	bool bShowConfigEditor;
 
 	UINT overlayShowMode;
 	bool hkDetected;

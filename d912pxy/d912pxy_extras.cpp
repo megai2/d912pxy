@@ -25,9 +25,11 @@ SOFTWARE.
 #include "stdafx.h"
 
 d912pxy_extras::d912pxy_extras() : 
-	overlayShowMode(eoverlay_hide),
+	overlayShowMode(eoverlay_show),
 	hkDetected(false),
-	gameActive(true)
+	gameActive(true),
+	bShowMainWindow(false),
+	bShowConfigEditor(false)
 {
 	
 }
@@ -87,12 +89,16 @@ void d912pxy_extras::Init()
 	{
 		d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
 
-		if ((wcsstr(iter->name, L"enable_") || wcsstr(iter->name, L"show_")) && (wcscmp(iter->value,L"0") != 0))
+		if ( wcsstr(iter->name, L"show_") && (wcscmp(iter->value,L"0") != 0))
 		{
-			overlayShowMode = eoverlay_show;
+			bShowMainWindow = true;
 			break;
 		}
 	}
+
+	//Sets Config Editor window to visible if enabled when there's no need for the main window
+	if ((bShowMainWindow == false) && (bEnableConfigEditor == true))
+		bShowConfigEditor = true;
 
 	//imgui setup
 
@@ -329,10 +335,8 @@ void d912pxy_extras::DrawConfigEditor()
 	ImGui::End();
 }
 
-void d912pxy_extras::DrawOverlay()
+void d912pxy_extras::DrawMainWindow()
 {
-	ImGUI_Render_Start();
-
 	ImGui::Begin(BUILD_VERSION_NAME, nullptr, (overlayShowMode != eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs));
 
 	if (bShowFps)
@@ -367,6 +371,14 @@ void d912pxy_extras::DrawOverlay()
 	}
 
 	ImGui::End();
+}
+
+void d912pxy_extras::DrawOverlay()
+{
+	ImGUI_Render_Start();
+
+	if (bShowMainWindow)
+		DrawMainWindow();
 
 	if (bShowConfigEditor)
 		DrawConfigEditor();
