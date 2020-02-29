@@ -262,7 +262,7 @@ void d912pxy_extras::OnHotkeyTriggered()
 
 void d912pxy_extras::DrawConfigEditor() 
 {
-	ImGui::Begin("d912pxy config editor", &bShowConfigEditor);
+	ImGui::Begin("d912pxy config editor", &bShowConfigEditor, ImVec2(475, 600));
 	
 	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
 	{
