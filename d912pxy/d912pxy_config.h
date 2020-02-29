@@ -90,12 +90,12 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_EXTRAS_SHOW_TIMINGS,
 	PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE,
 	PXY_CFG_EXTRAS_SHOW_GC_QUE,
-	PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR,
 	PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY,
 	PXY_CFG_EXTRAS_FPS_GRAPH_MAX,
 	PXY_CFG_EXTRAS_FPS_GRAPH_MIN,
 	PXY_CFG_EXTRAS_FPS_GRAPH_W,
 	PXY_CFG_EXTRAS_FPS_GRAPH_H,
+	PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -203,12 +203,12 @@ private:
 		{L"extras", L"show_timings", L"0"},//PXY_CFG_EXTRAS_SHOW_TIMINGS,
 		{L"extras", L"show_pso_compile_que", L"0"},//PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE,
 		{L"extras", L"show_gc_que", L"0"},//PXY_CFG_EXTRAS_SHOW_GC_QUE,
-		{L"extras", L"enable_config_editor",L"0"},//PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR
 		{L"extras", L"overlay_toggle_key", L"78"},//PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY
 		{L"extras", L"fps_graph_max", L"80"},//PXY_CFG_EXTRAS_FPS_GRAPH_MAX
 		{L"extras", L"fps_graph_min", L"0"},//PXY_CFG_EXTRAS_FPS_GRAPH_MIN
 		{L"extras", L"fps_graph_w", L"512"},//PXY_CFG_EXTRAS_FPS_GRAPH_W
-		{L"extras", L"fps_graph_h", L"256"}//PXY_CFG_EXTRAS_FPS_GRAPH_H
+		{L"extras", L"fps_graph_h", L"256"},//PXY_CFG_EXTRAS_FPS_GRAPH_H
+		{L"extras", L"enable_config_editor",L"0"}//PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR
 		
 	};
 
