@@ -280,7 +280,8 @@ void d912pxy_extras::OnHotkeyTriggered()
 
 void d912pxy_extras::DrawConfigEditor() 
 {
-	ImGui::Begin("d912pxy config editor", &bShowConfigEditor, ImVec2(475, 600));
+	ImGui::SetNextWindowSize(ImVec2(475, 600));
+	ImGui::Begin("d912pxy config editor", &bShowConfigEditor, (overlayShowMode != eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs));
 	
 	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
 	{
