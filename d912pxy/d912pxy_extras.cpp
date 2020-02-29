@@ -58,7 +58,7 @@ void d912pxy_extras::Init()
 	bShowFps = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS);
 	bShowDrawCount = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_DRAW_COUNT);
 	bShowFpsGraph = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS_GRAPH);
-	bEnableConfigEditor = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_CONFIG_EDITOR);
+	bEnableConfigEditor = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR);
 
 	if (bShowFpsGraph)
 	{
