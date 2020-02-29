@@ -25,7 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 d912pxy_extras::d912pxy_extras() : 
-	overlayShowMode(eoverlay_show),
+	overlayShowMode(eoverlay_hide),
 	hkDetected(false),
 	gameActive(true)
 {
@@ -80,6 +80,18 @@ void d912pxy_extras::Init()
 	{
 		d912pxy_s.config.InitNewValueBuffers();
 		d912pxy_s.config.ValueToNewValueBuffers();
+	}
+
+	//Check if overlay window should be visible on launch based on active config values
+	for (int configIndex = PXY_CFG_EXTRAS_ENABLE; configIndex != PXY_CFG_CNT; configIndex++)
+	{
+		d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
+
+		if ((wcsstr(iter->name, L"enable_") || wcsstr(iter->name, L"show_")) && (wcscmp(iter->value,L"0") != 0))
+		{
+			overlayShowMode = eoverlay_show;
+			break;
+		}
 	}
 
 	//imgui setup
