@@ -52,7 +52,7 @@ private:
 
 	//Overlay Window Auto-Setup
 	bool* GetOverlayWindowCloseable(bool* WindowRenderBool);
-	UINT32 GetOverlayWindowFlags(bool isMain);
+	UINT32 GetOverlayWindowFlags();
 
 	//Window Render Booleans
 	bool bShowMainWindow;
