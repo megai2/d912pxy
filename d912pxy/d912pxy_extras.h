@@ -47,16 +47,24 @@ private:
 	void ImGUI_Render_End();
 	void OnHotkeyTriggered();
 	void DrawOverlay();
+	void DrawMainWindow();
 	void DrawConfigEditor();
 
-	//config state
+	//Overlay Window Auto-Setup
+	bool* GetOverlayWindowCloseable(bool* WindowRenderBool);
+	UINT32 GetOverlayWindowFlags();
 
-	UINT32 bShowFps;
-	UINT32 bShowDrawCount;
-	UINT32 bShowFpsGraph;
-	UINT32 bShowTimings;
-	UINT32 bShowPSOCompileQue;
-	UINT32 bShowGCQue;
+	//Window Render Booleans
+	bool bShowMainWindow;
+	bool bShowConfigEditor;
+
+	//config state
+	bool bShowFps;
+	bool bShowDrawCount;
+	bool bShowFpsGraph;
+	bool bShowTimings;
+	bool bShowPSOCompileQue;
+	bool bShowGCQue;
 
 	//gpu exec + sync time
 	Stopwatch syncNexecTime;
@@ -83,8 +91,7 @@ private:
 
 	//Config Editor
 	bool bEnableConfigEditor;
-	bool bShowConfigEditorRestartMsg = false;
-	bool bShowConfigEditor;
+	bool bShowConfigEditorRestartMsg;
 
 	//overlay toggle controls
 	enum overlayShowModeValues {

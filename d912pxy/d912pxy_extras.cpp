@@ -27,7 +27,9 @@ SOFTWARE.
 d912pxy_extras::d912pxy_extras() : 
 	overlayShowMode(eoverlay_show),
 	hkDetected(false),
-	gameActive(true)
+	gameActive(true),
+	bShowMainWindow(false),
+	bShowConfigEditor(false)
 {
 	
 }
@@ -55,10 +57,9 @@ void d912pxy_extras::Init()
 
 	//load config
 	
-	bShowFps = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS);
-	bShowDrawCount = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_DRAW_COUNT);
-	bShowFpsGraph = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_FPS_GRAPH);
-	bEnableConfigEditor = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_CONFIG_EDITOR);
+	bShowFps = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_FPS);
+	bShowDrawCount = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_DRAW_COUNT);
+	bShowFpsGraph = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_FPS_GRAPH);
 
 	if (bShowFpsGraph)
 	{
@@ -69,10 +70,11 @@ void d912pxy_extras::Init()
 		fpsGraph.min = (float)d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_GRAPH_MIN);
 	}
 
-	bShowTimings = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_TIMINGS);
-	bShowPSOCompileQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE);
-	bShowGCQue = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_SHOW_GC_QUE);
-	bShowConfigEditor = false;
+	bShowTimings = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_TIMINGS);
+	bShowPSOCompileQue = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE);
+	bShowGCQue = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_GC_QUE);
+	bEnableConfigEditor = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR);
+
 
 	hkVKeyCode = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY);
 
@@ -81,6 +83,22 @@ void d912pxy_extras::Init()
 		d912pxy_s.config.InitNewValueBuffers();
 		d912pxy_s.config.ValueToNewValueBuffers();
 	}
+
+	//Check if overlay window should be visible on launch based on active config values
+	for (int configIndex = PXY_CFG_EXTRAS_ENABLE; configIndex != PXY_CFG_CNT; configIndex++)
+	{
+		d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
+
+		if ( wcsstr(iter->name, L"show_") && (wcscmp(iter->value,L"0") != 0))
+		{
+			bShowMainWindow = true;
+			break;
+		}
+	}
+
+	//Sets Config Editor window to visible if enabled when there's no need for the main window
+	if ((bShowMainWindow == false) && (bEnableConfigEditor == true))
+		bShowConfigEditor = true;
 
 	//imgui setup
 
@@ -260,9 +278,24 @@ void d912pxy_extras::OnHotkeyTriggered()
 	overlayShowMode = (overlayShowMode + 1) % eoverlay_modes_count;
 }
 
+UINT32 d912pxy_extras::GetOverlayWindowFlags() 
+{
+	return (overlayShowMode != eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+}
+
+bool* d912pxy_extras::GetOverlayWindowCloseable(bool* WindowRenderBool = nullptr) 
+{
+	if (bShowMainWindow && WindowRenderBool)
+		return WindowRenderBool;
+
+	return nullptr;
+}
+
 void d912pxy_extras::DrawConfigEditor() 
 {
-	ImGui::Begin("d912pxy config editor", &bShowConfigEditor);
+	
+	ImGui::SetNextWindowSize(ImVec2(475, 600));
+	ImGui::Begin("d912pxy config editor", GetOverlayWindowCloseable(&bShowConfigEditor), GetOverlayWindowFlags());
 	
 	for (int configIndex = 0; configIndex != PXY_CFG_CNT; ++configIndex)
 	{
@@ -286,7 +319,7 @@ void d912pxy_extras::DrawConfigEditor()
 			
 		//Render InputText box for newValues
 		ImGui::PushID(configIndex);
-		ImGui::PushItemWidth(-200);
+		ImGui::PushItemWidth(-1);
 		ImGui::InputText("##On", iter->newValue, 254);
 		ImGui::PopItemWidth();
 		ImGui::PopID();
@@ -317,11 +350,9 @@ void d912pxy_extras::DrawConfigEditor()
 	ImGui::End();
 }
 
-void d912pxy_extras::DrawOverlay()
+void d912pxy_extras::DrawMainWindow()
 {
-	ImGUI_Render_Start();
-
-	ImGui::Begin(BUILD_VERSION_NAME, nullptr, (overlayShowMode != eoverlay_edit) * (ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs));
+	ImGui::Begin(BUILD_VERSION_NAME, GetOverlayWindowCloseable(), GetOverlayWindowFlags());
 
 	if (bShowFps)
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -355,6 +386,14 @@ void d912pxy_extras::DrawOverlay()
 	}
 
 	ImGui::End();
+}
+
+void d912pxy_extras::DrawOverlay()
+{
+	ImGUI_Render_Start();
+
+	if (bShowMainWindow)
+		DrawMainWindow();
 
 	if (bShowConfigEditor)
 		DrawConfigEditor();

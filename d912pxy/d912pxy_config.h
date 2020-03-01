@@ -95,7 +95,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_EXTRAS_FPS_GRAPH_MIN,
 	PXY_CFG_EXTRAS_FPS_GRAPH_W,
 	PXY_CFG_EXTRAS_FPS_GRAPH_H,
-	PXY_CFG_EXTRAS_CONFIG_EDITOR,
+	PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -208,7 +208,8 @@ private:
 		{L"extras", L"fps_graph_min", L"0"},//PXY_CFG_EXTRAS_FPS_GRAPH_MIN
 		{L"extras", L"fps_graph_w", L"512"},//PXY_CFG_EXTRAS_FPS_GRAPH_W
 		{L"extras", L"fps_graph_h", L"256"},//PXY_CFG_EXTRAS_FPS_GRAPH_H
-		{L"extras", L"enable_config_editor",L"0"}//PXY_CFG_EXTRAS_CONFIG_EDITOR
+		{L"extras", L"enable_config_editor",L"0"}//PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR
+		
 	};
 
 };
