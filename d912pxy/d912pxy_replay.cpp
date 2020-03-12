@@ -158,18 +158,20 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 	while (WaitForWake(thrd))
 		;	
 
-	if (!items) //megai2: we can't put correct starting item on next thread, so we have to play things to next draw call as switch occuring right in that place
+	//megai2: we can't put correct starting item on next thread, so we have to play things to next draw call as switch occuring right in that place
+	//but we also have to properly process data that is visible in thread after stop marker is set
+	
+	bool linkedThread = context.tid != (numThreads - 1);
+
+	item_end = buffer.getCurrentExtern();
+	while (item_iter < item_end)
 	{
-		item_end = buffer.getCurrentExtern();
-		while (item_iter < item_end)
-		{
-			PlayId(item_iter, cl, &context);
+		PlayId(item_iter, cl, &context);
 
-			if (item_iter->GetTypeName() == d912pxy_replay_item::typeName::draw_indexed)
-				break;
+		if ((item_iter->GetTypeName() == d912pxy_replay_item::typeName::draw_indexed) && linkedThread)
+			break;
 
-			item_iter = item_iter->Next();
-		}
+		item_iter = item_iter->Next();
 	}
 }
 
