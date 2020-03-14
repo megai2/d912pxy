@@ -168,8 +168,15 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 	{
 		PlayId(item_iter, cl, &context);
 
-		if ((item_iter->GetTypeName() == d912pxy_replay_item::typeName::draw_indexed) && linkedThread)
-			break;
+		if (linkedThread)
+		{
+			if (items)
+				--items;
+
+			if ((item_iter->GetTypeName() == d912pxy_replay_item::typeName::draw_indexed) && !items)
+				break;
+
+		}
 
 		item_iter = item_iter->Next();
 	}
