@@ -263,7 +263,6 @@ void d912pxy_device::InitComPatches()
 		for (int i = 0; i != 32; ++i)
 			stageFormatsTrack[i] = D3DFMT_UNKNOWN;
 
-		LOG_INFO_DTDM("Profiling enabled, only profile data will be saved to vfs");
 		d912pxy_s.vfs.SetWriteMask(~(1 << (UINT)d912pxy_vfs_bid::shader_profile));
 
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETTEXTURE, &d912pxy_device::com_SetTexture_PS);
@@ -356,7 +355,14 @@ void d912pxy_device::PrintInfoBanner()
 	}
 	
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
-		LOG_INFO_DTDM("Shader profiling enabled, expect performance drops");
+	{
+		LOG_INFO_DTDM("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		LOG_INFO_DTDM("   ATTENTION:Shader profiling enabled         ");
+		LOG_INFO_DTDM("   this is a special mode to fix shader bugs  ");
+		LOG_INFO_DTDM("   DO NOT REPORT ANY ERRORS                   ");
+		LOG_INFO_DTDM("   IF YOU DON'T KNOW WHAT YOU ARE DOING       ");
+		LOG_INFO_DTDM("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+	}
 
 	OSVERSIONINFOEX info;
 	ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
