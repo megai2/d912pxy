@@ -88,11 +88,12 @@ void d912pxy_vfs::LoadVFS()
 	if (!cuPck)
 	{
 		wchar_t newPck[4096];
-
 		wsprintf(newPck, L"%S/%s", m_rootPath, PXY_VFS_LATEST_PCK);
 
-		cuPck = new d912pxy_vfs_pck(newPck, writeAllowed);
+		//try to remove old file before creating if it somehow corrupted
+		DeleteFile(newPck);
 
+		cuPck = new d912pxy_vfs_pck(newPck, writeAllowed);
 		if (cuPck->GetStatus())
 		{
 			LOG_ERR_DTDM("Latest pck file is broken, nothing will be saved");
