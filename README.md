@@ -111,7 +111,7 @@ and/or ready-to-use shader [packs](https://github.com/megai2/d912pxy/wiki/Shader
 
 # Troubleshooting
 
-Case #1: [Game crashes/hangs](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)
+Case #1: [Game crashes/hangs/not starting](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)
 
 Case #2: [Visual errors](https://github.com/megai2/d912pxy/wiki/Reporting-visual-errors)
 
