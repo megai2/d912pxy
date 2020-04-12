@@ -134,8 +134,10 @@ private:
 	UINT32 CalcCRC32(intptr_t data, UINT32 length);
 
 	UINT LoadChunkIndex();
-	UINT AddToChunkIndex(d912pxy_vfs_pck_chunk* chunk, UINT64 offset);	
-
+	UINT AddToChunkIndex(d912pxy_vfs_pck_chunk* chunk, UINT64 offset);
+	void AddToChunkList(d912pxy_vfs_pck_chunk_index_data* indexDt);
+	d912pxy_vfs_pck_chunk_index_data* NewChunkIndexElement(d912pxy_vfs_pck_chunk* chunk, UINT64 offset);
+	
 	UINT64 PackChunkIndexInfo(UINT8 type, UINT64 offset);
 	UINT8 GetChunkTypeFromIndex(d912pxy_vfs_pck_chunk* chunk);
 	UINT64 GetChunkOffsetFromIndex(d912pxy_vfs_pck_chunk* chunk);

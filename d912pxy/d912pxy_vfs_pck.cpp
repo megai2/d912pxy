@@ -399,12 +399,11 @@ UINT d912pxy_vfs_pck::LoadChunkIndex()
 		d912pxy_vfs_pck_chunk_index_data* indexData = chunkIndex->data.chunk_index.data;
 		for (UINT32 i = 0; i != chunkIndex->data.chunk_index.usedIndexes; ++i)
 		{			
+			AddToChunkList(&indexData[i]);
+
 			if (indexData[i].id > maxChunkId)
 				maxChunkId = indexData[i].id;
-
-			cuChunkList->PointAtMem(&indexData[i].id, 4);
-			cuChunkList->SetValue(indexData[i].packedInfo);
-			++totalChunks;
+			++totalChunks;				
 		}
 
 		if (chunkIndex->data.chunk_index.nextIndexChunk)
@@ -429,8 +428,6 @@ UINT d912pxy_vfs_pck::LoadChunkIndex()
 
 	LOG_DBG_DTDM3("Readed %lu chunks from %016llX pck index", totalChunks, this);
 
-	++maxChunkId;
-
 	if (cuHeader->data.header.maxId != maxChunkId)
 	{
 		LOG_WARN_DTDM("Max chunk id of %016llX are corrupted, updating %u to %u from chunk index", this, cuHeader->data.header.maxId, maxChunkId);
@@ -442,35 +439,42 @@ UINT d912pxy_vfs_pck::LoadChunkIndex()
 
 UINT d912pxy_vfs_pck::AddToChunkIndex(d912pxy_vfs_pck_chunk * chunk, UINT64 offset)
 {
-	UINT32 newIndexId = cuChunkIndex->data.chunk_index.usedIndexes;
-	if (newIndexId < PXY_VFS_PCK_INDEX_ROOM)
+	if (cuChunkIndex->data.chunk_index.usedIndexes >= PXY_VFS_PCK_INDEX_ROOM)
 	{
-		d912pxy_vfs_pck_chunk_index_data* indexDt = &cuChunkIndex->data.chunk_index.data[newIndexId];
-		indexDt->id = chunk->dsc.id;
-		indexDt->packedInfo = PackChunkIndexInfo(chunk->dsc.type, offset);
-		++cuChunkIndex->data.chunk_index.usedIndexes;
-
-		cuChunkList->PointAtMem(&chunk->dsc.id,4);
-		cuChunkList->SetValue(indexDt->packedInfo);
-
-		return UpdateChunk(cuChunkIndex);
-	}
-	else {
 		cuChunkIndex->data.chunk_index.nextIndexChunk = fs_write_offset;
 		UpdateChunk(cuChunkIndex);
 		FreeChunk(cuChunkIndex);
 
 		cuChunkIndex = AllocateChunk(CHU_CHUNK_INDEX);
-		
-		cuChunkIndex->data.chunk_index.usedIndexes = 1;
+
+		cuChunkIndex->data.chunk_index.usedIndexes = 0;
 		cuChunkIndex->data.chunk_index.nextIndexChunk = 0;
-		
-		d912pxy_vfs_pck_chunk_index_data* indexDt = &cuChunkIndex->data.chunk_index.data[0];
-		indexDt->id = chunk->dsc.id;
-		indexDt->packedInfo = PackChunkIndexInfo(chunk->dsc.type, offset);
-						
-		return WriteChunk(cuChunkIndex);
-	}	
+	
+		if (!WriteChunk(cuChunkIndex))
+			return 0;
+	}
+
+	AddToChunkList(NewChunkIndexElement(chunk, offset));
+	
+	return UpdateChunk(cuChunkIndex);	
+}
+
+void d912pxy_vfs_pck::AddToChunkList(d912pxy_vfs_pck_chunk_index_data* indexDt)
+{
+	cuChunkList->PointAtMem(&indexDt->id, 4);
+	cuChunkList->SetValue(indexDt->packedInfo);
+}
+
+d912pxy_vfs_pck_chunk_index_data* d912pxy_vfs_pck::NewChunkIndexElement(d912pxy_vfs_pck_chunk* chunk, UINT64 offset)
+{
+	auto& indexInfo = cuChunkIndex->data.chunk_index;
+
+	auto ret = &indexInfo.data[indexInfo.usedIndexes++];
+
+	ret->id = chunk->dsc.id;
+	ret->packedInfo = PackChunkIndexInfo(chunk->dsc.type, offset);
+
+	return ret;
 }
 
 UINT64 d912pxy_vfs_pck::PackChunkIndexInfo(UINT8 type, UINT64 offset)
