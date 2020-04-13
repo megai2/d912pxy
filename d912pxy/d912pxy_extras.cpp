@@ -85,7 +85,7 @@ void d912pxy_extras::Init()
 	}
 
 	//Check if overlay window should be visible on launch based on active config values
-	for (int configIndex = PXY_CFG_EXTRAS_ENABLE; configIndex != PXY_CFG_CNT; configIndex++)
+	for (int configIndex = PXY_CFG_EXTRAS_ENABLE; configIndex != PXY_CFG_CNT; ++configIndex)
 	{
 		d912pxy_config_value_dsc* iter = d912pxy_s.config.GetEntryRaw(d912pxy_config_value(configIndex));
 
@@ -136,7 +136,8 @@ void d912pxy_extras::UnInit()
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	d912pxy_s.config.UnInitNewValueBuffers();
+	if (bEnableConfigEditor)
+		d912pxy_s.config.UnInitNewValueBuffers();
 
 	d912pxy_noncom::UnInit();
 }

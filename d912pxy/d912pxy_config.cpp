@@ -34,7 +34,7 @@ d912pxy_config::~d912pxy_config()
 }
 
 void d912pxy_config::Init()
-{	
+{
 	FILE* f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "rb");
 
 	if (!f) {
@@ -186,8 +186,8 @@ void d912pxy_config::UnInitNewValueBuffers()
 {
 	for (int i = 0; i != PXY_CFG_CNT; ++i)
 	{
-		if (data[i].newValue)
-			PXY_FREE(data[i].newValue);
+		PXY_FREE(data[i].newValue);
+		data[i].newValue = nullptr;
 	}
 }
 
@@ -206,6 +206,7 @@ void d912pxy_config::SaveConfig()
 
 	wchar_t csection[256] = L"0";
 
+	bool writeNewValues = data[0].newValue != nullptr;
 
 	for (int i = 0; i != PXY_CFG_CNT; ++i)
 	{
@@ -216,7 +217,7 @@ void d912pxy_config::SaveConfig()
 			lstrcpyW(csection, data[i].section);
 		}
 
-		if (data[i].newValue) 
+		if (writeNewValues)
 		{
 			wchar_t conversion_buffer[256];
 			mbstowcs(conversion_buffer, data[i].newValue, 255);
