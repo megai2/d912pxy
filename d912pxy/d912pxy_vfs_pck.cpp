@@ -208,7 +208,7 @@ UINT d912pxy_vfs_pck::CreateNewPckFile(wchar_t * fn)
 	headerChunk->data.header.compressed = 0;
 	headerChunk->data.header.fileSize = 0x1845;
 	headerChunk->data.header.freeSpace = 0;
-	headerChunk->data.header.maxId = 2;
+	headerChunk->data.header.maxId = 1;
 	headerChunk->data.header.ver = PXY_VFS_PCK_VER;
 
 	memset(indexChunk->data.chunk_index.data, 0, PXY_VFS_PCK_CHUNK_DATA_SIZE_INDEX);
