@@ -109,6 +109,23 @@ After shader cache is generated, load times will be much faster.
 If you want to eleminate this problem once and for all, use [PSO precompile](https://github.com/megai2/d912pxy/wiki/Using-PSO-precompile)
 and/or ready-to-use shader [packs](https://github.com/megai2/d912pxy/wiki/Shader-packs)
 
+**Bug**
+
+Game/installer are not starting
+
+*Troubleshooting*
+
+Update [MSVC](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)
+
+**Bug**
+
+Nothing happens when installed
+
+*Troubleshooting*
+
+Ensure that d3d9.dll is in game root folder or bin64 folder.
+Then try using this https://github.com/megai2/d912pxy/wiki/Removing-compat-flags
+
 # Troubleshooting
 
 Case #1: [Game crashes/hangs/not starting](https://github.com/megai2/d912pxy/wiki/Reporting-crashes)
