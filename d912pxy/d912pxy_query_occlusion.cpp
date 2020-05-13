@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -26,6 +26,7 @@ SOFTWARE.
 
 typedef struct d912pxy_query_occlusion_gpu_stack {
 	d912pxy_resource* readbackBuffer;
+	UINT64* readbackPtr;
 	d912pxy_query_occlusion* stack[PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME];
 	UINT32 count;
 } d912pxy_query_occlusion_gpu_stack;
@@ -42,7 +43,6 @@ d912pxy_query_occlusion::d912pxy_query_occlusion(D3DQUERYTYPE Type) : d912pxy_qu
 	queryResult = 0;
 	queryOpened = 0;
 }
-
 
 d912pxy_query_occlusion * d912pxy_query_occlusion::d912pxy_query_occlusion_com(D3DQUERYTYPE Type)
 {
@@ -159,18 +159,11 @@ void d912pxy_query_occlusion::OnIFrameStart()
 	d912pxy_query_occlusion_gpu_stack* readStack = &g_gpuStack[!g_writeStack];
 
 	if (readStack->count)
-	{
-		UINT64* readbackPtr;
-
-		if (!FAILED(readStack->readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&readbackPtr)))
+	{	
+		for (int i = 0; i != readStack->count; ++i)
 		{
-			for (int i = 0; i != readStack->count; ++i)
-			{
-				readStack->stack[i]->SetQueryResult((UINT32)readbackPtr[i]);
-			}
-
-			readStack->readbackBuffer->GetD12Obj()->Unmap(0, 0);
-		}
+			readStack->stack[i]->SetQueryResult((UINT32)readStack->readbackPtr[i]);
+		}			
 
 		readStack->count = 0;
 	}
@@ -196,9 +189,13 @@ UINT d912pxy_query_occlusion::InitOccQueryEmulation()
 
 	for (int i = 0; i != 2; ++i)
 	{
-		g_gpuStack[i].readbackBuffer = new d912pxy_resource(RTID_RB_BUF, PXY_COM_OBJ_NOVTABLE, L"query readback buffer");
-		g_gpuStack[i].readbackBuffer->d12res_readback_buffer(8 * PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME);
-		g_gpuStack[i].count = 0;		
+		auto& stack = g_gpuStack[i];
+
+		stack.count = 0;
+		stack.readbackBuffer = new d912pxy_resource(RTID_RB_BUF, PXY_COM_OBJ_NOVTABLE, L"query readback buffer");
+		stack.readbackBuffer->d12res_readback_buffer(8 * PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME);
+		if (FAILED(stack.readbackBuffer->GetD12Obj()->Map(0, 0, (void**)&stack.readbackPtr)))
+			return 1;	
 	}
 
 	g_writeStack = 0;
@@ -216,7 +213,6 @@ void d912pxy_query_occlusion::FreePendingQueryObjects()
 			continue;
 
 		UINT32 unused;
-
 		for (int j = 0; j != objCount; ++j)
 			g_gpuStack[i].stack[j]->occ_GetData(&unused, 4, 0);
 
