@@ -47,6 +47,7 @@ private:
 		d912pxy_trimmed_pso_desc psoDsc;
 		d912pxy_vdecl* vdecl;
 		D3D12_VIEWPORT viewport;
+		UINT restoreScissor;
 	};
 
 	enum shaderSet {

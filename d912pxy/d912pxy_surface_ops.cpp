@@ -92,15 +92,9 @@ void d912pxy_surface_ops::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags
 	if (Flags & D3DCLEAR_STENCIL)	
 		oldStencilRef = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
-	UINT restoreScissor = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
-
 	//set needed things
 	SetCommonState(shaderSet::SHSET_CLEAR);
 
-	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_ALPHABLENDENABLE, false);
-	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_SEPARATEALPHABLENDENABLE, false);
-	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_SCISSORTESTENABLE, 0);
-	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_CULLMODE, D3DCULL_NONE);
 	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_COLORWRITEENABLE, Flags & D3DCLEAR_TARGET ? 0xF : 0);
 
 	if (Flags & D3DCLEAR_ZBUFFER)
@@ -109,10 +103,7 @@ void d912pxy_surface_ops::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags
 		d912pxy_s.dev.SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
 		d912pxy_s.dev.SetRenderState(D3DRS_ZWRITEENABLE, 1);
 	}
-	else {
-		d912pxy_s.dev.SetRenderState(D3DRS_ZENABLE, 0);
-	}
-
+	
 	if (Flags & D3DCLEAR_STENCIL)
 	{
 		d912pxy_s.dev.SetRenderState(D3DRS_STENCILREF, Stencil);
@@ -121,10 +112,7 @@ void d912pxy_surface_ops::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags
 		d912pxy_s.dev.SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
 		d912pxy_s.dev.SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_REPLACE);
 	}
-	else {
-		d912pxy_s.dev.SetRenderState(D3DRS_STENCILENABLE, 0);
-	}
-
+	
 	//set shader constants
 
 	if (Flags & D3DCLEAR_TARGET)
@@ -175,10 +163,7 @@ void d912pxy_surface_ops::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags
 	//restore PSO and other things
 
 	if (Flags & D3DCLEAR_STENCIL)
-		d912pxy_s.dev.SetRenderState(D3DRS_STENCILREF, oldStencilRef);	
-
-	if (restoreScissor)
-		d912pxy_s.render.state.pso.SetDX9RS(D3DRS_SCISSORTESTENABLE, 1);	
+		d912pxy_s.dev.SetRenderState(D3DRS_STENCILREF, oldStencilRef);
 }
 
 void d912pxy_surface_ops::ClearIter(D3DRECT * pRect)
@@ -197,13 +182,18 @@ void d912pxy_surface_ops::ClearIter(D3DRECT * pRect)
 
 void d912pxy_surface_ops::StretchRect(d912pxy_surface* pSourceSurface, d912pxy_surface* pDestSurface)
 {
+	//TODO: use precompiled pso, but sort out pso format dep earlier
+
 	//megai2: save current pso & related
 	D3DSURFACE_DESC dDst = pDestSurface->GetDX9DescAtLevel(0);
 
 	SavedIFrameState savedState;
 	SetCommonState(shaderSet::SHSET_STRETCH);
+
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_COLORWRITEENABLE, 0xF);
 	
-	d912pxy_surface* oldRT = d912pxy_s.render.iframe.GetBindedSurface(1);	
+	d912pxy_surface* oldRT = d912pxy_s.render.iframe.GetBindedSurface(1);
+	d912pxy_surface* oldDS = d912pxy_s.render.iframe.GetBindedSurface(0);
 	UINT oldTex0 = d912pxy_s.render.state.tex.GetTexStage(0);
 	d912pxy_surface* targetRT = dDst.Usage == D3DUSAGE_RENDERTARGET ? 
 		pDestSurface : 
@@ -213,12 +203,14 @@ void d912pxy_surface_ops::StretchRect(d912pxy_surface* pSourceSurface, d912pxy_s
 	d912pxy_s.render.iframe.SetViewport(&wvp);
 	d912pxy_s.render.state.tex.SetTexture(0, pSourceSurface->GetSRVHeapId());
 	d912pxy_s.render.iframe.BindSurface(1, targetRT);
+	d912pxy_s.render.iframe.BindSurface(0, nullptr);
 	
     //TODO: sampler for tex0
-		
+
 	PXY_COM_CAST_(IDirect3DDevice9, &d912pxy_s.dev)->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
 	
 	d912pxy_s.render.iframe.BindSurface(1, oldRT);
+	d912pxy_s.render.iframe.BindSurface(0, oldDS);
 
 	if (targetRT != pDestSurface)
 	{
@@ -238,6 +230,12 @@ void d912pxy_surface_ops::SetCommonState(shaderSet idx)
 	d912pxy_s.render.state.pso.IAFormat(vdcl);
 	d912pxy_s.render.state.pso.VShader(vs[idx]);
 	d912pxy_s.render.state.pso.PShader(ps[idx]);
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_ALPHABLENDENABLE, false);
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_SEPARATEALPHABLENDENABLE, false);
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_SCISSORTESTENABLE, 0);
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_CULLMODE, D3DCULL_NONE);
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_ZENABLE, 0);
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_STENCILENABLE, 0);
 }
 
 d912pxy_surface_ops::SavedIFrameState::SavedIFrameState()	
@@ -245,10 +243,13 @@ d912pxy_surface_ops::SavedIFrameState::SavedIFrameState()
 	viewport = *d912pxy_s.render.iframe.GetViewport();
 	psoDsc = d912pxy_s.render.state.pso.GetCurrentDesc();	
 	vdecl = d912pxy_s.render.state.pso.GetIAFormat();
+	restoreScissor = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
 }
 
 d912pxy_surface_ops::SavedIFrameState::~SavedIFrameState()
 {	
+	if (restoreScissor)
+		d912pxy_s.render.state.pso.SetDX9RS(D3DRS_SCISSORTESTENABLE, 1);
 	d912pxy_s.render.state.pso.SetCurrentDesc(psoDsc);
 	d912pxy_s.render.state.pso.IAFormat(vdecl);	
 	d912pxy_s.render.state.pso.MarkDirty();
