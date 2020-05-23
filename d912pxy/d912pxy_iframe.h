@@ -97,6 +97,23 @@ public:
 
 	UINT GetActiveStreamCount() { return streamsActive; };
 
+	struct StreamBinds
+	{
+		d912pxy_device_streamsrc vertex[PXY_INNER_MAX_VBUF_STREAMS];
+		d912pxy_vstream* index;
+	};
+
+	class StreamBindsHolder
+	{
+	public:
+		StreamBindsHolder();
+		~StreamBindsHolder();
+
+	private:
+		StreamBinds data;
+		d912pxy_iframe& iframe;
+	};
+
 private:	
 	void InitRootSignature();
 
@@ -119,8 +136,8 @@ private:
 	UINT batchCommisionDF;
 	UINT instanceCount;
 	D3DPRIMITIVETYPE cuPrimType;
-	d912pxy_device_streamsrc streamBinds[PXY_INNER_MAX_VBUF_STREAMS];
-	d912pxy_vstream* indexBind;
+
+	StreamBinds streamBinds;
 
 	UINT mCurrentFrameIndex;
 

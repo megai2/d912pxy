@@ -48,10 +48,8 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 
 	d912pxy_s.render.db.pso.Init();
 
-	streamsActive = 0;
-	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
-		streamBinds[i].buffer = 0;
-
+	memset((void*)&streamBinds, 0, sizeof(StreamBinds));
+	streamsActive = 0;	
 
 	mSetHeapArrCnt = 0;
 
@@ -87,7 +85,7 @@ void d912pxy_iframe::UnInit()
 
 void d912pxy_iframe::SetStreamFreq(UINT StreamNumber, UINT Divider)
 {
-	streamBinds[StreamNumber].divider = Divider;
+	streamBinds.vertex[StreamNumber].divider = Divider;
 }
 
 void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride)
@@ -96,9 +94,9 @@ void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT Offse
 
 	batchCommisionDF |= 1;	
 
-	streamBinds[StreamNumber].buffer = vb;
-	streamBinds[StreamNumber].offset = OffsetInBytes;
-	streamBinds[StreamNumber].stride = Stride;
+	streamBinds.vertex[StreamNumber].buffer = vb;
+	streamBinds.vertex[StreamNumber].offset = OffsetInBytes;
+	streamBinds.vertex[StreamNumber].stride = Stride;
 
 	if (vb)		
 		d912pxy_s.render.replay.DoVBbind(vb, Stride, StreamNumber, OffsetInBytes);
@@ -106,7 +104,7 @@ void d912pxy_iframe::SetVBuf(d912pxy_vstream * vb, UINT StreamNumber, UINT Offse
 
 void d912pxy_iframe::SetIBuf(d912pxy_vstream* ib)
 {
-	indexBind = ib;	
+	streamBinds.index = ib;	
 
 	if (ib)
 		d912pxy_s.render.replay.DoIBbind(ib);
@@ -114,16 +112,16 @@ void d912pxy_iframe::SetIBuf(d912pxy_vstream* ib)
 
 void d912pxy_iframe::SetIBufIfChanged(d912pxy_vstream * ib)
 {
-	if (indexBind != ib)	
+	if (streamBinds.index != ib)
 		SetIBuf(ib);	
 }
 
 void d912pxy_iframe::SetVBufIfChanged(d912pxy_vstream * vb, UINT StreamNumber, UINT OffsetInBytes, UINT Stride)
 {
 	if (
-		(streamBinds[StreamNumber].buffer != vb) ||
-		(streamBinds[StreamNumber].offset != OffsetInBytes) ||
-		(streamBinds[StreamNumber].stride != Stride)
+		(streamBinds.vertex[StreamNumber].buffer != vb) ||
+		(streamBinds.vertex[StreamNumber].offset != OffsetInBytes) ||
+		(streamBinds.vertex[StreamNumber].stride != Stride)
 		)
 		SetVBuf(vb, StreamNumber, OffsetInBytes, Stride);
 
@@ -131,23 +129,23 @@ void d912pxy_iframe::SetVBufIfChanged(d912pxy_vstream * vb, UINT StreamNumber, U
 
 void d912pxy_iframe::UpdateActiveStreams(d912pxy_vstream * vb, UINT StreamNumber)
 {
-	if (vb && !streamBinds[StreamNumber].buffer)
+	if (vb && !streamBinds.vertex[StreamNumber].buffer)
 		++streamsActive;
 	else if (!vb && streamsActive)
 	{
-		if (streamBinds[StreamNumber].buffer)
+		if (streamBinds.vertex[StreamNumber].buffer)
 			--streamsActive;
 	}
 }
 
 d912pxy_vstream* d912pxy_iframe::GetIBuf()
 {
-	return indexBind;
+	return streamBinds.index;
 }
 
 d912pxy_device_streamsrc d912pxy_iframe::GetStreamSource(UINT StreamNumber)
 {
-	return streamBinds[StreamNumber];
+	return streamBinds.vertex[StreamNumber];
 }
 
 
@@ -192,12 +190,12 @@ void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexI
 	{
 		for (int i = 0; i != streamsActive; ++i)
 		{
-			if (streamBinds[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
+			if (streamBinds.vertex[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
 			{
-				instanceCount = 0x3FFFFFFF & streamBinds[i].divider;
+				instanceCount = 0x3FFFFFFF & streamBinds.vertex[i].divider;
 			}
 
-			if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
+			if (streamBinds.vertex[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
 			{
 				instancedModMask |= 1 << i;
 				batchDF |= 8;
@@ -258,15 +256,15 @@ void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertex
 			if (!(usedStreams & (1 << i)))
 				continue;
 
-			if (!streamBinds[i].buffer)
+			if (!streamBinds.vertex[i].buffer)
 				continue;
 
-			if (streamBinds[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
+			if (streamBinds.vertex[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
 			{
-				instanceCount = 0x3FFFFFFF & streamBinds[i].divider;
+				instanceCount = 0x3FFFFFFF & streamBinds.vertex[i].divider;
 			}
 
-			if (streamBinds[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
+			if (streamBinds.vertex[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
 			{
 				instancedModMask |= 1 << i;
 				batchDF |= 8;
@@ -523,27 +521,10 @@ void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
 
 void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 {
-	d912pxy_vstream* indTransfer = indexBind;
-
 	D3D12_VIEWPORT transVW = main_viewport;
 	D3D12_RECT transSR = main_scissor;
 
 	DWORD transSRef = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
-
-	if (indexBind)
-		indexBind->ThreadRef(1);
-
-	d912pxy_device_streamsrc vstreamTransfer[PXY_INNER_MAX_VBUF_STREAMS];
-	UINT savedActiveStreams = streamsActive;
-
-	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
-	{
-		if (streamBinds[i].buffer)
-		{
-			streamBinds[i].buffer->ThreadRef(1);			
-		}
-		vstreamTransfer[i] = streamBinds[i];
-	}
 
 	d912pxy_surface* refSurf[2];
 
@@ -553,6 +534,8 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 		if (refSurf[i])
 			refSurf[i]->ThreadRef(1);
 	}
+
+	StreamBindsHolder savedStreamBinds;
 		
 	End();
 	if (fullFlush)
@@ -568,24 +551,6 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 
 		if (refSurf[i])
 			refSurf[i]->ThreadRef(-1);
-	}
-
-	//megai2: rebind buffers too as commitdraw is optimized out for buffer bindings
-	if (indTransfer)
-	{
-		SetIBuf(indTransfer);
-		indTransfer->ThreadRef(-1);
-	}
-
-	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
-	{
-		if (vstreamTransfer[i].buffer)
-		{
-			SetVBuf(vstreamTransfer[i].buffer, i, vstreamTransfer[i].offset, vstreamTransfer[i].stride);			
-			vstreamTransfer[i].buffer->ThreadRef(-1);
-		}
-
-		SetStreamFreq(i, vstreamTransfer[i].divider);
 	}
 
 	//megai2: rebind scissor 
@@ -755,4 +720,44 @@ void d912pxy_iframe::InitRootSignature()
 	rootSignatureDesc.pStaticSamplers = &staticPCF;
 
 	mRootSignature = d912pxy_s.dev.ConstructRootSignature(&rootSignatureDesc);
+}
+
+d912pxy_iframe::StreamBindsHolder::StreamBindsHolder() 
+	: iframe(d912pxy_s.render.iframe)
+{
+	data = iframe.streamBinds;
+
+	if (data.index)
+		data.index->ThreadRef(1);
+
+	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
+	{
+		auto& vbsEl = data.vertex[i];
+		if (vbsEl.buffer)
+		{
+			vbsEl.buffer->ThreadRef(1);
+		}		
+	}
+}
+
+d912pxy_iframe::StreamBindsHolder::~StreamBindsHolder()
+{	
+	if (data.index)
+	{
+		iframe.SetIBuf(data.index);
+		data.index->ThreadRef(-1);
+	}
+
+	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
+	{
+		auto& vbsEl = data.vertex[i];
+		if (vbsEl.buffer)
+		{
+			iframe.SetVBuf(vbsEl.buffer, i, vbsEl.offset, vbsEl.stride);
+			vbsEl.buffer->ThreadRef(-1);
+		}
+
+		iframe.SetStreamFreq(i, vbsEl.divider);
+	}
+
 }

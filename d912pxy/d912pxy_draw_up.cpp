@@ -221,42 +221,4 @@ void d912pxy_draw_up::AllocateBuffer(d912pxy_draw_up_buffer_name bid, UINT len)
 	buf[bid].vstream = d912pxy_s.pool.vstream.GetVStreamObject(len, nFmt, nIB);
 }
 
-void d912pxy_draw_up::PushVSBinds()
-{
-	oi = d912pxy_s.render.iframe.GetIBuf();
-	oss = d912pxy_s.render.iframe.GetStreamSource(0);
-	ossi = d912pxy_s.render.iframe.GetStreamSource(1);
-
-	if (oi)
-		oi->ThreadRef(1);
-
-	if (oss.buffer)
-		oss.buffer->ThreadRef(1);
-
-	if (ossi.buffer)
-		ossi.buffer->ThreadRef(1);
-
-	d912pxy_s.render.iframe.SetVBuf(0, 1, 0, 0);
-	d912pxy_s.render.iframe.SetStreamFreq(0, 1);
-	d912pxy_s.render.iframe.SetStreamFreq(1, 0);
-}
-
-void d912pxy_draw_up::PopVSBinds()
-{
-	d912pxy_s.render.iframe.SetIBuf(oi);
-	d912pxy_s.render.iframe.SetVBuf(oss.buffer, 0, oss.offset, oss.stride);
-	d912pxy_s.render.iframe.SetVBuf(ossi.buffer, 1, ossi.offset, ossi.stride);
-	d912pxy_s.render.iframe.SetStreamFreq(0, oss.divider);
-	d912pxy_s.render.iframe.SetStreamFreq(1, ossi.divider);
-
-	if (oi)
-		oi->ThreadRef(-1);
-
-	if (oss.buffer)
-		oss.buffer->ThreadRef(-1);
-
-	if (ossi.buffer)
-		ossi.buffer->ThreadRef(-1);
-}
-
 #undef API_OVERHEAD_TRACK_LOCAL_ID_DEFINE 
