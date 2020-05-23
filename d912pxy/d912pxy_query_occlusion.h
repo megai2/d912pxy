@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -45,13 +45,10 @@ public:
 
 	void ForceClose();
 
-
 	static UINT InitOccQueryEmulation();
 	static void FreePendingQueryObjects();
 	static void DeInitOccQueryEmulation();	
 	static UINT32 bufferedReadback;
-
-
 
 private:
 	d912pxy_query_occlusion(D3DQUERYTYPE Type);
@@ -63,4 +60,3 @@ private:
 	UINT32 frameIdx;
 	UINT32 queryOpened;
 };
-
