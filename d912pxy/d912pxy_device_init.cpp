@@ -311,7 +311,7 @@ void d912pxy_device::InitDrawUPBuffers()
 {
 	d912pxy_s.render.draw_up.Init();
 
-	m_clearEmul = new d912pxy_surface_clear(this);
+	m_emulatedSurfaceOps = new d912pxy_surface_ops(this);
 }
 
 void d912pxy_device::InitDescriptorHeaps()

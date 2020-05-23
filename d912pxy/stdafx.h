@@ -141,7 +141,7 @@ SOFTWARE.
 #include "d912pxy_replay_thread.h"
 #include "d912pxy_replay.h"
 #include "d912pxy_draw_up.h"
-#include "d912pxy_surface_clear.h"
+#include "d912pxy_surface_ops.h"
 #include "d912pxy_extras.h"
 #include "d912pxy_device.h"
 #include "d912pxy_instance.h"

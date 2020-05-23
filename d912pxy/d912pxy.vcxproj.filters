@@ -203,9 +203,6 @@
     <ClCompile Include="d912pxy_draw_up.cpp">
       <Filter>d3d9_impl\device\emulated</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_surface_clear.cpp">
-      <Filter>d3d9_impl\device\emulated</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_device_surface.cpp">
       <Filter>d3d9_impl\device</Filter>
     </ClCompile>
@@ -328,6 +325,9 @@
     </ClCompile>
     <ClCompile Include="d912pxy_pso_db.cpp">
       <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClCompile>
+    <ClCompile Include="d912pxy_surface_ops.cpp">
+      <Filter>d3d9_impl\device\emulated</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -510,9 +510,6 @@
     <ClInclude Include="d912pxy_draw_up.h">
       <Filter>d3d9_impl\device\emulated</Filter>
     </ClInclude>
-    <ClInclude Include="d912pxy_surface_clear.h">
-      <Filter>d3d9_impl\device\emulated</Filter>
-    </ClInclude>
     <ClInclude Include="d912pxy_query.h">
       <Filter>d3d9_impl\query</Filter>
     </ClInclude>
@@ -632,6 +629,9 @@
     </ClInclude>
     <ClInclude Include="d912pxy_pso_item.h">
       <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_surface_ops.h">
+      <Filter>d3d9_impl\device\emulated</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

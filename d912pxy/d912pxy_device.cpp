@@ -146,7 +146,7 @@ void d912pxy_device::FreeAdditionalDX9Objects()
 	d912pxy_query_occlusion::DeInitOccQueryEmulation();
 
 	d912pxy_s.render.draw_up.UnInit();
-	delete m_clearEmul;
+	delete m_emulatedSurfaceOps;
 
 	mNullTexture->Release();
 }

@@ -110,7 +110,7 @@ HRESULT d912pxy_device::StretchRect(IDirect3DSurface9* pSourceSurface, CONST REC
 
 HRESULT d912pxy_device::Clear_Emulated(DWORD Count, const D3DRECT * pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
-	m_clearEmul->Clear(Count, pRects, Flags, Color, Z, Stencil);
+	m_emulatedSurfaceOps->Clear(Count, pRects, Flags, Color, Z, Stencil);
 	
 	return D3D_OK;
 }

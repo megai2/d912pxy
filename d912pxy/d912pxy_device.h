@@ -394,7 +394,7 @@ private:
 	ID3D12Device* m_d12evice_ptr;
 	
 	
-	d912pxy_surface_clear* m_clearEmul;
+	d912pxy_surface_ops* m_emulatedSurfaceOps;
 
 	d912pxy_dheap* m_dheaps[PXY_INNER_MAX_DSC_HEAPS];
 	

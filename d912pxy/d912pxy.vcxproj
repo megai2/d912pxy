@@ -495,7 +495,7 @@
     <ClInclude Include="d912pxy_shader_replacer.h" />
     <ClInclude Include="d912pxy_stackwalker.h" />
     <ClInclude Include="d912pxy_surface.h" />
-    <ClInclude Include="d912pxy_surface_clear.h" />
+    <ClInclude Include="d912pxy_surface_ops.h" />
     <ClInclude Include="d912pxy_surface_layer.h" />
     <ClInclude Include="d912pxy_surface_pool.h" />
     <ClInclude Include="d912pxy_swapchain.h" />
@@ -609,7 +609,7 @@
     <ClCompile Include="d912pxy_shader_replacer.cpp" />
     <ClCompile Include="d912pxy_stackwalker.cpp" />
     <ClCompile Include="d912pxy_surface.cpp" />
-    <ClCompile Include="d912pxy_surface_clear.cpp" />
+    <ClCompile Include="d912pxy_surface_ops.cpp" />
     <ClCompile Include="d912pxy_surface_layer.cpp" />
     <ClCompile Include="d912pxy_surface_pool.cpp" />
     <ClCompile Include="d912pxy_swapchain.cpp" />

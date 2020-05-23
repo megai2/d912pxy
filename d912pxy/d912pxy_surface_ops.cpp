@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_surface_clear::d912pxy_surface_clear(d912pxy_device * dev) : d912pxy_noncom( L"surface_clear")
+d912pxy_surface_ops::d912pxy_surface_ops(d912pxy_device * dev) : d912pxy_noncom( L"surface_ops")
 {
 	ps = d912pxy_shader::d912pxy_shader_com(0, 0, 0x5);
 	vs = d912pxy_shader::d912pxy_shader_com(1, 0, 0x4);
@@ -64,7 +64,7 @@ d912pxy_surface_clear::d912pxy_surface_clear(d912pxy_device * dev) : d912pxy_non
 	vdcl = d912pxy_vdecl::d912pxy_vdecl_com(vDclElements);
 }
 
-d912pxy_surface_clear::~d912pxy_surface_clear()
+d912pxy_surface_ops::~d912pxy_surface_ops()
 {
 	vBuf->Release();
 	iBuf->Release();
@@ -78,7 +78,7 @@ d912pxy_surface_clear::~d912pxy_surface_clear()
 	vdcl->Release();
 }
 
-void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
+void d912pxy_surface_ops::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
 	//TODO obsolete, remove
 
@@ -154,7 +154,7 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 			((Color >> 24) & 0xFF) / 255.0f
 		};
 
-		d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLEAR_COLOR, 1, fvColor);
+		d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_ops_COLOR, 1, fvColor);
 	}
 
 	float fvZVal[4] = {
@@ -172,7 +172,7 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 		fvZVal[2] = cuVWP->Height;
 	}
 
-	d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLEAR_ZWH, 1, fvZVal);
+	d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_ops_ZWH, 1, fvZVal);
 
 	//do iterated clear for each rect specified or use viewport rect
 
@@ -212,16 +212,16 @@ void d912pxy_surface_clear::Clear(DWORD Count, const D3DRECT * pRects, DWORD Fla
 
 }
 
-void d912pxy_surface_clear::ClearIter(D3DRECT * pRect)
+void d912pxy_surface_ops::ClearIter(D3DRECT * pRect)
 {
-	float fvRect[4] = {
+	/*float fvRect[4] = {
 		(float)pRect->x1,
 		(float)pRect->y1,
 		(float)pRect->x2,
 		(float)pRect->y2
 	};
 
-	d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_CLEAR_RECT, 1, fvRect);
+	d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_ops_RECT, 1, fvRect);
 
-	PXY_COM_CAST_(IDirect3DDevice9, &d912pxy_s.dev)->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
+	PXY_COM_CAST_(IDirect3DDevice9, &d912pxy_s.dev)->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);*/
 }
