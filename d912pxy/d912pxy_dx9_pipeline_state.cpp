@@ -283,6 +283,11 @@ d912pxy_trimmed_pso_desc d912pxy_dx9_pipeline_state::GetCurrentDesc()
 	return psoDesc;
 }
 
+void d912pxy_dx9_pipeline_state::SetCurrentDesc(d912pxy_trimmed_pso_desc& dsc)
+{
+	psoDesc = dsc;
+}
+
 DWORD d912pxy_dx9_pipeline_state::GetDX9RsValue(D3DRENDERSTATETYPE State)
 {
 	switch (State)

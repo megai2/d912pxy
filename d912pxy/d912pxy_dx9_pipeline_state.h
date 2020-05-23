@@ -62,6 +62,7 @@ public:
 
 	d912pxy_pso_item* GetCurrentCPSO();
 	d912pxy_trimmed_pso_desc GetCurrentDesc();
+	void SetCurrentDesc(d912pxy_trimmed_pso_desc& dsc);
 
 	DWORD GetDX9RsValue(D3DRENDERSTATETYPE State);
 

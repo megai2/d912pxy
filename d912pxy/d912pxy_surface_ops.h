@@ -32,12 +32,33 @@ public:
 	~d912pxy_surface_ops();
 
 	void Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
-
 	void ClearIter(D3DRECT* pRect);
+	void StretchRect(d912pxy_surface* pSourceSurface, d912pxy_surface* pDestSurface);
 
 private:
-	d912pxy_shader* vs;
-	d912pxy_shader* ps;
+	class SavedIFrameState
+	{
+	public:
+		SavedIFrameState();
+		~SavedIFrameState();
+
+	private:
+		d912pxy_iframe::StreamBindsHolder streamBinds;
+		d912pxy_trimmed_pso_desc psoDsc;
+		d912pxy_vdecl* vdecl;
+		D3D12_VIEWPORT viewport;
+	};
+
+	enum shaderSet {
+		SHSET_CLEAR,
+		SHSET_STRETCH,
+		SHSET_COUNT
+	};
+
+	void SetCommonState(shaderSet idx);
+
+	d912pxy_shader* vs[SHSET_COUNT];
+	d912pxy_shader* ps[SHSET_COUNT];
 	d912pxy_vdecl* vdcl;
 
 	d912pxy_vstream* vBuf;
