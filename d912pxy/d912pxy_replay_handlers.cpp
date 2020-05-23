@@ -166,29 +166,13 @@ RHA_DECL(rect_copy, void* unused)
 	d912pxy_surface* sSrc = it->src;
 	d912pxy_surface* sDst = it->dst;
 
-	D3DSURFACE_DESC dSrc, dDst;
+	if (!sSrc->GetD12Obj())
+		sSrc->ConstructResource();
 
-	dSrc = sSrc->GetDX9DescAtLevel(0);
-	dDst = sDst->GetDX9DescAtLevel(0);
+	if (!sDst->GetD12Obj())
+		sDst->ConstructResource();
 
-	if (
-		(dSrc.Height == dDst.Height) &&
-		(dSrc.Width == dDst.Width) &&
-		(dSrc.Format == dDst.Format)
-		)
-	{
-		if (!sSrc->GetD12Obj())
-			sSrc->ConstructResource();
-
-		if (!sDst->GetD12Obj())
-			sDst->ConstructResource();
-
-		sSrc->BCopyToWStates(sDst, 0x3, cl, it->prevD, it->prevS);
-	}
-	else {
-		//megai2: TODO allow non similar texture copy via custom pass
-		LOG_DBG_DTDM3("rha rect with different textures");
-	}
+	sSrc->BCopyToWStates(sDst, 0x3, cl, it->prevD, it->prevS);	
 }
 
 RHA_DECL(gpu_write_ctl, d912pxy_replay_thread_context* context)

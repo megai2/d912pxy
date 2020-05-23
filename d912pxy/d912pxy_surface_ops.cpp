@@ -27,10 +27,10 @@ SOFTWARE.
 d912pxy_surface_ops::d912pxy_surface_ops(d912pxy_device * dev) : d912pxy_noncom( L"surface_ops")
 {
 	//TODO: write shaders
-	ps[SHSET_CLEAR] = d912pxy_shader::d912pxy_shader_com(0, 0, 0x5);
-	ps[SHSET_STRETCH] = d912pxy_shader::d912pxy_shader_com(0, 0, 0x6);
 	vs[SHSET_CLEAR] = d912pxy_shader::d912pxy_shader_com(1, 0, 0x4);
-	vs[SHSET_STRETCH] = d912pxy_shader::d912pxy_shader_com(1, 0, 0x7);
+	ps[SHSET_CLEAR] = d912pxy_shader::d912pxy_shader_com(0, 0, 0x5);	
+	vs[SHSET_STRETCH] = d912pxy_shader::d912pxy_shader_com(1, 0, 0x6);
+	ps[SHSET_STRETCH] = d912pxy_shader::d912pxy_shader_com(0, 0, 0x7);
 
 	const D3DVERTEXELEMENT9 vDclElements[] = {
 		{0,0,D3DDECLTYPE_FLOAT4,0,D3DDECLUSAGE_POSITION,0},
