@@ -95,7 +95,7 @@ void d912pxy_surface_ops::Clear(DWORD Count, const D3DRECT * pRects, DWORD Flags
 	//set needed things
 	SetCommonState(shaderSet::SHSET_CLEAR);
 
-	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_COLORWRITEENABLE, Flags & D3DCLEAR_TARGET ? 0xF : 0);
+	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_COLORWRITEENABLE, (Flags & D3DCLEAR_TARGET) ? 0xF : 0);
 
 	if (Flags & D3DCLEAR_ZBUFFER)
 	{
@@ -199,7 +199,7 @@ void d912pxy_surface_ops::StretchRect(d912pxy_surface* pSourceSurface, d912pxy_s
 		pDestSurface : 
 		d912pxy_s.pool.rtds.GetSurface(dDst.Width, dDst.Height, dDst.Format, 1, 1, D3DUSAGE_RENDERTARGET, nullptr); 	
 
-	D3D12_VIEWPORT wvp{ 0,0, dDst.Width, dDst.Height, 0, 1 };
+	D3D12_VIEWPORT wvp{ 0,0, (float)dDst.Width, (float)dDst.Height, 0, 1 };
 	d912pxy_s.render.iframe.SetViewport(&wvp);
 	d912pxy_s.render.state.tex.SetTexture(0, pSourceSurface->GetSRVHeapId());
 	d912pxy_s.render.iframe.BindSurface(1, targetRT);
@@ -238,12 +238,12 @@ void d912pxy_surface_ops::SetCommonState(shaderSet idx)
 	d912pxy_s.render.state.pso.SetDX9RS(D3DRS_STENCILENABLE, 0);
 }
 
-d912pxy_surface_ops::SavedIFrameState::SavedIFrameState()	
-{
-	viewport = *d912pxy_s.render.iframe.GetViewport();
-	psoDsc = d912pxy_s.render.state.pso.GetCurrentDesc();	
-	vdecl = d912pxy_s.render.state.pso.GetIAFormat();
-	restoreScissor = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
+d912pxy_surface_ops::SavedIFrameState::SavedIFrameState() :
+	viewport(*d912pxy_s.render.iframe.GetViewport()),
+	psoDsc(d912pxy_s.render.state.pso.GetCurrentDesc()),
+	vdecl(d912pxy_s.render.state.pso.GetIAFormat()),
+	restoreScissor(d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE))
+{			
 }
 
 d912pxy_surface_ops::SavedIFrameState::~SavedIFrameState()
