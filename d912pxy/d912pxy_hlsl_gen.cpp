@@ -494,14 +494,22 @@ void d912pxy_hlsl_generator::RegDefine(d912pxy_dxbc9::token_register* reg, bool 
 	}
 	case D3DSPR_COLOROUT:
 	{
-		HLSL_GEN_WRITE_HEADO(0, "	float4 %s%u: SV_TARGET;",
-			GetRegTypeStr(reg->regType, 0),
-			num
-		);
-		HLSL_GEN_WRITE_PROC_PD("#define dx9_ret_color_reg_ac %s%u",
-			GetRegTypeStr(reg->regType, 1),
-			num
-		);
+		if (!num)
+		{
+			HLSL_GEN_WRITE_HEADO(0, "	float4 %s0: SV_TARGET;",
+				GetRegTypeStr(reg->regType, 0)
+			);
+			HLSL_GEN_WRITE_PROC_PD("#define dx9_ret_color_reg_ac %s0",
+				GetRegTypeStr(reg->regType, 1)
+			);
+		}
+		else {
+			HLSL_GEN_WRITE_HEADO(0, "	float4 %s%u: SV_Target%u;",
+				GetRegTypeStr(reg->regType, 0),
+				num,
+				num
+			);
+		}
 		break;
 	}
 	case D3DSPR_TEXCRDOUT:
