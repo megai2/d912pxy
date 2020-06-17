@@ -180,6 +180,7 @@ void d912pxy_config::InitNewValueBuffers()
 	{
 		PXY_MALLOC(data[i].newValue, 255, char*);
 	}
+	ValueToNewValueBuffers();
 }
 
 void d912pxy_config::UnInitNewValueBuffers()

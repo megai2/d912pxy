@@ -49,6 +49,7 @@ private:
 	void DrawOverlay();
 	void DrawMainWindow();
 	void DrawConfigEditor();
+	void DrawFirstInstallMessage();
 
 	//Overlay Window Auto-Setup
 	bool* GetOverlayWindowCloseable(bool* WindowRenderBool);
@@ -92,6 +93,7 @@ private:
 	//Config Editor
 	bool bEnableConfigEditor;
 	bool bShowConfigEditorRestartMsg;
+	bool bShowFirstInstallMessage;
 
 	//overlay toggle controls
 	enum overlayShowModeValues {

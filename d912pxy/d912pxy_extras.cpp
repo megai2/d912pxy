@@ -29,7 +29,8 @@ d912pxy_extras::d912pxy_extras() :
 	hkDetected(false),
 	gameActive(true),
 	bShowMainWindow(false),
-	bShowConfigEditor(false)
+	bShowConfigEditor(false),
+	bShowFirstInstallMessage(false)
 {
 	
 }
@@ -73,16 +74,13 @@ void d912pxy_extras::Init()
 	bShowTimings = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_TIMINGS);
 	bShowPSOCompileQue = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_PSO_COMPILE_QUE);
 	bShowGCQue = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_SHOW_GC_QUE);
-	bEnableConfigEditor = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR);
-
+	bShowFirstInstallMessage = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_FIRST_INSTALL_MESSAGE);
+	bEnableConfigEditor = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR) | bShowFirstInstallMessage;
 
 	hkVKeyCode = d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY);
-
-	if (bEnableConfigEditor)
-	{
+	
+	if (bEnableConfigEditor)	
 		d912pxy_s.config.InitNewValueBuffers();
-		d912pxy_s.config.ValueToNewValueBuffers();
-	}
 
 	//Check if overlay window should be visible on launch based on active config values
 	for (int configIndex = PXY_CFG_EXTRAS_ENABLE; configIndex != PXY_CFG_CNT; ++configIndex)
@@ -351,6 +349,42 @@ void d912pxy_extras::DrawConfigEditor()
 	ImGui::End();
 }
 
+void d912pxy_extras::DrawFirstInstallMessage()
+{
+	ImGui::Begin("[PH] This is your first/clean installation of d912pxy");
+	
+	ImGui::Text("[PH] Congratulations! As you see this text - d912pxy is installed and running properly!");	
+	ImGui::Text("[PH] d912pxy will build necessary data ONE time in background every time you see new scene, expect texture&object pop-ins");
+	ImGui::Text("[PH] Make sure you use latest graphics drivers, windowed-fullscreen, compatible 3-rd party addons and safe overclocking profiles");
+	ImGui::Text("[PH] Ctrl+Alt+N toggles this overlay mode between hide/show/edit");
+
+	int buttonPressed = ImGui::Button("Okay & hide this all") ? 1 : 0;
+
+	ImGui::SameLine();
+	buttonPressed |= ImGui::Button("Let me hack around please!") ? 2 : 0;
+
+	if (buttonPressed)
+	{		
+		strcpy(d912pxy_s.config.GetEntryRaw(PXY_CFG_EXTRAS_FIRST_INSTALL_MESSAGE)->newValue, "0");
+
+		if ((buttonPressed & 2) == 0)
+		{
+			strcpy(d912pxy_s.config.GetEntryRaw(PXY_CFG_EXTRAS_ENABLE)->newValue, "0");
+			overlayShowMode = eoverlay_hide;
+		}
+		else {
+			bShowConfigEditor = true;
+			overlayShowMode = eoverlay_edit;
+		}
+
+		d912pxy_s.config.SaveConfig();
+
+		bShowFirstInstallMessage = false;
+	}
+
+	ImGui::End();
+}
+
 void d912pxy_extras::DrawMainWindow()
 {
 	ImGui::Begin(BUILD_VERSION_NAME, GetOverlayWindowCloseable(), GetOverlayWindowFlags());
@@ -398,6 +432,9 @@ void d912pxy_extras::DrawOverlay()
 
 	if (bShowConfigEditor)
 		DrawConfigEditor();
+
+	if (bShowFirstInstallMessage)
+		DrawFirstInstallMessage();
 
 	ImGUI_Render_End();
 
