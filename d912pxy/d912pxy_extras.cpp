@@ -351,12 +351,14 @@ void d912pxy_extras::DrawConfigEditor()
 
 void d912pxy_extras::DrawFirstInstallMessage()
 {
-	ImGui::Begin("[PH] This is your first/clean installation of d912pxy");
+	ImGui::Begin("This is your first/clean installation of d912pxy");
 	
-	ImGui::Text("[PH] Congratulations! As you see this text - d912pxy is installed and running properly!");	
-	ImGui::Text("[PH] d912pxy will build necessary data ONE time in background every time you see new scene, expect texture&object pop-ins");
-	ImGui::Text("[PH] Make sure you use latest graphics drivers, windowed-fullscreen, compatible 3-rd party addons and safe overclocking profiles");
-	ImGui::Text("[PH] Ctrl+Alt+N toggles this overlay mode between hide/show/edit");
+	ImGui::Text("Congratulations! d912pxy is installed and running properly!");	
+	ImGui::Text("Expect heavy texture&object pop-ins as d912pxy will build necessary data each time you see a new game element for the first time");
+	ImGui::Text("When all necessary data is built, the amount of texture&object pop-ins will gradually decrease");
+	ImGui::Text("Ensure your GPU Driver is fully up-to-date or you may experience unexpected problems, this is very important.");
+	ImGui::Text("You must use Windowed-fullscreen mode; you may use compatible 3rd party addons and safe GPU overclocking profiles");
+	ImGui::Text("Ctrl+Alt+N toggles this overlay mode between hide/show/edit");
 
 	int buttonPressed = ImGui::Button("Okay & hide this all") ? 1 : 0;
 
