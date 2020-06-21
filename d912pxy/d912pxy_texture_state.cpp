@@ -116,7 +116,7 @@ void d912pxy_texture_state::ModSampler(UINT stage, D3DSAMPLERSTATETYPE state, DW
 		cDesc->MinLOD = (UINT16)value;
 		break;
 	case D3DSAMP_MIPMAPLODBIAS:		
-		cDesc->MipLODBias = (UINT16)value;
+		cDesc->MipLODBias = (INT16)value;
 		break;
 	case D3DSAMP_SRGBTEXTURE:
 	    ModStageBit(30, stage, value);
@@ -273,7 +273,7 @@ void d912pxy_texture_state::UpdateFullSplDsc(UINT from)
 		splDsc.BorderColor[i] = bTmp;
 	}*/
 
-	splDsc.MipLODBias = trimmedSpl[from].MipLODBias;
+	splDsc.MipLODBias = max(D3D12_MIP_LOD_BIAS_MIN, min(D3D12_MIP_LOD_BIAS_MAX, trimmedSpl[from].MipLODBias));
 	splDsc.MinLOD = trimmedSpl[from].MinLOD;
 }
 

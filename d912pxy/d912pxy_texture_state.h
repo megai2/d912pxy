@@ -36,7 +36,7 @@ typedef struct d912pxy_device_texture_state {
 typedef struct d912pxy_trimmed_sampler_dsc {
 	UINT16 Dsc0;
 	UINT16 Dsc1;
-	UINT16 MipLODBias;
+	INT16 MipLODBias;
 	UINT16 MinLOD;	
 	//UINT32 borderColor;
 } d912pxy_trimmed_sampler_dsc;
