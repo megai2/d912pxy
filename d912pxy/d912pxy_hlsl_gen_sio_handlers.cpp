@@ -283,6 +283,22 @@ void d912pxy_hlsl_generator::ProcSIO_TEXKILL(d912pxy_dxbc9::token* op)
 
 void d912pxy_hlsl_generator::ProcSIO_IF(d912pxy_dxbc9::token* op)
 {
+	OverrideWriteMask(0x1);
+	d912pxy_hlsl_generator_regtext boolOp = FormatRegister(0, 0, 0);
+	OverrideWriteMask(0);
+
+	HLSL_GEN_WRITE_PROC(" ");
+	HLSL_GEN_WRITE_PROC("if (%s)",
+		boolOp.t		
+	);
+	HLSL_GEN_WRITE_PROC("{");
+	HLSL_GEN_WRITE_PROC(" ");
+	++procIdent;
+}
+
+
+void d912pxy_hlsl_generator::ProcSIO_IFC(d912pxy_dxbc9::token* op)
+{
 	UINT64 cmpStr = code.Current()->ins.formatCmpString();
 
 	OverrideWriteMask(0x1);

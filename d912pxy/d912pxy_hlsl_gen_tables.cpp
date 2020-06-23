@@ -244,7 +244,8 @@ void d912pxy_hlsl_generator::FillHandlers()
 	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
 	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
 	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
-	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_IF] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IFC;
 	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
 	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
 	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
@@ -285,7 +286,8 @@ void d912pxy_hlsl_generator::FillHandlers()
 	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
 	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
 	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
-	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_IF] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IFC;
 	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
 	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
 	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;
@@ -328,7 +330,8 @@ void d912pxy_hlsl_generator::FillHandlers()
 	SIOhandlers[__SIOtOF + D3DSIO_EXP] = &d912pxy_hlsl_generator::ProcSIO_EXP;
 	SIOhandlers[__SIOtOF + D3DSIO_EXPP] = &d912pxy_hlsl_generator::ProcSIO_EXPP;
 	SIOhandlers[__SIOtOF + D3DSIO_TEXKILL] = &d912pxy_hlsl_generator::ProcSIO_TEXKILL;
-	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_IF] = &d912pxy_hlsl_generator::ProcSIO_IF;
+	SIOhandlers[__SIOtOF + D3DSIO_IFC] = &d912pxy_hlsl_generator::ProcSIO_IFC;
 	SIOhandlers[__SIOtOF + D3DSIO_ELSE] = &d912pxy_hlsl_generator::ProcSIO_ELSE;
 	SIOhandlers[__SIOtOF + D3DSIO_ENDIF] = &d912pxy_hlsl_generator::ProcSIO_ENDIF;
 	SIOhandlers[__SIOtOF + D3DSIO_BREAKC] = &d912pxy_hlsl_generator::ProcSIO_BREAK;

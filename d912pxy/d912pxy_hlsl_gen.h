@@ -158,6 +158,7 @@ private:
 	void ProcSIO_EXPP(d912pxy_dxbc9::token* op);
 	void ProcSIO_TEXKILL(d912pxy_dxbc9::token* op);
 	void ProcSIO_IF(d912pxy_dxbc9::token* op);
+	void ProcSIO_IFC(d912pxy_dxbc9::token* op);
 	void ProcSIO_ELSE(d912pxy_dxbc9::token* op);
 	void ProcSIO_ENDIF(d912pxy_dxbc9::token* op);
 	void ProcSIO_BREAK(d912pxy_dxbc9::token* op);
