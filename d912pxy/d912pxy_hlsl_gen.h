@@ -191,6 +191,7 @@ private:
 	//extra conditional flags
 	UINT8 PSpositionUsed;
 	UINT8 relLookupDefined;
+	UINT16 relLookupGroup;
 	UINT8 isDepthOutUsed;
 
 	//write mask override

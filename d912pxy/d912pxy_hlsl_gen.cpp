@@ -52,6 +52,7 @@ d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * 
 	ZeroMemory(regDefined, 8 * ((D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN));
 	ZeroMemory(regDefinedAsC, 8 * ((D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN));
 	relLookupDefined = 0;
+	relLookupGroup = 0;
 	isDepthOutUsed = 0;
 	writeMaskOverride = 0;
 }
@@ -184,6 +185,13 @@ d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRelativeSrcRegister
 	if (RegIsDefined(reg, 0) == 2)
 	{
 		UINT baseRelNum = reg->regNum;
+
+		if (relLookupDefined != baseRelNum)
+		{			
+			relLookupDefined = 0;
+			++relLookupGroup;
+		}
+
 		if (!relLookupDefined)
 		{
 			UINT relArrSz = 0;
@@ -195,7 +203,7 @@ d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRelativeSrcRegister
 					break;//megai2: stop on first fail for now
 			}
 
-			HLSL_GEN_WRITE_PROC("float4 reg_consts_rel[%u] = { ", relArrSz);
+			HLSL_GEN_WRITE_PROC("float4 reg_consts_rel%u[%u] = { ", relLookupGroup, relArrSz);
 
 			for (int i = 0; i != relArrSz; ++i)
 			{
@@ -208,11 +216,9 @@ d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRelativeSrcRegister
 			relLookupDefined = baseRelNum;
 		}
 
-		if (relLookupDefined != baseRelNum)
-			LOG_ERR_THROW2(-1, "reg_consts_rel go wrong 1");
-
 		//c23[a0.x].swizzle => getPassedVSFv(23 + a0.x).swizzle
-		sprintf(ret.t, "reg_consts_rel[%s%u%s]%s",
+		sprintf(ret.t, "reg_consts_rel%u[%s%u%s]%s",
+			relLookupGroup,
 			GetRegTypeStr(adrReg->regType, 1),
 			adrReg->regNum,
 			(char*)&adrComponent,
