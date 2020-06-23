@@ -162,12 +162,14 @@ private:
 	void ProcSIO_ENDIF(d912pxy_dxbc9::token* op);
 	void ProcSIO_BREAK(d912pxy_dxbc9::token* op);
 	void ProcSIO_LRP(d912pxy_dxbc9::token* op);
-	void ProcSIO_SLT(d912pxy_dxbc9::token* op);
+	void ProcSIO_SLT(d912pxy_dxbc9::token* op);	
 	void ProcSIO_ABS(d912pxy_dxbc9::token* op);
 	void ProcSIO_SGE(d912pxy_dxbc9::token* op);
 	void ProcSIO_SGN(d912pxy_dxbc9::token* op);
 	void ProcSIO_SINCOS(d912pxy_dxbc9::token* op);
 	void ProcSIO_ADD(d912pxy_dxbc9::token* op);
+	void ProcSIO_DSX(d912pxy_dxbc9::token* op);
+	void ProcSIO_DSY(d912pxy_dxbc9::token* op);
 
 	//generic sio handlers
 	void ProcSIO_DOTX(d912pxy_dxbc9::token * op, UINT sz);

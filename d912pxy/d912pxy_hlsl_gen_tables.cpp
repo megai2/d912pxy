@@ -296,7 +296,8 @@ void d912pxy_hlsl_generator::FillHandlers()
 	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
 	SIOhandlers[__SIOtOF + D3DSIO_SGN] = &d912pxy_hlsl_generator::ProcSIO_SGN;
 	SIOhandlers[__SIOtOF + D3DSIO_SINCOS] = &d912pxy_hlsl_generator::ProcSIO_SINCOS;
-
+	SIOhandlers[__SIOtOF + D3DSIO_DSX] = &d912pxy_hlsl_generator::ProcSIO_DSX;
+	SIOhandlers[__SIOtOF + D3DSIO_DSY] = &d912pxy_hlsl_generator::ProcSIO_DSY;
 #undef __SIOtOF
 
 	//sm 3_0
@@ -338,5 +339,7 @@ void d912pxy_hlsl_generator::FillHandlers()
 	SIOhandlers[__SIOtOF + D3DSIO_SGE] = &d912pxy_hlsl_generator::ProcSIO_SGE;
 	SIOhandlers[__SIOtOF + D3DSIO_SGN] = &d912pxy_hlsl_generator::ProcSIO_SGN;
 	SIOhandlers[__SIOtOF + D3DSIO_SINCOS] = &d912pxy_hlsl_generator::ProcSIO_SINCOS;
+	SIOhandlers[__SIOtOF + D3DSIO_DSX] = &d912pxy_hlsl_generator::ProcSIO_DSX;
+	SIOhandlers[__SIOtOF + D3DSIO_DSY] = &d912pxy_hlsl_generator::ProcSIO_DSY;
 #undef __SIOtOF
 }

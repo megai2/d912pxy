@@ -343,6 +343,16 @@ void d912pxy_hlsl_generator::ProcSIO_LRP(d912pxy_dxbc9::token* op)
 	);
 }
 
+void d912pxy_hlsl_generator::ProcSIO_DSX(d912pxy_dxbc9::token* op)
+{
+	ProcSIO_1OP(op, "ddx(", ")");	
+}
+
+void d912pxy_hlsl_generator::ProcSIO_DSY(d912pxy_dxbc9::token* op)
+{
+	ProcSIO_1OP(op, "ddy(", ")");
+}
+
 void d912pxy_hlsl_generator::ProcSIO_SLT(d912pxy_dxbc9::token* op)
 {
 	ProcSIO_2OP(op, "(", " < ", ") ? 1.0f : 0.0f");
