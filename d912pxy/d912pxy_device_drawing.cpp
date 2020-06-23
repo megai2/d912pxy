@@ -44,69 +44,44 @@ HRESULT d912pxy_device::EndScene(void)
 
 HRESULT d912pxy_device::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 { 
-	if (1)
-	{
-		LOG_DBG_DTDM3("DP NON INDEXED SKIPPING");
-		return D3D_OK;
-	}
+	d912pxy_s.render.iframe.CommitBatch(PrimitiveType, -1, 0, 0, StartVertex, PrimitiveCount);
+	return D3D_OK;
+}
+
+HRESULT d912pxy_device::DrawPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
+{
+	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, -1, 0, 0, StartVertex, PrimitiveCount);
+	return D3D_OK;
+}
+
+HRESULT d912pxy_device::DrawPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
+{
+	TrackVSProfile();
+	TrackPSProfile();
+
+	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, -1, 0, 0, StartVertex, PrimitiveCount);
+	return D3D_OK;
 }
 
 HRESULT d912pxy_device::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 { 	
 	d912pxy_s.render.iframe.CommitBatch(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
-
-#ifdef PER_BATCH_FLUSH_DEBUG
-	replayer->Finish();
-
-	iframe->End();
-	mGPUque->Flush(0);
-
-	iframe->Start();
-#endif
-		
 	return D3D_OK;
 }
 
 HRESULT d912pxy_device::DrawIndexedPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
 	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
-
-#ifdef PER_BATCH_FLUSH_DEBUG
-	replayer->Finish();
-
-	iframe->End();
-	mGPUque->Flush(0);
-
-	iframe->Start();
-#endif
-
-	
-
 	return D3D_OK;
 }
 
 
 HRESULT d912pxy_device::DrawIndexedPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
-{
-	
-
-#ifdef PER_BATCH_FLUSH_DEBUG
-	replayer->Finish();
-
-	iframe->End();
-	mGPUque->Flush(0);
-
-	iframe->Start();
-#endif
-
+{	
 	TrackVSProfile();
 	TrackPSProfile();
 
-
 	d912pxy_s.render.iframe.CommitBatch2(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
-
-	
-
 	return D3D_OK;
 }
 

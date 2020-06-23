@@ -47,17 +47,22 @@ public:
 
 	d912pxy_vstream* GetIBuf();
 	d912pxy_device_streamsrc GetStreamSource(UINT StreamNumber);
-		
-	UINT CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType);
+			
 	void CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 	void CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
+	void CommitBatchTailProc(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
+	bool CommitBatchHeadProc(D3DPRIMITIVETYPE PrimitiveType);
+	void ExtractInstanceCount();
+	void ExtractInstanceCountExtra();
+	void ExtractBatchDataFromStream(int stream);
+	UINT CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType);
 
 	void TransitZBufferRW(int write);
 	void BindSurface(UINT index, d912pxy_surface* obj);
 	void ClearBindedSurfaces();
 	d912pxy_surface* GetBindedSurface(UINT index) { return bindedSurfaces[index]; };
 
-	UINT GetInstanceCount() { return instanceCount; };
+	UINT GetInstanceCount() { return batchCommitData.instanceCount; };
 
 	void Start();
 	void End();
@@ -114,6 +119,13 @@ public:
 		d912pxy_iframe& iframe;
 	};
 
+	struct BatchCommitData
+	{
+		UINT batchDF;
+		UINT32 instancedModMask;
+		UINT instanceCount;
+	};
+
 private:	
 	void InitRootSignature();
 
@@ -133,9 +145,9 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE* bindedDSV;
 
 	UINT streamsActive;
-	UINT batchCommisionDF;
-	UINT instanceCount;
+	UINT batchCommisionDF;	
 	D3DPRIMITIVETYPE cuPrimType;
+	BatchCommitData batchCommitData;
 
 	StreamBinds streamBinds;
 

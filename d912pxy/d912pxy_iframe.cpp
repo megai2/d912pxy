@@ -55,7 +55,7 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 
 	batchCommisionDF = 7;
 
-	instanceCount = 0;
+	batchCommitData.instanceCount = 0;
 
 	for (int i = 0; i != PXY_INNER_MAX_DSC_HEAPS; ++i)
 	{
@@ -146,170 +146,6 @@ d912pxy_vstream* d912pxy_iframe::GetIBuf()
 d912pxy_device_streamsrc d912pxy_iframe::GetStreamSource(UINT StreamNumber)
 {
 	return streamBinds.vertex[StreamNumber];
-}
-
-
-UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
-{
-	if (PrimitiveType == D3DPT_TRIANGLEFAN)
-	{
-		LOG_DBG_DTDM3("DP TRIFAN skipping");
-		return 0;
-	}
-
-#ifdef PER_DRAW_FLUSH
-	if (d912pxy_s.render.batch.GetBatchCount() >= 1)
-		StateSafeFlush(0);
-#else
-	if (d912pxy_s.render.batch.GetBatchCount() >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
-	{
-		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
-
-		StateSafeFlush(0);
-	}
-#endif
-
-	return 1;
-}
-
-//megai2: this CommitBatch is made in assumption that app API stream is clean from dx9 intrisic resets / runtime checks / well hid kittens
-void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
-{
-	if (!CommitBatchPreCheck(PrimitiveType))
-		return;
-	
-	UINT32 batchDF = batchCommisionDF;
-	batchCommisionDF = 0;
-	UINT32 instancedModMask = 0;
-	
-	d912pxy_s.render.state.tex.Use();
-
-	//bind vb/ib
-	
-	if (batchDF & 1)
-	{
-		for (int i = 0; i != streamsActive; ++i)
-		{
-			if (streamBinds.vertex[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
-			{
-				instanceCount = 0x3FFFFFFF & streamBinds.vertex[i].divider;
-			}
-
-			if (streamBinds.vertex[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
-			{
-				instancedModMask |= 1 << i;
-				batchDF |= 8;
-			}						
-		}
-	}
-
-	if (batchDF & 8)
-	{
-		d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification(instancedModMask, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-		d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
-	}
-
-	if (batchDF & 4)
-	{
-		ProcessSurfaceBinds(0);
-	}
-
-	d912pxy_s.render.state.pso.Use();
-
-	d912pxy_s.render.replay.DoDIIP(GetIndexCount(primCount,PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
-
-	instanceCount = 1;
-
-	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchCount());
-
-	if (batchDF & 8)
-	{
-		d912pxy_s.render.state.pso.IAFormat(d912pxy_s.render.state.pso.GetIAFormat());
-	}
-}
-
-
-//megai2: this CommitBatch is made in assumption that app API stream is garbadge
-void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
-{
-	if (!CommitBatchPreCheck(PrimitiveType))
-		return;
-
-	UINT32 batchDF = batchCommisionDF;
-	batchCommisionDF = 0;
-	UINT32 instancedModMask = 0;
-
-	d912pxy_s.render.state.tex.Use();
-
-	DWORD usedStreams = 0xFF;
-
-	if (!d912pxy_s.render.state.pso.GetCurrentCPSO())
-	{
-		d912pxy_vdecl* vdecl = d912pxy_s.render.state.pso.GetIAFormat();
-		usedStreams = vdecl->GetUsedStreams();
-	}
-
-	if (batchDF & 1)
-	{
-		for (int i = 0; i != streamsActive; ++i)
-		{
-			if (!(usedStreams & (1 << i)))
-				continue;
-
-			if (!streamBinds.vertex[i].buffer)
-				continue;
-
-			if (streamBinds.vertex[i].divider & D3DSTREAMSOURCE_INDEXEDDATA)
-			{
-				instanceCount = 0x3FFFFFFF & streamBinds.vertex[i].divider;
-			}
-
-			if (streamBinds.vertex[i].divider & D3DSTREAMSOURCE_INSTANCEDATA)
-			{
-				instancedModMask |= 1 << i;
-				batchDF |= 8;
-			}
-		}
-	}
-
-	if (instanceCount > 1)
-	{
-		if ((batchDF & 8) == 0)
-		{
-			instanceCount = 1;
-			batchDF &= ~8;
-		}
-	}
-
-	if (batchDF & 8)
-	{
-		d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification(instancedModMask, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
-		d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
-	}
-
-	if (batchDF & 4)
-	{
-		ProcessSurfaceBinds(0);
-	}
-
-	d912pxy_s.render.state.pso.Use();
-
-	if (PrimitiveType != cuPrimType)
-	{
-		cuPrimType = PrimitiveType;
-		d912pxy_s.render.replay.DoPrimTopo(cuPrimType);
-	}
-
-	d912pxy_s.render.replay.DoDIIP(GetIndexCount(primCount, PrimitiveType), instanceCount, startIndex, BaseVertexIndex, MinVertexIndex, d912pxy_s.render.batch.FinishCurrentDraw());
-
-	instanceCount = 1;
-
-	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchCount());
-
-	if (batchDF & 8)
-	{
-		d912pxy_s.render.state.pso.IAFormat(d912pxy_s.render.state.pso.GetIAFormat());
-	}
 }
 
 void d912pxy_iframe::TransitZBufferRW(int write)
@@ -760,4 +596,159 @@ d912pxy_iframe::StreamBindsHolder::~StreamBindsHolder()
 		iframe.SetStreamFreq(i, vbsEl.divider);
 	}
 
+}
+
+UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
+{
+	if (PrimitiveType == D3DPT_TRIANGLEFAN)
+	{
+		LOG_DBG_DTDM3("DP TRIFAN skipping");
+		return 0;
+	}
+
+#ifdef PER_DRAW_FLUSH
+	if (d912pxy_s.render.batch.GetBatchCount() >= 1)
+		StateSafeFlush(0);
+#else
+	if (d912pxy_s.render.batch.GetBatchCount() >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
+	{
+		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
+
+		StateSafeFlush(0);
+	}
+#endif
+
+	return 1;
+}
+
+void d912pxy_iframe::CommitBatchTailProc(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
+{
+	if (batchCommitData.batchDF & 8)
+	{
+		d912pxy_vdecl* useInstanced = d912pxy_s.render.state.pso.GetIAFormat()->GetInstancedModification(batchCommitData.instancedModMask, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA);
+		d912pxy_s.render.state.pso.IAFormatInstanced(useInstanced);
+	}
+
+	if (batchCommitData.batchDF & 4)
+	{
+		d912pxy_s.render.iframe.ProcessSurfaceBinds(0);
+	}
+
+	d912pxy_s.render.state.tex.Use();
+	d912pxy_s.render.state.pso.Use();
+
+	d912pxy_s.render.replay.DoDIIP(
+		d912pxy_s.render.iframe.GetIndexCount(primCount, PrimitiveType), 
+		batchCommitData.instanceCount,
+		startIndex, 
+		BaseVertexIndex, 
+		MinVertexIndex, 
+		d912pxy_s.render.batch.FinishCurrentDraw()
+	);
+
+	batchCommitData.instanceCount = 1;
+
+	d912pxy_s.render.replay.IssueWork(d912pxy_s.render.batch.GetBatchCount());
+
+	if (batchCommitData.batchDF & 8)
+	{
+		d912pxy_s.render.state.pso.IAFormat(d912pxy_s.render.state.pso.GetIAFormat());
+	}
+}
+
+bool d912pxy_iframe::CommitBatchHeadProc(D3DPRIMITIVETYPE PrimitiveType)
+{
+	if (!CommitBatchPreCheck(PrimitiveType))
+		return false;
+
+	batchCommitData.batchDF = batchCommisionDF;
+	batchCommisionDF = 0;
+	batchCommitData.instancedModMask = 0;
+
+	return true;
+}
+
+void d912pxy_iframe::ExtractInstanceCount()
+{	
+	if (batchCommitData.batchDF & 1)
+	{
+		for (int i = 0; i != streamsActive; ++i)
+			ExtractBatchDataFromStream(i);
+	}	
+}
+
+void d912pxy_iframe::ExtractInstanceCountExtra()
+{
+	DWORD usedStreams = 0xFF;
+
+	if (!d912pxy_s.render.state.pso.GetCurrentCPSO())
+	{
+		d912pxy_vdecl* vdecl = d912pxy_s.render.state.pso.GetIAFormat();
+		usedStreams = vdecl->GetUsedStreams();
+	}
+
+	if (batchCommitData.batchDF & 1)
+	{
+		for (int i = 0; i != streamsActive; ++i)
+		{
+			if (!(usedStreams & (1 << i)))
+				continue;
+
+			if (!streamBinds.vertex[i].buffer)
+				continue;
+
+			ExtractBatchDataFromStream(i);
+		}
+	}
+
+	if (batchCommitData.instanceCount > 1)
+	{
+		if ((batchCommitData.batchDF & 8) == 0)
+		{
+			batchCommitData.instanceCount = 1;
+			batchCommitData.batchDF &= ~8;
+		}
+	}
+}
+
+void d912pxy_iframe::ExtractBatchDataFromStream(int stream)
+{
+	auto& streamRef = streamBinds.vertex[stream];
+
+	if (streamRef.divider & D3DSTREAMSOURCE_INDEXEDDATA)
+	{
+		batchCommitData.instanceCount = 0x3FFFFFFF & streamRef.divider;
+	}
+
+	if (streamRef.divider & D3DSTREAMSOURCE_INSTANCEDATA)
+	{
+		batchCommitData.instancedModMask |= 1 << stream;
+		batchCommitData.batchDF |= 8;
+	}
+}
+
+void d912pxy_iframe::CommitBatch(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
+{
+	if (!CommitBatchHeadProc(PrimitiveType))
+		return;
+
+	ExtractInstanceCount();
+
+	CommitBatchTailProc(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+}
+
+void d912pxy_iframe::CommitBatch2(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
+{
+	if (!CommitBatchHeadProc(PrimitiveType))
+		return;
+
+	ExtractInstanceCountExtra();
+
+	if (PrimitiveType != cuPrimType)
+	{
+		cuPrimType = PrimitiveType;
+		d912pxy_s.render.replay.DoPrimTopo(cuPrimType);
+	}
+
+	CommitBatchTailProc(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 }

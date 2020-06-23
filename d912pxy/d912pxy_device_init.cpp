@@ -267,10 +267,12 @@ void d912pxy_device::InitComPatches()
 
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETTEXTURE, &d912pxy_device::com_SetTexture_PS);
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_PS);		
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWPRIMITIVE, &d912pxy_device::com_DrawPrimitive_PS);
 	}
 	else if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_Compat);
+		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWPRIMITIVE, &d912pxy_device::com_DrawPrimitive_Compat);
 	}
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_DUP_UNSAFE))

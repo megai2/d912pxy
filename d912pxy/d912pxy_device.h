@@ -341,6 +341,8 @@ public:
 
 	//megai2: variants of API calls
 
+	HRESULT DrawPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount);
+	HRESULT DrawPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount);
 	HRESULT DrawIndexedPrimitive_PS(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 	HRESULT DrawIndexedPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 	D912PXY_METHOD_NC(DrawPrimitiveUP_StateUnsafe)(THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
@@ -377,6 +379,8 @@ public:
 	D912PXY_METHOD(SetRenderState_Tracked)(PXY_THIS_ D3DRENDERSTATETYPE State, DWORD Value);
 	D912PXY_METHOD(SetSamplerState_Tracked)(PXY_THIS_ DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value);
 	D912PXY_METHOD(CreateQuery_Optimized)(PXY_THIS_ D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery);
+	D912PXY_METHOD(DrawPrimitive_PS)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount);
+	D912PXY_METHOD(DrawPrimitive_Compat)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount);
 	
 	HRESULT InnerPresentExecute();
 	void InnerPresentFinish();

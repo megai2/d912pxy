@@ -644,6 +644,20 @@ D912PXY_METHOD_IMPL_(float, GetNPatchMode)(PXY_THIS)
 	D912PXY_ROUTE_IMPL_END
 }
 
+D912PXY_METHOD_IMPL(DrawPrimitive_Compat)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
+{
+	D912PXY_ROUTE_IMPL_START
+		D912PXY_ROUTE_IMPL_PREFIX DrawPrimitive_Compat(PrimitiveType, StartVertex, PrimitiveCount);
+	D912PXY_ROUTE_IMPL_END
+}
+
+D912PXY_METHOD_IMPL(DrawPrimitive_PS)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
+{
+	D912PXY_ROUTE_IMPL_START
+		D912PXY_ROUTE_IMPL_PREFIX DrawPrimitive_PS(PrimitiveType, StartVertex, PrimitiveCount);
+	D912PXY_ROUTE_IMPL_END
+}
+
 D912PXY_METHOD_IMPL(DrawPrimitive)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
 	D912PXY_ROUTE_IMPL_START

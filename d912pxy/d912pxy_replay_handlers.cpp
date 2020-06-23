@@ -54,13 +54,21 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 
 	d912pxy_s.render.batch.Bind(cl, it->batchId);
 
-	cl->DrawIndexedInstanced(
-		it->IndexCountPerInstance,
-		it->InstanceCount,
-		it->StartIndexLocation,
-		it->BaseVertexLocation,
-		it->StartInstanceLocation
-	);
+	if (it->BaseVertexLocation < 0)
+		cl->DrawInstanced(
+			it->IndexCountPerInstance,
+			it->InstanceCount,
+			it->StartIndexLocation,
+			it->StartInstanceLocation
+		);
+	else 
+		cl->DrawIndexedInstanced(
+			it->IndexCountPerInstance,
+			it->InstanceCount,
+			it->StartIndexLocation,
+			it->BaseVertexLocation,
+			it->StartInstanceLocation
+		);
 }
 
 RHA_DECL(om_render_targets, void* unused)
