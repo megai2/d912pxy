@@ -336,7 +336,7 @@ void d912pxy_hlsl_generator::ProcSIO_ENDIF(d912pxy_dxbc9::token* op)
 
 void d912pxy_hlsl_generator::ProcSIO_BREAK(d912pxy_dxbc9::token* op)
 {
-	ProcSIO_IF(op);
+	ProcSIO_IFC(op);
 	HLSL_GEN_WRITE_PROC("	break;");
 	ProcSIO_ENDIF(op);
 
