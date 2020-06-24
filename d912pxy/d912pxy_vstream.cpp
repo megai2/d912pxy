@@ -78,6 +78,8 @@ D912PXY_METHOD_IMPL_NC(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** pp
 	d912pxy_vstream_lock_data* linfo = &lockInfo[lockDepth];
 	++lockDepth;
 
+	LOG_ASSERT(PXY_INNER_MAX_LOCK_DEPTH > lockDepth, "vstream lock depth too big");
+
 	linfo->dst = this;
 
 	if (!SizeToLock)
@@ -103,7 +105,7 @@ D912PXY_METHOD_IMPL_NC(Unlock)(THIS)
 	--lockDepth;
 
 	if (lockInfo[lockDepth].size)
-		d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);	
+		d912pxy_s.thread.bufld.IssueUpload(lockInfo[lockDepth]);
 	
 	return D3D_OK;
 }
