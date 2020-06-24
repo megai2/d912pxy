@@ -99,7 +99,7 @@ void d912pxy_replay::Init()
 
 void d912pxy_replay::PlayId(d912pxy_replay_item* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
 {	
-	LOG_DBG_DTDM("RP I: %llX T: %u", it, context->tid);
+	LOG_DBG_DTDM("RP I: %llX Type: %u Thread: %u", it, (UINT)it->GetTypeName(), context->tid);
 	(this->*replay_handlers[(UINT)it->GetTypeName()])(it->GetData<void*>(), cl, context);
 }
 
