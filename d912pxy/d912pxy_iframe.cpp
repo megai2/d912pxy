@@ -357,6 +357,8 @@ void d912pxy_iframe::NoteBindedSurfaceTransit(d912pxy_surface * surf, UINT slot)
 
 void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 {
+	LOG_DBG_DTDM("State safe flush(%u)", fullFlush);
+
 	D3D12_VIEWPORT transVW = main_viewport;
 	D3D12_RECT transSR = main_scissor;
 
