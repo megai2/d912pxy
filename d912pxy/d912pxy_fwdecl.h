@@ -201,13 +201,13 @@ SOFTWARE.
 		#define LOG_DBG_DTDM2(fmt, ...) ;//(d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 		#define LOG_DBG_DTDM3(fmt, ...) (d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 		#define LOG_DX_SET_NAME(obj, val) obj->SetName(val)
-        #define LOG_ASSERT(cnd, text) if (!cnd) LOG_ERR_THROW2(-1, text)
+        #define LOG_ASSERT(cnd, text) if (!(cnd)) LOG_ERR_THROW2(-1, text)
 	#else 
 		#define LOG_DBG_DTDM(fmt, ...) (d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 		#define LOG_DBG_DTDM2(fmt, ...) (d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 		#define LOG_DBG_DTDM3(fmt, ...) (d912pxy_s.log.text._PXY_LOG_DEBUG(LGC_DEFAULT, TM(fmt), __VA_ARGS__))
 		#define LOG_DX_SET_NAME(obj, val) obj->SetName(val)
-		#define LOG_ASSERT(cnd, text) if (!cnd) LOG_ERR_THROW2(-1, text)
+		#define LOG_ASSERT(cnd, text) if (!(cnd)) LOG_ERR_THROW2(-1, text)
         #define PER_DRAW_FLUSH 
 	#endif
 #else
@@ -215,7 +215,7 @@ SOFTWARE.
 	#define LOG_DBG_DTDM2(fmt, ...) ;
 	#define LOG_DBG_DTDM3(fmt, ...) ;
 	#define LOG_DX_SET_NAME(obj, val) 
-	#define LOG_ASSERT(cnd, text) cnd
+	#define LOG_ASSERT(cnd, text) (cnd)
 #endif
 
 #define LOG_ERR_THROW(hr) LOG_ERR_THROW2(hr, hr)
