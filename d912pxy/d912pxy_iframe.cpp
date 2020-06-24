@@ -445,15 +445,10 @@ void d912pxy_iframe::OptimizeZeroWriteRT(UINT writeFlag)
 		BindSurface(1, NULL);
 	}
 	else {
-		if (bindedSurfaces[1] == NULL)
-		{
-			BindSurface(1, zeroWriteRT);
-		}
-
+		if (bindedSurfaces[1] == NULL)		
+			BindSurface(1, zeroWriteRT);		
 		zeroWriteRT = NULL;
 	}
-
-
 }
 
 void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
