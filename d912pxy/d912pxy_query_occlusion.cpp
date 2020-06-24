@@ -65,7 +65,10 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 	if (dwIssueFlags & D3DISSUE_BEGIN)
 	{
 		if (g_gpuStack[g_writeStack].count >= PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME)
-			FlushQueryStack();			
+		{
+			LOG_ERR_DTDM("Too many occlusion queries per frame, performance will degrade ( > %u )", PXY_INNER_MAX_OCCLUSION_QUERY_COUNT_PER_FRAME);
+			FlushQueryStack();
+		}
 
 		//megai2: as we use addition on query result read due to inter-cl force close/open thingy, we need to clear result on fully open condition
 		if (!(dwIssueFlags & D3DISSUE_FORCED))
@@ -93,14 +96,19 @@ D912PXY_METHOD_IMPL_NC(occ_Issue)(THIS_ DWORD dwIssueFlags)
 D912PXY_METHOD_IMPL_NC(occ_GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags)
 {
 	LOG_DBG_DTDM(__FUNCTION__);
-	
-	if(queryFinished)		
-		FlushQueryStack();
+		
+	if (queryFinished)
+	{
+		//flush only wheny app asks for flush and we are not executing work on gpu already
+		if ((D3DGETDATA_FLUSH & dwGetDataFlags) && (d912pxy_s.dx12.que.IsWorkCompleted() == 0))
+			FlushQueryStack();
 
-	((DWORD*)pData)[0] = queryResult;				
-	
-	return !queryFinished ? S_OK : S_FALSE;
+		return S_FALSE;
+	}
 
+	((DWORD*)pData)[0] = queryResult;
+	
+	return S_OK;
 }
 
 #undef D912PXY_METHOD_IMPL_CN
