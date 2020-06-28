@@ -45,6 +45,38 @@ IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* 
 	return (IDirect3DDevice9*)d912translator;
 }
 
+void DetectFilePaths()
+{
+	//megai2: check if we are installed as gw2 addon
+	if (d912pxy_helper::IsFileExist("./addons/d912pxy/dll/release/d3d9.dll"))
+		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_file_paths_addon);
+	//megai2: check if we running Astellia
+	else if (d912pxy_helper::IsFileExist("./Binaries/Win64/Astellia.exe"))
+	{
+		static const int maxPathLen = 4069;
+
+		char binaryPath[maxPathLen];
+		if (!GetModuleFileNameA(GetModuleHandleA(nullptr), binaryPath, maxPathLen))
+			MessageBoxA(0, "Can't get Astellia binary location", "d912pxy error", MB_ICONERROR);
+
+		d912pxy_helper::StrAbsFileNameToPath(binaryPath);
+
+		d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths, FP_NO_PATH + 1);
+		for (int i = 0; i != FP_NO_PATH; ++i)
+		{
+			d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[i].ds, maxPathLen);
+			d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[i].dw, maxPathLen);
+
+			sprintf(d912pxy_s.dynamicFilePaths[i].ds, "%s%s", binaryPath, d912pxy_file_paths_abs_rh[i].s);
+			wsprintf(d912pxy_s.dynamicFilePaths[i].dw, L"%S%s", binaryPath, d912pxy_file_paths_abs_rh[i].w);
+		}
+
+		d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[FP_NO_PATH].ds, maxPathLen);
+		d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[FP_NO_PATH].dw, maxPathLen);
+		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_s.dynamicFilePaths);
+	}
+}
+
 void d912pxy_first_init()
 {
 	//megai2: load config at dll load
@@ -53,9 +85,9 @@ void d912pxy_first_init()
 		return;
 
 	d912pxy_s.running = 1;
+	d912pxy_s.dynamicFilePaths = nullptr;
 	
-	if (d912pxy_helper::IsFileExist("./addons/d912pxy/dll/release/d3d9.dll"))
-		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_file_paths_addon);
+	DetectFilePaths();
 
 	d912pxy_s.dev_vtable = NULL;
 	d912pxy_s.mem.Init();	
@@ -76,6 +108,17 @@ void d912pxy_final_cleanup()
 	d912pxy_s.pool.hostPow2.UnInit();
 	d912pxy_s.mem.UnInit();
 	d912pxy_s.log.text.UnInit();
+
+	if (d912pxy_s.dynamicFilePaths)
+	{
+		for (int i = 0; i != FP_NO_PATH + 1; ++i)
+		{
+			PXY_FREE(d912pxy_s.dynamicFilePaths[i].ds);
+			PXY_FREE(d912pxy_s.dynamicFilePaths[i].dw);
+		}
+
+		PXY_FREE(d912pxy_s.dynamicFilePaths);
+	}
 	
 	d912pxy_s.running = 0;
 }

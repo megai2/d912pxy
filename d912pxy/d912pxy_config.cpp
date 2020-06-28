@@ -205,6 +205,17 @@ void d912pxy_config::SaveConfig()
 {
 	FILE* f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "wb");
 
+	if (!f)
+	{
+		char buf[4096];
+		char cwd[4096];
+		GetCurrentDirectoryA(4096, cwd);
+
+		sprintf(buf, "Can't save config to %s, check folder write permissions! (cwd: %s)", d912pxy_helper::GetFilePath(FP_CONFIG)->s, cwd);
+		MessageBoxA(0, buf, "d912pxy error", MB_ICONERROR);
+		return;
+	}
+
 	wchar_t csection[256] = L"0";
 
 	bool writeNewValues = data[0].newValue != nullptr;

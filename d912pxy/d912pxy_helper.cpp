@@ -2,7 +2,7 @@
 MIT License
 
 Copyright(c) 2018 Jeremiah van Oosten
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -511,6 +511,23 @@ char * d912pxy_helper::StrNextLine(char * buffer)
 	}
 
 	return itr + 1;
+}
+
+void d912pxy_helper::StrAbsFileNameToPath(char* fn)
+{
+	char* lastDlmt = nullptr;
+	while (*fn != 0)
+	{
+		if (*fn == '\\')
+			lastDlmt = fn;
+		++fn;
+	}
+
+	if (lastDlmt)
+	{
+		++lastDlmt;
+		*lastDlmt = 0;
+	}
 }
 
 UINT64 d912pxy_helper::GetClosestPow2(UINT64 size)

@@ -254,9 +254,15 @@ typedef enum d912pxy_file_path_id {
 	FP_NO_PATH
 } d912pxy_file_path_id;
 
-typedef struct d912pxy_file_path {
-	const char* s;
-	const wchar_t* w;
+typedef union d912pxy_file_path {
+	struct {
+		const char* s;
+		const wchar_t* w;
+	};
+	struct {
+		char* ds;
+		wchar_t* dw;
+	};
 } d912pxy_file_path;
 
 #define FP_DEF(a) {a, L##a }
@@ -306,6 +312,30 @@ static const d912pxy_file_path d912pxy_file_paths_addon[] = {
 	FP_DEF("./addons/"),
 	FP_DEF("./addons/d912pxy/imgui.ini"),
 	FP_DEF("./addons/d912pxy/imgui.log"),
+	FP_DEF("")
+};
+
+static const d912pxy_file_path d912pxy_file_paths_abs_rh[] = {
+	FP_DEF("d912pxy/shaders/cs"),
+	FP_DEF("cs/cso"),
+	FP_DEF("d912pxy/shaders/hlsl"),
+	FP_DEF("d912pxy/pck/pid.lock"),
+	FP_DEF("vfs_archive"),
+	FP_DEF("addons/d912pxy/shaders/hlsl/custom"),
+	FP_DEF("shaders/cso"),
+	FP_DEF("shaders/bugs"),
+	FP_DEF("d912pxy/crash"),
+	FP_DEF("d912pxy/log.txt"),
+	FP_DEF("d912pxy/log.1.txt"),
+	FP_DEF("d912pxy/dx12_perf_graph.html"),
+	FP_DEF("d912pxy/dx9_perf_graph.html"),
+	FP_DEF("d912pxy/dx12_perf_graph.png"),
+	FP_DEF("d912pxy/dx9_perf_graph.png"),
+	FP_DEF("d912pxy/config.ini"),
+	FP_DEF("d912pxy/12on7/"),
+	FP_DEF(""),
+	FP_DEF("d912pxy/imgui.ini"),
+	FP_DEF("d912pxy/imgui.log"),
 	FP_DEF("")
 };
 

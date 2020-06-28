@@ -80,7 +80,8 @@ typedef struct d912pxy_instance {
 	};
 	
 	d912pxy_vfs vfs;		
-	d912pxy_config config;	
+	d912pxy_config config;
+	d912pxy_file_path* dynamicFilePaths;
 
 	d912pxy_com_mgr com;
 	d912pxy_mem_mgr mem;
