@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -40,9 +40,12 @@ void d912pxy_batch_buffer::Init()
 	batchNum = 0;	
 	forceNewBatch = d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_FORCE_NEW_BATCH);
 
-	d912pxy_folded_buffer<d912pxy_batch_buffer_element, d912pxy_batch_buffer_sub_element>::Init(
-		PXY_INNER_MAX_IFRAME_BATCH_COUNT, 
-		PXY_INNER_MAX_IFRAME_BATCH_COUNT * 128, 
+	int maxBatches = d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_MAX_BATCHES_PER_IFRAME);
+	int maxWritesPerBatch = d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_MAX_WRITES_PER_BATCH);
+
+	d912pxy_folded_buffer<d912pxy_batch_buffer_element, d912pxy_batch_buffer_sub_element>::Init(		
+		maxBatches,
+		maxBatches * maxWritesPerBatch,
 		d912pxy_s.config.GetValueUI32(PXY_CFG_REPLAY_THREADS)
 	);
 }

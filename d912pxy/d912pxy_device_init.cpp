@@ -338,7 +338,7 @@ void d912pxy_device::PrintInfoBanner()
 		LOG_INFO_DTDM("CPU arch: SSE");
 	#endif	
 #endif
-	LOG_INFO_DTDM("Batch Limit: %u", PXY_INNER_MAX_IFRAME_BATCH_COUNT);
+	LOG_INFO_DTDM("Batch Limit: %u", d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_MAX_BATCHES_PER_IFRAME));
 	LOG_INFO_DTDM("Recreation Limit: %u", PXY_INNER_MAX_IFRAME_CLEANUPS);
 	LOG_INFO_DTDM("TextureBind Limit: %u", PXY_INNER_MAX_TEXTURE_STAGES);
 	LOG_INFO_DTDM("RenderTargets Limit: %u", PXY_INNER_MAX_RENDER_TARGETS);

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2019 megai2
+Copyright(c) 2019-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -36,7 +36,10 @@ void d912pxy_replay_buffer::Init()
 {
 	NonCom_Init(L"replay_buffer");
 
-	d912pxy_mem_block area = d912pxy_mem_block::allocZero(&base, PXY_INNER_MAX_IFRAME_BATCH_COUNT * d912pxy_s.config.GetValueUI32(PXY_CFG_REPLAY_ITEMS_PER_BATCH));
+	d912pxy_mem_block area = d912pxy_mem_block::allocZero(
+		&base, 
+		d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_MAX_BATCHES_PER_IFRAME) * d912pxy_s.config.GetValueUI32(PXY_CFG_REPLAY_ITEMS_PER_BATCH)
+	);
 	bufferLimit = (intptr_t)area.block_end();
 
 	Reset();

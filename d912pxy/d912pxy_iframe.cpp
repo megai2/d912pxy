@@ -37,6 +37,8 @@ void d912pxy_iframe::Init(d912pxy_dheap ** heaps)
 {
 	NonCom_Init(L"iframe");
 
+	batchLimit = d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_MAX_BATCHES_PER_IFRAME);
+
 	mHeaps = heaps;
 	
 	d912pxy_s.render.state.tex.Init();
@@ -607,9 +609,9 @@ UINT d912pxy_iframe::CommitBatchPreCheck(D3DPRIMITIVETYPE PrimitiveType)
 	if (d912pxy_s.render.batch.GetBatchCount() >= 1)
 		StateSafeFlush(0);
 #else
-	if (d912pxy_s.render.batch.GetBatchCount() >= (PXY_INNER_MAX_IFRAME_BATCH_COUNT - 2))
+	if (d912pxy_s.render.batch.GetBatchCount() >= (batchLimit - 2))
 	{
-		LOG_ERR_DTDM("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
+		LOG_DBG_DTDM3("batches in one frame exceeded PXY_INNER_MAX_IFRAME_BATCH_COUNT, performing queued commands now");
 
 		StateSafeFlush(0);
 	}

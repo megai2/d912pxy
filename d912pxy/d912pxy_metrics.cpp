@@ -59,8 +59,10 @@ void d912pxy_metrics::Init()
 		dheapMetrics->Create(PXY_METRICS_DHEAP_NAMES[i], 0, 0, d912pxy_dx12_heap_config[i].NumDescriptors, d912pxy_dx12_heap_config[i].NumDescriptors >> 1, 1, &metricDHeapSlots[i]);
 	}
 
-	iframeMetrics->Create(TM("counters / draws"), 0, 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT, PXY_INNER_MAX_IFRAME_BATCH_COUNT / 2, 1, &metricIFrameDraws);
-	iframeMetrics->Create(TM("counters / cleans"), 0, 0, PXY_INNER_MAX_IFRAME_BATCH_COUNT * 3, PXY_INNER_MAX_IFRAME_BATCH_COUNT, 1, &metricIFrameCleans);
+	int batchLimit = d912pxy_s.config.GetValueUI32(PXY_CFG_BATCHING_MAX_BATCHES_PER_IFRAME);
+
+	iframeMetrics->Create(TM("counters / draws"), 0, 0, batchLimit, batchLimit / 2, 1, &metricIFrameDraws);
+	iframeMetrics->Create(TM("counters / cleans"), 0, 0, batchLimit * 3, batchLimit, 1, &metricIFrameCleans);
 	iframeMetrics->Create(TM("mem / pool / surf"), 0, 0, 1ULL << 12, 1ULL << 12, 1, &metricMemSurf);
 	iframeMetrics->Create(TM("mem / pool / ul"), 0, 0, 1ULL << 10, 1ULL << 10, 1, &metricMemUl);
 	iframeMetrics->Create(TM("mem / pool / vstream"), 0, 0, 1ULL << 10, 1ULL << 10, 1, &metricMemVStream);
