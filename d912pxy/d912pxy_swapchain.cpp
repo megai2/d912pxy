@@ -62,7 +62,7 @@ d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) :
 	dxgiNoWaitFlag = DXGI_PRESENT_DO_NOT_WAIT;
 	dxgiOWndProc = NULL;	
 	errorCount = 0;
-
+	dxgiMaxFrameLatency = d912pxy_s.config.GetValueUI32(PXY_CFG_DX_FRAME_LATENCY);
 
 	if (index == 0)
 	{
@@ -236,6 +236,12 @@ HRESULT d912pxy_swapchain::Swap()
 HRESULT d912pxy_swapchain::SwapCheck()
 {
 	return swapCheckValue;
+}
+
+void d912pxy_swapchain::WaitForNewFrame()
+{
+	if (dxgiMaxFrameLatency)	
+		WaitForSingleObjectEx(dxgiFrameLatencyWaitObj, 1000, true);
 }
 
 void d912pxy_swapchain::CopyFrameToDXGI(ID3D12GraphicsCommandList * cl)
@@ -763,6 +769,11 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 	dxgiResizeFlags = 0;	
 	dxgiPresentFlags = dxgiNoWaitFlag;
 	
+	if (dxgiMaxFrameLatency)
+	{
+		dxgiResizeFlags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+	}
+	
 	if (currentPP.Windowed)
 	{
 		dxgiResizeFlags |= dxgiTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
@@ -824,6 +835,18 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 		// Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen will be handled manually.
 		ThrowCritialError(dxgiFactory4->MakeWindowAssociation(currentPP.hDeviceWindow, DXGI_MWA_NO_ALT_ENTER), "DXGI window assoc @ InitDXGISwapChain");
 		ThrowCritialError(swapChain1.As(&dxgiSwapchain), "DXGI swap chain 1->4 @ InitDXGISwapChain");
+
+		if (dxgiMaxFrameLatency)
+		{
+			ThrowCritialError(dxgiSwapchain->SetMaximumFrameLatency(dxgiMaxFrameLatency), "Failed to set DXGI max frame latency");
+			dxgiFrameLatencyWaitObj = dxgiSwapchain->GetFrameLatencyWaitableObject();
+
+			if (dxgiFrameLatencyWaitObj == INVALID_HANDLE_VALUE)
+				ThrowCritialError(-1, "Failed to get DXGI frame latency waitable obj");
+
+			WaitForNewFrame();
+		}		
+
 		return swapRet;
 	}	
 }

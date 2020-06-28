@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -100,6 +100,9 @@ void d912pxy_device::InnerPresentFinish()
 	d912pxy_s.render.iframe.Start();
 
 	swapOpLock.Release();
+	
+	if (swapchains[0])
+		swapchains[0]->WaitForNewFrame();
 
 	LOG_DBG_DTDM("Present finished");	
 }

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -31,7 +31,7 @@ IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* 
 {
 	d912pxy_first_init();
 	
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_MISC_USE_DX9))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_DX_ROUTE_TO_DX9))
 	{
 		dev->InitPerfGraph();
 		return dev;
