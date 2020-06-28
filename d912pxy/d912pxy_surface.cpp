@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -370,8 +370,7 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 	if (!m_res)
 		ConstructResource();
 
-	GetCopyableFootprints(lv, &srcR.PlacedFootprint);
-
+	srcR.PlacedFootprint = subresFootprints[lv];
 	srcR.PlacedFootprint.Offset = ul[lv].offset;
 
 	ul_obj->Reconstruct(
