@@ -513,12 +513,12 @@ char * d912pxy_helper::StrNextLine(char * buffer)
 	return itr + 1;
 }
 
-void d912pxy_helper::StrAbsFileNameToPath(char* fn)
+bool d912pxy_helper::StrCutLastElementInPath(char* fn)
 {
 	char* lastDlmt = nullptr;
 	while (*fn != 0)
 	{
-		if (*fn == '\\')
+		if ((*fn == '\\') && (*(fn + 1) != 0))
 			lastDlmt = fn;
 		++fn;
 	}
@@ -527,7 +527,10 @@ void d912pxy_helper::StrAbsFileNameToPath(char* fn)
 	{
 		++lastDlmt;
 		*lastDlmt = 0;
-	}
+		return true;
+	} 
+
+	return false;
 }
 
 UINT64 d912pxy_helper::GetClosestPow2(UINT64 size)

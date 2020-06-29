@@ -50,30 +50,62 @@ void DetectFilePaths()
 	//megai2: check if we are installed as gw2 addon
 	if (d912pxy_helper::IsFileExist("./addons/d912pxy/dll/release/d3d9.dll"))
 		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_file_paths_addon);
-	//megai2: check if we running Astellia
-	else if (d912pxy_helper::IsFileExist("./Binaries/Win64/Astellia.exe"))
+	else
 	{
+		//megai2: check if we running specific game
 		static const int maxPathLen = 4069;
 
 		char binaryPath[maxPathLen];
-		if (!GetModuleFileNameA(GetModuleHandleA(nullptr), binaryPath, maxPathLen))
-			MessageBoxA(0, "Can't get Astellia binary location", "d912pxy error", MB_ICONERROR);
-
-		d912pxy_helper::StrAbsFileNameToPath(binaryPath);
-
-		d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths, FP_NO_PATH + 1);
-		for (int i = 0; i != FP_NO_PATH; ++i)
+		if (GetModuleFileNameA(GetModuleHandleA(nullptr), binaryPath, maxPathLen))
 		{
-			d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[i].ds, maxPathLen);
-			d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[i].dw, maxPathLen);
+			//  Astellia
+			//working dir is not same as exe folder & anticheats/whatever blocking that dir
+			//use 2 way failsafe
+			//  replace relative path to absolute
+			//  search d912pxy installation up in path so user can install d912pxy out of game blocked folders
+			if (strstr(binaryPath, "Astellia.exe") != nullptr)
+			{
+				//navigate up until we find d912pxy installation
+				bool foundInstallation = false;
+				while (d912pxy_helper::StrCutLastElementInPath(binaryPath))
+				{
+					char testFile[maxPathLen];
+					sprintf(testFile, "%s%s", binaryPath, "d912pxy/dll/release/d3d9.dll");
 
-			sprintf(d912pxy_s.dynamicFilePaths[i].ds, "%s%s", binaryPath, d912pxy_file_paths_abs_rh[i].s);
-			wsprintf(d912pxy_s.dynamicFilePaths[i].dw, L"%S%s", binaryPath, d912pxy_file_paths_abs_rh[i].w);
+					if (d912pxy_helper::IsFileExist(testFile))
+					{
+						foundInstallation = true;
+						break;
+					}
+				}
+
+				if (!foundInstallation)
+				{
+					MessageBoxA(
+						0,
+						"d912pxy installation is not found, make sure there is d912pxy folder in one of folders on route to Astellia installation and it is writable&accesible",
+						"d912pxy fatal",
+						MB_ICONERROR
+					);
+					abort();
+				}
+
+				d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths, FP_NO_PATH + 1);
+				for (int i = 0; i != FP_NO_PATH; ++i)
+				{
+					d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[i].ds, maxPathLen);
+					d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[i].dw, maxPathLen);
+
+					sprintf(d912pxy_s.dynamicFilePaths[i].ds, "%s%s", binaryPath, d912pxy_file_paths_abs_rh[i].s);
+					wsprintf(d912pxy_s.dynamicFilePaths[i].dw, L"%S%s", binaryPath, d912pxy_file_paths_abs_rh[i].w);
+				}
+
+				d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[FP_NO_PATH].ds, maxPathLen);
+				d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[FP_NO_PATH].dw, maxPathLen);
+				d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_s.dynamicFilePaths);
+			}
 		}
 
-		d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[FP_NO_PATH].ds, maxPathLen);
-		d912pxy_mem_block::allocZero(&d912pxy_s.dynamicFilePaths[FP_NO_PATH].dw, maxPathLen);
-		d912pxy_helper::SwitchFilePaths((d912pxy_file_path*)d912pxy_s.dynamicFilePaths);
 	}
 }
 
