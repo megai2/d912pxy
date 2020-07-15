@@ -105,6 +105,9 @@ HRESULT d912pxy_device::GetRenderState(D3DRENDERSTATETYPE State, DWORD* pValue)
 		d912pxy_s.render.state.tex.Use();
 		*pValue = d912pxy_s.render.state.tex.GetCurrent()->splHeapID[*pValue];
 		break;
+	case D3DRS_D912PXY_CUSTOM_BATCH_DATA:
+		d912pxy_s.render.replay.DoUseCustomBatchData((d912pxy_custom_batch_data*)pValue);
+		break;
 	default:
 		*pValue = d912pxy_s.render.state.pso.GetDX9RsValue(State);
 	}

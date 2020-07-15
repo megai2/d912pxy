@@ -93,6 +93,7 @@ void d912pxy_replay::Init()
 	RHA_ASSIGN(gpu_write_ctl);
 	RHA_ASSIGN(ia_prim_topo);
 	RHA_ASSIGN(query_mark);
+	RHA_ASSIGN(custom_batch_data);
 #undef RHA_ASSIGN
 	
 }
@@ -110,6 +111,7 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 	d912pxy_replay_thread_context context;
 	context.pso = 0;
 	context.tid = thrd->GetId();
+	context.customBatchPtr = 0;
 
 	d912pxy_replay_item* item_iter;
 	//megai2: wait for actual data

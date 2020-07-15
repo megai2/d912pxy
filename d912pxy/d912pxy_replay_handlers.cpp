@@ -52,7 +52,12 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 	if (!context->pso)
 		return;
 
-	d912pxy_s.render.batch.Bind(cl, it->batchId);
+	if (context->customBatchPtr)
+	{
+		cl->SetGraphicsRootConstantBufferView(3, context->customBatchPtr);
+		context->customBatchPtr = 0;
+	} else
+		d912pxy_s.render.batch.Bind(cl, it->batchId);
 
 	if (it->BaseVertexLocation < 0)
 		cl->DrawInstanced(
@@ -200,6 +205,11 @@ RHA_DECL(ia_prim_topo, void* unused)
 RHA_DECL(query_mark, void* unused)
 {
 	it->obj->QueryMark(it->start, cl);
+}
+
+RHA_DECL(custom_batch_data, d912pxy_replay_thread_context* context)
+{
+	context->customBatchPtr = it->batchDataPtr;
 }
 
 #undef RHA_DECL

@@ -46,6 +46,7 @@ public:
 		gpu_write_ctl,
 		ia_prim_topo,
 		query_mark,
+		custom_batch_data,
 		_count
 	} typeNames;
 	
@@ -183,6 +184,11 @@ public:
 
 		static constexpr typeName GetTypeName() { return typeName::query_mark; };
 	} dt_query_mark;
+
+	struct dt_custom_batch_data {
+		D3D12_GPU_VIRTUAL_ADDRESS batchDataPtr;
+		static constexpr typeName GetTypeName() { return typeName::custom_batch_data; };
+	};
 
 #pragma pack(pop)
 

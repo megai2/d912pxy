@@ -195,3 +195,11 @@ void d912pxy_replay::DoDSClear(d912pxy_surface* tgt, float depth, UINT8 stencil,
 	};
 	it->cuState = tgt->GetCurrentState();
 }
+
+void d912pxy_replay::DoUseCustomBatchData(d912pxy_custom_batch_data* customDrawParams)
+{
+	ITEM_PUSH(custom_batch_data);
+	
+	d912pxy_vstream* cbuf = PXY_COM_LOOKUP(customDrawParams->buffer, vstream);
+	it->batchDataPtr = cbuf->GetVA_GPU() + sizeof(d912pxy_batch_buffer_element) * customDrawParams->index;
+}

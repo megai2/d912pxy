@@ -28,6 +28,7 @@ SOFTWARE.
 typedef struct d912pxy_replay_thread_context {
 	ID3D12PipelineState* pso;
 	UINT tid;
+	D3D12_GPU_VIRTUAL_ADDRESS customBatchPtr;
 } d912pxy_replay_thread_context;
 
 class d912pxy_replay;
@@ -62,6 +63,7 @@ public:
 	void DoGPUW(UINT32 si, UINT16 of, UINT16 cnt, UINT16 bn);
 	void DoQueryMark(d912pxy_query* va, UINT8 start);
 	void DoPrimTopo(D3DPRIMITIVETYPE primType);
+	void DoUseCustomBatchData(d912pxy_custom_batch_data* customDrawParams);
 
 	//actual execute code and thread managment
 
@@ -148,6 +150,7 @@ private:
 	RHA_DECL(gpu_write_ctl, d912pxy_replay_thread_context* context);
 	RHA_DECL(ia_prim_topo, void* unused);
 	RHA_DECL(query_mark, void* unused);
+	RHA_DECL(custom_batch_data, d912pxy_replay_thread_context* context);
 #undef RHA_DECL		
 
 	d912pxy_replay_buffer buffer;
