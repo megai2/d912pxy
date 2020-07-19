@@ -410,7 +410,6 @@ void d912pxy_hlsl_generator::ProcSIO_SINCOS(d912pxy_dxbc9::token* op)
 	{
 		d912pxy_hlsl_generator_regtext rSide = FormatRightSide1("cos(", ")", sSrc0);
 
-
 		HLSL_GEN_WRITE_PROC("tmp.x = %s;",
 			rSide.t
 		);
@@ -427,7 +426,8 @@ void d912pxy_hlsl_generator::ProcSIO_SINCOS(d912pxy_dxbc9::token* op)
 
 	OverrideWriteMask(0);
 
-	HLSL_GEN_WRITE_PROC("%s = tmp;", sDst.t);
+	UINT64 tmpReadMask = dstReg->target.dst.getWriteMaskStr(0);
+	HLSL_GEN_WRITE_PROC("%s = tmp%s;", sDst.t, (char*)&tmpReadMask);
 
 	--procIdent;
 	HLSL_GEN_WRITE_PROC("}");
