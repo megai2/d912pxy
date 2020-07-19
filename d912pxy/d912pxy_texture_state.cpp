@@ -194,26 +194,31 @@ void d912pxy_texture_state::ClearActiveTextures()
 	}
 }
 
-UINT d912pxy_texture_state::LookupSamplerId(UINT stage)
+UINT d912pxy_texture_state::LookupSamplerId(const d912pxy_trimmed_sampler_dsc& trimmedDsc)
 {
-	UINT ret = (UINT32)splLookup->PointAt32(&trimmedSpl[stage]);
+	UINT ret = (UINT32)splLookup->PointAt32((void*)&trimmedDsc);
 
 	if (ret != 0)
-	{		
+	{
 		return ret - 1;
 	}
 
-	UpdateFullSplDsc(stage);
+	UpdateFullSplDsc(trimmedDsc);
 	ret = CreateNewSampler();
-	
+
 	return ret;
 }
 
-void d912pxy_texture_state::UpdateFullSplDsc(UINT from)
+UINT d912pxy_texture_state::LookupSamplerId(UINT stage)
+{
+	return LookupSamplerId(trimmedSpl[stage]);
+}
+
+void d912pxy_texture_state::UpdateFullSplDsc(const d912pxy_trimmed_sampler_dsc& trimmedSpl)
 {
 	//megai2: handle filter type for real
 
-	UINT16 dx9FilterName = trimmedSpl[from].Dsc0;
+	UINT16 dx9FilterName = trimmedSpl.Dsc0;
 
 	D3D12_FILTER dx12Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
 
@@ -256,7 +261,7 @@ void d912pxy_texture_state::UpdateFullSplDsc(UINT from)
 
 	splDsc.Filter = dx12Filter;
 
-	UINT16 dx9FilterAWA = trimmedSpl[from].Dsc1;
+	UINT16 dx9FilterAWA = trimmedSpl.Dsc1;
 
 	splDsc.AddressU = (D3D12_TEXTURE_ADDRESS_MODE)((dx9FilterAWA) & 0x7);
 	splDsc.AddressV = (D3D12_TEXTURE_ADDRESS_MODE)((dx9FilterAWA >> 3) & 0x7);
@@ -273,8 +278,8 @@ void d912pxy_texture_state::UpdateFullSplDsc(UINT from)
 		splDsc.BorderColor[i] = bTmp;
 	}*/
 
-	splDsc.MipLODBias = trimmedSpl[from].MipLODBias;
-	splDsc.MinLOD = trimmedSpl[from].MinLOD;
+	splDsc.MipLODBias = trimmedSpl.MipLODBias;
+	splDsc.MinLOD = trimmedSpl.MinLOD;
 }
 
 UINT d912pxy_texture_state::CreateNewSampler()

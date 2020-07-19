@@ -69,9 +69,11 @@ public:
 	void ClearActiveTextures();
 
 private:
+	//this function is not thread safe
+	UINT LookupSamplerId(const d912pxy_trimmed_sampler_dsc& trimmedDsc);
 	UINT LookupSamplerId(UINT stage);
 
-	void UpdateFullSplDsc(UINT from);
+	void UpdateFullSplDsc(const d912pxy_trimmed_sampler_dsc& trimmedSpl);
 
 	UINT CreateNewSampler();
 
