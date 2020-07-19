@@ -26,7 +26,6 @@ SOFTWARE.
 
 d912pxy_surface_ops::d912pxy_surface_ops(d912pxy_device * dev) : d912pxy_noncom( L"surface_ops")
 {
-	//TODO: write shaders
 	vs[SHSET_CLEAR] = d912pxy_shader::d912pxy_shader_com(1, 0, 0x4);
 	ps[SHSET_CLEAR] = d912pxy_shader::d912pxy_shader_com(0, 0, 0x5);	
 	vs[SHSET_STRETCH] = d912pxy_shader::d912pxy_shader_com(1, 0, 0x6);
@@ -65,7 +64,7 @@ d912pxy_surface_ops::d912pxy_surface_ops(d912pxy_device * dev) : d912pxy_noncom(
 	
 	vdcl = d912pxy_vdecl::d912pxy_vdecl_com(vDclElements);
 
-
+	bilinearSamplerId = d912pxy_s.render.state.tex.LookupSamplerId(bilinearSamplerDsc);
 }
 
 d912pxy_surface_ops::~d912pxy_surface_ops()
@@ -193,20 +192,27 @@ void d912pxy_surface_ops::StretchRect(d912pxy_surface* pSourceSurface, d912pxy_s
 	
 	d912pxy_surface* oldRT = d912pxy_s.render.iframe.GetBindedSurface(1);
 	d912pxy_surface* oldDS = d912pxy_s.render.iframe.GetBindedSurface(0);
-	UINT oldTex0 = d912pxy_s.render.state.tex.GetTexStage(0);
 	d912pxy_surface* targetRT = dDst.Usage == D3DUSAGE_RENDERTARGET ? 
 		pDestSurface : 
 		d912pxy_s.pool.rtds.GetSurface(dDst.Width, dDst.Height, dDst.Format, 1, 1, D3DUSAGE_RENDERTARGET, nullptr); 	
 
 	D3D12_VIEWPORT wvp{ 0,0, (float)dDst.Width, (float)dDst.Height, 0, 1 };
 	d912pxy_s.render.iframe.SetViewport(&wvp);
-	d912pxy_s.render.state.tex.SetTexture(0, pSourceSurface->GetSRVHeapId());
+
+	d912pxy_batch_buffer_sub_element texSet, samplerSet = {};
+
+	texSet.ui[0] = pSourceSurface->GetSRVHeapId();
+	samplerSet.ui[0] = bilinearSamplerId;
+
+	d912pxy_s.render.state.tex.Use();
+	d912pxy_s.render.batch.GPUWrite(&texSet, 1, D912PXY_GPU_WRITE_OFFSET_TEXBIND);
+	d912pxy_s.render.batch.GPUWrite(&samplerSet, 1, D912PXY_GPU_WRITE_OFFSET_SAMPLER);
+	
 	d912pxy_s.render.iframe.BindSurface(1, targetRT);
 	d912pxy_s.render.iframe.BindSurface(0, nullptr);
 	
 	d912pxy_s.render.state.pso.SetCurrentDesc(localPSO);
 
-    //TODO: sampler for tex0
 	PXY_COM_CAST_(IDirect3DDevice9, &d912pxy_s.dev)->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
 	
 	d912pxy_s.render.iframe.BindSurface(1, oldRT);
@@ -218,7 +224,10 @@ void d912pxy_surface_ops::StretchRect(d912pxy_surface* pSourceSurface, d912pxy_s
 		targetRT->Release();
 	}
 
-	d912pxy_s.render.state.tex.SetTexture(0, oldTex0);
+	//reset texture & sampler via dirty flag
+	d912pxy_s.render.state.tex.AddDirtyFlag(
+		d912pxy_s.render.state.tex.MakeDirtyFlagBit(0, false) | d912pxy_s.render.state.tex.MakeDirtyFlagBit(0, true)
+	);
 }
 
 void d912pxy_surface_ops::SetCommonState(shaderSet idx)

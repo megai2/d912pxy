@@ -65,5 +65,10 @@ private:
 	d912pxy_vstream* vBuf;
 	d912pxy_vstream* iBuf;
 	d912pxy_trimmed_pso_desc localPSO;
+
+	// bilinear, uvw wrap
+	constexpr static d912pxy_trimmed_sampler_dsc bilinearSamplerDsc = { 0x92,0x49, 0, 0 };
+
+	UINT bilinearSamplerId;
 };
 

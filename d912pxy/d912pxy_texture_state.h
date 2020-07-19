@@ -68,9 +68,18 @@ public:
 
 	void ClearActiveTextures();
 
-private:
+	constexpr DWORD MakeDirtyFlagBit(const int stage, const bool sampler)
+	{
+		if (sampler)
+			return (1 << stage) << 8;
+		else
+			return 1 << (stage >> 2);
+	}
+
 	//this function is not thread safe
 	UINT LookupSamplerId(const d912pxy_trimmed_sampler_dsc& trimmedDsc);
+
+private:
 	UINT LookupSamplerId(UINT stage);
 
 	void UpdateFullSplDsc(const d912pxy_trimmed_sampler_dsc& trimmedSpl);
