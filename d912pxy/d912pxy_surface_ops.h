@@ -64,5 +64,6 @@ private:
 
 	d912pxy_vstream* vBuf;
 	d912pxy_vstream* iBuf;
+	d912pxy_trimmed_pso_desc localPSO;
 };
 
