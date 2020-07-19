@@ -547,7 +547,7 @@ void d912pxy_hlsl_generator::RegDefine(d912pxy_dxbc9::token_register* reg, bool 
 			}
 			else {
 				//megai2: i think this is fog & point size registers, that are not routed to PS, so we need to emulate them or just ignore
-				HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_POS, 0), "	float4 %s%u: FIXPIPE_UNIMPL%u;",
+				HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_VS_NOT_USED, 0), "	float4 %s%u: FIXPIPE_UNIMPL%u;",
 					GetRegTypeStr(reg->regType, 0),
 					num, num
 				);

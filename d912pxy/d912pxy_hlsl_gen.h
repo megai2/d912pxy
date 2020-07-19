@@ -40,6 +40,7 @@ SOFTWARE.
 
 #define HLSL_HIO_PRIOG_POS 1
 #define HLSL_HIO_PRIOG_TEXC 2
+#define HLSL_HIO_PRIOG_VS_NOT_USED 3
 #define HLSL_HIO_PRIOG_NC 30
 #define HLSL_HIO_PRIOG_END 31
 #define HLSL_HIO_PRIORITY(a,b) d912pxy_hlsl_generator_head_priority_group_size * a + b
