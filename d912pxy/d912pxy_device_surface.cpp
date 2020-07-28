@@ -73,7 +73,16 @@ HRESULT d912pxy_device::GetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurfac
 
 HRESULT d912pxy_device::SetDepthStencilSurface(IDirect3DSurface9* pNewZStencil)
 { 
-	d912pxy_s.render.iframe.BindSurface(0, PXY_COM_LOOKUP(pNewZStencil, surface));
+	d912pxy_surface* newDS = PXY_COM_LOOKUP(pNewZStencil, surface);
+
+	//megai2: remove this filter when GW2 is fixed
+	if (newDS)
+	{
+		if (newDS->GetDX9DescAtLevel(0).Usage != D3DUSAGE_DEPTHSTENCIL)
+			newDS = nullptr;
+	}
+
+	d912pxy_s.render.iframe.BindSurface(0, newDS);
 
 	return D3D_OK; 
 }
@@ -146,7 +155,6 @@ HRESULT d912pxy_device::Clear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D
 		DWORD cvtCf = ((D3D12_CLEAR_FLAG_DEPTH * ((Flags & D3DCLEAR_ZBUFFER) != 0)) | (D3D12_CLEAR_FLAG_STENCIL * ((Flags & D3DCLEAR_STENCIL) != 0)));
 
 		d912pxy_surface* surf = d912pxy_s.render.iframe.GetBindedSurface(0);
-
 		if (surf)
 			d912pxy_s.render.replay.DoDSClear(surf, Z, Stencil & 0xFF, (D3D12_CLEAR_FLAGS)cvtCf, d912pxy_s.render.iframe.GetViewport());
 	}
