@@ -73,11 +73,15 @@ void d912pxy_gpu_que::UnInit()
 	mGPUCleanupThread->SignalWork();
 	mGPUCleanupThread->IssueItems(NULL, 0);
 
+	LOG_INFO_DTDM("cleanup thread finished");
+
 	while (mLists->HaveElements()) //but do get->next cuz we using one that is current
 	{
 		delete mLists->GetElement();
 		mLists->Next();
 	}
+
+	LOG_INFO_DTDM("elements freed");
 
 	delete mLists;
 
