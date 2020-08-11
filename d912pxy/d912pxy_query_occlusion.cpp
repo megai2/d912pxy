@@ -233,6 +233,16 @@ void d912pxy_query_occlusion::FreePendingQueryObjects()
 
 void d912pxy_query_occlusion::DeInitOccQueryEmulation()
 {
+	//finish outstanding queres so thery are properly freed on exit
+	d912pxy_query_occlusion_gpu_stack* readStack = &g_gpuStack[!g_writeStack];
+	if (readStack->count)
+	{
+		for (int i = 0; i != readStack->count; ++i)	
+			readStack->stack[i]->SetQueryResult(0);
+
+		readStack->count = 0;
+	}
+
 	if (!g_occQueryHeap)
 		return;
 
