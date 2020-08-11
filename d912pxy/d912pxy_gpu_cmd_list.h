@@ -44,7 +44,7 @@ public:
 	void Signal();	
 	void EnqueueCleanup(d912pxy_comhandler* obj);
 
-	void CleanupAllReferenced();
+	void FinalReferenceCleanup();
 	void CleanupReferenced(UINT items);
 
 	void EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio);
