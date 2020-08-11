@@ -79,7 +79,7 @@ HRESULT d912pxy_device::SetDepthStencilSurface(IDirect3DSurface9* pNewZStencil)
 	if (newDS)
 	{
 		if (newDS->GetDX9DescAtLevel(0).Usage != D3DUSAGE_DEPTHSTENCIL)
-			newDS = nullptr;
+			return D3DERR_INVALIDCALL;
 	}
 
 	d912pxy_s.render.iframe.BindSurface(0, newDS);
