@@ -59,6 +59,16 @@ SOFTWARE.
 	#include "../thirdparty/p7logger/Headers/P7_Telemetry.h"
 #endif
 
+#include "v3/base_object.h"
+#include "v3/util/error_handler.h"
+#include "v3/util/memory_block.h"
+#include "v3/util/hash.h"
+#include "v3/util/trivial/linear_array.h"
+#include "v3/util/trivial/push_buffer.h"
+#include "v3/util/mt/lock.h"
+#include "v3/util/mt/container.h"
+#include "v3/util/memtree.h"
+
 #include "../thirdparty/imgui/imgui.h"
 #include "../thirdparty/imgui/imgui_impl_dx12.h"
 #include "../thirdparty/imgui/imgui_impl_win32.h"

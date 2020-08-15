@@ -133,6 +133,7 @@
     <TargetName>d3d9</TargetName>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\debug\</OutDir>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -523,6 +524,15 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="stopwatch.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="v3\base_object.h" />
+    <ClInclude Include="v3\util\error_handler.h" />
+    <ClInclude Include="v3\util\hash.h" />
+    <ClInclude Include="v3\util\memory_block.h" />
+    <ClInclude Include="v3\util\memtree.h" />
+    <ClInclude Include="v3\util\mt\container.h" />
+    <ClInclude Include="v3\util\mt\lock.h" />
+    <ClInclude Include="v3\util\trivial\linear_array.h" />
+    <ClInclude Include="v3\util\trivial\push_buffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\thirdparty\fastlz\fastlz.cpp" />
@@ -644,6 +654,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_pp|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_pb|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="v3\util\memory_block.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />

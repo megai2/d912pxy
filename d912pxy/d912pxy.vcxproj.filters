@@ -329,6 +329,9 @@
     <ClCompile Include="d912pxy_surface_ops.cpp">
       <Filter>d3d9_impl\device\emulated</Filter>
     </ClCompile>
+    <ClCompile Include="v3\util\memory_block.cpp">
+      <Filter>v3\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -633,6 +636,33 @@
     <ClInclude Include="d912pxy_surface_ops.h">
       <Filter>d3d9_impl\device\emulated</Filter>
     </ClInclude>
+    <ClInclude Include="v3\base_object.h">
+      <Filter>v3</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\mt\container.h">
+      <Filter>v3\util\mt</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\hash.h">
+      <Filter>v3\util</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\trivial\linear_array.h">
+      <Filter>v3\util\trivial</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\memory_block.h">
+      <Filter>v3\util</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\trivial\push_buffer.h">
+      <Filter>v3\util\trivial</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\memtree.h">
+      <Filter>v3\util</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\mt\lock.h">
+      <Filter>v3\util\mt</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\error_handler.h">
+      <Filter>v3\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />
@@ -727,6 +757,18 @@
     </Filter>
     <Filter Include="d3d9_impl\device\iframe\pso">
       <UniqueIdentifier>{1405e705-a9d9-48f8-b695-16176f6cd8e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="v3">
+      <UniqueIdentifier>{11168088-187c-456f-978d-0532f67b64d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="v3\util">
+      <UniqueIdentifier>{4b1c34af-a2a0-4079-9306-ec8ff93666cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="v3\util\mt">
+      <UniqueIdentifier>{0aa26e5d-278e-4ab8-84fd-bc4886c52f09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="v3\util\trivial">
+      <UniqueIdentifier>{5ec4567d-f2b5-46d9-91c9-ab21b1158915}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
