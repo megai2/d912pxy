@@ -57,14 +57,14 @@ public:
 	static bool allowRealtimeChecks;
 
 private:
-	d912pxy_memtree2* cacheIndexes;
-	UINT32 cacheIncID;
+	d912pxy_trimmed_pso_desc::IdStorage cacheIndexes;
+	uint32_t cacheIncID;
 	bool saveCache;
 
 	d912pxy_ringbuffer<d912pxy_pso_item*>* psoCompileQue;
 	d912pxy_thread_lock compileQueLock;
 	void CheckCompileQueueLock();
-	void SaveKeyToCache(d912pxy_trimmed_pso_desc_key key, d912pxy_trimmed_pso_desc * desc);
+	void SaveKeyToCache(d912pxy_trimmed_pso_desc::StorageKey key, d912pxy_trimmed_pso_desc * desc);
 };
 
 #pragma pack(pop)

@@ -25,8 +25,6 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-typedef UINT32 d912pxy_trimmed_pso_desc_key;
-
 #pragma pack(push, 1)
 
 class d912pxy_trimmed_pso_desc 
@@ -79,7 +77,7 @@ public:
 		UINT8 format;
 	};
 	   
-	struct value_part {
+	struct ValuePart {
 		UINT vdeclHash;
 		rasterizer_desc rast;
 		ds_desc ds;
@@ -95,16 +93,19 @@ public:
 
 	struct serialized_data {
 		D3DVERTEXELEMENT9 declData[PXY_INNER_MAX_VDECL_LEN];
-		value_part val;
+		ValuePart val;
 	};
 
-	value_part val;
+	ValuePart val;
 	ref_part ref;
+
+	typedef d912pxy::Memtree<ValuePart, uint32_t, d912pxy::Hash32> IdStorage;
+	typedef IdStorage::PreparedKey StorageKey;
 
 	d912pxy_trimmed_pso_desc();
 	~d912pxy_trimmed_pso_desc();
 	
-	d912pxy_trimmed_pso_desc_key GetKey();	 
+	const ValuePart& GetValuePart();
 	d912pxy_shader_pair_hash_type GetShaderPairUID();
 
 	//megai2: this function is not thread safe

@@ -37,11 +37,11 @@ d912pxy_trimmed_pso_desc::~d912pxy_trimmed_pso_desc()
 {
 }
 
-d912pxy_trimmed_pso_desc_key d912pxy_trimmed_pso_desc::GetKey()
+const d912pxy_trimmed_pso_desc::ValuePart& d912pxy_trimmed_pso_desc::GetValuePart()
 {
 	val.vdeclHash = ref.InputLayout->GetHash();
 
-	return d912pxy_memtree2::memHash32s(&val, sizeof(value_part));
+	return val;
 }
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC* d912pxy_trimmed_pso_desc::GetPSODesc()

@@ -39,7 +39,6 @@ void d912pxy_pso_db::Init()
 	NonCom_Init(L"pso db");
 	InitThread("d912pxy pso compile", 0);
 
-	cacheIndexes = new d912pxy_memtree2(sizeof(d912pxy_trimmed_pso_desc_key), PXY_INNER_MAX_PSO_CACHE_NODES, 2);
 	cacheIncID = 0;
 	
 	allowRealtimeChecks = d912pxy_s.config.GetValueB(PXY_CFG_SDB_ALLOW_REALTIME_CHECKS);
@@ -62,8 +61,6 @@ void d912pxy_pso_db::UnInit()
 	Stop();
 	delete psoCompileQue;
 
-	delete cacheIndexes;
-
 	d912pxy_noncom::UnInit();
 }
 
@@ -75,21 +72,25 @@ d912pxy_pso_item* d912pxy_pso_db::GetByDescMT(d912pxy_trimmed_pso_desc* desc)
 		return NULL;
 	}
 
-	UINT32 key = desc->GetKey();
-	UINT64 id = cacheIndexes->PointAtMemMTR(&key, 4);
-
-	if (id == 0)
+	auto key = desc->GetValuePart();
+	uint32_t id = 0;
+	bool newId = false;
+	
 	{
-		id = cacheIndexes->PointAtMemMTRW(&key, 4);
-
-		if (!id)
+		d912pxy::mt::containter::OptRef<d912pxy_trimmed_pso_desc::IdStorage> lookup(cacheIndexes, key);
+	
+		if (!lookup.val)
+		{
 			id = ++cacheIncID;
-
-		cacheIndexes->PointAtMemMTW(id);
-
-		if (saveCache)
-			SaveKeyToCache(key, desc);
+			lookup.add() = id;
+			newId = true;
+		}
+		else
+			id = *lookup.val;
 	}
+
+	if (newId && saveCache)
+		SaveKeyToCache(cacheIndexes.prepareKey(key), desc);
 
 	return d912pxy_s.render.db.shader.GetPair(desc->ref.VS, desc->ref.PS)->GetPSOItemMT((UINT32)id, desc);
 }
@@ -168,20 +169,19 @@ void d912pxy_pso_db::LoadCachedData()
 					continue;
 				}
 
-				auto psoKey = psoDesc.GetKey();
+				auto psoValue = psoDesc.GetValuePart();
+				auto psoKey = cacheIndexes.prepareKey(psoValue);
 
-				if (psoKey != keyName)
+				if (psoKey.data() != keyName)
 				{
-					LOG_ERR_DTDM("PSO keyname %lX differs from %lX that defined by data in PSO", keyName, psoKey);
+					LOG_ERR_DTDM("PSO keyname %lX differs from %lX that defined by data in PSO", keyName, psoKey.data());
 					psoDesc.ref.InputLayout->Release();
 					continue;
 				}
 
 				++keyIdx;
 				psoDescs->WriteElement(psoDesc);
-				cacheIndexes->PointAtMem(&psoKey, sizeof(psoKey));
-				cacheIndexes->SetValue(keyIdx);
-
+				cacheIndexes.findPrepared(psoKey) = keyIdx;
 			}
 			else {
 				LOG_ERR_DTDM("can't read PSO data with key %lX ", keyName);
@@ -210,8 +210,6 @@ void d912pxy_pso_db::LoadCachedData()
 			if (!pairEntry)
 				continue;
 
-			cacheIndexes->PointAtMem(&pairEntry->pso, sizeof(d912pxy_trimmed_pso_desc_key));
-
 			shaderBuffer->PointAtMem(&pairEntry->vs, 8);
 			d912pxy_shader* vs = (d912pxy_shader*)shaderBuffer->CurrentCID();
 			if (!vs)
@@ -229,7 +227,7 @@ void d912pxy_pso_db::LoadCachedData()
 			}
 
 			bool missingItems[3] = {
-				!cacheIndexes->CurrentCID(),
+				!cacheIndexes.containsPrepared(pairEntry->pso),
 				!vs->GetCode()->pShaderBytecode,
 				!ps->GetCode()->pShaderBytecode
 			};
@@ -242,12 +240,13 @@ void d912pxy_pso_db::LoadCachedData()
 			else {
 				d912pxy_shader_pair* pair = d912pxy_s.render.db.shader.GetPair(vs, ps);
 
-				auto psoDesc = psoDescs->GetElementOffsetPtr((UINT32)cacheIndexes->CurrentCID());
+				uint32_t psoDescIdx = cacheIndexes.findPrepared(pairEntry->pso);
+				auto psoDesc = psoDescs->GetElementOffsetPtr(psoDescIdx);
 
 				psoDesc->ref.PS = ps;
 				psoDesc->ref.VS = vs;
 
-				if (pair->PrecompilePSO((UINT32)cacheIndexes->CurrentCID(), psoDesc))
+				if (pair->PrecompilePSO(psoDescIdx, psoDesc))
 					++psoItemsCompiled;
 			}
 
@@ -294,11 +293,11 @@ void d912pxy_pso_db::CheckCompileQueueLock()
 	}
 }
 
-void d912pxy_pso_db::SaveKeyToCache(d912pxy_trimmed_pso_desc_key key, d912pxy_trimmed_pso_desc* desc)
+void d912pxy_pso_db::SaveKeyToCache(d912pxy_trimmed_pso_desc::StorageKey key, d912pxy_trimmed_pso_desc* desc)
 {
 	d912pxy_mem_block data = desc->Serialize();
 
-	d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(key, d912pxy_vfs_bid::pso_cache_keys), data);
+	d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(key.val.value, d912pxy_vfs_bid::pso_cache_keys), data);
 	data.Delete();
 
 	//if pso data get corrupted on save
