@@ -63,9 +63,25 @@ namespace d912pxy
 		bool operator==(const XorHash& r) const { return value == r.value; }
 	};
 
-
 	typedef XorHash<uint64_t, 0xcbf29ce484222325, 1099511628211> Hash64;
 	typedef XorHash<uint32_t, 0x811c9dc5, 16777619> Hash32;
+
+	template<typename InnerType>
+	struct RawHash
+	{
+		typedef InnerType Data;
+
+		union {
+			InnerType value = 0;
+			uint8_t mem[sizeof(InnerType)];
+		};
+
+		RawHash() = default;
+		RawHash(const InnerType& obj) { from(obj); }
+		void from(const InnerType& obj) { value = obj; }
+		uint8_t operator [] (int index) const { return mem[index]; }
+		bool operator==(const RawHash& r) const { return value == r.value; }
+	};
 
 }
 

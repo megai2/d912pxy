@@ -40,7 +40,7 @@ namespace d912pxy
 			Hash val;
 			StepType tip;
 
-			const Hash::Data& data()
+			const typename Hash::Data& data()
 			{
 				return val.value;
 			}
@@ -109,6 +109,16 @@ namespace d912pxy
 		}
 
 	public:
+		class Iterator
+		{
+			Leaf* current;
+		public:
+			Iterator(Leaf* base) : current(base) { }
+			bool operator<(const Iterator& b) { return current < b.current; }							   
+			Iterator& operator++() { ++current;	return *this; }
+			Value& value() { return current->val; }
+		};
+
 		Memtree()
 		{
 			baseNode = nodes.next();
@@ -138,9 +148,12 @@ namespace d912pxy
 			return *ret;
 		}
 
-		Value& find(const Key& key) { return findPrepared(transformKey(key)); }
-		Value* contains(const Key& key) { return containsPrepared(transformKey(key)); }
+		Value& find(const Key& key) { return findPrepared(prepareKey(key)); }
+		Value* contains(const Key& key) { return containsPrepared(prepareKey(key)); }
 		Value& operator[](const Key& key) { return find(key); }
+
+		Iterator Begin() { return Iterator(&leafs[1]); }
+		Iterator End() { return Iterator(&leafs.head()); }
 
 	private:
 		IndexType baseNode;

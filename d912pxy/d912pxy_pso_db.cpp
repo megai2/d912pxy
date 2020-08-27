@@ -200,7 +200,7 @@ void d912pxy_pso_db::LoadCachedData()
 
 	{
 		auto precompList = d912pxy_s.vfs.GetFileList(d912pxy_vfs_bid::pso_precompile_list);
-		d912pxy_memtree2* shaderBuffer = new d912pxy_memtree2(sizeof(d912pxy_shader_uid), 100, 2);
+		auto shaderBuffer = new d912pxy::Memtree<d912pxy_shader_uid, d912pxy_shader*, d912pxy::RawHash<d912pxy_shader_uid>>();
 
 		while (precompList->HaveElements())
 		{
@@ -210,21 +210,13 @@ void d912pxy_pso_db::LoadCachedData()
 			if (!pairEntry)
 				continue;
 
-			shaderBuffer->PointAtMem(&pairEntry->vs, 8);
-			d912pxy_shader* vs = (d912pxy_shader*)shaderBuffer->CurrentCID();
-			if (!vs)
-			{
-				vs = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_VS, 0, pairEntry->vs);
-				shaderBuffer->SetValue((UINT64)vs);
-			}
+			d912pxy_shader*& vs = shaderBuffer->find(pairEntry->vs);
+			d912pxy_shader*& ps = shaderBuffer->find(pairEntry->ps);
 
-			shaderBuffer->PointAtMem(&pairEntry->ps, 8);
-			d912pxy_shader* ps = (d912pxy_shader*)shaderBuffer->CurrentCID();
-			if (!ps)
-			{
+			if (!vs)
+				vs = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_VS, 0, pairEntry->vs);
+			if (!ps)			
 				ps = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_PS, 0, pairEntry->ps);
-				shaderBuffer->SetValue((UINT64)ps);
-			}
 
 			bool missingItems[3] = {
 				!cacheIndexes.containsPrepared(pairEntry->pso),
@@ -255,15 +247,11 @@ void d912pxy_pso_db::LoadCachedData()
 			PXY_FREE(pairEntry);
 		}
 
-		shaderBuffer->Begin();
-
-		while (!shaderBuffer->IterEnd())
+		for (auto iter = shaderBuffer->Begin(); iter < shaderBuffer->End(); ++iter)
 		{
-			auto item = (d912pxy_shader*)shaderBuffer->CurrentCID();
-			if (item)
-				item->Release();
-
-			shaderBuffer->Next();
+			d912pxy_shader*& shader = iter.value();
+			if (!shader)
+				shader->Release();
 		}
 
 		delete shaderBuffer;

@@ -58,6 +58,7 @@ namespace d912pxy
 				return last;
 			}
 
+			Element& head() { return storage.get(last); }
 			Element& operator[](intptr_t idx) { return storage.get(idx); }
 		};
 	}
