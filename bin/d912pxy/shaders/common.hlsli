@@ -170,7 +170,7 @@ float4 dx9_fix_halfpixel_offset(float4 inPos)
 #define dx9_rsqrt(a) rsqrt(abs(a))
 #define dx9_rsqrt_guarded(a) a != 0 ? rsqrt(abs(a)) : 1e37
 #define dx9_frac(a) frac(a)
-#define dx9_pow(a,b) pow(abs(a), b)
+#define dx9_pow(a,b) ((a == 0) && (b == 0)) ? 0 : pow(abs(a), b)
 #define dx9_normalize(a) normalize(a)
 #define dx9_normalize_guarded(a) any(a) ? normalize(a) : 0
 #define dx9texldl(dt, srgb, to, so, uv, w) dx9texldl_ ## dt(to,so,uv,w, srgb)
