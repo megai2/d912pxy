@@ -141,7 +141,6 @@ void d912pxy_pso_db::ThreadJob()
 void d912pxy_pso_db::LoadCachedData()
 {
 	//todo: use proper buffer
-	//todo2: use smth better than a memtree2 for everything ... ><
 	d912pxy_ringbuffer<d912pxy_trimmed_pso_desc>* psoDescs = new d912pxy_ringbuffer<d912pxy_trimmed_pso_desc>(65535, 2);
 	psoDescs->WriteElement(d912pxy_trimmed_pso_desc());
 	
@@ -247,7 +246,7 @@ void d912pxy_pso_db::LoadCachedData()
 			PXY_FREE(pairEntry);
 		}
 
-		for (auto iter = shaderBuffer->Begin(); iter < shaderBuffer->End(); ++iter)
+		for (auto iter = shaderBuffer->begin(); iter < shaderBuffer->end(); ++iter)
 		{
 			d912pxy_shader*& shader = iter.value();
 			if (!shader)

@@ -152,8 +152,8 @@ namespace d912pxy
 		Value* contains(const Key& key) { return containsPrepared(prepareKey(key)); }
 		Value& operator[](const Key& key) { return find(key); }
 
-		Iterator Begin() { return Iterator(&leafs[1]); }
-		Iterator End() { return Iterator(&leafs.head()); }
+		Iterator begin() { return Iterator(&leafs[1]); }
+		Iterator end() { return Iterator(&leafs.head()); }
 
 	private:
 		IndexType baseNode;
