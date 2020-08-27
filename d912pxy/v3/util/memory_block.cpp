@@ -24,9 +24,9 @@ SOFTWARE.
 */
 #include <stdafx.h>
 
-d912pxy::MemoryBlock::MemoryBlock(intptr_t size)
-{
-	ptr = malloc(size);
+d912pxy::MemoryBlock::MemoryBlock(intptr_t i_size) 
+{ 
+	alloc(i_size);
 }
 
 d912pxy::MemoryBlock::~MemoryBlock()
@@ -35,13 +35,15 @@ d912pxy::MemoryBlock::~MemoryBlock()
 		::free(ptr);
 }
 
-void d912pxy::MemoryBlock::alloc(intptr_t size)
+void d912pxy::MemoryBlock::alloc(intptr_t i_size)
 {
+	size = i_size;
 	ptr = malloc(size);
 }
 
 void d912pxy::MemoryBlock::realloc(intptr_t newSize)
 {
+	size = newSize;
 	ptr = ::realloc(ptr, newSize);
 }
 

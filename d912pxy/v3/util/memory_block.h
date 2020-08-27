@@ -31,21 +31,22 @@ namespace d912pxy
 	class MemoryBlock : public BaseObject
 	{
 		void* ptr = nullptr;
+		intptr_t size = 0;
 
 	public:
 		MemoryBlock() = default;
-		MemoryBlock(void* in_ptr) : ptr(in_ptr) {};
+		MemoryBlock(void* in_ptr, intptr_t in_size) : ptr(in_ptr), size(in_size) {};
+		MemoryBlock(void* in_ptr) : ptr(in_ptr), size(0) {};
 		MemoryBlock(intptr_t size);
 		~MemoryBlock();
 
 		void alloc(intptr_t size);
 		void realloc(intptr_t newSize);
 		void free();
+		intptr_t getSize() const { return size; }
 
 		template<class T>
-		T* c_arr() {
-			return (T*)ptr;
-		}
+		T* c_arr() const { return (T*)ptr; }
 	};
 
 }

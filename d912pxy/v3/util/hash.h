@@ -59,6 +59,20 @@ namespace d912pxy
 			}
 		}
 
+		template<>
+		void from(const MemoryBlock& obj)
+		{
+			value = base;
+			uint8_t* objMem = obj.c_arr<uint8_t>();
+
+			for (uintptr_t i = 0; i < obj.getSize(); ++i)
+			{
+				value ^= *objMem;
+				value *= multiplier;
+				++objMem;
+			}
+		}
+
 		uint8_t operator [] (int index) const { return mem[index]; }
 		bool operator==(const XorHash& r) const { return value == r.value; }
 	};
