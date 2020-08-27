@@ -37,33 +37,32 @@ d912pxy_shader_db::~d912pxy_shader_db()
 void d912pxy_shader_db::Init()
 {
 	NonCom_Init(L"shader database");
-
-	shaderPairs = new d912pxy_memtree2(sizeof(d912pxy_shader_pair_hash_type), 0xFF, 2);
 }
 
 void d912pxy_shader_db::UnInit()
 {
-	shaderPairs->Begin();
-
-	while (!shaderPairs->IterEnd())
+	for (auto iter = shaderPairs.begin(); iter < shaderPairs.end(); ++iter)
 	{
-		UINT64 cid = shaderPairs->CurrentCID();
-		if (cid)
-		{
-			d912pxy_shader_pair* item = (d912pxy_shader_pair*)cid;
-
-			delete item;
-		}
-		shaderPairs->Next();
+		d912pxy_shader_pair*& pair = iter.value();
+		if (pair)
+			delete pair;
 	}
-
-	delete shaderPairs;
 
 	d912pxy_noncom::UnInit();
 }
 
 d912pxy_shader_uid d912pxy_shader_db::GetUID(DWORD * code, UINT32* len)
 {
+/*
+	//this is not optimal! but fancy? FUU!
+	UINT ctr = 0;
+	while (code[ctr] != 0x0000FFFF)
+		++ctr;
+
+	*len = (ctr >> 2) + 1;
+	return d912pxy::Hash64(d912pxy::MemoryBlock((void*)code, len));
+*/
+
 	UINT64 hash = 0xcbf29ce484222325;
 	UINT ctr = 0;
 
@@ -92,41 +91,37 @@ d912pxy_shader_pair_hash_type d912pxy_shader_db::GetPairUID(d912pxy_shader * vs,
 	return ha;
 }
 
-d912pxy_shader_pair * d912pxy_shader_db::GetPair(d912pxy_shader* vs, d912pxy_shader* ps)
-{	
+d912pxy_shader_pair* d912pxy_shader_db::GetPair(d912pxy_shader* vs, d912pxy_shader* ps)
+{
 	d912pxy_shader_pair_hash_type ha = GetPairUID(vs, ps);
-		
-	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->PointAtMemMTR(&ha, sizeof(d912pxy_shader_pair_hash_type));
-	
-	if (it)
-	{		
-		return it;
+
+	d912pxy::mt::containter::OptRef<ShaderPairStorage> ref(shaderPairs, ha);
+
+	if (!ref.val)
+	{
+		d912pxy_shader_uid pdc[2] = { vs->GetID(), ps->GetID() };
+
+		*ref.val = new d912pxy_shader_pair(ha, pdc);
+
+		vs->NotePairUsage(ha);
+		ps->NotePairUsage(ha);
 	}
-	else {
-		it = (d912pxy_shader_pair*)shaderPairs->PointAtMemMTRW(&ha, sizeof(d912pxy_shader_pair_hash_type));
 
-		if (!it)
-		{
-			d912pxy_shader_uid pdc[2] = { vs->GetID(), ps->GetID() };
-
-			it = new d912pxy_shader_pair(ha, pdc);
-
-			vs->NotePairUsage(ha);
-			ps->NotePairUsage(ha);
-		}
-	
-		shaderPairs->PointAtMemMTW((intptr_t)it);
-
-		return it;
-	}
+	return *ref.val;
 }
 
 void d912pxy_shader_db::DeletePair(d912pxy_shader_pair_hash_type ha)
 {
-	d912pxy_shader_pair* it = (d912pxy_shader_pair*)shaderPairs->PointAtMemMTRW(&ha, sizeof(d912pxy_shader_pair_hash_type));
+	d912pxy_shader_pair* pair = nullptr;
 
-	shaderPairs->PointAtMemMTW(0);
-	
-	if (it)
-		delete it;		
+	{
+		d912pxy::mt::containter::OptRef<ShaderPairStorage> ref(shaderPairs, ha);
+
+		if (!ref.val)
+			pair = *ref.val;
+	}
+
+	if (pair)
+		delete pair;
+
 }

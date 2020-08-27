@@ -45,6 +45,7 @@ public:
 	void DeletePair(d912pxy_shader_pair_hash_type ha);
 
 private:
-	d912pxy_memtree2* shaderPairs;
+	typedef d912pxy::Memtree<d912pxy_shader_pair_hash_type, d912pxy_shader_pair*, d912pxy::RawHash<d912pxy_shader_pair_hash_type>> ShaderPairStorage;
+	ShaderPairStorage shaderPairs;
 };
 
