@@ -325,8 +325,8 @@ void d912pxy_pso_item::RCEFixIOBlocksOrdering(char** vsOut, char** psIn, UINT vs
 char* d912pxy_pso_item::RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias)
 {
 	UINT64 derivedUID[2] = {
-		d912pxy_memtree2::memHash64s(src[0].ptr(), (UINT)src[0].size()),
-		d912pxy_memtree2::memHash64s(src[1].ptr(), (UINT)src[1].size())
+		d912pxy::Hash64(d912pxy::MemoryBlock(src[0].ptr(), (UINT)src[0].size())).value,
+		d912pxy::Hash64(d912pxy::MemoryBlock(src[1].ptr(), (UINT)src[1].size())).value
 	};
 
 	char derivedName[255];
