@@ -27,6 +27,16 @@ SOFTWARE.
 
 class d912pxy_surface_pool : public d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>
 {
+	struct Uid
+	{
+		uint16_t w;
+		uint16_t h;
+		uint8_t levels;
+		uint8_t arrSz;
+		uint8_t usage;
+		uint32_t fmt;
+	};
+
 public:
 	d912pxy_surface_pool();
 	~d912pxy_surface_pool();
@@ -53,10 +63,9 @@ public:
 	ID3D12Resource* GetPlacedSurface(D3D12_RESOURCE_DESC* dsc, D3D12_RESOURCE_STATES initialState);
 	   
 private:
-	d912pxy_memtree2* table;
-
-	d912pxy_thread_lock mtMutex;
-
+	typedef d912pxy::Memtree<Uid, d912pxy_ringbuffer<d912pxy_surface*>*, d912pxy::Hash32> CatTable;
+	CatTable table;
+	
 	bool disableGC;
 	UINT persistentItems;
 

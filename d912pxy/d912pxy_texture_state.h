@@ -89,7 +89,9 @@ private:
 	d912pxy_device_texture_state current;	
 
 	d912pxy_dheap* samplerHeap;	
-	d912pxy_memtree2* splLookup;
+
+	typedef d912pxy::Memtree<d912pxy_trimmed_sampler_dsc, uint32_t, d912pxy::Hash32> LookupTable;
+	LookupTable splLookup;
 
 	D3D12_SAMPLER_DESC splDsc;
 	d912pxy_trimmed_sampler_dsc trimmedSpl[PXY_INNER_MAX_TEXTURE_STAGES];

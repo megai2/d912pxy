@@ -16,8 +16,6 @@ void d912pxy_texture_state::Init()
 
 	samplerHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_SPL);
 
-	splLookup = new d912pxy_memtree2(sizeof(d912pxy_trimmed_sampler_dsc), 20, 2);
-
 	UINT16 defaultMinLOD = (UINT16)d912pxy_s.config.GetValueUI64(PXY_CFG_SAMPLERS_MIN_LOD);
 
 	ZeroMemory(&splDsc, sizeof(D3D12_SAMPLER_DESC));
@@ -38,18 +36,12 @@ void d912pxy_texture_state::Init()
 
 void d912pxy_texture_state::UnInit()
 {
-	splLookup->Begin();
-
-	while (!splLookup->IterEnd())
+	for (auto i = splLookup.begin(); i < splLookup.end(); ++i)
 	{
-		UINT32 cid = splLookup->CurrentCID() & 0xFFFFFFFF;
+		uint32_t cid = i.value();
 		if (cid)
 			samplerHeap->FreeSlot(cid - 1);
-
-		splLookup->Next();
 	}
-
-	delete splLookup;
 
 	d912pxy_noncom::UnInit();
 }
@@ -196,14 +188,13 @@ void d912pxy_texture_state::ClearActiveTextures()
 
 UINT d912pxy_texture_state::LookupSamplerId(const d912pxy_trimmed_sampler_dsc& trimmedDsc)
 {
-	UINT ret = (UINT32)splLookup->PointAt32((void*)&trimmedDsc);
+	uint32_t& ret = splLookup[trimmedDsc];
 
 	if (ret != 0)
-	{
 		return ret - 1;
-	}
 
 	UpdateFullSplDsc(trimmedDsc);
+
 	ret = CreateNewSampler();
 
 	return ret;
@@ -288,9 +279,5 @@ UINT d912pxy_texture_state::CreateNewSampler()
 		splDsc.Filter, splDsc.MinLOD, splDsc.MaxLOD, splDsc.MipLODBias, splDsc.AddressU, splDsc.AddressV, splDsc.AddressW, splDsc.MaxAnisotropy,
 		splDsc.BorderColor[0], splDsc.BorderColor[1], splDsc.BorderColor[2], splDsc.BorderColor[3]);
 
-	UINT ret = samplerHeap->CreateSampler(&splDsc);
-	
-	splLookup->SetValue(ret + 1);
-
-	return ret;
+	return samplerHeap->CreateSampler(&splDsc);
 }

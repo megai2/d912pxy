@@ -52,8 +52,6 @@ void d912pxy_surface_pool::Init(D3D12_HEAP_FLAGS memPoolFlag)
 	disableGC = (config & 0x10000) > 0;
 	persistentItems = config & 0xFFFF;
 
-	table = new d912pxy_memtree2(4, 4096, 2);
-
 	PXY_MALLOC(this->rwMutex, sizeof(d912pxy_thread_lock) * 1, d912pxy_thread_lock*);
 
 	this->rwMutex[0].Init();
@@ -63,27 +61,21 @@ void d912pxy_surface_pool::UnInit()
 {
 	pRunning = 0;
 
-	table->Begin();
-
-	while (!table->IterEnd())
+	for (auto i = table.begin(); i < table.end(); ++i)
 	{
-		UINT64 cid = table->CurrentCID();
-		if (cid)
+		d912pxy_ringbuffer<d912pxy_surface*>*& item = i.value();
+
+		if (!item)
+			continue;
+
+		while (item->HaveElements())
 		{
-			d912pxy_ringbuffer<d912pxy_surface*>* item = (d912pxy_ringbuffer<d912pxy_surface*>*)cid;
-
-			while (item->HaveElements())
-			{
-				item->GetElement()->Release();
-				item->Next();
-			}
-
-			delete item;
+			item->GetElement()->Release();
+			item->Next();
 		}
-		table->Next();
-	}
 
-	delete table;
+		delete item;
+	}
 
 	PXY_FREE(this->rwMutex);
 
@@ -92,25 +84,18 @@ void d912pxy_surface_pool::UnInit()
 
 d912pxy_surface * d912pxy_surface_pool::GetSurface(UINT width, UINT height, D3DFORMAT fmt, UINT levels, UINT arrSz, UINT Usage, UINT32* srvFeedback)
 {
-	UINT uidPrecursor[] = {
-		width + (height << 16),		
-		levels + (arrSz << 8),
-		(UINT)fmt,
-		Usage
-	};
-
-	UINT uid = table->memHash32s(uidPrecursor, 4 * 4);
+	CatTable::PreparedKey uid({ (uint16_t)width, (uint16_t)height, (uint8_t)levels, (uint8_t)arrSz, (uint8_t)Usage, (uint32_t)fmt });
 
 	d912pxy_surface* ret = NULL;
 	
-	PoolRW(uid, &ret, 0);
+	PoolRW(uid.data(), &ret, 0);
 
 	if (!ret)
 	{
 		LOG_DBG_DTDM2("surface pool miss: %u %u %u %u %u %u", width, height, fmt, arrSz, levels, Usage);
 
 		ret = d912pxy_surface::d912pxy_surface_com(width, height, fmt, Usage, D3DMULTISAMPLE_NONE, 0, 0, &levels, arrSz, srvFeedback);
-		ret->MarkPooled(uid);
+		ret->MarkPooled(uid.data());
 	}
 	else {
 		ret->SetDHeapIDFeedbackPtr(srvFeedback);
@@ -127,21 +112,13 @@ d912pxy_surface * d912pxy_surface_pool::AllocProc(UINT32 cat)
 
 d912pxy_ringbuffer<d912pxy_surface*>* d912pxy_surface_pool::GetCatBuffer(UINT32 cat)
 {
-	d912pxy_ringbuffer<d912pxy_surface*>* ret = NULL;
+	d912pxy::mt::containter::OptRefPrepared<CatTable> ref(table, CatTable::PreparedKey::fromRawData(cat));
 
-	mtMutex.Hold();
+	if (ref.val)
+		return *ref.val;
 
-	table->PointAtMem(&cat, 4);
-	ret = (d912pxy_ringbuffer<d912pxy_surface*>*)table->CurrentCID();
-
-	if (!ret)
-	{
-		ret = new d912pxy_ringbuffer<d912pxy_surface*>(64, 2);
-		table->SetValue((UINT64)ret);
-	}
-
-	mtMutex.Release();
-
+	d912pxy_ringbuffer<d912pxy_surface*>* ret = new d912pxy_ringbuffer<d912pxy_surface*>(64, 2);
+	ref.add() = ret;
 	return ret;
 }
 

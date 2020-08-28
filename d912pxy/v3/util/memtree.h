@@ -40,10 +40,19 @@ namespace d912pxy
 			Hash val;
 			StepType tip;
 
+			static PreparedKey fromRawData(typename Hash::Data& rawData)
+			{
+				PreparedKey ret;
+				ret.val.value = rawData;
+				return ret;
+			}
+
 			const typename Hash::Data& data()
 			{
 				return val.value;
 			}
+
+			PreparedKey() {}
 
 			PreparedKey(const Key& obj)
 			{

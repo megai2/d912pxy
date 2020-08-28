@@ -224,8 +224,7 @@ void d912pxy_vdecl::ModifyStreamElementType(UINT stream, D3D12_INPUT_CLASSIFICAT
 
 void d912pxy_vdecl::UpdateHash()
 {
-	void* mem = declData;
-	mHash = d912pxy_memtree2::memHash32s(mem, declLen * sizeof(D3DVERTEXELEMENT9));
+	mHash = d912pxy::Hash32(d912pxy::MemoryArea((void*)declData, declLen * sizeof(D3DVERTEXELEMENT9))).value;
 }
 
 d912pxy_vdecl * d912pxy_vdecl::GetInstancedModification(UINT streamMask, D3D12_INPUT_CLASSIFICATION newMode)
