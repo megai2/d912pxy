@@ -154,23 +154,17 @@ d912pxy_ringbuffer<d912pxy_vfs_pck_chunk*>* d912pxy_vfs_pck::GetFileList()
 {
 	d912pxy_ringbuffer<d912pxy_vfs_pck_chunk*>* ret = new d912pxy_ringbuffer<d912pxy_vfs_pck_chunk*>(512, 2);
 
-	cuChunkList->Begin();
-
-	while (!cuChunkList->IterEnd())
+	for (auto i = cuChunkList->begin(); i < cuChunkList->end(); ++i)
 	{
-		UINT64 packedData = cuChunkList->CurrentCID();
+		UINT64 packedData = i.value();
 
 		if (UnpackChunkTypeFromPackedData(packedData) == CHU_FILE_INFO)
 		{
 			d912pxy_vfs_pck_chunk* fiCh = ReadChunk(UnpackChunkOffsetFromPackedData(packedData));
 
 			if (fiCh)
-			{				
 				ret->WriteElement(fiCh);
-			}
 		}
-
-		cuChunkList->Next();
 	}
 
 	LOG_INFO_DTDM("Found %u files in %016llX", ret->TotalElements(), this);
@@ -379,7 +373,7 @@ UINT d912pxy_vfs_pck::LoadChunkIndex()
 
 	UINT64 indexOffset = d912pxy_vfs_pck_on_disk_chunk_sizes[CHU_HEADER];
 
-	cuChunkList = new d912pxy_memtree2(4, 100, 2);
+	cuChunkList = new d912pxy::Memtree<uint32_t, uint64_t, d912pxy::RawHash<uint32_t>>();
 	cuChunkIndex = 0;
 	
 	d912pxy_vfs_pck_chunk* chunkIndex = ReadChunk(indexOffset);
@@ -461,8 +455,7 @@ UINT d912pxy_vfs_pck::AddToChunkIndex(d912pxy_vfs_pck_chunk * chunk, UINT64 offs
 
 void d912pxy_vfs_pck::AddToChunkList(d912pxy_vfs_pck_chunk_index_data* indexDt)
 {
-	cuChunkList->PointAtMem(&indexDt->id, 4);
-	cuChunkList->SetValue(indexDt->packedInfo);
+	cuChunkList->find(indexDt->id) = indexDt->packedInfo;
 }
 
 d912pxy_vfs_pck_chunk_index_data* d912pxy_vfs_pck::NewChunkIndexElement(d912pxy_vfs_pck_chunk* chunk, UINT64 offset)
@@ -484,20 +477,17 @@ UINT64 d912pxy_vfs_pck::PackChunkIndexInfo(UINT8 type, UINT64 offset)
 
 UINT8 d912pxy_vfs_pck::GetChunkTypeFromIndex(d912pxy_vfs_pck_chunk* chunk)
 {
-	cuChunkList->PointAtMem(&chunk->dsc.id, 4);
-	return UnpackChunkTypeFromPackedData(cuChunkList->CurrentCID());	
+	return UnpackChunkTypeFromPackedData(cuChunkList->find(chunk->dsc.id));
 }
 
 UINT64 d912pxy_vfs_pck::GetChunkOffsetFromIndex(d912pxy_vfs_pck_chunk* chunk)
 {
-	cuChunkList->PointAtMem(&chunk->dsc.id, 4);	
-	return UnpackChunkOffsetFromPackedData(cuChunkList->CurrentCID());
+	return UnpackChunkOffsetFromPackedData(cuChunkList->find(chunk->dsc.id));
 }
 
 UINT64 d912pxy_vfs_pck::GetChunkOffsetFromIndexById(UINT32 id)
 {
-	cuChunkList->PointAtMem(&id, 4);
-	return UnpackChunkOffsetFromPackedData(cuChunkList->CurrentCID());
+	return UnpackChunkOffsetFromPackedData(cuChunkList->find(id));
 }
 
 UINT8 d912pxy_vfs_pck::UnpackChunkTypeFromPackedData(UINT64 packedData)

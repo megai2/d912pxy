@@ -143,8 +143,6 @@ public:
 	d912pxy_vfs_pck_chunk* WriteFileToPck(d912pxy_vfs_pck_chunk*& prevChunk, UINT id, UINT64 namehash, void* data, UINT sz);
 
 private:
-	
-
 	HANDLE lockFile;
 	UINT32 writeAllowed;
 	char m_rootPath[2048];

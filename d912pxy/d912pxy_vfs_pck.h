@@ -168,8 +168,8 @@ private:
 
 	////
 	d912pxy_vfs_pck_chunk* cuHeader;
-	d912pxy_vfs_pck_chunk* cuChunkIndex;
-	d912pxy_memtree2* cuChunkList;	
+	d912pxy_vfs_pck_chunk* cuChunkIndex;	
+	d912pxy::Memtree<uint32_t, uint64_t, d912pxy::RawHash<uint32_t>>* cuChunkList;
 
 	HANDLE fs_file;
 	UINT64 fs_write_offset;
