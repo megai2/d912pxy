@@ -77,7 +77,8 @@ namespace d912pxy
 				typename Container::Provider::Value& add()
 				{
 					//TODO: can be optimized by skipping search sequenece
-					return containerRef.findPrepared(RefBaseType::key);
+					RefBaseType::val = &containerRef.findPrepared(RefBaseType::key);
+					return *RefBaseType::val;
 				}
 			};
 
