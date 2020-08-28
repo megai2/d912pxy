@@ -167,8 +167,8 @@ namespace d912pxy
 	private:
 		IndexType baseNode;
 
-		Trivial::PushBuffer<Node> nodes;
-		Trivial::PushBuffer<Leaf> leafs;
+		Trivial::PushBuffer<Node, IndexType> nodes;
+		Trivial::PushBuffer<Leaf, IndexType> leafs;
 	};
 	
 }

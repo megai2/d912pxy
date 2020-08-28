@@ -29,11 +29,11 @@ namespace d912pxy
 {
 	namespace Trivial
 	{
-		template<typename Element, int initialSize = 256>
+		template<typename Element, typename IndexType = intptr_t, int initialSize = 256>
 		class PushBuffer
 		{
-			intptr_t maxElements;
-			intptr_t last;
+			IndexType maxElements;
+			IndexType last;
 			LinearArray<Element> storage;
 
 		public:
@@ -45,7 +45,7 @@ namespace d912pxy
 				storage.zeroMem(0, initialSize);
 			}
 
-			intptr_t next()
+			IndexType next()
 			{
 				++last;
 				if (last >= maxElements)
