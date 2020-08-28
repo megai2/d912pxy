@@ -35,28 +35,21 @@ namespace d912pxy
 		typedef uint8_t StepType;
 		typedef uint32_t IndexType;	
 
-		union PreparedKey
+		struct PreparedKey
 		{
 			Hash val;
-			StepType tip;
+			
+			StepType tip() const { return val[0]; }
+			const typename Hash::Data& data() { return val.value; }
+
+			PreparedKey() {}
+			PreparedKey(const Key& obj) { val.from(obj); }
 
 			static PreparedKey fromRawData(typename Hash::Data& rawData)
 			{
 				PreparedKey ret;
 				ret.val.value = rawData;
 				return ret;
-			}
-
-			const typename Hash::Data& data()
-			{
-				return val.value;
-			}
-
-			PreparedKey() {}
-
-			PreparedKey(const Key& obj)
-			{
-				val.from(obj);
 			}
 		};
 	
@@ -79,7 +72,7 @@ namespace d912pxy
 		{
 			IndexType nextNode;
 
-			for (; depth > 1; --depth)
+			for (; depth >= 1; --depth)
 			{
 				nextNode = nodes.next();
 				nodes[lastNode].childs[hash.val[depth]] = nextNode;
@@ -87,7 +80,7 @@ namespace d912pxy
 			}
 
 			nextNode = leafs.next();
-			nodes[lastNode].childs[hash.tip] = nextNode;
+			nodes[lastNode].childs[hash.tip()] = nextNode;
 			
 			leafs[nextNode].origHash = hash;
 			return &leafs[nextNode].val;
@@ -97,7 +90,7 @@ namespace d912pxy
 		{
 			lastNode = baseNode;
 			Node* cnode = &nodes[lastNode];
-			for (depth = treeDepth; depth > 1; --depth)
+			for (depth = treeDepth-1; depth >= 1; --depth)
 			{			
 				IndexType childNode = cnode->childs[hash.val[depth]];
 				if (!childNode)
@@ -107,7 +100,7 @@ namespace d912pxy
 				lastNode = childNode;
 			}
 
-			IndexType leafNode = cnode->childs[hash.tip];
+			IndexType leafNode = cnode->childs[hash.tip()];
 			if (!leafNode)
 				return nullptr;
 
@@ -151,7 +144,7 @@ namespace d912pxy
 			IndexType lastNode;
 			Value* ret = searchInner(hash, depth, lastNode);
 
-			if (!ret)			
+			if (!ret)
 				ret = insertNew(hash, depth, lastNode);
 
 			return *ret;
