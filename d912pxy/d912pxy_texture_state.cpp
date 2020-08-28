@@ -279,5 +279,5 @@ UINT d912pxy_texture_state::CreateNewSampler()
 		splDsc.Filter, splDsc.MinLOD, splDsc.MaxLOD, splDsc.MipLODBias, splDsc.AddressU, splDsc.AddressV, splDsc.AddressW, splDsc.MaxAnisotropy,
 		splDsc.BorderColor[0], splDsc.BorderColor[1], splDsc.BorderColor[2], splDsc.BorderColor[3]);
 
-	return samplerHeap->CreateSampler(&splDsc);
+	return samplerHeap->CreateSampler(&splDsc)+1;
 }
