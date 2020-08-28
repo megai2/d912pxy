@@ -167,7 +167,7 @@ d912pxy_vfs_locked_entry d912pxy_vfs::GetBidLocked(d912pxy_vfs_bid bid)
 	return d912pxy_vfs_locked_entry(bid, items);
 }
 
-d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk*& prevChunk, UINT id, UINT64 namehash, void * data, UINT sz)
+d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk, UINT id, UINT64 namehash, void * data, UINT sz)
 {
 	if (prevChunk)
 	{
