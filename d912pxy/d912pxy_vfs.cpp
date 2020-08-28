@@ -139,20 +139,14 @@ d912pxy_ringbuffer<d912pxy_vfs_path_hash>* d912pxy_vfs::GetFileList(d912pxy_vfs_
 {
 	d912pxy_ringbuffer<d912pxy_vfs_path_hash>* ret = new d912pxy_ringbuffer<d912pxy_vfs_path_hash>(20, 2);
 
-	d912pxy_memtree2* cuTree = GetBidLocked(bid)->GetChunkTree();
+	d912pxy_vfs_entry::ChunkTree* cuTree = GetBidLocked(bid)->GetChunkTree();
 
-	cuTree->Begin();
-
-	while (!cuTree->IterEnd())
+	for (auto i = cuTree->begin(); i < cuTree->end(); ++i)
 	{
-		d912pxy_vfs_pck_chunk* chunk = (d912pxy_vfs_pck_chunk*)cuTree->CurrentCID();
+		d912pxy_vfs_pck_chunk* chunk = i.value();
 
 		if (chunk && (chunk->dsc.type == CHU_FILE_INFO))
-		{
 			ret->WriteElement(chunk->data.file_info.name);
-		}
-
-		cuTree->Next();
 	}
 
 	return ret;
@@ -173,7 +167,7 @@ d912pxy_vfs_locked_entry d912pxy_vfs::GetBidLocked(d912pxy_vfs_bid bid)
 	return d912pxy_vfs_locked_entry(bid, items);
 }
 
-d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk, UINT id, UINT64 namehash, void * data, UINT sz)
+d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk*& prevChunk, UINT id, UINT64 namehash, void * data, UINT sz)
 {
 	if (prevChunk)
 	{
@@ -182,7 +176,7 @@ d912pxy_vfs_pck_chunk * d912pxy_vfs::WriteFileToPck(d912pxy_vfs_pck_chunk* prevC
 			if (prevChunk->parent == cuPck)
 			{
 				items[id]->LoadFileFromDisk(prevChunk);
-				prevChunk = (d912pxy_vfs_pck_chunk*)items[id]->GetChunkTree()->CurrentCID();
+				prevChunk = (d912pxy_vfs_pck_chunk*)items[id]->GetLastChunk();
 
 				return WriteFileToPck(prevChunk, id, namehash, data, sz);
 			}
@@ -302,7 +296,7 @@ void d912pxy_vfs::LoadPckFromRootPath()
 d912pxy_vfs_path_hash d912pxy_vfs_path::HashFromName(const char * fnpath)
 {
 	UINT len = (UINT32)strlen(fnpath);
-	d912pxy_vfs_path_hash ret = d912pxy_memtree2::memHash64s((void*)fnpath, len);
+	d912pxy_vfs_path_hash ret = d912pxy::Hash64(d912pxy::MemoryArea((void*)fnpath, len)).value;
 
 	auto checkPath = d912pxy_vfs_path(ret, d912pxy_vfs_bid::vfs_paths);
 	if (d912pxy_s.vfs.IsFilePresent(checkPath))

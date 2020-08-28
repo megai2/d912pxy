@@ -27,34 +27,31 @@ SOFTWARE.
 d912pxy_vfs_entry::d912pxy_vfs_entry(UINT id) : d912pxy_noncom(L"vfs_entry")
 {
 	m_Id = id;
-	chunkTree = new d912pxy_memtree2(8, 100, 2);
+	chunkTree = new ChunkTree();
 }
 
 d912pxy_vfs_entry::~d912pxy_vfs_entry()
 {
-	chunkTree->Begin();
 
-	while (!chunkTree->IterEnd())
+	for (auto i = chunkTree->begin(); i < chunkTree->end(); ++i)
 	{
-		d912pxy_vfs_pck_chunk* dtCh = (d912pxy_vfs_pck_chunk*)chunkTree->CurrentCID();
-
+		d912pxy_vfs_pck_chunk* dtCh = i.value();
 		if (dtCh)
 		{
 			if (dtCh->dsc.type == CHU_FILE_INFO)
 				dtCh->parent->ModRef(-1);
 			PXY_FREE(dtCh);
 		}
-
-		chunkTree->Next();
 	}
 
 	delete chunkTree;
 }
 
-UINT64 d912pxy_vfs_entry::IsPresentH(UINT64 fnHash)
+d912pxy_vfs_pck_chunk* d912pxy_vfs_entry::IsPresentH(UINT64 fnHash)
 {
-	chunkTree->PointAtMem(&fnHash, 8);
-	return chunkTree->CurrentCID();
+	lastFind = &chunkTree->findPrepared(ChunkTree::PreparedKey::fromRawData(fnHash));
+
+	return *lastFind;
 }
 
 void * d912pxy_vfs_entry::GetFileDataH(UINT64 namehash, UINT64 * sz)
@@ -68,7 +65,7 @@ void * d912pxy_vfs_entry::GetFileDataH(UINT64 namehash, UINT64 * sz)
 	if (dtCh->dsc.type == CHU_FILE_INFO)
 	{
 		LoadFileFromDisk(dtCh);
-		dtCh = (d912pxy_vfs_pck_chunk*)chunkTree->CurrentCID();
+		dtCh = *lastFind;
 
 		if (!dtCh)
 			return 0;
@@ -85,7 +82,7 @@ void d912pxy_vfs_entry::WriteFileH(UINT64 namehash, void * data, UINT64 sz)
 
 	dtCh = d912pxy_s.vfs.WriteFileToPck(dtCh, m_Id, namehash, data, (UINT)sz);
 
-	chunkTree->SetValue((UINT64)dtCh);
+	*lastFind = dtCh;
 }
 
 void d912pxy_vfs_entry::ReWriteFileH(UINT64 namehash, void * data, UINT64 sz)
@@ -95,7 +92,7 @@ void d912pxy_vfs_entry::ReWriteFileH(UINT64 namehash, void * data, UINT64 sz)
 
 void d912pxy_vfs_entry::AddFileInfo(d912pxy_vfs_pck_chunk * fileInfo)
 {
-	d912pxy_vfs_pck_chunk* fiCh = (d912pxy_vfs_pck_chunk*)IsPresentH(fileInfo->data.file_info.name);
+	d912pxy_vfs_pck_chunk* fiCh = IsPresentH(fileInfo->data.file_info.name);
 	
 	if (fiCh)
 	{
@@ -105,7 +102,7 @@ void d912pxy_vfs_entry::AddFileInfo(d912pxy_vfs_pck_chunk * fileInfo)
 
 	fileInfo->parent->ModRef(1);
 
-	chunkTree->SetValue((UINT64)fileInfo);
+	*lastFind = fileInfo;
 }
 
 void d912pxy_vfs_entry::LoadFileFromDisk(d912pxy_vfs_pck_chunk * fiCh)
@@ -117,7 +114,7 @@ void d912pxy_vfs_entry::LoadFileFromDisk(d912pxy_vfs_pck_chunk * fiCh)
 		fiCh->parent->ModRef(-1);
 		PXY_FREE(fiCh);
 
-		chunkTree->SetValue((UINT64)dtCh);
+		*lastFind = dtCh;
 	}
 }
 
@@ -125,16 +122,14 @@ void d912pxy_vfs_entry::LoadFilesFromDisk()
 {
 	UINT32 filesLoaded = 0;
 
-	chunkTree->Begin();
-
-	while (!chunkTree->IterEnd())
+	for (auto i = chunkTree->begin(); i < chunkTree->end(); ++i)
 	{
-		LoadFileFromDisk((d912pxy_vfs_pck_chunk*)chunkTree->CurrentCID());
+		lastFind = &i.value();
+		LoadFileFromDisk(i.value());
 
-		if (chunkTree->CurrentCID() != 0)
+		if (*lastFind != 0)
 			++filesLoaded;
 
-		chunkTree->Next();
 	}
 
 	LOG_INFO_DTDM("Loaded %u files in %s ", filesLoaded, d912pxy_vfs_entry_name_str[m_Id]);

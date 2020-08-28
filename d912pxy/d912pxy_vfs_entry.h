@@ -28,10 +28,12 @@ SOFTWARE.
 class d912pxy_vfs_entry : public d912pxy_noncom
 {
 public:
+	typedef d912pxy::Memtree<d912pxy::MemoryArea, d912pxy_vfs_pck_chunk*, d912pxy::Hash64> ChunkTree;
+
 	d912pxy_vfs_entry(UINT id);
 	~d912pxy_vfs_entry();
 
-	UINT64 IsPresentH(UINT64 fnHash);
+	d912pxy_vfs_pck_chunk* IsPresentH(UINT64 fnHash);
 	void* GetFileDataH(UINT64 namehash, UINT64* sz);
 
 	void WriteFileH(UINT64 namehash, void* data, UINT64 sz);
@@ -41,12 +43,13 @@ public:
 	void LoadFileFromDisk(d912pxy_vfs_pck_chunk* fileInfo);
 	void LoadFilesFromDisk();
 
-	d912pxy_memtree2* GetChunkTree() {
-		return chunkTree;
-	};
+	ChunkTree* GetChunkTree() { return chunkTree; };
+	d912pxy_vfs_pck_chunk* GetLastChunk() { return *lastFind; }
 
-private:
-	d912pxy_memtree2* chunkTree;
+private:	
+	ChunkTree* chunkTree;
+	d912pxy_vfs_pck_chunk** lastFind;
+
 	
 	UINT m_Id;
 };

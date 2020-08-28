@@ -140,7 +140,7 @@ public:
 	d912pxy_vfs_locked_entry GetBidLocked(d912pxy_vfs_path path);
 	d912pxy_vfs_locked_entry GetBidLocked(d912pxy_vfs_bid bid);
 
-	d912pxy_vfs_pck_chunk* WriteFileToPck(d912pxy_vfs_pck_chunk* prevChunk, UINT id, UINT64 namehash, void* data, UINT sz);
+	d912pxy_vfs_pck_chunk* WriteFileToPck(d912pxy_vfs_pck_chunk*& prevChunk, UINT id, UINT64 namehash, void* data, UINT sz);
 
 private:
 	
