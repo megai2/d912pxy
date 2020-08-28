@@ -60,7 +60,7 @@ namespace d912pxy
 		}
 
 		template<>
-		void from(const MemoryBlock& obj)
+		void from(const MemoryArea& obj)
 		{
 			value = base;
 			uint8_t* objMem = obj.c_arr<uint8_t>();

@@ -28,25 +28,34 @@ SOFTWARE.
 namespace d912pxy
 {
 
-	class MemoryBlock : public BaseObject
+	class MemoryArea : public BaseObject
 	{
+	protected:
 		void* ptr = nullptr;
-		intptr_t size = 0;
+		uintptr_t size = 0;
+				
+	public:
+		MemoryArea() = default;
+		MemoryArea(void* in_ptr, uintptr_t in_size) : ptr(in_ptr), size(in_size) {};
+		uintptr_t getSize() const { return size; }
+		
+		template<class T>
+		T* c_arr() const { return (T*)ptr; }
+	};
+
+	class MemoryBlock : public MemoryArea
+	{
 
 	public:
 		MemoryBlock() = default;
-		MemoryBlock(void* in_ptr, intptr_t in_size) : ptr(in_ptr), size(in_size) {};
-		MemoryBlock(void* in_ptr) : ptr(in_ptr), size(0) {};
-		MemoryBlock(intptr_t size);
+		MemoryBlock(void* in_ptr, uintptr_t in_size) : MemoryArea(in_ptr, in_size) {}
+		MemoryBlock(void* in_ptr) : MemoryArea(in_ptr, 0) {}
+		MemoryBlock(uintptr_t size);
 		~MemoryBlock();
 
-		void alloc(intptr_t size);
-		void realloc(intptr_t newSize);
+		void alloc(uintptr_t size);
+		void realloc(uintptr_t newSize);
 		void free();
-		intptr_t getSize() const { return size; }
-
-		template<class T>
-		T* c_arr() const { return (T*)ptr; }
 	};
 
 }
