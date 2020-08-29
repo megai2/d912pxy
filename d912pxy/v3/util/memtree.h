@@ -155,7 +155,7 @@ namespace d912pxy
 		Value& operator[](const Key& key) { return find(key); }
 
 		Iterator begin() { return Iterator(&leafs[1]); }
-		Iterator end() { return Iterator(&leafs.head()); }
+		Iterator end() { return Iterator((&leafs.head()) + 1); }
 
 	private:
 		IndexType baseNode;
