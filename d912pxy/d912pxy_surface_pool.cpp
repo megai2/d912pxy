@@ -47,7 +47,7 @@ void d912pxy_surface_pool::Init(D3D12_HEAP_FLAGS memPoolFlag)
 
 	d912pxy_pool<d912pxy_surface*, d912pxy_surface_pool*>::Init();
 
-	UINT config = d912pxy_s.config.GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
+	UINT config = (UINT)d912pxy_s.config.GetValueXI64(PXY_CFG_POOLING_SURFACE_LIMITS);
 
 	disableGC = (config & 0x10000) > 0;
 	persistentItems = config & 0xFFFF;
