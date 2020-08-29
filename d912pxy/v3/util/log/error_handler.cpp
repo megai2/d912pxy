@@ -28,10 +28,11 @@ void d912pxy::error::fatal(const wchar_t* reason, ...)
 {
 	d912pxy_s.log.text.SyncCrashWrite(1);
 
-	wchar_t formattedReason[1024 * 10];
+	constexpr int bufSize = 1024 * 10;
+	wchar_t formattedReason[bufSize];
 	va_list arg;
 	va_start(arg, reason);
-	vswprintf(formattedReason, reason, arg);
+	vswprintf(formattedReason, bufSize, reason, arg);
 	va_end(arg);
 
 	d912pxy_s.log.text.WriteCrashLogLine((wchar_t*)formattedReason);
