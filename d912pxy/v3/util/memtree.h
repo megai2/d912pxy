@@ -54,7 +54,7 @@ namespace d912pxy
 		};
 	
 	private:
-		static const int nodeChilds = (1 << (8 * sizeof(StepType))) - 1;
+		static const int nodeChilds = (1 << (8 * sizeof(StepType)));
 		static const int treeDepth = sizeof(Hash) / sizeof(StepType);
 
 		struct Node
@@ -65,7 +65,7 @@ namespace d912pxy
 		struct Leaf
 		{
 			Value val;
-			PreparedKey origHash;
+			//TODO: add wrap to this class with hash collision check
 		};
 
 		Value* insertNew(const PreparedKey& hash, IndexType depth, IndexType lastNode)
@@ -82,7 +82,6 @@ namespace d912pxy
 			nextNode = leafs.next();
 			nodes[lastNode].childs[hash.tip()] = nextNode;
 			
-			leafs[nextNode].origHash = hash;
 			return &leafs[nextNode].val;
 		}
 
@@ -105,8 +104,6 @@ namespace d912pxy
 				return nullptr;
 
 			Leaf& retLeaf = leafs[leafNode];
-			error::check(retLeaf.origHash.val == hash.val, L"hash collision in Memtree");
-
 			return &retLeaf.val;
 		}
 
