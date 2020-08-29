@@ -32,7 +32,6 @@ d912pxy_vfs_entry::d912pxy_vfs_entry(UINT id) : d912pxy_noncom(L"vfs_entry")
 
 d912pxy_vfs_entry::~d912pxy_vfs_entry()
 {
-
 	for (auto i = chunkTree->begin(); i < chunkTree->end(); ++i)
 	{
 		d912pxy_vfs_pck_chunk* dtCh = i.value();
@@ -107,15 +106,26 @@ void d912pxy_vfs_entry::AddFileInfo(d912pxy_vfs_pck_chunk * fileInfo)
 
 void d912pxy_vfs_entry::LoadFileFromDisk(d912pxy_vfs_pck_chunk * fiCh)
 {
+	*lastFind = nullptr;
+
 	if (fiCh)
 	{		
 		d912pxy_vfs_pck_chunk* dtCh = fiCh->parent->ReadFileFromPck(fiCh);
 
+		if (dtCh)
+		{
+			if (dtCh->dsc.type != CHU_FILE_DATA)
+			{
+				LOG_ERR_DTDM("VFS %u / %016llX file info points to non data chunk", fiCh->data.file_info.category, fiCh->data.file_info.name);
+				PXY_FREE(dtCh);
+			}
+			else
+				*lastFind = dtCh;
+		}
+
 		fiCh->parent->ModRef(-1);
 		PXY_FREE(fiCh);
-
-		*lastFind = dtCh;
-	}
+	} 	
 }
 
 void d912pxy_vfs_entry::LoadFilesFromDisk()
