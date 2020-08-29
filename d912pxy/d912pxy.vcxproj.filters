@@ -86,12 +86,6 @@
     <ClCompile Include="d912pxy_linked_list.cpp">
       <Filter>base\utils</Filter>
     </ClCompile>
-    <ClCompile Include="d912pxy_memtree.cpp">
-      <Filter>base\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="d912pxy_memtree2.cpp">
-      <Filter>base\utils</Filter>
-    </ClCompile>
     <ClCompile Include="d912pxy_ringbuffer.cpp">
       <Filter>base\utils</Filter>
     </ClCompile>
@@ -388,12 +382,6 @@
       <Filter>base\utils</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_linked_list.h">
-      <Filter>base\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_memtree.h">
-      <Filter>base\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="d912pxy_memtree2.h">
       <Filter>base\utils</Filter>
     </ClInclude>
     <ClInclude Include="d912pxy_ringbuffer.h">

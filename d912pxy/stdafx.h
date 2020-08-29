@@ -98,8 +98,6 @@ SOFTWARE.
 #include "d912pxy_comhandler.h"
 #include "d912pxy_linked_list.h"
 #include "d912pxy_cleanup_thread.h"
-#include "d912pxy_memtree.h"
-#include "d912pxy_memtree2.h"
 #include "d912pxy_vfs_pck.h"
 #include "d912pxy_vfs_entry.h"
 #include "d912pxy_vfs.h"
