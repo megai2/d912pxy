@@ -205,7 +205,7 @@ UINT d912pxy_vfs_pck::CreateNewPckFile(wchar_t * fn)
 	headerChunk->data.header.maxId = 1;
 	headerChunk->data.header.ver = PXY_VFS_PCK_VER;
 
-	memset(indexChunk->data.chunk_index.data, 0, PXY_VFS_PCK_CHUNK_DATA_SIZE_INDEX);
+	memset(&indexChunk->data.chunk_index, 0, PXY_VFS_PCK_CHUNK_DATA_SIZE_INDEX);
 	indexChunk->dsc.id = 1;
 	indexChunk->data.chunk_index.usedIndexes = 2;
 	indexChunk->data.chunk_index.nextIndexChunk = 0;
