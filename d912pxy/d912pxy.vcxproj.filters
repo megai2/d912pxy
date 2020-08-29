@@ -326,6 +326,9 @@
     <ClCompile Include="v3\util\memory_block.cpp">
       <Filter>v3\util</Filter>
     </ClCompile>
+    <ClCompile Include="v3\util\log\error_handler.cpp">
+      <Filter>v3\util\log</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -648,8 +651,8 @@
     <ClInclude Include="v3\util\mt\lock.h">
       <Filter>v3\util\mt</Filter>
     </ClInclude>
-    <ClInclude Include="v3\util\error_handler.h">
-      <Filter>v3\util</Filter>
+    <ClInclude Include="v3\util\log\error_handler.h">
+      <Filter>v3\util\log</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -757,6 +760,9 @@
     </Filter>
     <Filter Include="v3\util\trivial">
       <UniqueIdentifier>{5ec4567d-f2b5-46d9-91c9-ab21b1158915}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="v3\util\log">
+      <UniqueIdentifier>{8452a761-88cf-42d0-b26e-dc9c8487b803}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

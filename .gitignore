@@ -59,7 +59,6 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
-[Ll]og/
 
 # allow our bin directory
 !bin/

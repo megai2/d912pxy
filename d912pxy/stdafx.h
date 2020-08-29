@@ -60,7 +60,7 @@ SOFTWARE.
 #endif
 
 #include "v3/base_object.h"
-#include "v3/util/error_handler.h"
+#include "v3/util/log/error_handler.h"
 #include "v3/util/memory_block.h"
 #include "v3/util/hash.h"
 #include "v3/util/trivial/linear_array.h"

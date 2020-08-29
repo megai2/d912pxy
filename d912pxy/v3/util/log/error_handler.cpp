@@ -22,22 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#pragma once
 #include "stdafx.h"
 
-namespace d912pxy
+void d912pxy::error::fatal(const wchar_t* reason, ...)
 {
-	namespace error
-	{
-		static void fatal(const wchar_t* reason)
-		{
-			//TODO
-		}
+	d912pxy_s.log.text.SyncCrashWrite(1);
 
-		static void check(bool cond, const wchar_t* reason)
-		{
-			if (!cond)
-				fatal(reason);
-		}
-	}
+	wchar_t formattedReason[1024 * 10];
+	va_list arg;
+	va_start(arg, reason);
+	vswprintf(formattedReason, reason, arg);
+	va_end(arg);
+
+	d912pxy_s.log.text.WriteCrashLogLine((wchar_t*)formattedReason);
+
+	d912pxy_s.log.text.SyncCrashWrite(0);
+
+	MessageBoxW(0, formattedReason, L"d912pxy fatal error", MB_OK);
+
+	//here should be fatal / abort / crash / exit / whatever but we do belive in miracles, a'nt we? ;)
 }
