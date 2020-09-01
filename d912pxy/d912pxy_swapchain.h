@@ -161,6 +161,8 @@ private:
 	DXGI_FORMAT GetDXGIFormatForBackBuffer(D3DFORMAT fmt);
 	UINT DXGIFullscreenInterrupt(UINT inactive);
 	void CacheDXGITearingSupport();
+
+	void OverrideWndProc();
 	
 	ComPtr<IDXGISwapChain4> dxgiSwapchain;
 	ComPtr<ID3D12Resource> dxgiBackBuffer[4];	

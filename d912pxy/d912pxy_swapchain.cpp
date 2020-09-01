@@ -700,6 +700,8 @@ HRESULT d912pxy_swapchain::SwapHandle_Swap_Test()
 
 HRESULT d912pxy_swapchain::SwapHandle_Setup_W7()
 {
+	OverrideWndProc();
+
 	for (int i = 0; i != 2; ++i)
 	{
 		LOG_ERR_THROW2(d912pxy_s.dx12.dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&w7_cla[i])), "w7 gpu cmd list allocator error");
@@ -810,13 +812,7 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 		currentPP.BackBufferFormat
 	);
 
-	if (!dxgiOWndProc)
-	{
-		if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
-			dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch_extras);
-		else
-			dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch);
-	}
+	OverrideWndProc();
 	
 	HRESULT swapRet = dxgiFactory4->CreateSwapChainForHwnd(
 		d912pxy_s.dx12.que.GetDXQue().Get(),
@@ -983,5 +979,16 @@ void d912pxy_swapchain::CacheDXGITearingSupport()
 				dxgiTearingSupported = FALSE;
 			}
 		}
+	}
+}
+
+void d912pxy_swapchain::OverrideWndProc()
+{
+	if (!dxgiOWndProc)
+	{
+		if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
+			dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch_extras);
+		else
+			dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch);
 	}
 }
