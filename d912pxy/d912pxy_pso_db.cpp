@@ -249,7 +249,7 @@ void d912pxy_pso_db::LoadCachedData()
 		for (auto iter = shaderBuffer->begin(); iter < shaderBuffer->end(); ++iter)
 		{
 			d912pxy_shader*& shader = iter.value();
-			if (!shader)
+			if (shader)
 				shader->Release();
 		}
 
