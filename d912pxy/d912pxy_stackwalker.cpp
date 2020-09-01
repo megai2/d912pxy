@@ -25,7 +25,16 @@ SOFTWARE.
 #include "stdafx.h"
 #include "d912pxy_stackwalker.h"
 
-d912pxy_StackWalker::d912pxy_StackWalker(UINT32 opts, UINT32 saveCaller) : StackWalker(opts)
+const char* extraSymSearchPath =
+	"./addons/d912pxy/dll/debug;"
+	"./addons/d912pxy/dll/release;"
+	"./addons/d912pxy/dll/release_avx2;"
+	"./d912pxy/dll/debug;"
+	"./d912pxy/dll/release;"
+	"./d912pxy/dll/release_avx2;"
+  ;
+
+d912pxy_StackWalker::d912pxy_StackWalker(UINT32 opts, UINT32 saveCaller) : StackWalker(opts | StackWalkOptions::SymBuildPath, extraSymSearchPath)
 {
 	if (!saveCaller)
 		d912pxy_s.log.text.SyncCrashWrite(1);

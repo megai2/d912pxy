@@ -272,7 +272,7 @@
       <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\thirdparty\p7logger\Binaries\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release_avx\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>copy $(SolutionDir)\bin\d912pxy\dll\release\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
@@ -308,7 +308,7 @@
       <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\thirdparty\p7logger\Binaries\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release_avx2\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>copy $(SolutionDir)\bin\d912pxy\dll\release\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
