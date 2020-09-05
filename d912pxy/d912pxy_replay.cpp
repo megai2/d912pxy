@@ -75,7 +75,13 @@ void d912pxy_replay::Init()
 		transitData[i].Reset();
 	}
 
-#define RHA_ASSIGN(a) replay_handlers[(UINT)d912pxy_replay_item::typeName::a] = (d912pxy_replay_handler_func)&d912pxy_replay::RHA_##a
+	extras.enable = lstrcmpW(d912pxy_s.config.GetValueRaw(PXY_CFG_EXTRAS_IFRAME_MOD_SOURCE), L"none") != 0;
+	extras.pairTracker.enable = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS);
+
+#define RHA_ASSIGN(a) replay_handlers[(UINT)d912pxy_replay_item::typeName::a] = extras.enable ? \
+						(d912pxy_replay_handler_func)&d912pxy_replay::RHA_##a##_extra : \
+						(d912pxy_replay_handler_func)&d912pxy_replay::RHA_##a
+
 	RHA_ASSIGN(barrier);
 	RHA_ASSIGN(om_stencilref);
 	RHA_ASSIGN(om_blendfactor);
@@ -135,6 +141,11 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 	}
 
 	d912pxy_replay_item* item_end = item_iter;
+
+	if (extras.enable)
+	{
+		extras.pairTracker.nextFrame();
+	}
 	
 	//execute operations
 	while (items)
@@ -396,3 +407,16 @@ bool d912pxy_replay::thread_transit_data::Apply(ID3D12GraphicsCommandList* cl, d
 #undef ITEM_TRANSIT
 }
 
+void d912pxy_replay::ExtraFeatures::PairTracker::nextFrame()
+{
+	if (!enable)
+		return;
+
+	writable = (writable == 0);
+	replayList[writable].reset();
+}
+
+void d912pxy_replay::ExtraFeatures::PairTracker::write(d912pxy_shader_pair_hash_type v)
+{
+	replayList[writable].push(v);
+}

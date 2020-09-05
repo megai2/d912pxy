@@ -50,6 +50,7 @@ private:
 	void DrawMainWindow();
 	void DrawConfigEditor();
 	void DrawFirstInstallMessage();
+	void DrawShaderPairTracker();
 
 	//Overlay Window Auto-Setup
 	bool* GetOverlayWindowCloseable(bool* WindowRenderBool);
@@ -66,6 +67,7 @@ private:
 	bool bShowTimings;
 	bool bShowPSOCompileQue;
 	bool bShowGCQue;
+	bool bShowShaderPairTracker;
 
 	//gpu exec + sync time
 	Stopwatch syncNexecTime;

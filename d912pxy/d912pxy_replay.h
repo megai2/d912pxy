@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2018-2019 megai2
+Copyright(c) 2018-2020 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -81,6 +81,11 @@ public:
 	UINT GetThreadCount() { return numThreads; };
 	void ReRangeThreads(UINT batches);
 
+	d912pxy::Trivial::PushBuffer<d912pxy_shader_pair_hash_type>& getLastFrameShaderPairList()
+	{
+		return extras.pairTracker.read();
+	}
+
 private:
 	//thread transit class
 	class thread_transit_data
@@ -132,7 +137,9 @@ private:
 	//handlers
 	d912pxy_replay_handler_func replay_handlers[(UINT)d912pxy_replay_item::typeName::_count];
 
-#define RHA_DECL(a,b) void RHA_##a(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList * cl, b)
+#define RHA_DECL(a,b) \
+void RHA_##a(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList * cl, b); \
+void RHA_##a##_extra(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList * cl, b)
 	RHA_DECL(barrier, void* unused);
 	RHA_DECL(om_stencilref, void* unused);
 	RHA_DECL(om_blendfactor, void* unused);
@@ -165,6 +172,24 @@ private:
 	thread_transit_data transitData[PXY_INNER_REPLAY_THREADS_MAX];
 	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS_MAX];
 	LONG stopMarker;
+
+	struct ExtraFeatures
+	{
+		bool enable;
+
+		struct PairTracker
+		{
+			bool enable;
+			//FIXME: it should race here
+			int writable;
+			d912pxy::Trivial::PushBuffer<d912pxy_shader_pair_hash_type> replayList[2];
+
+			void nextFrame();
+			void write(d912pxy_shader_pair_hash_type v);
+			d912pxy::Trivial::PushBuffer<d912pxy_shader_pair_hash_type>& read() { return replayList[writable == 0]; }
+		} pairTracker;
+
+	} extras;
 
 	
 };

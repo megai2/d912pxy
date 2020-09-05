@@ -98,6 +98,8 @@ void d912pxy_extras::Init()
 	if ((bShowMainWindow == false) && (bEnableConfigEditor == true))
 		bShowConfigEditor = true;
 
+	bShowShaderPairTracker = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS);
+
 	//imgui setup
 
 	IMGUI_CHECKVERSION();
@@ -387,6 +389,20 @@ void d912pxy_extras::DrawFirstInstallMessage()
 	ImGui::End();
 }
 
+void d912pxy_extras::DrawShaderPairTracker()
+{
+	ImGui::Begin("ShaderPairTracker");
+
+	auto& list = d912pxy_s.render.replay.getLastFrameShaderPairList();
+
+	for (intptr_t i = 1; i < list.headIdx(); ++i)
+	{
+		ImGui::BulletText("%u: <%016llX> %s", i, list[i], "undefined");
+	}
+
+	ImGui::End();
+}
+
 void d912pxy_extras::DrawMainWindow()
 {
 	ImGui::Begin(BUILD_VERSION_NAME, GetOverlayWindowCloseable(), GetOverlayWindowFlags());
@@ -437,6 +453,9 @@ void d912pxy_extras::DrawOverlay()
 
 	if (bShowFirstInstallMessage)
 		DrawFirstInstallMessage();
+
+	if (bShowShaderPairTracker)
+		DrawShaderPairTracker();
 
 	ImGUI_Render_End();
 

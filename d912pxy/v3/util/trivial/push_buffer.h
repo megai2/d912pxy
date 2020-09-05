@@ -58,8 +58,12 @@ namespace d912pxy
 				return last;
 			}
 
+			void push(const Element& v) { storage.get(next()) = v; }
+			void reset() { last = 0; }
+
+			IndexType headIdx() { return last; }
 			Element& head() { return storage.get(last); }
-			Element& operator[](intptr_t idx) { return storage.get(idx); }
+			Element& operator[](IndexType idx) { return storage.get(idx); }
 		};
 	}
 }

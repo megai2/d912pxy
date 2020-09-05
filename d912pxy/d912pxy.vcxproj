@@ -602,6 +602,7 @@
     <ClCompile Include="d912pxy_replay.cpp" />
     <ClCompile Include="d912pxy_replay_actions.cpp" />
     <ClCompile Include="d912pxy_replay_buffer.cpp" />
+    <ClCompile Include="d912pxy_replay_extra_handlers.cpp" />
     <ClCompile Include="d912pxy_replay_handlers.cpp" />
     <ClCompile Include="d912pxy_replay_item.cpp" />
     <ClCompile Include="d912pxy_replay_thread.cpp" />

@@ -99,6 +99,8 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_EXTRAS_FPS_GRAPH_H,
 	PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR,
 	PXY_CFG_EXTRAS_FIRST_INSTALL_MESSAGE,
+	PXY_CFG_EXTRAS_IFRAME_MOD_SOURCE,
+	PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -237,8 +239,27 @@ private:
 		{L"extras", L"fps_graph_w", L"512"},//PXY_CFG_EXTRAS_FPS_GRAPH_W
 		{L"extras", L"fps_graph_h", L"256"},//PXY_CFG_EXTRAS_FPS_GRAPH_H
 		{L"extras", L"enable_config_editor",L"1"},//PXY_CFG_EXTRAS_ENABLE_CONFIG_EDITOR
-		{L"extras", L"show_first_install_message",L"1"}//PXY_CFG_EXTRAS_FIRST_INSTALL_MESSAGE
-		
+		{L"extras", L"show_first_install_message",L"1"},//PXY_CFG_EXTRAS_FIRST_INSTALL_MESSAGE
+		{
+			L"extras", 
+			L"iframe_mod_source", 
+			L"none",
+			L"s r:valid path to file or \"none\" string"
+			L"source of iframe modifications",
+			L"defines source of iframe modifications scripts"
+			L"iframe modifications transform api stream to perform specific effects"
+			L"by default no modifications are used. modifications are strongly game dependant!"
+			L"builtin modifications live in d912pxy/shaders/mods"
+		},//PXY_CFG_EXTRAS_IFRAME_MOD_SOURCE
+		{
+			L"extras", 
+			L"shader_pair_tracker",
+			L"0",
+			L"b r:[0-1]",
+			L"enable/disable shader pair tracker in overlay",
+			L"if enabled will record and show every draw shader pair with supplied marks if found in d912pxy/shaders/pairs/<cfg>"
+			L"iframe mods should be enabled for this feature to work"
+		}//PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS
 	};
 
 };

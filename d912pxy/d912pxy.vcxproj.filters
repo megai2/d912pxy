@@ -329,6 +329,9 @@
     <ClCompile Include="v3\util\log\error_handler.cpp">
       <Filter>v3\util\log</Filter>
     </ClCompile>
+    <ClCompile Include="d912pxy_replay_extra_handlers.cpp">
+      <Filter>d3d9_impl\device\iframe\replay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
