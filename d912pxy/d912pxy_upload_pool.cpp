@@ -153,11 +153,12 @@ fallback:
 	return ret;
 }
 
-d912pxy_upload_item::d912pxy_upload_item(UINT8 icat) : d912pxy_comhandler(PXY_COM_OBJ_NOVTABLE, L"upload item")
+d912pxy_upload_item::d912pxy_upload_item(UINT8 icat) 
+	: d912pxy_comhandler(PXY_COM_OBJ_NOVTABLE, L"upload item")
+	, cat(icat)
+	, usedSpace(0)
 {
-	cat = icat;	
 	space = d912pxy_s.pool.upload.MemCatToSize(cat);
-	usedSpace = 0;
 	mRes = d912pxy_s.pool.upload.MakeUploadBuffer(cat);
 	LOG_ERR_THROW2(mRes->Map(0, 0, (void**)&mappedMemWofs), "upload pool memory map error on creation");
 }

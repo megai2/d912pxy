@@ -37,13 +37,15 @@ d912pxy_surface * d912pxy_surface::CorrectLayerRepresent(d912pxy_com_object * ob
 		return &(obj->surface);
 }
 
-d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) : d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface")
+d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) 
+	: d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface")
+	, isPooled(0)
+	, ul(NULL)
+	, layers(NULL)
+	, dheapId(-1)
+	, dheapIdFeedback(srvFeedback)
 {
-	isPooled = 0;
-	ul = NULL;
-	layers = NULL;
-	dheapId = -1;
-	dheapIdFeedback = srvFeedback;
+	stateCache = D3D12_RESOURCE_STATE_COMMON;
 	dHeap = d912pxy_s.dev.GetDHeap(PXY_INNER_HEAP_SRV);	
 
 	surf_dx9dsc.Format = Format;
@@ -56,13 +58,10 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	surf_dx9dsc.Usage = Usage;
 	
 	m_fmt = d912pxy_helper::DXGIFormatFromDX9FMT(Format);
-	LOG_DBG_DTDM("fmt %u => %u", Format, m_fmt);
-
-	stateCache = D3D12_RESOURCE_STATE_COMMON;
+	LOG_DBG_DTDM("fmt %u => %u", Format, m_fmt);	
 
 	if (Format == D3DFMT_NULL)//FOURCC NULL DX9 no rendertarget trick
 	{
-
 		PXY_MALLOC(subresFootprints, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * 1, D3D12_PLACED_SUBRESOURCE_FOOTPRINT*);
 
 		PXY_MALLOC(ul, sizeof(d912pxy_surface_ul), d912pxy_surface_ul*);
@@ -127,7 +126,6 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 		AllocateLayers();
 	} 
 	else {
-
 		if (!threadedCtor || (dheapId == 0))
 			dheapId = AllocateSRV(m_res);
 		else

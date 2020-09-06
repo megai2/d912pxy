@@ -24,10 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_query::d912pxy_query(D3DQUERYTYPE Type) : d912pxy_comhandler(PXY_COM_OBJ_QUERY,L"query")
-{
-	m_type = Type;
-}
+d912pxy_query::d912pxy_query(D3DQUERYTYPE Type) : d912pxy_comhandler(PXY_COM_OBJ_QUERY,L"query"), m_type(Type)
+{ }
 
 
 d912pxy_query_non_derived * d912pxy_query::d912pxy_query_com(D3DQUERYTYPE Type)

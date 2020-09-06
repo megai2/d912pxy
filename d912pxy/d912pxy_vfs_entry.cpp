@@ -24,9 +24,10 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_vfs_entry::d912pxy_vfs_entry(UINT id) : d912pxy_noncom(L"vfs_entry")
+d912pxy_vfs_entry::d912pxy_vfs_entry(UINT id) 
+	: d912pxy_noncom(L"vfs_entry")
+	, m_Id(id)
 {
-	m_Id = id;
 	chunkTree = new ChunkTree();
 }
 

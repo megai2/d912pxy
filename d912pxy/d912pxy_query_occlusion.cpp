@@ -37,11 +37,11 @@ UINT32 g_writeStack = 0;
 #define PXY_OCCLUSION_TYPE D3D12_QUERY_TYPE_OCCLUSION
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_QUERY_OCCLUSION
 
-d912pxy_query_occlusion::d912pxy_query_occlusion(D3DQUERYTYPE Type) : d912pxy_query(Type)
-{
-	queryResult = 0;
-	queryOpened = 0;
-}
+d912pxy_query_occlusion::d912pxy_query_occlusion(D3DQUERYTYPE Type) 
+	: d912pxy_query(Type)
+	, queryResult(0)
+	, queryOpened(0)
+{ }
 
 
 d912pxy_query_occlusion * d912pxy_query_occlusion::d912pxy_query_occlusion_com(D3DQUERYTYPE Type)

@@ -24,16 +24,15 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_shader_uid* shd) : d912pxy_noncom( L"shader pair")
-{	
-	maxPsoId = 512;
-
+d912pxy_shader_pair::d912pxy_shader_pair(d912pxy_shader_pair_hash_type nodeId, d912pxy_shader_uid* shd) 
+	: d912pxy_noncom( L"shader pair")
+	, maxPsoId(512)
+	, node(nodeId)
+{		
 	UINT32 msz = sizeof(d912pxy_pso_item*)*maxPsoId;
 
 	PXY_MALLOC(psoItems, msz, d912pxy_pso_item**);
 	ZeroMemory(psoItems, msz);
-
-	node = nodeId;
 
 	memcpy(shdUID, shd, sizeof(d912pxy_shader_uid) * 2);
 

@@ -24,9 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_performance_graph::d912pxy_performance_graph(UINT isDX9)
+d912pxy_performance_graph::d912pxy_performance_graph(UINT isDX9) : dx9(isDX9)
 {
-	dx9 = isDX9;
 	frameTime.Reset();
 	ZeroMemory(dataAcm, PXY_PERFGRPH_BATCH_PTS * PXY_PERFGRPH_FRAMETIME_PTS * 4);	
 }

@@ -24,7 +24,9 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_vdecl::d912pxy_vdecl(const D3DVERTEXELEMENT9* data) : d912pxy_comhandler(PXY_COM_OBJ_VDECL, L"vdecl")
+d912pxy_vdecl::d912pxy_vdecl(const D3DVERTEXELEMENT9* data) 
+	: d912pxy_comhandler(PXY_COM_OBJ_VDECL, L"vdecl")
+	, usedStreamSlots(0)
 {
 	usedStreamSlots = 0;
 	instancedDecl = nullptr;

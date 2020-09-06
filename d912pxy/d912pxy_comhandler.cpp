@@ -24,15 +24,16 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_comhandler::d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t* moduleText) : d912pxy_noncom(moduleText)
+d912pxy_comhandler::d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t* moduleText)
+	: d912pxy_noncom(moduleText)
+	, refc(1)
+	, thrdRefc(0)
+	, thrdRefcFlag(0)
+	, beingWatched(0)
+	, persistentlyPooled(0)
+	, objType(tid)
 {
-	objType = tid;
-	refc = 1;
-	thrdRefc = 0;
-	thrdRefcFlag = 0;
-	beingWatched = 0;
 	poolSync.LockedSet(1);
-	persistentlyPooled = 0;
 	comBase = (d912pxy_com_object*)((intptr_t)this - 8);
 }
 

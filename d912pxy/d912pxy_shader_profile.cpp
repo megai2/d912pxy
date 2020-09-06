@@ -26,9 +26,7 @@ SOFTWARE.
 
 d912pxy_shader_profile::d912pxy_shader_profile(d912pxy_shader_uid shdUID) :
 	shader(shdUID)
-{
-	shader = shdUID;
-}
+{ }
 
 d912pxy_shader_profile::~d912pxy_shader_profile()
 {
