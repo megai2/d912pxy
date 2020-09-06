@@ -57,5 +57,5 @@ private:
 
 	void ReadVFS();
 		
-	d912pxy_vfs_packer_stream streams[VFS_PCK_STREAM_CNT];
+	d912pxy_vfs_packer_stream streams[VFS_PCK_STREAM_CNT] = {};
 };

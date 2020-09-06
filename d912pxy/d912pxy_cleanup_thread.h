@@ -43,7 +43,7 @@ public:
 	void OnReset();
 
 private:
-	d912pxy_linked_list<d912pxy_comhandler*>* buffer;
+	d912pxy_linked_list<d912pxy_comhandler*>* buffer = nullptr;
 	UINT watchCount;
 	d912pxy_thread_lock forcedCleanup;
 	

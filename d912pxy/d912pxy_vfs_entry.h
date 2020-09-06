@@ -32,6 +32,7 @@ public:
 
 	d912pxy_vfs_entry(UINT id);
 	~d912pxy_vfs_entry();
+	d912pxy_vfs_entry(const d912pxy_vfs_entry&) = delete;
 
 	d912pxy_vfs_pck_chunk* IsPresentH(UINT64 fnHash);
 	void* GetFileDataH(UINT64 namehash, UINT64* sz);

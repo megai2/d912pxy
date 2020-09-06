@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_buffer_loader::d912pxy_buffer_loader() 
+d912pxy_buffer_loader::d912pxy_buffer_loader()
 {
 }
 

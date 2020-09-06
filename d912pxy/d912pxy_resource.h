@@ -107,7 +107,7 @@ private:
 protected:
 	ID3D12Resource* m_res;
 	
-	d912pxy_dheap* dHeap;
+	d912pxy_dheap* dHeap=nullptr;
 
 	D3D12_RESOURCE_STATES stateCache;	
 

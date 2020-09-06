@@ -37,6 +37,7 @@ public:
 
 	d912pxy_shader(const wchar_t * shtName, const DWORD* fun, d912pxy_shader_uid uid, UINT isVS);	
 	~d912pxy_shader();
+	d912pxy_shader(const d912pxy_shader&) = delete;
 
 	D912PXY_METHOD(GetFunction)(PXY_THIS_ void* arg, UINT* pSizeOfData);
 

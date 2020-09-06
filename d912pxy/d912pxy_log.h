@@ -79,7 +79,7 @@ private:
 	d912pxy_thread_lock logLock;
 #endif
 
-	FILE* crashLog;
+	FILE* crashLog=nullptr;
 	UINT32 crashLogLine;
 	d912pxy_thread_lock crashLock;
 };

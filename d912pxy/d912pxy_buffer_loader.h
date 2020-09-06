@@ -40,6 +40,6 @@ public:
 	void OnThreadInterrupt();
 
 private:
-	ID3D12GraphicsCommandList* cl;	
+	ID3D12GraphicsCommandList* cl = nullptr;	
 };
 

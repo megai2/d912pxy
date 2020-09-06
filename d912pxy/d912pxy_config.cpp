@@ -51,7 +51,11 @@ void d912pxy_config::Init()
 	fseek(f, 0, SEEK_SET);
 
 	if (fsz <= 0)
+	{
+		if (f)
+			fclose(f);
 		return;
+	}
 
 	int fptr = 0;
 
@@ -231,7 +235,7 @@ void d912pxy_config::SaveConfig()
 
 		if (writeNewValues)
 		{
-			wchar_t conversion_buffer[256];
+			wchar_t conversion_buffer[256] = {0};
 			mbstowcs(conversion_buffer, data[i].newValue, 255);
 			fwprintf(f, L"%s=%s\r\n", data[i].name, conversion_buffer);
 		}

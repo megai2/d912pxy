@@ -51,7 +51,7 @@ public:
 protected:
 	UINT32 srvIDc[2];
 
-	d912pxy_surface * baseSurface;
+	d912pxy_surface * baseSurface = nullptr;
 
 	UINT m_levels;	
 };
