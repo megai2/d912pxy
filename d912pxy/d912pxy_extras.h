@@ -50,7 +50,6 @@ private:
 	void DrawMainWindow();
 	void DrawConfigEditor();
 	void DrawFirstInstallMessage();
-	void DrawShaderPairTracker();
 
 	//Overlay Window Auto-Setup
 	bool* GetOverlayWindowCloseable(bool* WindowRenderBool);
@@ -108,4 +107,7 @@ private:
 	UINT overlayShowMode;
 	bool hkDetected;
 	UINT hkVKeyCode;
+
+	//tracker
+	d912pxy::extras::ShaderPair::Tracker pairTracker;
 };

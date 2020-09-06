@@ -89,6 +89,7 @@ typedef struct d912pxy_instance {
 	d912pxy_dynamic_imports imports;
 
 	d912pxy_extras extras;
+	d912pxy::extras::ShaderPair::InfoStorage spairInfo;
 
 	UINT running;
 } d912pxy_instance;

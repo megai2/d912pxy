@@ -101,6 +101,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_EXTRAS_FIRST_INSTALL_MESSAGE,
 	PXY_CFG_EXTRAS_IFRAME_MOD_SOURCE,
 	PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS,
+	PXY_CFG_EXTRAS_SPAIR_SOURCE,
 	PXY_CFG_CNT
 } d912pxy_config_value;
 
@@ -259,7 +260,15 @@ private:
 			L"enable/disable shader pair tracker in overlay",
 			L"if enabled will record and show every draw shader pair with supplied marks if found in d912pxy/shaders/pairs/<cfg>"
 			L"iframe mods should be enabled for this feature to work"
-		}//PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS
+		},//PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS
+		{
+			L"extras",
+			L"spair_source",
+			L"none",
+			L"s r:valid directory name or \"none\" string",
+			L"defines source for shader pair information",
+			L"will read data from d912pxy/shaders/pairs/<value> for shader pair info"
+		}//PXY_CFG_EXTRAS_SPAIR_SOURCE
 	};
 
 };

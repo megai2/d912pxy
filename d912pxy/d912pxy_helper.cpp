@@ -586,3 +586,13 @@ INT64 d912pxy_helper::SafeDiv(INT64 a, INT64 b)
 	else
 		return 0;
 }
+
+wchar_t* d912pxy_helper::strdupw(const wchar_t* s)
+{
+	//TODO: u=ugly, clean this up
+	wchar_t* ret = nullptr;
+	int l = lstrlenW(s)+1;
+	d912pxy_mem_block::allocZero(&ret, l);
+	memcpy(ret, s, l * sizeof(wchar_t));
+	return ret;
+}

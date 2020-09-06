@@ -22,47 +22,46 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 #pragma once
 #include "stdafx.h"
 
 namespace d912pxy
 {
-
-	class MemoryArea : public BaseObject
+	namespace extras
 	{
-	protected:
-		void* ptr = nullptr;
-		uintptr_t size = 0;
-				
-	public:
-		MemoryArea() = default;
-		MemoryArea(void* in_ptr, uintptr_t in_size) : ptr(in_ptr), size(in_size) {};
-		uintptr_t getSize() const { return size; }
-		
-		template<class T>
-		T* c_arr() const { return (T*)ptr; }
+		namespace ShaderPair
+		{
+			enum class DrawType
+			{
+				simple,
+				pass_start,
+				pass_end
+			};
 
-		void* getPtr() { return ptr; }
+			struct Info
+			{
+				wchar_t* name = nullptr;
+				DrawType drawType;
+				d912pxy_shader_pair_hash_type spair;
+			};
 
-		template<class T>
-		T* end() const { return (T*)((void*)((uintptr_t)ptr + size)); }
-	};
+			class InfoStorage : public d912pxy_noncom
+			{
+				Memtree<d912pxy_shader_pair_hash_type, Info, RawHash<d912pxy_shader_pair_hash_type>> storage;
 
-	class MemoryBlock : public MemoryArea
-	{
+				void readFData(MemoryBlock& mb);
 
-	public:
-		MemoryBlock() = default;
-		MemoryBlock(void* in_ptr, uintptr_t in_size) : MemoryArea(in_ptr, in_size) {}
-		MemoryBlock(void* in_ptr) : MemoryArea(in_ptr, 0) {}
-		MemoryBlock(uintptr_t size);
-		~MemoryBlock();
+			public:
+				InfoStorage();
+				~InfoStorage();
 
-		void alloc(uintptr_t size);
-		void realloc(uintptr_t newSize);
-		void free();
-	};
+				void Init();
 
+				Info& find(d912pxy_shader_pair_hash_type pair);
+				void reload();
+			};
+		}
+	}
 }
-
 

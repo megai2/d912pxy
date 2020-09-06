@@ -29,6 +29,7 @@ typedef struct d912pxy_replay_thread_context {
 	ID3D12PipelineState* pso;
 	UINT tid;
 	D3D12_GPU_VIRTUAL_ADDRESS customBatchPtr;
+	d912pxy_shader_pair_hash_type trackedSPair;
 } d912pxy_replay_thread_context;
 
 class d912pxy_replay;
@@ -80,11 +81,6 @@ public:
 
 	UINT GetThreadCount() { return numThreads; };
 	void ReRangeThreads(UINT batches);
-
-	d912pxy::Trivial::PushBuffer<d912pxy_shader_pair_hash_type>& getLastFrameShaderPairList()
-	{
-		return extras.pairTracker.read();
-	}
 
 private:
 	//thread transit class
@@ -173,24 +169,28 @@ void RHA_##a##_extra(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList 
 	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS_MAX];
 	LONG stopMarker;
 
+public:
 	struct ExtraFeatures
 	{
 		bool enable;
 
 		struct PairTracker
 		{
-			bool enable;
-			//FIXME: it should race here
-			int writable;
+			bool enable;			
+			d912pxy_thread_lock lock;
+			int writable=0;
+			int lastReaded=0;
 			d912pxy::Trivial::PushBuffer<d912pxy_shader_pair_hash_type> replayList[2];
+			typedef d912pxy::Memtree<d912pxy_shader_pair_hash_type, bool, d912pxy::RawHash<d912pxy_shader_pair_hash_type>> ExclusionStorage;
+			ExclusionStorage exclusions;
 
 			void nextFrame();
 			void write(d912pxy_shader_pair_hash_type v);
-			d912pxy::Trivial::PushBuffer<d912pxy_shader_pair_hash_type>& read() { return replayList[writable == 0]; }
+			d912pxy::Trivial::PushBuffer<d912pxy_shader_pair_hash_type>& read();
+			void finishRead();
 		} pairTracker;
 
 	} extras;
-
 	
 };
 

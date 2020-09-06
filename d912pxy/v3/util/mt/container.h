@@ -31,13 +31,12 @@ namespace d912pxy
 	{
 		namespace containter
 		{
-			template<typename Container, typename ValueType>
+			template<typename Container>
 			class RefBase
 			{
 				typename Container::Provider::Lock& lockObj;
 			public:
 				typename Container::PreparedKey key;
-				ValueType val;
 
 				RefBase(Container& container, const typename Container::Provider::Key& rawKey)
 					: lockObj(container.getLock())
@@ -50,45 +49,49 @@ namespace d912pxy
 			};
 
 			template<typename Container>
-			class Ref : public RefBase<Container, typename Container::Provider::Value&>
-			{
+			class Ref : public RefBase<Container>
+			{			
+				typedef typename RefBase<Container> RefBaseType;
 			public:
+				typename Container::Provider::Value& val;
+
 				Ref(Container& container, const typename Container::Provider::Key& rawKey)
-					: RefBase(container, rawKey)
+					: RefBaseType(container, rawKey)//FIXME: order is not guarantied?
+					, val(container.findPrepared(RefBaseType::key))
 				{
-					RefBase::val = container.findPrepared(RefBase::key);
 				}
 			};
 
 			template<typename Container>
-			class OptRef : public RefBase<Container, typename Container::Provider::Value*>
-			{
-				typedef typename RefBase<Container, typename Container::Provider::Value*> RefBaseType;
+			class OptRef : public RefBase<Container>
+			{				
+				typedef typename RefBase<Container> RefBaseType;
 
 				Container& containerRef;
 			public:	
+				typename Container::Provider::Value* val;
+
 				OptRef(Container& container, const typename Container::Provider::Key& rawKey)
 					: RefBaseType(container, rawKey)
 					, containerRef(container)
 				{				
-					RefBaseType::val = container.containsPrepared(RefBaseType::key);
+					val = container.containsPrepared(RefBaseType::key);
 				}
 
 				typename Container::Provider::Value& add()
 				{
 					//TODO: can be optimized by skipping search sequenece
-					RefBaseType::val = &containerRef.findPrepared(RefBaseType::key);
-					return *RefBaseType::val;
+					val = &containerRef.findPrepared(RefBaseType::key);
+					return *val;
 				}
 			};
 
-			template<typename Container, typename ValueType>
+			template<typename Container>
 			class RefBasePrepared
 			{
 				typename Container::Provider::Lock& lockObj;
 			public:
 				typename Container::PreparedKey key;
-				ValueType val;
 
 				RefBasePrepared(Container& container, const typename Container::PreparedKey& preparedKey)
 					: lockObj(container.getLock())
@@ -101,28 +104,33 @@ namespace d912pxy
 			};
 
 			template<typename Container>
-			class RefPrepared : public RefBasePrepared<Container, typename Container::Provider::Value&>
-			{
+			class RefPrepared : public RefBasePrepared<Container>
+			{				
+				typedef typename RefBasePrepared<Container> RefBaseType;
 			public:
+				typename Container::Provider::Value& val;
+
 				RefPrepared(Container& container, const typename Container::PreparedKey& preparedKey)
-					: RefBase(container, preparedKey)
+					: RefBaseType(container, preparedKey)//FIXME: order is not guarantied?
+					, val(container.findPrepared(RefBaseType::key))
 				{
-					RefBase::val = container.findPrepared(RefBase::key);
 				}
 			};
 
 			template<typename Container>
-			class OptRefPrepared : public RefBasePrepared<Container, typename Container::Provider::Value*>
-			{
-				typedef typename RefBasePrepared<Container, typename Container::Provider::Value*> RefBaseType;
+			class OptRefPrepared : public RefBasePrepared<Container>
+			{				
+				typedef typename RefBasePrepared<Container> RefBaseType;
 
 				Container& containerRef;
 			public:
+				typename Container::Provider::Value* val;
+
 				OptRefPrepared(Container& container, const typename Container::PreparedKey& preparedKey)
 					: RefBaseType(container, preparedKey)
 					, containerRef(container)
 				{
-					RefBaseType::val = container.containsPrepared(RefBaseType::key);
+					val = container.containsPrepared(RefBaseType::key);
 				}
 
 				typename Container::Provider::Value& add()

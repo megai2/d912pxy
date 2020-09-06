@@ -22,47 +22,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 #pragma once
 #include "stdafx.h"
 
 namespace d912pxy
 {
-
-	class MemoryArea : public BaseObject
+	namespace extras
 	{
-	protected:
-		void* ptr = nullptr;
-		uintptr_t size = 0;
-				
-	public:
-		MemoryArea() = default;
-		MemoryArea(void* in_ptr, uintptr_t in_size) : ptr(in_ptr), size(in_size) {};
-		uintptr_t getSize() const { return size; }
-		
-		template<class T>
-		T* c_arr() const { return (T*)ptr; }
+		namespace ShaderPair {
 
-		void* getPtr() { return ptr; }
+			class Tracker : public d912pxy_noncom
+			{
+				bool freezeLastFrame;
+				Trivial::PushBuffer<Info*> listData;
 
-		template<class T>
-		T* end() const { return (T*)((void*)((uintptr_t)ptr + size)); }
-	};
+				void updateList();
+				void handleFreeze();
+				void handleReload();
+				void drawList();
 
-	class MemoryBlock : public MemoryArea
-	{
+			public:
+				Tracker() {}
+				~Tracker() {}
 
-	public:
-		MemoryBlock() = default;
-		MemoryBlock(void* in_ptr, uintptr_t in_size) : MemoryArea(in_ptr, in_size) {}
-		MemoryBlock(void* in_ptr) : MemoryArea(in_ptr, 0) {}
-		MemoryBlock(uintptr_t size);
-		~MemoryBlock();
-
-		void alloc(uintptr_t size);
-		void realloc(uintptr_t newSize);
-		void free();
-	};
-
+				void init();
+				void draw();
+			};
+		}
+	}
 }
-
-

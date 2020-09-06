@@ -78,6 +78,11 @@ void d912pxy_replay::Init()
 	extras.enable = lstrcmpW(d912pxy_s.config.GetValueRaw(PXY_CFG_EXTRAS_IFRAME_MOD_SOURCE), L"none") != 0;
 	extras.pairTracker.enable = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS);
 
+	if (extras.enable)
+	{
+		d912pxy_s.spairInfo.Init();
+	}
+
 #define RHA_ASSIGN(a) replay_handlers[(UINT)d912pxy_replay_item::typeName::a] = extras.enable ? \
 						(d912pxy_replay_handler_func)&d912pxy_replay::RHA_##a##_extra : \
 						(d912pxy_replay_handler_func)&d912pxy_replay::RHA_##a
@@ -412,11 +417,24 @@ void d912pxy_replay::ExtraFeatures::PairTracker::nextFrame()
 	if (!enable)
 		return;
 
-	writable = (writable == 0);
+	lock.Hold();
+	writable = (writable == 0) ? 1 : 0;
 	replayList[writable].reset();
+	lock.Release();
 }
 
 void d912pxy_replay::ExtraFeatures::PairTracker::write(d912pxy_shader_pair_hash_type v)
 {
 	replayList[writable].push(v);
+}
+
+d912pxy::Trivial::PushBuffer<d912pxy_shader_pair_hash_type>& d912pxy_replay::ExtraFeatures::PairTracker::read()
+{
+	lock.Hold();
+	return replayList[writable == 0 ? 1 : 0];
+}
+
+void d912pxy_replay::ExtraFeatures::PairTracker::finishRead()
+{
+	lock.Release();
 }

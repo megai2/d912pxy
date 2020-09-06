@@ -99,6 +99,8 @@ void d912pxy_extras::Init()
 		bShowConfigEditor = true;
 
 	bShowShaderPairTracker = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS);
+	if (bShowShaderPairTracker)
+		pairTracker.init();
 
 	//imgui setup
 
@@ -138,6 +140,9 @@ void d912pxy_extras::UnInit()
 
 	if (bEnableConfigEditor)
 		d912pxy_s.config.UnInitNewValueBuffers();
+
+	if (bShowShaderPairTracker)
+		pairTracker.UnInit();
 
 	d912pxy_noncom::UnInit();
 }
@@ -389,20 +394,6 @@ void d912pxy_extras::DrawFirstInstallMessage()
 	ImGui::End();
 }
 
-void d912pxy_extras::DrawShaderPairTracker()
-{
-	ImGui::Begin("ShaderPairTracker");
-
-	auto& list = d912pxy_s.render.replay.getLastFrameShaderPairList();
-
-	for (intptr_t i = 1; i < list.headIdx(); ++i)
-	{
-		ImGui::BulletText("%u: <%016llX> %s", i, list[i], "undefined");
-	}
-
-	ImGui::End();
-}
-
 void d912pxy_extras::DrawMainWindow()
 {
 	ImGui::Begin(BUILD_VERSION_NAME, GetOverlayWindowCloseable(), GetOverlayWindowFlags());
@@ -455,7 +446,7 @@ void d912pxy_extras::DrawOverlay()
 		DrawFirstInstallMessage();
 
 	if (bShowShaderPairTracker)
-		DrawShaderPairTracker();
+		pairTracker.draw();
 
 	ImGUI_Render_End();
 

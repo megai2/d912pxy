@@ -49,6 +49,16 @@ RHA_DECL(view_scissor, void* unused)
 
 RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 {
+	if (extras.pairTracker.enable)
+	{		
+		extras.pairTracker.write(context->trackedSPair);		
+		{
+			d912pxy::mt::containter::Ref<ExtraFeatures::PairTracker::ExclusionStorage> excRef(extras.pairTracker.exclusions, context->trackedSPair);
+			if (excRef.val)
+				return;
+		}
+	}
+
 	RHA_BASE(draw_indexed, context);
 }
 
@@ -81,8 +91,10 @@ RHA_DECL(pso_raw, d912pxy_replay_thread_context* context)
 {
 	d912pxy_trimmed_pso_desc& targetPso = it->rawState;
 
-	if (extras.pairTracker.enable)	
-		extras.pairTracker.write(targetPso.GetShaderPairUID());
+	if (extras.pairTracker.enable)
+	{
+		context->trackedSPair = targetPso.GetShaderPairUID();		
+	}
 
 	RHA_BASE(pso_raw, context);
 }

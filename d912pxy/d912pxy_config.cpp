@@ -202,7 +202,6 @@ void d912pxy_config::ValueToNewValueBuffers()
 	{
 		wcstombs(data[i].newValue, data[i].value, 255);
 	}
-
 }
 
 void d912pxy_config::SaveConfig()

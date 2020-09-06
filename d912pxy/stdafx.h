@@ -150,6 +150,8 @@ SOFTWARE.
 #include "d912pxy_replay.h"
 #include "d912pxy_draw_up.h"
 #include "d912pxy_surface_ops.h"
+#include "v3/dx12/extras/shader_pair/info.h"
+#include "v3/dx12/extras/shader_pair/tracker.h"
 #include "d912pxy_extras.h"
 #include "d912pxy_device.h"
 #include "d912pxy_instance.h"

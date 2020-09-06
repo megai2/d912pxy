@@ -75,4 +75,6 @@ namespace d912pxy_helper {
 	bool IsKeyDown(int vkcode);
 
 	INT64 SafeDiv(INT64 a, INT64 b);
+
+	wchar_t* strdupw(const wchar_t* s);
 }

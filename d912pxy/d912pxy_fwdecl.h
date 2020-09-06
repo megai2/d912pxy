@@ -258,6 +258,7 @@ typedef enum d912pxy_file_path_id {
 	FP_VFS_PREFIX,
 	FP_IMGUI_INI,
 	FP_IMGUI_LOG,
+	FP_SPAIR_INFO_BASE_PATH,
 	FP_NO_PATH
 } d912pxy_file_path_id;
 
@@ -295,6 +296,7 @@ static const d912pxy_file_path d912pxy_file_paths_default[] = {
 	FP_DEF("."),
 	FP_DEF("./d912pxy/imgui.ini"),
 	FP_DEF("./d912pxy/imgui.log"),
+	FP_DEF("./d912pxy/shaders/pairs/"),
 	FP_DEF("")
 };
 
@@ -319,6 +321,7 @@ static const d912pxy_file_path d912pxy_file_paths_addon[] = {
 	FP_DEF("./addons/"),
 	FP_DEF("./addons/d912pxy/imgui.ini"),
 	FP_DEF("./addons/d912pxy/imgui.log"),
+	FP_DEF("./addons/d912pxy/shaders/pairs/"),
 	FP_DEF("")
 };
 
@@ -343,6 +346,7 @@ static const d912pxy_file_path d912pxy_file_paths_abs_rh[] = {
 	FP_DEF(""),
 	FP_DEF("d912pxy/imgui.ini"),
 	FP_DEF("d912pxy/imgui.log"),
+	FP_DEF("d912pxy/shaders/pairs/"),
 	FP_DEF("")
 };
 
