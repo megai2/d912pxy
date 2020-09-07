@@ -76,7 +76,7 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 		);
 }
 
-RHA_DECL(om_render_targets, void* unused)
+RHA_DECL(om_render_targets, d912pxy_replay_thread_context*)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[2];
 	D3D12_CPU_DESCRIPTOR_HANDLE* bindedRTV = 0;

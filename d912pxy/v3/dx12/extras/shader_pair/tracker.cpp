@@ -65,6 +65,7 @@ void d912pxy::extras::ShaderPair::Tracker::drawList()
 	int hiddenDepth = 0;
 	int openedNodes = 0;
 	int nestedDraws = 1;
+	int passIdx = 0;
 	
 	for (intptr_t i = 1; i < listData.headIdx(); ++i)
 	{		
@@ -85,7 +86,8 @@ void d912pxy::extras::ShaderPair::Tracker::drawList()
 			break;
 		case DrawType::pass_start:
 			char buf[255];
-			sprintf(buf, "%S", v.name ? v.name : L"unknown");
+			sprintf(buf, "%S %i", v.name ? v.name : L"unknown", passIdx);
+			++passIdx;
 			if (showSubgrp)
 			{
 				showSubgrp = ImGui::TreeNode(buf);
@@ -95,25 +97,11 @@ void d912pxy::extras::ShaderPair::Tracker::drawList()
 			if (!showSubgrp)
 				++hiddenDepth;
 			break;
-		case DrawType::pass_end:
-			if (hiddenDepth)
-			{
-				--hiddenDepth;
-				if (!hiddenDepth)				
-					showSubgrp = true;
-			}
-			else if (openedNodes) {
-				--openedNodes;
-				ImGui::TreePop();
-			}
-			break;
-		default:
-			d912pxy::error::fatal(L"spair tracker got invalid group type = %u for draw %s (%u)", (int)v.drawType, v.name, v.spair);
 		}
 
 		if (showSubgrp)
 		{
-			ImGui::BulletText("%u: <%016llX> %S (%u)", i, v.spair, v.name ? v.name : L"unknown", nestedDraws);
+			ImGui::BulletText("%lli: <%016llX> %S (%u)", i, v.spair, v.name ? v.name : L"unknown", nestedDraws);
 			char tgButton[255];
 			sprintf(tgButton, "toggle##%016llX %lli", v.spair, i);
 			ImGui::SameLine();
@@ -127,6 +115,22 @@ void d912pxy::extras::ShaderPair::Tracker::drawList()
 			}
 		}
 		nestedDraws = 1;
+
+		switch (v.drawType)
+		{
+		case DrawType::pass_end:
+			if (hiddenDepth)
+			{
+				--hiddenDepth;
+				if (!hiddenDepth)
+					showSubgrp = true;
+			}
+			else if (openedNodes) {
+				--openedNodes;
+				ImGui::TreePop();
+			}
+			break;
+		}
 	}
 
 	while (openedNodes)

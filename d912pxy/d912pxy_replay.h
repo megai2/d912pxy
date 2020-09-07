@@ -29,7 +29,12 @@ typedef struct d912pxy_replay_thread_context {
 	ID3D12PipelineState* pso;
 	UINT tid;
 	D3D12_GPU_VIRTUAL_ADDRESS customBatchPtr;
-	d912pxy_shader_pair_hash_type trackedSPair;
+	struct 
+	{
+		d912pxy_shader_pair_hash_type spair;
+		d912pxy_surface* dsv;
+		d912pxy_surface* rtv;
+	} tracked;
 } d912pxy_replay_thread_context;
 
 class d912pxy_replay;
@@ -141,7 +146,7 @@ void RHA_##a##_extra(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList 
 	RHA_DECL(om_blendfactor, void* unused);
 	RHA_DECL(view_scissor, void* unused);
 	RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context);
-	RHA_DECL(om_render_targets, void* unused);
+	RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context);
 	RHA_DECL(vbuf_bind, void* unused);
 	RHA_DECL(ibuf_bind, void* unused);
 	RHA_DECL(clear_rt, void* unused);

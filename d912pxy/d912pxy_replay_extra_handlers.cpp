@@ -51,9 +51,9 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 {
 	if (extras.pairTracker.enable)
 	{		
-		extras.pairTracker.write(context->trackedSPair);		
+		extras.pairTracker.write(context->tracked.spair);		
 		{
-			d912pxy::mt::containter::Ref<ExtraFeatures::PairTracker::ExclusionStorage> excRef(extras.pairTracker.exclusions, context->trackedSPair);
+			d912pxy::mt::containter::Ref<ExtraFeatures::PairTracker::ExclusionStorage> excRef(extras.pairTracker.exclusions, context->tracked.spair);
 			if (excRef.val)
 				return;
 		}
@@ -62,9 +62,22 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 	RHA_BASE(draw_indexed, context);
 }
 
-RHA_DECL(om_render_targets, void* unused)
+RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 {
-	RHA_BASE(om_render_targets, unused);
+	if (extras.pairTracker.enable)
+	{
+		if ((context->tracked.dsv != it->dsv) || (context->tracked.rtv != it->rtv))
+		{
+			context->tracked.dsv = it->dsv;
+			context->tracked.rtv = it->rtv;
+			//add 2 markers for pass end & pass start on rt changes
+			extras.pairTracker.write(0);
+			int passId = (it->dsv ? 1 : 0) + (it->rtv ? 2 : 0);
+			extras.pairTracker.write(passId);
+		}
+	}
+
+	RHA_BASE(om_render_targets, context);
 }
 
 RHA_DECL(vbuf_bind, void* unused)
@@ -93,7 +106,7 @@ RHA_DECL(pso_raw, d912pxy_replay_thread_context* context)
 
 	if (extras.pairTracker.enable)
 	{
-		context->trackedSPair = targetPso.GetShaderPairUID();		
+		context->tracked.spair = targetPso.GetShaderPairUID();		
 	}
 
 	RHA_BASE(pso_raw, context);
