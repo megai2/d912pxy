@@ -238,6 +238,8 @@ void d912pxy_iframe::Start()
 
 	d912pxy_query_occlusion::OnIFrameStart();
 
+	if (d912pxy_s.render.replay.extras.enable)
+		d912pxy_s.iframeMods.IFR_Start();
 }
 
 void d912pxy_iframe::End()
@@ -247,6 +249,9 @@ void d912pxy_iframe::End()
 
 	if (mSwapChain) 
 		mSwapChain->EndFrame();
+
+	if (d912pxy_s.render.replay.extras.enable)
+		d912pxy_s.iframeMods.IFR_End();
 
 	LOG_DBG_DTDM2("End Frame %u", mCurrentFrameIndex);
 	++mCurrentFrameIndex;
