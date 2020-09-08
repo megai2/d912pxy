@@ -34,16 +34,16 @@ namespace d912pxy {
 			class ModHandler : public d912pxy_noncom
 			{
 			public:
-				virtual void Init();
-				virtual void UnInit();
+				virtual void Init() {};
+				virtual void UnInit() {};
 
-				virtual void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext);
-				virtual void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				virtual void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				virtual void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext);
+				virtual void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw*, d912pxy_replay_thread_context*) {};
+				virtual void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed*, d912pxy_replay_thread_context*) {};
+				virtual void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed*, d912pxy_replay_thread_context*) {};
+				virtual void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets*, d912pxy_replay_thread_context*) {};
 
-				virtual void IFR_Start();
-				virtual void IFR_End();
+				virtual void IFR_Start() {};
+				virtual void IFR_End() {};
 			};
 
 			class Manager : public d912pxy_noncom
