@@ -81,6 +81,7 @@ void d912pxy_replay::Init()
 	if (extras.enable)
 	{
 		d912pxy_s.spairInfo.Init();
+		d912pxy_s.iframeMods.Init();
 	}
 
 #define RHA_ASSIGN(a) replay_handlers[(UINT)d912pxy_replay_item::typeName::a] = extras.enable ? \

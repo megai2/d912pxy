@@ -89,7 +89,9 @@ typedef struct d912pxy_instance {
 	d912pxy_dynamic_imports imports;
 
 	d912pxy_extras extras;
+	//TODO: maybe move it to another category
 	d912pxy::extras::ShaderPair::InfoStorage spairInfo;
+	d912pxy::extras::IFrameMods::Manager iframeMods;
 
 	UINT running;
 } d912pxy_instance;

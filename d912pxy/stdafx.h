@@ -68,6 +68,7 @@ SOFTWARE.
 #include "v3/util/mt/lock.h"
 #include "v3/util/mt/container.h"
 #include "v3/util/memtree.h"
+#include "v3/util/dir_reader.h"
 
 #include "../thirdparty/imgui/imgui.h"
 #include "../thirdparty/imgui/imgui_impl_dx12.h"
@@ -152,6 +153,10 @@ SOFTWARE.
 #include "d912pxy_surface_ops.h"
 #include "v3/dx12/extras/shader_pair/info.h"
 #include "v3/dx12/extras/shader_pair/tracker.h"
+#include "v3/dx12/extras/iframe_mods/manager.h"
+#include "v3/dx12/extras/iframe_mods/pass_detector.h"
+#include "v3/dx12/extras/iframe_mods/generic_taa.h"
+#include "v3/dx12/extras/iframe_mods/gw2_taa.h"
 #include "d912pxy_extras.h"
 #include "d912pxy_device.h"
 #include "d912pxy_instance.h"

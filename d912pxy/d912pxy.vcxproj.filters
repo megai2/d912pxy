@@ -335,7 +335,14 @@
     <ClCompile Include="v3\dx12\extras\shader_pair\tracker.cpp">
       <Filter>d3d9_impl\device\dx12\extras\shader_pair</Filter>
     </ClCompile>
-    <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp" />
+    <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp">
+      <Filter>d3d9_impl\device\dx12\extras\shader_pair</Filter>
+    </ClCompile>
+    <ClCompile Include="v3\util\dir_reader.cpp">
+      <Filter>v3\util</Filter>
+    </ClCompile>
+    <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp" />
+    <ClCompile Include="v3\dx12\extras\iframe_mods\generic_taa.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -667,6 +674,21 @@
     <ClInclude Include="v3\dx12\extras\shader_pair\info.h">
       <Filter>d3d9_impl\device\dx12\extras\shader_pair</Filter>
     </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\pass_detector.h">
+      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\manager.h">
+      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\dir_reader.h">
+      <Filter>v3\util</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\generic_taa.h">
+      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\gw2_taa.h">
+      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />
@@ -779,6 +801,9 @@
     </Filter>
     <Filter Include="d3d9_impl\device\dx12\extras\shader_pair">
       <UniqueIdentifier>{82184ead-e162-4c0f-88d7-eeef3db31d3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d9_impl\device\dx12\extras\iframe_mods">
+      <UniqueIdentifier>{ba4b577c-723c-432a-8a64-2f85ffcb1b90}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

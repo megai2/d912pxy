@@ -49,6 +49,7 @@ RHA_DECL(view_scissor, void* unused)
 
 RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 {
+	d912pxy_s.iframeMods.RP_PreDraw(it, context);
 	if (extras.pairTracker.enable)
 	{		
 		extras.pairTracker.write(context->tracked.spair);		
@@ -60,10 +61,13 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 	}
 
 	RHA_BASE(draw_indexed, context);
+
+	d912pxy_s.iframeMods.RP_PostDraw(it, context);
 }
 
 RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 {
+	d912pxy_s.iframeMods.RP_RTDSChange(it, context);
 	if (extras.pairTracker.enable)
 	{
 		if ((context->tracked.dsv != it->dsv) || (context->tracked.rtv != it->rtv))
@@ -102,6 +106,8 @@ RHA_DECL(clear_ds, void* unused)
 
 RHA_DECL(pso_raw, d912pxy_replay_thread_context* context)
 {
+	d912pxy_s.iframeMods.RP_PSO_Change(it, context);
+
 	d912pxy_trimmed_pso_desc& targetPso = it->rawState;
 
 	if (extras.pairTracker.enable)

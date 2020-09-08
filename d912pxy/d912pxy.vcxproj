@@ -523,8 +523,13 @@
     <ClInclude Include="stopwatch.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="v3\base_object.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\gw2_taa.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\manager.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\pass_detector.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\generic_taa.h" />
     <ClInclude Include="v3\dx12\extras\shader_pair\info.h" />
     <ClInclude Include="v3\dx12\extras\shader_pair\tracker.h" />
+    <ClInclude Include="v3\util\dir_reader.h" />
     <ClInclude Include="v3\util\hash.h" />
     <ClInclude Include="v3\util\log\error_handler.h" />
     <ClInclude Include="v3\util\memory_block.h" />
@@ -653,8 +658,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_pp|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_pb|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="v3\dx12\extras\iframe_mods\generic_taa.cpp" />
+    <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\tracker.cpp" />
+    <ClCompile Include="v3\util\dir_reader.cpp" />
     <ClCompile Include="v3\util\log\error_handler.cpp" />
     <ClCompile Include="v3\util\memory_block.cpp" />
   </ItemGroup>
