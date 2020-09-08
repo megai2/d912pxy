@@ -27,40 +27,17 @@ SOFTWARE.
 
 namespace d912pxy
 {
-	namespace extras
+	class DirReader
 	{
-		namespace ShaderPair
-		{
-			enum class DrawType
-			{
-				simple,
-				pass_start,
-				pass_end
-			};
+		int cur = 0;
+		Trivial::PushBuffer<MemoryBlock> dataArray;
 
-			struct Info
-			{
-				wchar_t* name = nullptr;
-				DrawType drawType;
-				d912pxy_shader_pair_hash_type spair;
-			};
+	public:
+		DirReader(const wchar_t* root, const wchar_t* path);
+		~DirReader();
 
-			class InfoStorage : public d912pxy_noncom
-			{
-				Memtree<d912pxy_shader_pair_hash_type, Info, RawHash<d912pxy_shader_pair_hash_type>> storage;
-
-				void readFData(MemoryBlock& mb);
-
-			public:
-				InfoStorage();
-				~InfoStorage();
-
-				void Init();
-
-				Info& find(d912pxy_shader_pair_hash_type pair);
-				void reload();
-			};
-		}
-	}
+		bool empty();
+		MemoryBlock& next();
+		intptr_t readed();
+	};
 }
-

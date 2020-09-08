@@ -113,52 +113,11 @@ Info& InfoStorage::find(d912pxy_shader_pair_hash_type pair)
 
 void InfoStorage::reload()
 {
-	//TODO: move tons of this code to shared/helper
-	WIN32_FIND_DATA fdFile;
-	HANDLE hFind = NULL;
+	DirReader dirReader(d912pxy_helper::GetFilePath(FP_SPAIR_INFO_BASE_PATH)->w, d912pxy_s.config.GetValueRaw(PXY_CFG_EXTRAS_SPAIR_SOURCE));
 
-	wchar_t sPath[2048];
-	wsprintf(sPath, L"%s%s/*", d912pxy_helper::GetFilePath(FP_SPAIR_INFO_BASE_PATH)->w, d912pxy_s.config.GetValueRaw(PXY_CFG_EXTRAS_SPAIR_SOURCE));
+	while (!dirReader.empty())
+		readFData(dirReader.next());	
 
-	LOG_INFO_DTDM("Loading spair info from %s", sPath);
+	LOG_INFO_DTDM("Readed %u shader pair info files", dirReader.readed());
 
-	if ((hFind = FindFirstFile(sPath, &fdFile)) == INVALID_HANDLE_VALUE)
-	{
-		LOG_INFO_DTDM("No spair data loaded");
-		return;
-	}
-
-	do
-	{
-		if (wcscmp(fdFile.cFileName, L".") != 0
-			&& wcscmp(fdFile.cFileName, L"..") != 0)
-		{
-			if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				continue;
-
-			wchar_t fPath[2048];
-			wsprintf(fPath, L"%s%s/%s", d912pxy_helper::GetFilePath(FP_SPAIR_INFO_BASE_PATH)->w, d912pxy_s.config.GetValueRaw(PXY_CFG_EXTRAS_SPAIR_SOURCE), fdFile.cFileName);
-
-			FILE* f = _wfopen(fPath, L"rb+");
-
-			if (!f)
-				continue;
-
-			fseek(f, 0, SEEK_END);
-			int fsz = ftell(f);
-			fseek(f, 0, SEEK_SET);
-
-			if (!fsz)
-			{
-				fclose(f);
-				continue;
-			}
-
-			MemoryBlock fdata(fsz);
-			fread(fdata.getPtr(), 1, fsz, f);
-			readFData(fdata);
-
-			fclose(f);
-		}
-	} while (FindNextFile(hFind, &fdFile));
 }
