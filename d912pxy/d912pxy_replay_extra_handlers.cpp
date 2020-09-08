@@ -67,18 +67,20 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 
 RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 {
+	if ((context->tracked.dsv != it->dsv) || (context->tracked.rtv != it->rtv))
+	{
+		context->tracked.dsv = it->dsv;
+		context->tracked.rtv = it->rtv;
+	}
+
 	d912pxy_s.iframeMods.RP_RTDSChange(it, context);
+
 	if (extras.pairTracker.enable)
 	{
-		if ((context->tracked.dsv != it->dsv) || (context->tracked.rtv != it->rtv))
-		{
-			context->tracked.dsv = it->dsv;
-			context->tracked.rtv = it->rtv;
-			//add 2 markers for pass end & pass start on rt changes
-			extras.pairTracker.write(0);
-			int passId = (it->dsv ? 1 : 0) + (it->rtv ? 2 : 0);
-			extras.pairTracker.write(passId);
-		}
+		//add 2 markers for pass end & pass start on rt changes
+		extras.pairTracker.write(0);
+		int passId = (it->dsv ? 1 : 0) + (it->rtv ? 2 : 0);
+		extras.pairTracker.write(passId);
 	}
 
 	RHA_BASE(om_render_targets, context);
@@ -106,15 +108,11 @@ RHA_DECL(clear_ds, void* unused)
 
 RHA_DECL(pso_raw, d912pxy_replay_thread_context* context)
 {
-	d912pxy_s.iframeMods.RP_PSO_Change(it, context);
-
 	d912pxy_trimmed_pso_desc& targetPso = it->rawState;
+	context->tracked.spair = targetPso.GetShaderPairUID();
 
-	if (extras.pairTracker.enable)
-	{
-		context->tracked.spair = targetPso.GetShaderPairUID();		
-	}
-
+	d912pxy_s.iframeMods.RP_PSO_Change(it, context);
+	
 	RHA_BASE(pso_raw, context);
 }
 
