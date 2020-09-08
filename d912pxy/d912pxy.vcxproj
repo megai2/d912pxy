@@ -660,6 +660,7 @@
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\iframe_mods\generic_taa.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp" />
+    <ClCompile Include="v3\dx12\extras\iframe_mods\pass_detector.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\tracker.cpp" />
     <ClCompile Include="v3\util\dir_reader.cpp" />

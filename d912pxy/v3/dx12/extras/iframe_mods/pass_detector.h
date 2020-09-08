@@ -31,24 +31,41 @@ namespace IFrameMods {
 
 	class PassDetector : public ModHandler
 	{
+		bool inPass;
+		bool justEntered;
+		bool justExited;
+		bool triggerOnSameRT;
+		int RTDSmask;
+
+		d912pxy_shader_pair_hash_type prevLastDrawSpair;
+		d912pxy_shader_pair_hash_type firstDrawSpair;
+		
+		enum 
+		{
+			SURF_RT = 0,
+			SURF_DS = 1,
+			SURF_LAST = 2,
+			SURF_TRACKED = 4
+		};
+
+		d912pxy_surface* surfaces[6];		
+
+		void enter(d912pxy_replay_thread_context* rpContext);
+		void exit();
+		void neutral();
+
 	public:
 		PassDetector(const wchar_t* prevLastDrawMarker, const wchar_t* firstDrawMarker, int iRTDSmask, bool iTriggerOnSameTargets);
-		~PassDetector();
 
-		bool inside();
-		bool exited();
-		bool entered();
+		d912pxy_surface* getSurf(bool RT=true, bool last=false) { return surfaces[(last ? SURF_LAST : 0) + (RT ? SURF_RT : SURF_DS)]; };
 
-		void Init();
-		void UnInit();
+		bool inside() { return inPass; }
+		bool exited() { return justExited; }
+		bool entered() { return justEntered; }
 
-		void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext);
 		void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
 		void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
 		void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext);
-
-		void IFR_Start();
-		void IFR_End();
 	};
 
 }
