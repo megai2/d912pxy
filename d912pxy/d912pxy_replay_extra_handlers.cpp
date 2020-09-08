@@ -71,9 +71,9 @@ RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 	{
 		context->tracked.dsv = it->dsv;
 		context->tracked.rtv = it->rtv;
-	}
 
-	d912pxy_s.iframeMods.RP_RTDSChange(it, context);
+		d912pxy_s.iframeMods.RP_RTDSChange(it, context);
+	}	
 
 	if (extras.pairTracker.enable)
 	{
