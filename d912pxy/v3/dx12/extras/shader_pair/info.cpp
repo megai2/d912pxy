@@ -111,6 +111,24 @@ Info& InfoStorage::find(d912pxy_shader_pair_hash_type pair)
 	return ret;
 }
 
+d912pxy_shader_pair_hash_type d912pxy::extras::ShaderPair::InfoStorage::getSpairForMarker(const wchar_t* name)
+{
+	if (!name)
+		return 0;
+
+	//FIXME: this is not super fast
+	for (auto i = storage.begin(); i < storage.end(); ++i)
+	{
+		if (!i.value().name)
+			continue;
+
+		if (lstrcmpW(i.value().name, name) == 0)		
+			return i.value().spair;		
+	}
+
+	return 0;
+}
+
 void InfoStorage::reload()
 {
 	DirReader dirReader(d912pxy_helper::GetFilePath(FP_SPAIR_INFO_BASE_PATH)->w, d912pxy_s.config.GetValueRaw(PXY_CFG_EXTRAS_SPAIR_SOURCE));

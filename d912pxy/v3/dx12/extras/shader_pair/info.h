@@ -58,6 +58,7 @@ namespace d912pxy
 				void Init();
 
 				Info& find(d912pxy_shader_pair_hash_type pair);
+				d912pxy_shader_pair_hash_type getSpairForMarker(const wchar_t* name);
 				void reload();
 			};
 		}
