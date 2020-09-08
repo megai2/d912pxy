@@ -37,7 +37,7 @@ namespace IFrameMods {
 			};
 			static const int TAA_jitterSequenceLength = 4;
 
-			class GenericTAA : public d912pxy_noncom
+			class GenericTAA : public ModHandler
 			{
 				int jitterIdx = 0;
 				d912pxy_surface* prevFrame = nullptr;
@@ -49,12 +49,7 @@ namespace IFrameMods {
 				GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw);
 
 				void UnInit();
-
-				void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext);
 				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext);
-
 				void IFR_Start();
 			};
 
