@@ -350,6 +350,7 @@
     <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp">
       <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
     </ClCompile>
+    <ClCompile Include="v3\dx12\extras\iframe_mods\gw2_taa.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />

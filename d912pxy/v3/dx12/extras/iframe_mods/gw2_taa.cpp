@@ -1,3 +1,4 @@
+#include "stdafx.h"
 /*
 MIT License
 
@@ -22,40 +23,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#pragma once
-#include "stdafx.h"
 
-namespace d912pxy {
-namespace extras {
-namespace IFrameMods {
+using namespace d912pxy::extras::IFrameMods;
 
-			class Gw2TAA : public d912pxy_noncom
-			{
-				GenericTAA* taa;
+bool d912pxy::extras::IFrameMods::Gw2TAA::shouldApplyJitter()
+{
+	return normDepthPass->inside() || resolvePass->inside();
+}
 
-				//applying jitter in this 2 passes looks like a surely needed
-				//but other ones should be investigated too
-				//anyway dealing with them will be a problem already
-				PassDetector* normDepthPass;
-				PassDetector* resolvePass;				
-
-				bool shouldApplyJitter();
-
-			public:
-				Gw2TAA();
-
-				void Init();
-				void UnInit();
-
-				void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext);
-				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext);
-
-				void IFR_Start();
-				void IFR_End();
-			};
+Gw2TAA::Gw2TAA()
+{
+	taa = new GenericTAA(d912pxy_s.iframeMods.configVal(L"post_proc_apply"), nullptr);
+	d912pxy_s.iframeMods.pushMod(taa);
 
 }
-}
+
+void Gw2TAA::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext)
+{
+	if (shouldApplyJitter())
+	{
+		;//d912pxy_s.render.db.shader.UseCustomCommonCode("taa_affected");
+	}
+	else
+		;//d912pxy_s.render.db.shader.UseCustomCommonCode(nullptr);
 }

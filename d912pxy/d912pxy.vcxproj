@@ -659,6 +659,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_pb|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\iframe_mods\generic_taa.cpp" />
+    <ClCompile Include="v3\dx12\extras\iframe_mods\gw2_taa.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\pass_detector.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp" />
