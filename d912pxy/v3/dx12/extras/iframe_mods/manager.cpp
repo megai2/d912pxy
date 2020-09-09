@@ -38,7 +38,7 @@ void Manager::loadConfig()
 	while (!dirReader.empty())
 		parseData(dirReader.next());
 
-	LOG_INFO_DTDM("Readed %u shader pair info files", dirReader.readed());
+	LOG_INFO_DTDM("Readed %u iframe mod config files", dirReader.readed());
 }
 
 Manager::Manager()
