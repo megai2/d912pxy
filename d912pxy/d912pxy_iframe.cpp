@@ -499,10 +499,47 @@ void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
 	}
 }
 
-void d912pxy_iframe::InitRootSignature()
+void d912pxy_iframe::OverrideRootSignature(ID3D12RootSignature* newRS)
 {
-	D3D12_DESCRIPTOR_RANGE ranges[3];
+	d912pxy::error::check(!mRootSignature, L"Can't double override root signature/root signature overriden too late");
+	mRootSignature = newRS;
+}
 
+void d912pxy_iframe::FillPrimaryRSParameters(D3D12_ROOT_PARAMETER* rootParameters, D3D12_DESCRIPTOR_RANGE* ranges)
+{
+	for (int i = 0; i != 3; ++i)
+	{
+		rootParameters[i].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootParameters[i].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		rootParameters[i].DescriptorTable.NumDescriptorRanges = 1;
+		rootParameters[i].DescriptorTable.pDescriptorRanges = &ranges[i];
+	}
+
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[3].Descriptor.RegisterSpace = 0;
+	rootParameters[3].Descriptor.ShaderRegister = 0;
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+}
+
+void d912pxy_iframe::FillPrimaryRSstaticPCFSampler(D3D12_STATIC_SAMPLER_DESC& staticPCF)
+{
+	staticPCF.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	staticPCF.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	staticPCF.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticPCF.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	staticPCF.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	staticPCF.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	staticPCF.RegisterSpace = 1;
+	staticPCF.ShaderRegister = 0;
+	staticPCF.MaxAnisotropy = 1;
+	staticPCF.MaxLOD = 0;
+	staticPCF.MinLOD = 0;
+	staticPCF.MipLODBias = 0;
+	staticPCF.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+}
+
+void d912pxy_iframe::FillPrimaryRSDescriptorRanges(D3D12_DESCRIPTOR_RANGE* ranges)
+{
 	//zero of ROOTDESC is PXY_INNER_HEAP_TEX2D where all our textures are
 	ranges[0].BaseShaderRegister = 0;
 	ranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -521,36 +558,24 @@ void d912pxy_iframe::InitRootSignature()
 	ranges[2].NumDescriptors = mHeaps[PXY_INNER_HEAP_SPL]->GetDesc()->NumDescriptors;
 	ranges[2].OffsetInDescriptorsFromTableStart = 0;
 	ranges[2].RegisterSpace = 0;
+}
 
-	D3D12_ROOT_PARAMETER rootParameters[5];
-
-	for (int i = 0; i != 3; ++i)
+void d912pxy_iframe::InitRootSignature()
+{
+	if (mRootSignature)
 	{
-		rootParameters[i].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParameters[i].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-		rootParameters[i].DescriptorTable.NumDescriptorRanges = 1;
-		rootParameters[i].DescriptorTable.pDescriptorRanges = &ranges[i];
+		LOG_INFO_DTDM("using custom/overriden root signature");
+		return;
 	}
 
-	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters[3].Descriptor.RegisterSpace = 0;
-	rootParameters[3].Descriptor.ShaderRegister = 0;	
-	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	D3D12_DESCRIPTOR_RANGE ranges[3];
+	FillPrimaryRSDescriptorRanges(ranges);
+
+	D3D12_ROOT_PARAMETER rootParameters[5];
+	FillPrimaryRSParameters(rootParameters, ranges);
 
 	D3D12_STATIC_SAMPLER_DESC staticPCF;
-	staticPCF.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	staticPCF.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	staticPCF.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticPCF.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-	staticPCF.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	staticPCF.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
-	staticPCF.RegisterSpace = 1;
-	staticPCF.ShaderRegister = 0;
-	staticPCF.MaxAnisotropy = 1;
-	staticPCF.MaxLOD = 0;
-	staticPCF.MinLOD = 0;
-	staticPCF.MipLODBias = 0;
-	staticPCF.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	FillPrimaryRSstaticPCFSampler(staticPCF);
 
 	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;

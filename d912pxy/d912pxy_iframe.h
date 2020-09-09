@@ -126,6 +126,11 @@ public:
 		UINT instanceCount;
 	};
 
+	void OverrideRootSignature(ID3D12RootSignature* newRS);
+	void FillPrimaryRSDescriptorRanges(D3D12_DESCRIPTOR_RANGE* ranges);
+	void FillPrimaryRSParameters(D3D12_ROOT_PARAMETER* rootParameters, D3D12_DESCRIPTOR_RANGE* ranges);
+	void FillPrimaryRSstaticPCFSampler(D3D12_STATIC_SAMPLER_DESC& staticPCF);
+
 private:	
 	void InitRootSignature();
 
