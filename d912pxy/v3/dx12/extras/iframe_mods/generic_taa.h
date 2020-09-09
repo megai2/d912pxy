@@ -29,24 +29,99 @@ namespace d912pxy {
 namespace extras {
 namespace IFrameMods {
 
-			//TODO: fill it
-			static const float TAA_jitterSequence[] = 
-			{ 
-				0, 0,
-				0, 0,
-			};
-			static const int TAA_jitterSequenceLength = 4;
-
-			class GenericTAA : public ModHandler
+			template<int Length>
+			struct JitterSequence
 			{
-				int jitterIdx = 0;
+				struct Elem
+				{
+					float jX;
+					float jY;
+					float invW;
+					float invH;
+				};
+
+				static constexpr int length = Length+1;
+				static constexpr int elemSize = sizeof(Elem);
+				static constexpr int size = length * elemSize;
+
+				Elem sequence[Length];
+
+				void advanceIdx(int& idx) { idx = (idx + 1) % Length; }
+
+				uint64_t cbOffset(int idx) { return elemSize * (idx + 1); }
+
+				Elem haltonSeq(int idx)
+				{
+					//ref https://github.com/cenit/jburkardt/blob/master/halton/halton.cpp
+
+					int   prime[2]     = { 1   , 2    };
+					float prime_inv[2] = { 1.0f, 0.5f };
+					int   t[2]         = { idx , idx  };
+					float r[2]         = { 0.0f, 0.0f };
+					int d = 0;
+
+					while (0 < (t[0] + t[1]))
+					{
+						for (int j = 0; j < 2; j++)
+						{
+							d = t[j] % prime[j];
+							r[j] = r[j] + d*prime_inv[j];
+							prime_inv[j] = prime_inv[j] / prime[j];
+							t[j] = t[j] / prime[j];
+						}
+					}
+
+					return Elem{ r[0] + 0.5f, r[1] + 0.5f, 0, 0 };
+				}
+
+				JitterSequence()
+				{
+					sequence[0] = Elem{ 0, 0, 0, 0 };
+					//fill with 2d halton sequence
+					for (int i = 1; i < Length; ++i)
+						sequence[i] = haltonSeq(i);
+
+				}
+
+				void adjustInverseWH(int w, int h)
+				{
+					float iwh[2] = { 1.0f / w, 1.0f / h };
+					for (int i = 1; i < Length; ++i)
+					{
+						sequence[i].invW = iwh[0];
+						sequence[i].invH = iwh[1];
+					}
+				}
+
+				void loadTo(d912pxy_vstream* cbuf) 
+				{ 
+					void* ptr;
+					cbuf->Lock(0, 0, &ptr, 0);
+					memcpy(ptr, (void*)sequence, size);
+					cbuf->Unlock();					
+				}
+			};
+	
+			class GenericTAA : public ModHandler
+			{				
 				d912pxy_surface* prevFrame = nullptr;
 				d912pxy_surface* currentFrame = nullptr;
+
+				d912pxy_surface* surfFromTempl(D3DSURFACE_DESC& descTempl);
+				void resetAdditionalFrames(d912pxy_surface* from);
+
 				d912pxy_pso_item* taaShader = nullptr;
 				PassDetector* uiPass;
 
+				d912pxy_vstream* jitterCBuf = nullptr;
+				int jitterCBufRSIdx = 0;
+				int jitterIdx = 0;
+				JitterSequence<16> jitterSeq;
+				
 			public:
-				GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw);
+				GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw, int cbufferRSIdx);
+
+				void setJitter(bool enable, d912pxy_replay_thread_context* ctx);
 
 				void UnInit();
 				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);

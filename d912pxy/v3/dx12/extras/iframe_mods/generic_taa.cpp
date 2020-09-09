@@ -26,12 +26,63 @@ SOFTWARE.
 
 using namespace d912pxy::extras::IFrameMods;
 
-GenericTAA::GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw)
+d912pxy_surface* GenericTAA::surfFromTempl(D3DSURFACE_DESC& descTempl)
+{
+	UINT levels = 1;
+	d912pxy_surface* ret = d912pxy_surface::d912pxy_surface_com(
+		descTempl.Width,
+		descTempl.Height,
+		descTempl.Format,
+		descTempl.Usage,
+		descTempl.MultiSampleType,
+		descTempl.MultiSampleQuality,
+		false,
+		&levels,
+		0,
+		nullptr
+	);
+
+	//TODO: ensure we have rtds at first TAA draw call
+	ret->GetSRVHeapIdRTDS();
+
+	return ret;
+}
+
+void GenericTAA::resetAdditionalFrames(d912pxy_surface* from)
+{
+	D3DSURFACE_DESC descTempl = from->GetDX9DescAtLevel(0);
+
+	if (prevFrame)
+		prevFrame->Release_Surface();
+
+	if (currentFrame)
+		currentFrame->Release_Surface();
+	
+	prevFrame = surfFromTempl(descTempl);
+	currentFrame = surfFromTempl(descTempl);
+
+	jitterSeq.adjustInverseWH(descTempl.Width, descTempl.Height);
+	jitterSeq.loadTo(jitterCBuf);
+}
+
+GenericTAA::GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw, int cbufferReg)
+	: jitterCBufRSIdx(cbufferReg)
 {
 	uiPass = new PassDetector(preUiLastDraw, uiFirstDraw, 0, false);
 	d912pxy_s.iframeMods.pushMod(uiPass);
+
+	jitterCBuf = d912pxy_vstream::d912pxy_vstream_com(jitterSeq.size, 0, 0, 0);	
+
 	//TODO: make dx12 shader class
 	//compile & load TAA shader
+}
+
+void GenericTAA::setJitter(bool enable, d912pxy_replay_thread_context* ctx)
+{
+	ctx->cl->SetGraphicsRootConstantBufferView(
+		jitterCBufRSIdx,
+		jitterCBuf->GetVA_GPU() + jitterSeq.cbOffset(enable ? jitterIdx : -1)
+	);
 }
 
 void d912pxy::extras::IFrameMods::GenericTAA::UnInit()
@@ -39,40 +90,49 @@ void d912pxy::extras::IFrameMods::GenericTAA::UnInit()
 	delete taaShader;
 
 	if (prevFrame)
-		delete prevFrame;
+		prevFrame->Release();
 
 	if (currentFrame)
-		delete currentFrame;
+		currentFrame->Release();
+
+	jitterCBuf->Release();
 }
 
 void GenericTAA::RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext)
 {
 	if (uiPass->entered())
 	{
-		if (!prevFrame)
+		d912pxy_surface* currentRt = uiPass->getSurf(true);
+
+		if (!prevFrame || !currentFrame)
 		{
-			//create new RTs from uiPass.getSurf(true, true) params;			
+			resetAdditionalFrames(currentRt);
 		}
-				
-		//copy currentRt to currentFrame
-		//transit prevFrame,currentFrame to SRV		
-		//bind to shader as SRV
-		//draw with TAA shader
-		//return to normal rendering
+		else {
+			D3DSURFACE_DESC actualDesc = currentRt->GetDX9DescAtLevel(0);
+			D3DSURFACE_DESC oldDesc = prevFrame->GetDX9DescAtLevel(0);
+			
+			if ((oldDesc.Height != actualDesc.Height) || (oldDesc.Width != actualDesc.Width))
+			{
+				resetAdditionalFrames(currentRt);
+			}
+		}
+
+		currentRt->BCopyToWStates(currentFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		
+		//TODO: make state holder for replay context & "native" dx12 draw class
+		//{
+	    //	StateHolder oldStates;
+		//	taaDraw->perform(rpContext.cl, 0);
+		//}		
+
+		currentFrame->BCopyToWStates(prevFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		
 	}
 }
 
 void GenericTAA::IFR_Start()
 {
 	//advance jitter idx
-	jitterIdx = (jitterIdx + 1) % TAA_jitterSequenceLength;
-
-	//update taa params in shader
-	float taaParams[4] = { TAA_jitterSequence[jitterIdx * 2 + 0], TAA_jitterSequence[jitterIdx * 2 + 1], 0.0f, 0.0f };
-	if (prevFrame)
-	{
-		taaParams[2] = 1.0f / prevFrame->GetDX9DescAtLevel(0).Width;
-		taaParams[3] = 1.0f / prevFrame->GetDX9DescAtLevel(0).Height;
-	}
-	d912pxy_s.render.batch.SetShaderConstF(1, PXY_INNER_EXTRA_SHADER_CONST_TAA_PARAMS, 1, taaParams);
+	jitterSeq.advanceIdx(jitterIdx);
 }

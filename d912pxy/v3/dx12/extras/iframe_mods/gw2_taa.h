@@ -40,6 +40,9 @@ namespace IFrameMods {
 				PassDetector* resolvePass;				
 
 				bool shouldApplyJitter();
+				void initAndSetRSOverride();
+
+				static constexpr int jitterCbufRSIdx = 4;
 
 			public:
 				Gw2TAA();
