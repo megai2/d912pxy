@@ -108,7 +108,9 @@ public:
 	static UINT allowPP_suffix;
 	static UINT32 NaNguard_flag;
 	static UINT32 sRGB_alphatest_bits;
-
+	static const wchar_t* commonIncludeOverride;
+	
+	static void overrideCommonInclude(const wchar_t* relPath);
 private:
 	const char* GetRegTypeStr(DWORD regType, UINT8 proc);
 	const char* GetUsageString(UINT usage, UINT type);

@@ -27,6 +27,7 @@ SOFTWARE.
 UINT d912pxy_hlsl_generator::allowPP_suffix = 0;
 UINT32 d912pxy_hlsl_generator::NaNguard_flag = 0;
 UINT32 d912pxy_hlsl_generator::sRGB_alphatest_bits = 0;
+const wchar_t* d912pxy_hlsl_generator::commonIncludeOverride = nullptr;
 
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : 
 	d912pxy_noncom(L"hlsl generator"),
@@ -63,6 +64,12 @@ d912pxy_hlsl_generator::~d912pxy_hlsl_generator()
 	fflush(of);
 	fclose(of);
 #endif
+}
+
+void d912pxy_hlsl_generator::overrideCommonInclude(const wchar_t* relPath)
+{
+	d912pxy::error::check(commonIncludeOverride == nullptr, L"Failed to override hlsl common include to %s as it is already overrided to %s", relPath, commonIncludeOverride);
+	commonIncludeOverride = relPath;
 }
 
 d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::Process(UINT toMemory)
@@ -866,7 +873,10 @@ void d912pxy_hlsl_generator::WriteShaderHeadData()
 	else
 		HLSL_GEN_WRITE_HEADI(0, "#define srgb_write_color_lin2s(color) color_lin2s_thru(color)");
 
-	HLSL_GEN_WRITE_HEADI(0, "#include \"../common.hlsli\"");
+	if (commonIncludeOverride)
+		HLSL_GEN_WRITE_HEADI(0, "#include \"%S\"", commonIncludeOverride);
+	else
+		HLSL_GEN_WRITE_HEADI(0, "#include \"../common.hlsli\"");
 	HLSL_GEN_WRITE_HEADI(0, "	");
 
 	HLSL_GEN_WRITE_PROC("	");
