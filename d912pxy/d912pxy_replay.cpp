@@ -148,9 +148,12 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 
 	d912pxy_replay_item* item_end = item_iter;
 
-	if (extras.enable)
+	if (extras.enable && (context.tid == 0))
 	{
-		extras.pairTracker.nextFrame();
+		context.cl = cl;
+
+		if (extras.pairTracker.enable)
+			extras.pairTracker.nextFrame();
 	}
 	
 	//execute operations

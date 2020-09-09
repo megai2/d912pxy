@@ -33,8 +33,9 @@ typedef struct d912pxy_replay_thread_context {
 	{
 		d912pxy_shader_pair_hash_type spair;
 		d912pxy_surface* dsv;
-		d912pxy_surface* rtv;
+		d912pxy_surface* rtv;		
 	} tracked;
+	ID3D12GraphicsCommandList* cl;
 } d912pxy_replay_thread_context;
 
 class d912pxy_replay;
