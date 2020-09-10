@@ -712,8 +712,8 @@ void d912pxy_iframe::ExtractInstanceCountExtra()
 
 	if (!d912pxy_s.render.state.pso.GetCurrentCPSO())
 	{
-		d912pxy_vdecl* vdecl = d912pxy_s.render.state.pso.GetIAFormat();
-		usedStreams = vdecl->GetUsedStreams();
+		d912pxy_vdecl* vdecl = d912pxy_s.render.state.pso.GetIAFormat();		
+		usedStreams = vdecl ? vdecl->GetUsedStreams() : 1;
 	}
 
 	if (batchCommitData.batchDF & 1)
