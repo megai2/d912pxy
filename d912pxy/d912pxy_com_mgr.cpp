@@ -76,6 +76,8 @@ void d912pxy_com_mgr::DeAllocateComObj(d912pxy_com_object * obj)
 	table.DeAllocateObj(obj);
 }
 
+#if _WIN64
+
 d912pxy_com_object * d912pxy_com_mgr::GetComObject(d912pxy_com_obj_typeid type, d912pxy_mem_va_table_obj_id id)
 {
 	return (d912pxy_com_object*)table.GetObj(type, id);
@@ -90,3 +92,5 @@ d912pxy_com_obj_typeid d912pxy_com_mgr::GetTypeIdFromAdr(d912pxy_com_object * ob
 {
 	return (d912pxy_com_obj_typeid)table.TypeFromAdr(obj);
 }
+
+#endif

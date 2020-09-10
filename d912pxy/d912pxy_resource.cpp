@@ -367,7 +367,7 @@ void d912pxy_resource::BCopyToWStates(d912pxy_resource * dst, UINT barriers, ID3
 		dst->BTransit(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, dstStateCache, D3D12_RESOURCE_STATE_COPY_DEST, cl);
 }
 
-intptr_t d912pxy_resource::GetVA_GPU()
+UINT64 d912pxy_resource::GetVA_GPU()
 {
 	return m_res->GetGPUVirtualAddress();
 }

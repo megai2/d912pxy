@@ -97,7 +97,7 @@ public:
 	void BCopyTo(d912pxy_resource* dst, UINT barriers, ID3D12GraphicsCommandList* cq);
 	void BCopyToWStates(d912pxy_resource* dst, UINT barriers, ID3D12GraphicsCommandList* cq, D3D12_RESOURCE_STATES dstStateCache, D3D12_RESOURCE_STATES srcStateCache);
 		
-	intptr_t GetVA_GPU();
+	UINT64 GetVA_GPU();
 	
 	static UINT residencyOverride;
 

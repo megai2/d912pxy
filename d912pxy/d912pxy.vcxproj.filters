@@ -697,6 +697,9 @@
     <ClInclude Include="v3\dx12\extras\iframe_mods\gw2_taa.h">
       <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
     </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\shader.h">
+      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="deffile" />

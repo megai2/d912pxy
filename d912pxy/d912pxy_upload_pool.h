@@ -52,7 +52,7 @@ public:
 
 	intptr_t GetCurrentOffset() { return usedSpace; };
 
-	void AddSpaceUsed(UINT64 amount) { usedSpace += amount; };
+	void AddSpaceUsed(intptr_t amount) { usedSpace += amount; };
 	   
 private:	
 	intptr_t DPtr();

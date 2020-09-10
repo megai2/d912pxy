@@ -103,7 +103,7 @@ void d912pxy::extras::ShaderPair::Tracker::drawList()
 		{
 			ImGui::BulletText("%lli: <%016llX> %S (%u)", i, v.spair, v.name ? v.name : L"unknown", nestedDraws);
 			char tgButton[255];
-			sprintf(tgButton, "toggle##%016llX %lli", v.spair, i);
+			sprintf(tgButton, "toggle##%016llX %p", v.spair, i);
 			ImGui::SameLine();
 			{
 				d912pxy::mt::containter::Ref<d912pxy_replay::ExtraFeatures::PairTracker::ExclusionStorage> excRef(d912pxy_s.render.replay.extras.pairTracker.exclusions, v.spair);				

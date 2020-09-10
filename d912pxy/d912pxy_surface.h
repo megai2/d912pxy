@@ -113,7 +113,7 @@ private:
 	
 	d912pxy_surface_layer** layers;
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* subresFootprints;
-	size_t subresSizes;
+	UINT64 subresSizes;
 	UINT subresCountCache;	
 
 	UINT ulMarked;

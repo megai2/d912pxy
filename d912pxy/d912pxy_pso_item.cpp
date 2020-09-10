@@ -206,7 +206,7 @@ void d912pxy_pso_item::RCELoadIOBlock(char* source, const char* marker, char** o
 		char* lnStart = structDclEmt;
 		structDclEmt = d912pxy_helper::StrNextLine(structDclEmt);
 
-		UINT64 lSz = (intptr_t)structDclEmt - (intptr_t)lnStart;
+		intptr_t lSz = (intptr_t)structDclEmt - (intptr_t)lnStart;
 
 		PXY_MALLOC(out[outCnt], lSz + 1, char*);
 
