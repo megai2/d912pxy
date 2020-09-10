@@ -46,7 +46,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_CS(const wchar_t* b
 	wchar_t replFn[1024];
 
 	//megai2: %016llX bugged out
-	wsprintf(replFn, L"%s/%08lX%08lX.hlsl", bfolder, mUID >> 32, mUID & 0xFFFFFFFF);
+	wsprintf(replFn, L"%s/%08lX%08lX.hlsl", bfolder, (int)(mUID >> 32), (int)(mUID & 0xFFFFFFFF));
 
 	char targetCompiler[] = "cs_5_1";
 
@@ -105,7 +105,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL(const wchar_t* bfol
 	wchar_t replFn[1024];
 
 	//megai2: %016llX bugged out
-	wsprintf(replFn, L"%s/%08lX%08lX.hlsl", bfolder, mUID >> 32, mUID & 0xFFFFFFFF);
+	wsprintf(replFn, L"%s/%08lX%08lX.hlsl", bfolder, (int)(mUID >> 32), (int)(mUID & 0xFFFFFFFF));
 
 	char targetCompiler[] = "ps_5_1";
 
@@ -172,7 +172,7 @@ d912pxy_shader_code d912pxy_shader_replacer::CompileFromHLSL_MEM(const wchar_t* 
 	char replFn[1024];
 
 	//megai2: %016llX bugged out
-	sprintf(replFn, "%S/%016llX.hlsl", bfolder, mUID);
+	sprintf(replFn, "%S/%08lX%08lX.hlsl", bfolder, (int)(mUID >> 32), (int)(mUID & 0xFFFFFFFF));
 
 	char targetCompiler[] = "ps_5_1";
 
