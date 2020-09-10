@@ -49,6 +49,7 @@ HRESULT d912pxy_device::GetSwapChain(UINT iSwapChain, IDirect3DSwapChain9** pSwa
 		return D3DERR_INVALIDCALL;
 
 	*pSwapChain = PXY_COM_CAST_(IDirect3DSwapChain9, swapchains[iSwapChain]);
+	(*pSwapChain)->AddRef();
 
 	return D3D_OK; 
 }
