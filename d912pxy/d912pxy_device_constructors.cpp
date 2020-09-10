@@ -107,6 +107,9 @@ HRESULT d912pxy_device::CreatePixelShader(CONST DWORD* pFunction, IDirect3DPixel
 
 HRESULT d912pxy_device::CreateQuery_Optimized(D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery)
 {
+	if (!ppQuery)
+		return D3D_OK;
+
 	switch (Type)
 	{
 	case D3DQUERYTYPE_OCCLUSION:
@@ -122,6 +125,9 @@ HRESULT d912pxy_device::CreateQuery_Optimized(D3DQUERYTYPE Type, IDirect3DQuery9
 
 HRESULT d912pxy_device::CreateQuery(D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery)
 { 
+	if (!ppQuery)
+		return D3D_OK;
+
 	switch (Type)
 	{
 		case D3DQUERYTYPE_OCCLUSION:
