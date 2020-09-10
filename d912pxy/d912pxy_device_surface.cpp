@@ -47,18 +47,22 @@ HRESULT d912pxy_device::SetRenderTarget_Compat(DWORD RenderTargetIndex, IDirect3
 
 	d912pxy_s.render.iframe.BindSurface(1 + RenderTargetIndex, rtSurf);
 
-	D3DVIEWPORT9 wp;
-	wp.X = 0;
-	wp.Y = 0;
+	//don't update viewport when setting extra RTs
+	if (RenderTargetIndex == 0)
+	{
+		D3DVIEWPORT9 wp;
+		wp.X = 0;
+		wp.Y = 0;
 
-	D3DSURFACE_DESC sdsc = rtSurf->GetDX9DescAtLevel(0);
+		D3DSURFACE_DESC sdsc = rtSurf->GetDX9DescAtLevel(0);
 
-	wp.Width = sdsc.Width;
-	wp.Height = sdsc.Height;
-	wp.MaxZ = 1;
-	wp.MinZ = 0;
+		wp.Width = sdsc.Width;
+		wp.Height = sdsc.Height;
+		wp.MaxZ = 1;
+		wp.MinZ = 0;
 
-	SetViewport(&wp);
+		SetViewport(&wp);
+	}
 
 	return D3D_OK;
 }
