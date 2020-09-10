@@ -139,16 +139,6 @@ HRESULT d912pxy_device::GetVertexDeclaration(IDirect3DVertexDeclaration9** ppDec
 	D912PXY_ROUTE_IMPL_STUB(D3D_OK);
 }
 
-HRESULT d912pxy_device::GetVertexShader(IDirect3DVertexShader9** ppShader)
-{
-	D912PXY_ROUTE_IMPL_STUB(D3D_OK);
-}
-
-HRESULT d912pxy_device::GetPixelShader(IDirect3DPixelShader9** ppShader)
-{
-	D912PXY_ROUTE_IMPL_STUB(D3D_OK);
-}
-
 HRESULT d912pxy_device::SetSoftwareVertexProcessing(BOOL bSoftware)
 {
 	D912PXY_ROUTE_IMPL_STUB(D3D_OK);

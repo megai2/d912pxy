@@ -72,6 +72,26 @@ HRESULT d912pxy_device::SetPixelShaderConstantF(UINT StartRegister, CONST float*
 	return D3D_OK;
 }
 
+HRESULT d912pxy_device::GetVertexShader(IDirect3DVertexShader9** ppShader)
+{
+	IDirect3DVertexShader9* vsObj = PXY_COM_CAST_(IDirect3DVertexShader9, d912pxy_s.render.state.pso.GetVShader());
+	if (vsObj)
+		vsObj->AddRef();
+
+	*ppShader = vsObj;		
+	return D3D_OK;
+}
+
+HRESULT d912pxy_device::GetPixelShader(IDirect3DPixelShader9** ppShader)
+{
+	IDirect3DPixelShader9* psObj = PXY_COM_CAST_(IDirect3DPixelShader9, d912pxy_s.render.state.pso.GetPShader());
+	if (psObj)
+		psObj->AddRef();
+
+	*ppShader = psObj;
+	return D3D_OK;
+}
+
 ID3D12RootSignature * d912pxy_device::ConstructRootSignature(D3D12_ROOT_SIGNATURE_DESC* rootSignatureDesc)
 {
 	ComPtr<ID3DBlob> signature;
