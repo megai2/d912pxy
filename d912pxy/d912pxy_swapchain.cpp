@@ -209,7 +209,9 @@ void d912pxy_swapchain::StartFrame()
 	backBufferSurface->BTransitGID(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_RENDER_TARGET, CLG_TOP);
 
 	d912pxy_s.dev.SetRenderTarget(0, PXY_COM_CAST_(IDirect3DSurface9, backBufferSurface));
-	d912pxy_s.dev.SetDepthStencilSurface(PXY_COM_CAST_(IDirect3DSurface9, depthStencilSurface));
+
+	if (depthStencilSurface)
+		d912pxy_s.dev.SetDepthStencilSurface(PXY_COM_CAST_(IDirect3DSurface9, depthStencilSurface));
 }
 
 void d912pxy_swapchain::EndFrame()
