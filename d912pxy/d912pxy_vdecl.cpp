@@ -43,6 +43,7 @@ d912pxy_vdecl::d912pxy_vdecl(const D3DVERTEXELEMENT9* data)
 		declData[i] = data[i];
 
 		declData12[i].InputSlot = data[i].Stream;
+		declData12[i].SemanticIndex = 0;
 
 		usedStreamSlots |= 1 << data[i].Stream;
 
