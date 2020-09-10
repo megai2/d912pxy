@@ -34,7 +34,7 @@ d912pxy_comhandler::d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t
 	, objType(tid)
 {
 	poolSync.LockedSet(1);
-	comBase = (d912pxy_com_object*)((intptr_t)this - 8);
+	comBase = (d912pxy_com_object*)((intptr_t)this - sizeof(void*));
 }
 
 d912pxy_comhandler::d912pxy_comhandler()
@@ -56,7 +56,7 @@ void d912pxy_comhandler::Init(d912pxy_com_obj_typeid tid, const wchar_t * module
 	poolSync.Init();
 	poolSync.LockedSet(1);
 	NonCom_Init(moduleText);
-	comBase = (d912pxy_com_object*)((intptr_t)this - 8);
+	comBase = (d912pxy_com_object*)((intptr_t)this - sizeof(void*));
 }
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_COM
