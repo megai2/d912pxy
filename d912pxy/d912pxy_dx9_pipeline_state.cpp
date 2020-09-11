@@ -40,8 +40,11 @@ void d912pxy_dx9_pipeline_state::Init()
 	cVDecl = NULL;
 
 	psoDesc.val.NumRenderTargets = 1;
-	psoDesc.val.rt0.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	psoDesc.val.rt[0].format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	psoDesc.val.ds.format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	for (int i = 1 ;i<PXY_INNER_MAX_RENDER_TARGETS;++i)
+		psoDesc.val.rt[i].format = DXGI_FORMAT_UNKNOWN;
 
 	for (int i = 0; i != PXY_DX9_MAX_RS_INDEX; ++i)
 		DX9RSvalues[i] = PXY_DX9_RS_INITIAL_VALUE;
@@ -230,10 +233,10 @@ void d912pxy_dx9_pipeline_state::IAFormatInstanced(d912pxy_vdecl* vertexDcl)
 
 void d912pxy_dx9_pipeline_state::RTVFormat(DXGI_FORMAT fmt, UINT idx)
 {
-	if (fmt != psoDesc.val.rt0.format/*[idx]*/)
-	{
+	if (fmt != psoDesc.val.rt[idx].format)
+	{		
+		psoDesc.val.rt[idx].format = fmt;
 		MarkDirty();
-		psoDesc.val.rt0.format = fmt;
 	}
 }
 
@@ -293,10 +296,10 @@ DWORD d912pxy_dx9_pipeline_state::GetDX9RsValue(D3DRENDERSTATETYPE State)
 	switch (State)
 	{
 	case D3DRS_ALPHABLENDENABLE:
-		return psoDesc.val.rt0.blend.enable;
+		return psoDesc.val.rt[0].blend.enable;
 		break;
 	case D3DRS_DESTBLEND:
-		return psoDesc.val.rt0.blend.dest;
+		return psoDesc.val.rt[0].blend.dest;
 		break;
 	default:
 		return DX9RSvalues[State];
@@ -423,19 +426,19 @@ void d912pxy_dx9_pipeline_state::ProcessDX9RSChange(D3DRENDERSTATETYPE State, DW
 
 	case D3DRS_SRCBLEND:
 		DX9RSvalues[State] = Value;
-		psoDesc.val.rt0.blend.src = (D3D12_BLEND)Value;
+		psoDesc.val.rt[0].blend.src = (D3D12_BLEND)Value;
 
 		if (!DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
-			psoDesc.val.rt0.blend.srcAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(Value);
+			psoDesc.val.rt[0].blend.srcAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(Value);
 
 		break; //19,   /* D3DBLEND */
 
 	case D3DRS_DESTBLEND:
 		DX9RSvalues[State] = Value;
-		psoDesc.val.rt0.blend.dest = (D3D12_BLEND)Value;
+		psoDesc.val.rt[0].blend.dest = (D3D12_BLEND)Value;
 
 		if (!DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
-			psoDesc.val.rt0.blend.destAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(Value);
+			psoDesc.val.rt[0].blend.destAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(Value);
 
 		break; //20,   /* D3DBLEND */
 
@@ -448,7 +451,7 @@ void d912pxy_dx9_pipeline_state::ProcessDX9RSChange(D3DRENDERSTATETYPE State, DW
 		break; //23,   /* D3DCMPFUNC */
 
 	case D3DRS_ALPHABLENDENABLE:
-		psoDesc.val.rt0.blend.enable = (UINT8)Value;
+		psoDesc.val.rt[0].blend.enable = (UINT8)Value;
 		//FIXME! must set this to all active RT's somewhere
 		break; //27,   /* TRUE to enable alpha blending */
 
@@ -456,21 +459,23 @@ void d912pxy_dx9_pipeline_state::ProcessDX9RSChange(D3DRENDERSTATETYPE State, DW
 	{
 		//megai2: zero write RT optimization can break PS depth write, so disable this for now
 		//d912pxy_s.render.iframe.OptimizeZeroWriteRT(Value);
-		psoDesc.val.rt0.blend.writeMask = Value & 0xF;
+		psoDesc.val.rt[State - D3DRS_COLORWRITEENABLE].blend.writeMask = Value & 0xF;
 	}
 	break; //168,  // per-channel write enable
 	case D3DRS_COLORWRITEENABLE1:
 	case D3DRS_COLORWRITEENABLE2:
 	case D3DRS_COLORWRITEENABLE3:
-		//cDsc.BlendStateRT0.RenderTarget[State - D3DRS_COLORWRITEENABLE1 + 1].RenderTargetWriteMask = Value & 0xF;
-		break;
+	{
+		psoDesc.val.rt[1 + (State - D3DRS_COLORWRITEENABLE1)].blend.writeMask = Value & 0xF;
+	}
+	break;
 
 	case D3DRS_BLENDOP:
 		DX9RSvalues[State] = Value;
-		psoDesc.val.rt0.blend.op = (D3D12_BLEND_OP)Value;
+		psoDesc.val.rt[0].blend.op = (D3D12_BLEND_OP)Value;
 
 		if (!DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
-			psoDesc.val.rt0.blend.opAlpha = (D3D12_BLEND_OP)Value;
+			psoDesc.val.rt[0].blend.opAlpha = (D3D12_BLEND_OP)Value;
 		break; //171,   // D3DBLENDOP setting
 
 	case D3DRS_SLOPESCALEDEPTHBIAS:
@@ -589,14 +594,14 @@ void d912pxy_dx9_pipeline_state::ProcessDX9RSChange(D3DRENDERSTATETYPE State, DW
 
 		if (Value)
 		{
-			psoDesc.val.rt0.blend.srcAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_SRCBLENDALPHA];
-			psoDesc.val.rt0.blend.destAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_DESTBLENDALPHA];
-			psoDesc.val.rt0.blend.opAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_BLENDOPALPHA];
+			psoDesc.val.rt[0].blend.srcAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_SRCBLENDALPHA];
+			psoDesc.val.rt[0].blend.destAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_DESTBLENDALPHA];
+			psoDesc.val.rt[0].blend.opAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_BLENDOPALPHA];
 		}
 		else {
-			psoDesc.val.rt0.blend.srcAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(DX9RSvalues[D3DRS_SRCBLEND]);
-			psoDesc.val.rt0.blend.destAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(DX9RSvalues[D3DRS_DESTBLEND]);
-			psoDesc.val.rt0.blend.opAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_BLENDOP];
+			psoDesc.val.rt[0].blend.srcAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(DX9RSvalues[D3DRS_SRCBLEND]);
+			psoDesc.val.rt[0].blend.destAlpha = (D3D12_BLEND)TransformBlend2AlphaBlend(DX9RSvalues[D3DRS_DESTBLEND]);
+			psoDesc.val.rt[0].blend.opAlpha = (D3D12_BLEND)DX9RSvalues[D3DRS_BLENDOP];
 		}
 
 		break; //206,  /* TRUE to enable a separate blending function for the alpha channel */
@@ -605,21 +610,21 @@ void d912pxy_dx9_pipeline_state::ProcessDX9RSChange(D3DRENDERSTATETYPE State, DW
 		DX9RSvalues[State] = Value;
 
 		if (DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
-			psoDesc.val.rt0.blend.srcAlpha = (D3D12_BLEND)Value;
+			psoDesc.val.rt[0].blend.srcAlpha = (D3D12_BLEND)Value;
 		break; //207,  /* SRC blend factor for the alpha channel when case D3DRS_SEPARATEDESTALPHAENABLE is TRUE */
 
 	case D3DRS_DESTBLENDALPHA:
 		DX9RSvalues[State] = Value;
 
 		if (DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
-			psoDesc.val.rt0.blend.destAlpha = (D3D12_BLEND)Value;
+			psoDesc.val.rt[0].blend.destAlpha = (D3D12_BLEND)Value;
 		break; //208,  /* DST blend factor for the alpha channel when case D3DRS_SEPARATEDESTALPHAENABLE is TRUE */
 
 	case D3DRS_BLENDOPALPHA:
 		DX9RSvalues[State] = Value;
 
 		if (DX9RSvalues[D3DRS_SEPARATEALPHABLENDENABLE])
-			psoDesc.val.rt0.blend.opAlpha = (D3D12_BLEND_OP)Value;
+			psoDesc.val.rt[0].blend.opAlpha = (D3D12_BLEND_OP)Value;
 
 		break; //209,  /* Blending operation for the alpha channel when case D3DRS_SEPARATEDESTALPHAENABLE is TRUE */
 

@@ -78,29 +78,23 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 
 RHA_DECL(om_render_targets, d912pxy_replay_thread_context*)
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[2];
-	D3D12_CPU_DESCRIPTOR_HANDLE* bindedRTV = 0;
-	D3D12_CPU_DESCRIPTOR_HANDLE* bindedDSV = 0;
+	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[1 + PXY_INNER_MAX_RENDER_TARGETS] = { 0 };
 
-	if (it->rtv)
-	{
-		bindedRTV = &bindedSurfacesDH[0];
-		bindedSurfacesDH[0] = it->rtv->GetDHeapHandle();
-	}
+	int totalRTs = 0;
+
+	for (int i = 0; i != PXY_INNER_MAX_RENDER_TARGETS; ++i)
+		if (it->rtv[i])
+		{
+			++totalRTs;
+			bindedSurfacesDH[i + 1] = it->rtv[i]->GetDHeapHandle();
+		}
+		else	
+			break;
 
 	if (it->dsv)
-	{
-		bindedDSV = &bindedSurfacesDH[1];
-		bindedSurfacesDH[1] = it->dsv->GetDHeapHandle();
-	}
+		bindedSurfacesDH[0] = it->dsv->GetDHeapHandle();
 
-	if (it->rtv)
-	{
-		cl->OMSetRenderTargets(1, bindedRTV, 0, bindedDSV);
-	}
-	else {
-		cl->OMSetRenderTargets(0, 0, 0, bindedDSV);
-	}
+	cl->OMSetRenderTargets(totalRTs, totalRTs ? &bindedSurfacesDH[1] : nullptr, false, it->dsv ? &bindedSurfacesDH[0] : nullptr);
 }
 
 RHA_DECL(vbuf_bind, void* unused)

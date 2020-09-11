@@ -81,7 +81,7 @@ public:
 		UINT vdeclHash;
 		rasterizer_desc rast;
 		ds_desc ds;
-		rt_desc rt0;
+		rt_desc rt[PXY_INNER_MAX_RENDER_TARGETS];
 		UINT8 NumRenderTargets;
 	};
 

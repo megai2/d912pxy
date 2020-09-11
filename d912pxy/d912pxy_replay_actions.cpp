@@ -101,12 +101,13 @@ void d912pxy_replay::DoDIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT
 	it->batchId = batchId;
 }
 
-void d912pxy_replay::DoRT(d912pxy_surface* rtv, d912pxy_surface* dsv)
+void d912pxy_replay::DoRT(d912pxy_surface** rtv, d912pxy_surface* dsv)
 {
 	ITEM_PUSH(om_render_targets);
 
 	it->dsv = dsv;
-	it->rtv = rtv;
+	for (int i = 0;i<PXY_INNER_MAX_RENDER_TARGETS;++i)
+		it->rtv[i] = rtv[i];
 }
 
 void d912pxy_replay::DoVBbind(d912pxy_vstream* buf, UINT stride, UINT slot, UINT offset)

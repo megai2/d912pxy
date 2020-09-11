@@ -51,18 +51,21 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC* d912pxy_trimmed_pso_desc::GetPSODesc()
 	singleFullPSO.InputLayout = *ref.InputLayout->GetD12IA_InputElementFmt();
 	singleFullPSO.NumRenderTargets = val.NumRenderTargets;
 
-	//for (numrt)
+	//TODO: check about blend states for different RTs in DX9
+	for (int i = 0; i<val.NumRenderTargets;++i)
 	{
-		singleFullPSO.BlendState.RenderTarget[0].SrcBlend = (D3D12_BLEND)val.rt0.blend.src;
-		singleFullPSO.BlendState.RenderTarget[0].SrcBlendAlpha = (D3D12_BLEND)val.rt0.blend.srcAlpha;
-		singleFullPSO.BlendState.RenderTarget[0].DestBlend = (D3D12_BLEND)val.rt0.blend.dest;
-		singleFullPSO.BlendState.RenderTarget[0].DestBlendAlpha = (D3D12_BLEND)val.rt0.blend.destAlpha;
-		singleFullPSO.BlendState.RenderTarget[0].BlendEnable = val.rt0.blend.enable;
-		singleFullPSO.BlendState.RenderTarget[0].RenderTargetWriteMask = val.rt0.blend.writeMask;
-		singleFullPSO.BlendState.RenderTarget[0].BlendOp = (D3D12_BLEND_OP)val.rt0.blend.op;
-		singleFullPSO.BlendState.RenderTarget[0].BlendOpAlpha = (D3D12_BLEND_OP)val.rt0.blend.opAlpha;
-		singleFullPSO.RTVFormats[0] = (DXGI_FORMAT)val.rt0.format;
+		singleFullPSO.BlendState.RenderTarget[i].SrcBlend = (D3D12_BLEND)val.rt[0].blend.src;
+		singleFullPSO.BlendState.RenderTarget[i].SrcBlendAlpha = (D3D12_BLEND)val.rt[0].blend.srcAlpha;
+		singleFullPSO.BlendState.RenderTarget[i].DestBlend = (D3D12_BLEND)val.rt[0].blend.dest;
+		singleFullPSO.BlendState.RenderTarget[i].DestBlendAlpha = (D3D12_BLEND)val.rt[0].blend.destAlpha;
+		singleFullPSO.BlendState.RenderTarget[i].BlendEnable = val.rt[0].blend.enable;
+		singleFullPSO.BlendState.RenderTarget[i].RenderTargetWriteMask = val.rt[0].blend.writeMask;
+		singleFullPSO.BlendState.RenderTarget[i].BlendOp = (D3D12_BLEND_OP)val.rt[0].blend.op;
+		singleFullPSO.BlendState.RenderTarget[i].BlendOpAlpha = (D3D12_BLEND_OP)val.rt[0].blend.opAlpha;
 	}
+
+	for (int i = 0; i < PXY_INNER_MAX_RENDER_TARGETS; ++i)
+		singleFullPSO.RTVFormats[i] = (DXGI_FORMAT)val.rt[i].format;
 
 	singleFullPSO.RasterizerState.FillMode = (D3D12_FILL_MODE)val.rast.fillMode;
 

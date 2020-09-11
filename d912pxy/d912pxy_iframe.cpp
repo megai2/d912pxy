@@ -371,9 +371,9 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 
 	DWORD transSRef = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
-	d912pxy_surface* refSurf[2];
+	d912pxy_surface* refSurf[1 + PXY_INNER_MAX_RENDER_TARGETS];
 
-	for (int i = 0; i != 2; ++i)
+	for (int i = 0; i != 1 + PXY_INNER_MAX_RENDER_TARGETS; ++i)
 	{
 		refSurf[i] = bindedSurfaces[i];
 		if (refSurf[i])
@@ -390,7 +390,7 @@ void d912pxy_iframe::StateSafeFlush(UINT fullFlush)
 	Start();
 
 	//megai2: rebind surfaces as they are resetted to swapchain back buffers by Start()
-	for (int i = 0; i != 2; ++i)
+	for (int i = 0; i != 1 + PXY_INNER_MAX_RENDER_TARGETS; ++i)
 	{
 		BindSurface(i, refSurf[i]);
 
@@ -462,19 +462,18 @@ void d912pxy_iframe::OptimizeZeroWriteRT(UINT writeFlag)
 
 void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
 {
-	bindedRTV = &bindedSurfacesDH[1];
-	bindedDSV = &bindedSurfacesDH[0];
+	bindedRTVcount = 0;
 
-	if (bindedSurfaces[1])
+	for (int i = 1; i < 1 + PXY_INNER_MAX_RENDER_TARGETS; ++i)
 	{
-		d912pxy_s.render.state.pso.RTVFormat(bindedSurfaces[1]->GetSRVFormat(), 0);
-		d912pxy_s.render.replay.DoBarrier(bindedSurfaces[1], D3D12_RESOURCE_STATE_RENDER_TARGET);
-		bindedRTVcount = 1;
-	}
-	else {
-		d912pxy_s.render.state.pso.RTVFormat(DXGI_FORMAT_UNKNOWN, 0);
-		bindedRTVcount = 0;
-		bindedRTV = 0;
+		if (bindedSurfaces[i])
+		{
+			d912pxy_s.render.state.pso.RTVFormat(bindedSurfaces[i]->GetSRVFormat(), 0);
+			d912pxy_s.render.replay.DoBarrier(bindedSurfaces[i], D3D12_RESOURCE_STATE_RENDER_TARGET);
+			bindedRTVcount = i;//count total by last active
+		}
+		else
+			d912pxy_s.render.state.pso.RTVFormat(DXGI_FORMAT_UNKNOWN, i-1);
 	}
 
 	if (bindedSurfaces[0])
@@ -482,21 +481,11 @@ void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
 		d912pxy_s.render.state.pso.DSVFormat(bindedSurfaces[0]->GetDSVFormat());
 		d912pxy_s.render.replay.DoBarrier(bindedSurfaces[0], D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	}
-	else {
-		bindedDSV = 0;
-	}
 
-	d912pxy_s.render.state.pso.OMReflect(bindedRTVcount, bindedDSV);
+	d912pxy_s.render.state.pso.OMReflect(bindedRTVcount, bindedSurfaces[0] ? &bindedSurfacesDH[0] : nullptr);
 
-	if (!psoOnly)
-	{
-		if (bindedRTV && bindedDSV)
-			d912pxy_s.render.replay.DoRT(bindedSurfaces[1], bindedSurfaces[0]);
-		else if (bindedRTV)
-			d912pxy_s.render.replay.DoRT(bindedSurfaces[1], 0);
-		else if (bindedDSV)
-			d912pxy_s.render.replay.DoRT(0, bindedSurfaces[0]);
-	}
+	if (!psoOnly)	
+		d912pxy_s.render.replay.DoRT(&bindedSurfaces[1], bindedSurfaces[0]);
 }
 
 void d912pxy_iframe::OverrideRootSignature(ID3D12RootSignature* newRS)
