@@ -225,7 +225,7 @@ void d912pxy_pso_db::LoadCachedData()
 
 			if (missingItems[0] || missingItems[1] || missingItems[2])
 			{
-				LOG_ERR_DTDM("Can't precompile PSO with VS: %llX PS: %llX DSC KEY: %lX due to missing %S %S %S", pairEntry->vs, pairEntry->ps, pairEntry->pso,
+				LOG_ERR_DTDM("Can't precompile PSO with VS: %llX PS: %llX DSC KEY: %lX due to missing %S %S %S", pairEntry->vs, pairEntry->ps, pairEntry->pso.data(),
 					missingItems[0] ? "PSO desc" : "", missingItems[1] ? "VS code" : "", missingItems[2] ? "PS code" : "");
 			}
 			else {
