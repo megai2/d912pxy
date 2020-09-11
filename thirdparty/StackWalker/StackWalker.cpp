@@ -962,7 +962,7 @@ BOOL StackWalker::LoadModules()
           break;
         }
       } // for (search for path separator...)
-      if (strlen(szTemp) > 0)
+      if (szTemp[0])
       {
         strcat_s(szSymPath, nSymPathLen, szTemp);
         strcat_s(szSymPath, nSymPathLen, ";");
