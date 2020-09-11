@@ -438,8 +438,6 @@ void d912pxy_extras::DrawMainWindow()
 		ImGui::Text("Use Ctrl+Alt+%c to toggle overlay mode (hide/show/allow input)", keyChar);
 	}
 
-
-
 	ImGui::End();
 }
 
