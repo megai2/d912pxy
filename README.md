@@ -5,6 +5,8 @@ d912pxy is a way to make games that use DirectX 9 use DirectX 12 instead, withou
 This is specifically designed for Guild Wars 2.
 You can try to use it with other games; it might work.
 
+Tool will show overlay when it installed correctly, use default hotkey Ctrl+Alt+N to toggle its mode (hide/show)
+
 Expect some minor crashes / visual bugs.
 
 [![Current Version](https://img.shields.io/github/release/megai2/d912pxy)](https://github.com/megai2/d912pxy/releases) 
