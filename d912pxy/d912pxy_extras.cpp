@@ -429,6 +429,17 @@ void d912pxy_extras::DrawMainWindow()
 			bShowConfigEditor = !bShowConfigEditor;
 	}
 
+	UINT ctick = GetTickCount();
+	if (!startupTime)
+		startupTime = ctick;
+	else if ((startupTime + hkTipShowTime) > ctick)
+	{
+		char keyChar = MapVirtualKeyA(d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_OVERLAY_TOGGLE_KEY), MAPVK_VK_TO_CHAR);
+		ImGui::Text("Use Ctrl+Alt+%c to toggle overlay mode (hide/show/allow input)", keyChar);
+	}
+
+
+
 	ImGui::End();
 }
 

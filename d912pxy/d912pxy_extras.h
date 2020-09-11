@@ -107,6 +107,8 @@ private:
 	UINT overlayShowMode;
 	bool hkDetected;
 	UINT hkVKeyCode;
+	UINT startupTime = 0;
+	UINT hkTipShowTime = 20000;
 
 	//tracker
 	d912pxy::extras::ShaderPair::Tracker pairTracker;
