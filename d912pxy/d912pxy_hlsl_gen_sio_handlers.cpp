@@ -503,7 +503,7 @@ void d912pxy_hlsl_generator::ProcSIO_DCL_sm2(d912pxy_dxbc9::token* op)
 		{
 			HLSL_GEN_WRITE_HEADI(
 				HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_NC, regNum),
-				"/*default*/    float4 %s%u: INPUT_REG%u;",
+				"/*default*/    float4 %s%u: PS2X_COLOR_OUT%u;",
 				regNameStr, regNum, regNum
 			);
 		}

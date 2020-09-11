@@ -568,7 +568,22 @@ void d912pxy_hlsl_generator::RegDefine(d912pxy_dxbc9::token_register* reg, bool 
 		strcat(lines[mainFunctionDeclStrIdx], ", out float glob_depthOut: SV_Depth)");
 
 		isDepthOutUsed = 1;
-		//megai2: drop to default case from here
+		HLSL_GEN_WRITE_PROC_PD("float4 %s%u = { 0, 0, 0, 0 };",
+			GetRegTypeStr(reg->regType, 1),
+			num
+		);
+		break;
+	}
+	case D3DSPR_ATTROUT:
+	{
+		if (verToken.major <= 2)
+		{
+			HLSL_GEN_WRITE_HEADO(HLSL_HIO_PRIORITY(HLSL_HIO_PRIOG_NC, 0), "	float4 %s%u: PS2X_COLOR_OUT%u;",
+				GetRegTypeStr(reg->regType, 0),
+				num, num
+			);
+		}
+		break;
 	}
 	default:
 		HLSL_GEN_WRITE_PROC_PD("float4 %s%u = { 0, 0, 0, 0 };",

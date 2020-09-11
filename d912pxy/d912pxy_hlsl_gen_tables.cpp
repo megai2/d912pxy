@@ -53,7 +53,7 @@ const char* d912pxy_hlsl_generator_reg_names_proc_ps[20] = {
 	"reg_const", // Constant Register File
 	"inp.reg_at",
 	"ret.reg_rastout",
-	"reg_attrout",
+	"inp.reg_attrout",
 	"ret.reg_tc_vo",
 	"reg_iconst",
 	"ret.reg_clr_out",
@@ -76,7 +76,7 @@ const char* d912pxy_hlsl_generator_reg_names_proc_vs[20] = {
 	"reg_const", // Constant Register File
 	"reg_at",
 	"ret.reg_rastout",
-	"reg_attrout",
+	"ret.reg_attrout",
 	"ret.reg_tc_vo",
 	"reg_iconst",
 	"ret.reg_clr_out",
