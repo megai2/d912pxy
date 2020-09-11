@@ -185,7 +185,7 @@ typedef GUID DXGI_DEBUG_ID;
 void d912pxy_helper::d3d12_ReportLeaks()
 {
 #ifdef _DEBUG
-	HMODULE hModule = LoadLibraryA("Dxgidebug.dll");
+	static HMODULE hModule = LoadLibraryA("Dxgidebug.dll");
 	if (hModule)
 	{
 		const auto pfn = (dxgi_dbg_get_proto)GetProcAddress(hModule, "DXGIGetDebugInterface");
