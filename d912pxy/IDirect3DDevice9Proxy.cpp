@@ -64,8 +64,7 @@ IDirect3DDevice9Proxy::~IDirect3DDevice9Proxy(void){
 	log_trace->P7_DEBUG(log_module, TM("freed"));
 #endif
 
-	if (perfGraph)
-		delete perfGraph;
+	delete perfGraph;
 }
 
 HRESULT IDirect3DDevice9Proxy::QueryInterface(REFIID riid, void** ppvObj){

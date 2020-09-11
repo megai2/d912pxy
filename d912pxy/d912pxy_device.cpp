@@ -101,8 +101,7 @@ void d912pxy_device::UnInit()
 	d912pxy_s.log.metrics.UnInit();
 #endif
 
-	if (perfGraph)
-		delete perfGraph;
+	delete perfGraph;
 
 	if (initPtr)
 		((IDirect3D9*)initPtr)->Release();
