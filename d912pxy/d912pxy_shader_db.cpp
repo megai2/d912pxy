@@ -44,8 +44,7 @@ void d912pxy_shader_db::UnInit()
 	for (auto iter = shaderPairs.begin(); iter < shaderPairs.end(); ++iter)
 	{
 		d912pxy_shader_pair*& pair = iter.value();
-		if (pair)
-			delete pair;
+		delete pair;
 	}
 
 	d912pxy_noncom::UnInit();
@@ -121,7 +120,6 @@ void d912pxy_shader_db::DeletePair(d912pxy_shader_pair_hash_type ha)
 			pair = *ref.val;
 	}
 
-	if (pair)
-		delete pair;
+	delete pair;
 
 }
