@@ -351,11 +351,11 @@ char* d912pxy_pso_item::RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias)
 
 bool d912pxy_pso_item::RCECompileDerivedCSO(d912pxy_mem_block* src, char* derivedName)
 {
-	d912pxy_shader_replacer* replVS = new d912pxy_shader_replacer(0, 0, desc->ref.VS->GetID(), 1);
-	d912pxy_shader_replacer* replPS = new d912pxy_shader_replacer(0, 0, desc->ref.PS->GetID(), 0);
+	auto replVS = d912pxy_shader_replacer(0, 0, desc->ref.VS->GetID(), 1);
+	auto replPS = d912pxy_shader_replacer(0, 0, desc->ref.PS->GetID(), 0);
 
-	d912pxy_shader_code bcVS = replVS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, src[0].ptr(), (UINT)src[0].size(), 0);
-	d912pxy_shader_code bcPS = replPS->CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, src[1].ptr(), (UINT)src[1].size(), 0);
+	d912pxy_shader_code bcVS = replVS.CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, src[0].ptr(), (UINT)src[0].size(), 0);
+	d912pxy_shader_code bcPS = replPS.CompileFromHLSL_MEM(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w, src[1].ptr(), (UINT)src[1].size(), 0);
 
 	if ((!bcVS.blob) || (!bcPS.blob))
 	{
@@ -366,9 +366,6 @@ bool d912pxy_pso_item::RCECompileDerivedCSO(d912pxy_mem_block* src, char* derive
 		d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(derivedName, d912pxy_vfs_bid::derived_cso_vs), d912pxy_mem_block::use(bcVS.code, bcVS.sz));
 		d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(derivedName, d912pxy_vfs_bid::derived_cso_ps), d912pxy_mem_block::use(bcPS.code, bcPS.sz));
 	}
-
-	delete replVS;
-	delete replPS;
 
 	return true;
 }
