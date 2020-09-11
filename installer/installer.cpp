@@ -31,7 +31,7 @@ int read_user_integer(int defv)
 		try {
 			ret = std::stoi(str);
 		}
-		catch (std::invalid_argument) {
+		catch (const std::invalid_argument &) {
 			return -1;
 		}
 	}
