@@ -31,8 +31,7 @@ d912pxy::MemoryBlock::MemoryBlock(uintptr_t i_size)
 
 d912pxy::MemoryBlock::~MemoryBlock()
 {
-	if (ptr)
-		::free(ptr);
+	::free(ptr);
 }
 
 void d912pxy::MemoryBlock::alloc(uintptr_t i_size)

@@ -5698,10 +5698,7 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
 			}
 		}
 		//   clear my palette, if I had one
-		if (tga_palette != NULL)
-		{
-			STBI_FREE(tga_palette);
-		}
+		STBI_FREE(tga_palette);
 	}
 
 	// swap RGB - if the source data was RGB16, it already is in the right order
@@ -6899,8 +6896,7 @@ static float *stbi__hdr_load(stbi__context *s, int *x, int *y, int *comp, int re
 			for (i = 0; i < width; ++i)
 				stbi__hdr_convert(hdr_data + (j*width + i)*req_comp, scanline + i * 4, req_comp);
 		}
-		if (scanline)
-			STBI_FREE(scanline);
+		STBI_FREE(scanline);
 	}
 
 	return hdr_data;

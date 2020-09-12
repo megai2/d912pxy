@@ -177,9 +177,8 @@ void d912pxy_folded_buffer<base_element, sub_element>::InitUnfoldCS()
 	unfoldRS = d912pxy_s.dev.ConstructRootSignature(&rootSignatureDesc);
 
 	//copy cs hlsl code
-	d912pxy_shader_replacer* CScodec = new d912pxy_shader_replacer(0, 0, 2, 0);
-	d912pxy_shader_code CScode = CScodec->GetCodeCS();
-	delete CScodec;
+	auto CScodec = d912pxy_shader_replacer(0, 0, 2, 0);
+	d912pxy_shader_code CScode = CScodec.GetCodeCS();
 
 	//copy cs PSO
 	D3D12_COMPUTE_PIPELINE_STATE_DESC dsc = {

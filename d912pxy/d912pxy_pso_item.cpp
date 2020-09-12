@@ -233,7 +233,7 @@ void d912pxy_pso_item::RCEUpdateVSInputByVDecl(char* source, D3D12_GRAPHICS_PIPE
 		}
 
 		char* defLine = d912pxy_helper::StrGetCurrentLineStart(semDefPlace);
-		char* replPos = strstr(defLine, "4") - 20;
+		char* replPos = strchr(defLine, '4') - 20;
 
 		const char* newType = "/*default*/    float4";
 

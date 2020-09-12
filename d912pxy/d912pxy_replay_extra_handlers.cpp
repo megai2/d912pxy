@@ -70,7 +70,8 @@ RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 	if ((context->tracked.dsv != it->dsv) || (context->tracked.rtv != it->rtv))
 	{
 		context->tracked.dsv = it->dsv;
-		context->tracked.rtv = it->rtv;
+		for (int i = 0; i < PXY_INNER_MAX_RENDER_TARGETS; ++i)
+			context->tracked.rtv[i] = it->rtv[i];
 
 		d912pxy_s.iframeMods.RP_RTDSChange(it, context);
 	}	

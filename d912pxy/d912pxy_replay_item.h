@@ -94,7 +94,7 @@ public:
 	} dt_draw_indexed;
 
 	typedef struct dt_om_render_targets {
-		d912pxy_surface* rtv;
+		d912pxy_surface* rtv[PXY_INNER_MAX_RENDER_TARGETS];
 		d912pxy_surface* dsv;
 
 		static constexpr typeName GetTypeName() { return typeName::om_render_targets; };

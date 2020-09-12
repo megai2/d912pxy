@@ -145,9 +145,7 @@ private:
 	d912pxy_surface* zeroWriteRT;
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[1 + PXY_INNER_MAX_RENDER_TARGETS];
-	D3D12_CPU_DESCRIPTOR_HANDLE* bindedRTV;
 	UINT bindedRTVcount;
-	D3D12_CPU_DESCRIPTOR_HANDLE* bindedDSV;
 
 	UINT streamsActive;
 	UINT batchCommisionDF;	

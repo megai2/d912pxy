@@ -264,45 +264,9 @@ void d912pxy_mem_va_table::DeInit()
 {
 }
 
-UINT __findPow2inPow2num(UINT32 v)
-{
-	static const unsigned int b[] = { 0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0,
-									 0xFF00FF00, 0xFFFF0000 };
-	register unsigned int r = (v & b[0]) != 0;
-	for (int i = 4; i > 0; i--) // unroll for speed...
-	{
-		r |= ((v & b[i]) != 0) << i;
-	}
-
-	return r;
-}
-
-UINT __round_to_pow2up(UINT32 v)
-{
-	v--;
-	v |= v >> 1;
-	v |= v >> 2;
-	v |= v >> 4;
-	v |= v >> 8;
-	v |= v >> 16;
-	v++;
-
-	return v;
-}
-
 void* d912pxy_mem_va_table::AllocateObjPow2(UINT64 size)
 {
-	size = size >> PXY_INNER_MIN_POW2_ALLOC_POW;
-
-	UINT isPow2 = (size & (size - 1)) == 0;
-
-	if (!isPow2)
-		size = __round_to_pow2up((UINT32)size);
-
-	if (size)
-		size = __findPow2inPow2num((UINT32)size);
-
-	return AllocateObj(size);
+	return malloc(size);
 }
 
 void* d912pxy_mem_va_table::AllocateObj(UINT64 type)

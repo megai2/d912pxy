@@ -141,8 +141,8 @@ void d912pxy_pso_db::ThreadJob()
 void d912pxy_pso_db::LoadCachedData()
 {
 	//todo: use proper buffer
-	d912pxy_ringbuffer<d912pxy_trimmed_pso_desc>* psoDescs = new d912pxy_ringbuffer<d912pxy_trimmed_pso_desc>(65535, 2);
-	psoDescs->WriteElement(d912pxy_trimmed_pso_desc());
+	auto psoDescs = d912pxy_ringbuffer<d912pxy_trimmed_pso_desc>(65535, 2);
+	psoDescs.WriteElement(d912pxy_trimmed_pso_desc());
 	
 	{
 		auto keyList = d912pxy_s.vfs.GetFileList(d912pxy_vfs_bid::pso_cache_keys);
@@ -179,7 +179,7 @@ void d912pxy_pso_db::LoadCachedData()
 				}
 
 				++keyIdx;
-				psoDescs->WriteElement(psoDesc);
+				psoDescs.WriteElement(psoDesc);
 				cacheIndexes.findPrepared(psoKey) = keyIdx;
 			}
 			else {
@@ -232,7 +232,7 @@ void d912pxy_pso_db::LoadCachedData()
 				d912pxy_shader_pair* pair = d912pxy_s.render.db.shader.GetPair(vs, ps);
 
 				uint32_t psoDescIdx = cacheIndexes.findPrepared(pairEntry->pso);
-				auto psoDesc = psoDescs->GetElementOffsetPtr(psoDescIdx);
+				auto psoDesc = psoDescs.GetElementOffsetPtr(psoDescIdx);
 
 				psoDesc->ref.PS = ps;
 				psoDesc->ref.VS = vs;
@@ -257,12 +257,11 @@ void d912pxy_pso_db::LoadCachedData()
 		delete precompList;
 	}
 
-	psoDescs->PopElement();
-	while (psoDescs->HaveElements())
+	psoDescs.PopElement();
+	while (psoDescs.HaveElements())
 	{
-		psoDescs->PopElement().ref.InputLayout->Release();		
+		psoDescs.PopElement().ref.InputLayout->Release();		
 	}
-	delete psoDescs;
 
 	LOG_INFO_DTDM("Compiled %u out of %u PSO items", psoItemsCompiled, psoItemsTotal);
 }

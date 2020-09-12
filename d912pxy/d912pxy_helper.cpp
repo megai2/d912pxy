@@ -185,21 +185,18 @@ typedef GUID DXGI_DEBUG_ID;
 void d912pxy_helper::d3d12_ReportLeaks()
 {
 #ifdef _DEBUG
-	ComPtr<IDXGIDebug> debugItf;
-
-	const GUID DXGI_DEBUG_ALL
-		= { 0xe48ae283,  0xda80, 0x490b, { 0x87, 0xe6, 0x43, 0xe9, 0xa9, 0xcf, 0xda, 0x8 } };
-
-	HMODULE hModule = NULL;
-	dxgi_dbg_get_proto pfn = NULL;
-
-	hModule = LoadLibraryA("Dxgidebug.dll");
+	static HMODULE hModule = LoadLibraryA("Dxgidebug.dll");
 	if (hModule)
 	{
-		pfn = (dxgi_dbg_get_proto)GetProcAddress(hModule, "DXGIGetDebugInterface");
+		const auto pfn = (dxgi_dbg_get_proto)GetProcAddress(hModule, "DXGIGetDebugInterface");
 		if (pfn)
 		{
+			ComPtr<IDXGIDebug> debugItf;
 			ThrowIfFailed(pfn(IID_PPV_ARGS(&debugItf)), "dxgi debug error 2");
+
+			const GUID DXGI_DEBUG_ALL
+				= { 0xe48ae283,  0xda80, 0x490b, { 0x87, 0xe6, 0x43, 0xe9, 0xa9, 0xcf, 0xda, 0x8 } };
+
 			debugItf->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
 		}
 	}

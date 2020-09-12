@@ -123,12 +123,12 @@ private:
 	d912pxy_hlsl_generator_regtext FormatSrcRegister(d912pxy_dxbc9::token_register* reg, d912pxy_dxbc9::token_register* dstReg, d912pxy_dxbc9::token_register* adrReg);
 	d912pxy_hlsl_generator_regtext FormatRelativeSrcRegister(d912pxy_dxbc9::token_register* reg, d912pxy_dxbc9::token_register* adrReg, UINT64 swizzle);
 
-	d912pxy_hlsl_generator_regtext FormatSrcModifier(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target_source* reg);
-	d912pxy_hlsl_generator_regtext FormatDstModifier(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target* dstReg);
-	d912pxy_hlsl_generator_regtext FormatDstModifierForSrc(d912pxy_hlsl_generator_regtext statement, d912pxy_dxbc9::register_target* dstReg);
-	d912pxy_hlsl_generator_regtext FormatRightSide1(const char* pre, const char* post, d912pxy_hlsl_generator_regtext op1);
-	d912pxy_hlsl_generator_regtext FormatRightSide2(const char* pre, const char* post, const char* mid, d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2);
-	d912pxy_hlsl_generator_regtext FormatRightSide3(const char* pre, const char* post, const char* mid[2], d912pxy_hlsl_generator_regtext op1, d912pxy_hlsl_generator_regtext op2, d912pxy_hlsl_generator_regtext op3);
+	d912pxy_hlsl_generator_regtext FormatSrcModifier(const d912pxy_hlsl_generator_regtext& statement, d912pxy_dxbc9::register_target_source* reg);
+	d912pxy_hlsl_generator_regtext FormatDstModifier(const d912pxy_hlsl_generator_regtext& statement, d912pxy_dxbc9::register_target* dstReg);
+	d912pxy_hlsl_generator_regtext FormatDstModifierForSrc(const d912pxy_hlsl_generator_regtext& statement, d912pxy_dxbc9::register_target* dstReg);
+	d912pxy_hlsl_generator_regtext FormatRightSide1(const char* pre, const char* post, const d912pxy_hlsl_generator_regtext& op1);
+	d912pxy_hlsl_generator_regtext FormatRightSide2(const char* pre, const char* post, const char* mid, const d912pxy_hlsl_generator_regtext& op1, const d912pxy_hlsl_generator_regtext& op2);
+	d912pxy_hlsl_generator_regtext FormatRightSide3(const char* pre, const char* post, const char* mid[2], const d912pxy_hlsl_generator_regtext& op1, const d912pxy_hlsl_generator_regtext& op2, d912pxy_hlsl_generator_regtext op3);
 
 
 	//sio handlers
