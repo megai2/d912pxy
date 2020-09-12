@@ -194,6 +194,12 @@ void d912pxy_pso_db::LoadCachedData()
 		delete keyList;
 	}
 
+	if (!cacheIncID)
+	{
+		LOG_INFO_DTDM("No PSO descriptions found, precompile will fail, skipping it");
+		return;
+	}
+
 	UINT psoItemsTotal = 0;
 	UINT psoItemsCompiled = 0;
 
