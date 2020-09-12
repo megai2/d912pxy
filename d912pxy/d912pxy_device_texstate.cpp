@@ -34,7 +34,11 @@ HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 
 	if (pTexture)
 	{
+#if _WIN64
 		srvId = PXY_COM_LOOKUP_(pTexture, basetex).GetSRVHeapId((intptr_t)pTexture & PXY_COM_OBJ_SIGNATURE_TEXTURE_RTDS);
+#else
+		srvId = PXY_COM_LOOKUP_(pTexture, basetex).GetPriority_SRVhack();
+#endif
 	}
 
 	d912pxy_s.render.state.tex.SetTexture(Stage, (UINT32)srvId);
