@@ -265,13 +265,13 @@ void d912pxy_mem_va_table::DeInit()
 }
 
 void* d912pxy_mem_va_table::AllocateObjPow2(UINT64 size)
-{
-	return malloc(size);
+{	
+	return calloc(1, size);
 }
 
 void* d912pxy_mem_va_table::AllocateObj(UINT64 type)
 {
-	return malloc(table[type].itemSize);
+	return calloc(1, table[type].itemSize);
 }
 
 void d912pxy_mem_va_table::DeAllocateObj(void* obj)
