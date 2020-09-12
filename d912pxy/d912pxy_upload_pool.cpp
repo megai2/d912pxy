@@ -214,7 +214,7 @@ void d912pxy_upload_item::Reconstruct(void* mem, UINT64 rowPitch, UINT64 height,
 		memcpy((void*)bufferRef, (void*)srcm, size);
 
 		bufferRef += rowPitch;
-		srcm = srcm + size;
+		srcm += size;
 	}
 }
 

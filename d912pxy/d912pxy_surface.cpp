@@ -335,7 +335,7 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 		return;
 	}
 
-	UINT blockHeight = FixBlockHeight(lv);
+	UINT64 blockHeight = FixBlockHeight(lv);
 
 	UINT copyNeeded = 0;
 
@@ -343,8 +343,7 @@ void d912pxy_surface::DelayedLoad(void* mem, UINT lv)
 	{
 		UINT64 ul_memory_space = d912pxy_helper::AlignValueByPow2(subresFootprints[lv].Footprint.RowPitch*blockHeight, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
 
-		ul[lv].item = d912pxy_s.thread.texld.GetUploadMem(
-			(UINT32)ul_memory_space);
+		ul[lv].item = d912pxy_s.thread.texld.GetUploadMem((UINT32)ul_memory_space);
 		ul[lv].item->AddRef();
 		ul[lv].offset = ul[lv].item->GetCurrentOffset();
 		ul[lv].item->AddSpaceUsed(ul_memory_space);

@@ -31,8 +31,6 @@ d912pxy_texture_loader::d912pxy_texture_loader() : d912pxy_async_upload_thread()
 
 d912pxy_texture_loader::~d912pxy_texture_loader()
 {
-	
-
 	if (asyncLoadPendingItems)
 	{
 		if (asyncLoadPendingItems->HaveElements())
