@@ -116,10 +116,9 @@ void d912pxy_shader_db::DeletePair(d912pxy_shader_pair_hash_type ha)
 	{
 		d912pxy::mt::containter::OptRef<ShaderPairStorage> ref(shaderPairs, ha);
 
-		if (!ref.val)
+		if (ref.val)
 			pair = *ref.val;
 	}
 
 	delete pair;
-
 }

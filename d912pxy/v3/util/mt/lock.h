@@ -38,6 +38,9 @@ namespace d912pxy
 				Lock() { InitializeCriticalSection(&cs); }
 				~Lock() { DeleteCriticalSection(&cs); }
 
+				Lock(const Lock&) = delete;
+				Lock& operator=(const Lock&) = delete;
+
 				void hold() { EnterCriticalSection(&cs); }
 				void release() { LeaveCriticalSection(&cs); }
 			};
@@ -46,7 +49,7 @@ namespace d912pxy
 			{
 				Lock& ref;
 			public:
-				ScopedLock(Lock targetLock) : ref(targetLock) { ref.hold(); }
+				ScopedLock(Lock &targetLock) : ref(targetLock) { ref.hold(); }
 				~ScopedLock() { ref.release(); }
 			};
 		}

@@ -146,7 +146,7 @@ HRESULT d912pxy_device::SetSoftwareVertexProcessing(BOOL bSoftware)
 
 BOOL d912pxy_device::GetSoftwareVertexProcessing(void)
 {
-	D912PXY_ROUTE_IMPL_STUB(D3D_OK);
+	D912PXY_ROUTE_IMPL_STUB(FALSE);
 }
 
 HRESULT d912pxy_device::ProcessVertices(UINT SrcStartIndex, UINT DestIndex, UINT VertexCount, IDirect3DVertexBuffer9* pDestBuffer, IDirect3DVertexDeclaration9* pVertexDecl, DWORD Flags)

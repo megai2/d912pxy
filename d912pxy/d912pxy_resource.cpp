@@ -96,19 +96,15 @@ ID3D12Resource* d912pxy_resource::d12res_tex2d_target(UINT width, UINT height, D
 	if (*levels != 0)
 		ret = d912pxy_s.pool.surface.GetPlacedSurface(&rsDesc, D3D12_RESOURCE_STATE_COMMON);
 
-	HRESULT hr = -1;
-
-	if (!ret)
-		hr = d912pxy_s.dx12.dev->CreateCommittedResource(
-			&rhCfg,
-			D3D12_HEAP_FLAG_NONE,
-			&rsDesc,
-			D3D12_RESOURCE_STATE_COMMON,
-			NULL,
-			IID_PPV_ARGS(&ret)
-		);
-	else
-		hr = S_OK;
+	HRESULT hr = !ret
+		? d912pxy_s.dx12.dev->CreateCommittedResource(
+				&rhCfg,
+				D3D12_HEAP_FLAG_NONE,
+				&rsDesc,
+				D3D12_RESOURCE_STATE_COMMON,
+				NULL,
+				IID_PPV_ARGS(&ret))
+		: S_OK;
 
 	if (hr != S_OK)
 	{
