@@ -33,7 +33,7 @@ public:
 	
 	void UploadTarget(ID3D12GraphicsCommandList* cl, d912pxy_cbuffer* target, UINT offset, UINT size);
 
-	intptr_t DevPtr() { return pointers.dev; };
+	UINT64 DevPtr() { return pointers.dev; };
 	intptr_t HostPtr() { return pointers.host; };
 
 	static UINT memUsage_V;

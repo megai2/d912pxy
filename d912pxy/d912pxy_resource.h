@@ -31,7 +31,7 @@ class d912pxy_device;
 
 typedef struct d912pxy_resource_ptr {
 	intptr_t host;
-	intptr_t dev;
+	UINT64 dev;
 } d912pxy_resource_ptr;
 
 enum d912pxy_resource_typeid {
