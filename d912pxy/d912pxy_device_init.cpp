@@ -329,6 +329,15 @@ void d912pxy_device::PrintInfoBanner()
 	LOG_INFO_DTDM("d912pxy(Direct3D9 to Direct3D12 api proxy) starting up");
 	LOG_INFO_DTDM("Original project link: https://github.com/megai2/d912pxy/");
 	LOG_INFO_DTDM(BUILD_VERSION_NAME);
+
+#if _WIN64
+	LOG_INFO_DTDM("Platform: win x64");	
+#elif _WIN32
+	LOG_INFO_DTDM("Platform: win x86(32bit)");
+#else 
+	LOG_INFO_DTDM("Platform: unknown");
+#endif
+
 #ifdef __AVX2__	
 	LOG_INFO_DTDM("CPU arch: AVX2");
 #else 
