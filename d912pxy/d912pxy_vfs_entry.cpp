@@ -26,7 +26,7 @@ SOFTWARE.
 
 d912pxy_vfs_entry::d912pxy_vfs_entry(UINT id) 
 	: d912pxy_noncom(L"vfs_entry")
-	,	chunkTree(new ChunkTree())
+	, chunkTree(new ChunkTree())
 	, lastFind(nullptr)
 	, m_Id(id)
 {
