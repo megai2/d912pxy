@@ -372,7 +372,7 @@ d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatRightSide3(const ch
 {
 	d912pxy_hlsl_generator_regtext ret;
 
-	sprintf(ret.t, "%s%s%s%s%s%s%s", pre, op1.t, mid[0], op2.t, mid[1], op3.t, post);
+	sprintf_s(ret.t, "%s%s%s%s%s%s%s", pre, op1.t, mid[0], op2.t, mid[1], op3.t, post);
 
 	return FormatDstModifier(ret, (code.FindDstRegToken()->iType == d912pxy_dxbc9::token_type::destination) ? &code.FindDstRegToken()->reg.target : nullptr);
 }

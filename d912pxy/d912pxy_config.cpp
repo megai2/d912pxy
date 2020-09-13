@@ -214,7 +214,7 @@ void d912pxy_config::SaveConfig()
 		char cwd[4096];
 		GetCurrentDirectoryA(4096, cwd);
 
-		sprintf(buf, "Can't save config to %s, check folder write permissions! (cwd: %s)", d912pxy_helper::GetFilePath(FP_CONFIG)->s, cwd);
+		sprintf_s(buf, "Can't save config to %s, check folder write permissions! (cwd: %s)", d912pxy_helper::GetFilePath(FP_CONFIG)->s, cwd);
 		MessageBoxA(0, buf, "d912pxy error", MB_ICONERROR);
 		return;
 	}
