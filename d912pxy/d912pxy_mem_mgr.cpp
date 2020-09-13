@@ -323,8 +323,7 @@ void d912pxy_mem_mgr::pxy_free_dbg(void** cp, const char* file, const int line, 
 		free(blkdsc->file);
 
 justFree:
-	if (this)
-		memUsed -= (LONG64)blkdsc->sz;
+	memUsed -= (LONG64)blkdsc->sz;
 
 	inFree(origBlk);
 	*cp = NULL;	
