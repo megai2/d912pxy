@@ -131,15 +131,15 @@ void d912pxy_config::Init()
 
 		if (valf)
 		{
-			for (int i = 0; i != PXY_CFG_CNT; ++i)
+			for (auto &&d : data)
 			{
-				if (lstrcmpW(section, data[i].section))
+				if (lstrcmpW(section, d.section))
 					continue;
 
-				if (lstrcmpW(param, data[i].name))
+				if (lstrcmpW(param, d.name))
 					continue;
 
-				lstrcpyW(data[i].value, val);
+				lstrcpyW(d.value, val);
 
 				break;
 			}
