@@ -217,7 +217,7 @@ void d912pxy_hlsl_generator::FillHandlers()
 		SIOhandlers[i] = &d912pxy_hlsl_generator::ProcSIO_UNK;
 
 	//megai2: sm 1_0, uses same handles as sm 2 and 3 , cuz i'm lazy and hope it will work
-#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x
+#define __SIOtOF (d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_1_x)
 	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL_sm1;
@@ -259,7 +259,7 @@ void d912pxy_hlsl_generator::FillHandlers()
 #undef __SIOtOF
 
 	//sm 2_0
-#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x
+#define __SIOtOF (d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_2_x)
 	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL_sm2;
@@ -303,7 +303,7 @@ void d912pxy_hlsl_generator::FillHandlers()
 #undef __SIOtOF
 
 	//sm 3_0
-#define __SIOtOF d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x
+#define __SIOtOF (d912pxy_hlsl_generator_op_handler_group_size * d912pxy_hlsl_generator_op_handler_3_x)
 	SIOhandlers[__SIOtOF + D3DSIO_DEF] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DEFI] = &d912pxy_hlsl_generator::ProcSIO_DEF;
 	SIOhandlers[__SIOtOF + D3DSIO_DCL] = &d912pxy_hlsl_generator::ProcSIO_DCL_sm3;
