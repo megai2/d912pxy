@@ -34,7 +34,7 @@ d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB
 	: d912pxy_resource(isIB ? RTID_IBUF : RTID_VBUF, PXY_COM_OBJ_VSTREAM, isIB ? L"vstream i" : L"vstream v")
 	, lockDepth(0)
 	, ul(NULL)
-	, ul_offset()
+	, ul_offset(0)
 {			
 	PXY_MALLOC_GPU_HOST_COPY(data, Length, void*);
 
