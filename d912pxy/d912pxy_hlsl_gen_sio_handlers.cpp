@@ -60,10 +60,10 @@ void d912pxy_hlsl_generator::ProcSIO_TEXLD(d912pxy_dxbc9::token* op)
 	dstReg->target.dst.allowDstModForSrc = true;
 
 	d912pxy_hlsl_generator_regtext pre;
-	sprintf(pre.t, "dx9texld(%s_deftype, %s_srgb_flag, ", sSrc2.t, sSrc2.t);
+	sprintf_s(pre.t, "dx9texld(%s_deftype, %s_srgb_flag, ", sSrc2.t, sSrc2.t);
 
 	d912pxy_hlsl_generator_regtext mid;
-	sprintf(mid.t, "t, %ss, ", sSrc2.t);
+	sprintf_s(mid.t, "t, %ss, ", sSrc2.t);
 	d912pxy_hlsl_generator_regtext rSide = FormatRightSide2(pre.t, ")", mid.t, sSrc2, sSrc1);
 
 	HLSL_GEN_WRITE_PROC("%s = %s;",
@@ -92,11 +92,11 @@ void d912pxy_hlsl_generator::ProcSIO_TEXLDL(d912pxy_dxbc9::token* op)
 	dstReg->target.dst.allowDstModForSrc = true;
 
 	d912pxy_hlsl_generator_regtext pre;
-	sprintf(pre.t, "dx9texldl(%s_deftype, %s_srgb_flag, ", sSrc2.t, sSrc2.t);
+	sprintf_s(pre.t, "dx9texldl(%s_deftype, %s_srgb_flag, ", sSrc2.t, sSrc2.t);
 
 	const char* mid[2] = { 0, ", " };
 	d912pxy_hlsl_generator_regtext mid0;
-	sprintf(mid0.t, "t, %ss, ", sSrc2.t);
+	sprintf_s(mid0.t, "t, %ss, ", sSrc2.t);
 	mid[0] = mid0.t;
 
 	d912pxy_hlsl_generator_regtext rSide = FormatRightSide3(pre.t, ")", mid, sSrc2, sSrc1, sSrc1W);

@@ -70,7 +70,7 @@ void DetectFilePaths()
 				while (d912pxy_helper::StrCutLastElementInPath(binaryPath))
 				{
 					char testFile[maxPathLen];
-					sprintf(testFile, "%s%s", binaryPath, "d912pxy/dll/release/d3d9.dll");
+					sprintf_s(testFile, "%s%s", binaryPath, "d912pxy/dll/release/d3d9.dll");
 
 					if (d912pxy_helper::IsFileExist(testFile))
 					{

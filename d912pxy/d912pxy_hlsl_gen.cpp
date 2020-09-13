@@ -299,19 +299,19 @@ d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatDstModifier(const d
 		sprintf(ret.t, "%s", statement.t);
 		break;
 	case D3DSPDM_SATURATE:
-		sprintf(ret.t, "saturate(%s)", statement.t);
+		sprintf_s(ret.t, "saturate(%s)", statement.t);
 		break;
 	case D3DSPDM_PARTIALPRECISION:
 		if (dstLen > 1)
-			sprintf(ret.t, "(half%u)(%s)", dstLen, statement.t);
+			sprintf_s(ret.t, "(half%u)(%s)", dstLen, statement.t);
 		else
-			sprintf(ret.t, "(half)(%s)", statement.t);
+			sprintf_s(ret.t, "(half)(%s)", statement.t);
 		break;
 	case D3DSPDM_PARTIALPRECISION | D3DSPDM_SATURATE:
 		if (dstLen > 1)
-			sprintf(ret.t, "saturate((half%u)(%s))", dstLen, statement.t);
+			sprintf_s(ret.t, "saturate((half%u)(%s))", dstLen, statement.t);
 		else
-			sprintf(ret.t, "saturate((half)(%s))", statement.t);
+			sprintf_s(ret.t, "saturate((half)(%s))", statement.t);
 		break;
 	default:
 		LOG_ERR_DTDM("hlsl generator not support %08lX dst mod", dstReg->dst.mod);
@@ -336,9 +336,9 @@ d912pxy_hlsl_generator_regtext d912pxy_hlsl_generator::FormatDstModifierForSrc(c
 	{
 		UINT dLen = dstReg->dst.dstLength(writeMaskOverride);
 		if (dLen > 1)
-			sprintf(ret.t, "((half%u)(%s))", dLen, statement.t);
+			sprintf_s(ret.t, "((half%u)(%s))", dLen, statement.t);
 		else
-			sprintf(ret.t, "((half)(%s))", statement.t);
+			sprintf_s(ret.t, "((half)(%s))", statement.t);
 	}
 		break;	
 	default:
