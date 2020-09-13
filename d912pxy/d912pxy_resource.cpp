@@ -28,6 +28,7 @@ UINT d912pxy_resource::residencyOverride = 0;
 
 d912pxy_resource::d912pxy_resource(d912pxy_resource_typeid type, d912pxy_com_obj_typeid tid, const wchar_t * cat) : d912pxy_comhandler(tid, cat)
 {
+	m_tid = type;
 	evicted = residencyOverride;
 	stateCache = D3D12_RESOURCE_STATE_COMMON;
 	m_res = NULL;
