@@ -241,10 +241,10 @@ void d912pxy_surface_ops::SetCommonState(shaderSet idx)
 	d912pxy_s.render.state.pso.PShader(ps[idx]);
 
 	localPSO = d912pxy_s.render.state.pso.GetCurrentDesc();
-	localPSO.val.rt[0].blend.enable = false;
+	localPSO.val.rt[0].blend.enable = FALSE;
 	localPSO.val.rast.cullMode = D3D12_CULL_MODE_NONE;
-	localPSO.val.ds.enable = false;
-	localPSO.val.ds.stencilEnable = false;
+	localPSO.val.ds.enable = FALSE;
+	localPSO.val.ds.stencilEnable = FALSE;
 }
 
 d912pxy_surface_ops::SavedIFrameState::SavedIFrameState() :
