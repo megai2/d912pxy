@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
-#define PXY_INNER_MAX_SHADER_LISTING_LEN 1024 * 1024
+#define PXY_INNER_MAX_SHADER_LISTING_LEN (1024 * 1024)
 
 #define PXY_SHADER_TYPE_PS 0
 #define PXY_SHADER_TYPE_VS 1
