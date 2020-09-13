@@ -40,6 +40,7 @@ d912pxy_surface * d912pxy_surface::CorrectLayerRepresent(d912pxy_com_object * ob
 d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWORD Usage, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, UINT* levels, UINT arrSz, UINT32* srvFeedback) 
 	: d912pxy_resource(RTID_SURFACE, PXY_COM_OBJ_SURFACE, L"surface")
 	, isPooled(0)
+	, ulMarked(0)
 	, ul(NULL)
 	, layers(NULL)
 	, dheapId(-1)

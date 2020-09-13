@@ -279,7 +279,7 @@ public:
 		return ((d912pxy_replay_item*)((intptr_t)this + GetSize(iName)));
 	}
 
-	d912pxy_replay_item() { };
+	d912pxy_replay_item() : iName(typeName::_count){ };
 	~d912pxy_replay_item() { };
 	   	
 private:

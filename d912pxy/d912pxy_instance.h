@@ -27,7 +27,7 @@ SOFTWARE.
 IDirect3DDevice9* app_cb_D3D9Dev_create(IDirect3DDevice9Proxy* dev, IDirect3D9* obj);
 
 typedef struct d912pxy_instance {
-	d912pxy_instance() { running = 0; };
+	d912pxy_instance() : dynamicFilePaths(nullptr), running(0) {};
 	~d912pxy_instance() {  };
 
 	struct pool {
