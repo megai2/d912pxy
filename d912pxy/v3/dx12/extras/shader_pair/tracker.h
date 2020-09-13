@@ -43,7 +43,7 @@ namespace d912pxy
 				void drawList();
 
 			public:
-				Tracker() {}
+				Tracker() : freezeLastFrame(false) {}
 				~Tracker() {}
 
 				void init();
