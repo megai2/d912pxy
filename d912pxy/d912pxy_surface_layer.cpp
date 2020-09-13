@@ -34,6 +34,7 @@ d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_com_object * iBase, UINT32 
 	, lockDepth(0)
 	, lockWrite(0)
 	, isDrect(0)
+	, drect{ 0 }
 {
 	PXY_MALLOC_GPU_HOST_COPY(surfMem, iBSize, void*);
 }
