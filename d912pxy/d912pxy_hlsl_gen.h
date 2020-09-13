@@ -31,7 +31,7 @@ SOFTWARE.
 #define d912pxy_hlsl_generator_op_handler_1_x 2
 #define d912pxy_hlsl_generator_op_handler_cnt 3
 
-#define d912pxy_hlsl_generator_max_code_lines 4096*10
+#define d912pxy_hlsl_generator_max_code_lines (4096*10)
 #define d912pxy_hlsl_generator_head_priority_group_size 16
 #define d912pxy_hlsl_generator_heado_offset 512
 #define d912pxy_hlsl_generator_proc_predef_offset 1024
@@ -43,7 +43,7 @@ SOFTWARE.
 #define HLSL_HIO_PRIOG_VS_NOT_USED 3
 #define HLSL_HIO_PRIOG_NC 30
 #define HLSL_HIO_PRIOG_END 31
-#define HLSL_HIO_PRIORITY(a,b) d912pxy_hlsl_generator_head_priority_group_size * a + b
+#define HLSL_HIO_PRIORITY(a,b) d912pxy_hlsl_generator_head_priority_group_size * (a) + (b)
 
 static const UINT HLSL_HIO_PRIOG_FROM_D3DDECLUSAGE[] = {
 	1,//D3DDECLUSAGE_POSITION = 0,

@@ -30,7 +30,7 @@ SOFTWARE.
 //megai2: 16 is for future placed resource heap aligment, if it work that whay
 #define PXY_INNDER_VSTREAM_POOL_BITIGNORE 16 
 #define PXY_INNDER_VSTREAM_POOL_BITLIMIT 28
-#define PXY_INNDER_VSTREAM_POOL_BITCNT PXY_INNDER_VSTREAM_POOL_BITLIMIT - PXY_INNDER_VSTREAM_POOL_BITIGNORE
+#define PXY_INNDER_VSTREAM_POOL_BITCNT (PXY_INNDER_VSTREAM_POOL_BITLIMIT - PXY_INNDER_VSTREAM_POOL_BITIGNORE)
 
 class d912pxy_vstream_pool : public d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>
 {

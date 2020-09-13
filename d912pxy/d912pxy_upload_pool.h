@@ -73,7 +73,7 @@ private:
 //this will allow creating buffers with size up to 256mB
 #define PXY_INNDER_UPLOAD_POOL_BITIGNORE 20
 #define PXY_INNDER_UPLOAD_POOL_BITLIMIT 28
-#define PXY_INNDER_UPLOAD_POOL_BITCNT PXY_INNDER_UPLOAD_POOL_BITLIMIT - PXY_INNDER_UPLOAD_POOL_BITIGNORE
+#define PXY_INNDER_UPLOAD_POOL_BITCNT (PXY_INNDER_UPLOAD_POOL_BITLIMIT - PXY_INNDER_UPLOAD_POOL_BITIGNORE)
 
 
 class d912pxy_upload_pool : public d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>
