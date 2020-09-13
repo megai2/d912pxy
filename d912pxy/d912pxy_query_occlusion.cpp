@@ -40,6 +40,8 @@ UINT32 g_writeStack = 0;
 d912pxy_query_occlusion::d912pxy_query_occlusion(D3DQUERYTYPE Type) 
 	: d912pxy_query(Type)
 	, queryResult(0)
+	, queryFinished(0)
+	, frameIdx(0)
 	, queryOpened(0)
 { }
 

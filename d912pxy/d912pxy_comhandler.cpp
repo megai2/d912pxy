@@ -27,6 +27,7 @@ SOFTWARE.
 d912pxy_comhandler::d912pxy_comhandler(d912pxy_com_obj_typeid tid, const wchar_t* moduleText)
 	: d912pxy_noncom(moduleText)
 	, refc(1)
+	, timestamp(0)
 	, thrdRefc(0)
 	, thrdRefcFlag(0)
 	, beingWatched(0)
