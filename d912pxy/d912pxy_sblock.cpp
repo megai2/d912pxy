@@ -24,7 +24,9 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_sblock::d912pxy_sblock(D3DSTATEBLOCKTYPE Type) : d912pxy_comhandler(PXY_COM_OBJ_SBLOCK, L"state block")
+d912pxy_sblock::d912pxy_sblock(D3DSTATEBLOCKTYPE Type)
+	: d912pxy_comhandler(PXY_COM_OBJ_SBLOCK, L"state block")
+	, m_type(Type)
 {
 }
 
