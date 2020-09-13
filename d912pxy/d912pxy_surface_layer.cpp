@@ -80,7 +80,7 @@ D912PXY_METHOD_IMPL_NC(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* 
 
 	if (pRect)
 	{
-		pLockedRect->pBits = (void*)((intptr_t)surfMemRef + (intptr_t)(pRect->left*memPerPix + pRect->top*wPitch));
+		pLockedRect->pBits = (void*)((intptr_t)surfMemRef + ((intptr_t)pRect->left*memPerPix + (intptr_t)pRect->top*wPitch));
 	}
 	else {
 		pLockedRect->pBits = (void*)((intptr_t)surfMemRef);
@@ -127,7 +127,7 @@ void * d912pxy_surface_layer::SurfacePixel(UINT32 x, UINT32 y)
 {
 	void* surfMemRef = surfMem;
 
-	return (void*)((intptr_t)surfMemRef + (intptr_t)((x + y*width)*memPerPix));
+	return (void*)((intptr_t)surfMemRef + (x + (intptr_t)y*width)*memPerPix);
 }
 
 d912pxy_surface_layer * d912pxy_surface_layer::d912pxy_surface_layer_com(d912pxy_com_object * iBase, UINT32 iSubres, UINT32 iBSize, UINT32 iWPitch, UINT32 iWidth, UINT32 imemPerPix)
