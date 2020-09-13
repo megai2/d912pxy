@@ -138,7 +138,7 @@ HRESULT d912pxy_device::Present_PG(const RECT * pSourceRect, const RECT * pDestR
 
 #ifdef ENABLE_METRICS
 	d912pxy_s.log.metrics.FlushIFrameValues();
-#endif s
+#endif
 
 	InnerPresentFinish();
 
@@ -159,7 +159,7 @@ HRESULT d912pxy_device::Present_Extra(const RECT * pSourceRect, const RECT * pDe
 
 #ifdef ENABLE_METRICS
 	d912pxy_s.log.metrics.FlushIFrameValues();
-#endif s
+#endif
 
 	InnerPresentFinish();
 
