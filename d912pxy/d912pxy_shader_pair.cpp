@@ -60,9 +60,14 @@ bool d912pxy_shader_pair::PrecompilePSO(UINT32 idx, d912pxy_trimmed_pso_desc* ds
 	ret->MarkPushedToCompile();
 	ret->Compile();
 
-	psoItems[idx] = ret;
+	if (!ret->GetPtr())
+	{
+		ret->Release();
+		return false;
+	}
 
-	return ret->GetPtr() != nullptr;
+	psoItems[idx] = ret;
+	return true;
 }
 
 void d912pxy_shader_pair::CheckArrayAllocation(UINT32 idx)
