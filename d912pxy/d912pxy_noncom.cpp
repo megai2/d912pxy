@@ -56,7 +56,7 @@ d912pxy_noncom::~d912pxy_noncom()
 void d912pxy_noncom::UnInit()
 {
 #ifdef _DEBUG	
-	LOG_DBG_DTDM("Objs last = %u", g_ObjectsCounter);
+	LOG_DBG_DTDM("Objs last = %u", g_ObjectsCounter.load());
 
 	WaitForSingleObject(gLeakMapLock, INFINITE);
 	gLeakTracker->erase(lkObjTrace);
