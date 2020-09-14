@@ -299,7 +299,7 @@ public:
 
 	void IFrameCleanupEnqeue(d912pxy_comhandler* obj);
 
-	UINT InterruptThreads() { return InterlockedAdd(&threadInterruptState, 0); };
+	UINT InterruptThreads() { return threadInterruptState; };
 	void LockThread(UINT thread);
 	void InitLockThread(UINT thread);
 
@@ -386,7 +386,7 @@ public:
 	void InnerPresentFinish();
 
 private:
-	LONG threadInterruptState;	
+	std::atomic<LONG> threadInterruptState { 0 };
 	d912pxy_thread_lock threadLockdEvents[PXY_INNER_THREADID_MAX];
 	d912pxy_thread_lock threadLock;
 	d912pxy_thread_lock cleanupLock;	

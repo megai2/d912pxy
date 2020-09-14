@@ -59,7 +59,7 @@ void d912pxy_device::LockAsyncThreads()
 
 	FRAME_METRIC_SYNC(1)
 
-	InterlockedIncrement(&threadInterruptState);
+	++threadInterruptState;
 	
 	d912pxy_s.thread.texld.SignalWork();
 	d912pxy_s.thread.bufld.SignalWork();
@@ -88,7 +88,7 @@ void d912pxy_device::LockAsyncThreads()
 
 void d912pxy_device::UnLockAsyncThreads()
 {
-	InterlockedDecrement(&threadInterruptState);
+	--threadInterruptState;
 	for (int i = 0; i != activeThreadCount; ++i)
 	{
 		threadLockdEvents[i].Release();

@@ -64,11 +64,7 @@ void d912pxy_replay_buffer::Reset()
 
 d912pxy_replay_item* d912pxy_replay_buffer::getCurrentExtern()
 {
-#if _WIN64
-	return (d912pxy_replay_item*)InterlockedAdd64((LONG64*)&externCurrent, 0);
-#else
-	return (d912pxy_replay_item*)InterlockedAdd((LONG*)&externCurrent, 0);
-#endif
+	return externCurrent;
 }
 
 d912pxy_replay_item* d912pxy_replay_buffer::getCurrent()
@@ -83,11 +79,7 @@ d912pxy_replay_item* d912pxy_replay_buffer::getBase()
 
 void d912pxy_replay_buffer::syncCurrent()
 {
-#if _WIN64
-	InterlockedExchange64((LONG64*)&externCurrent, (LONG64)current);
-#else
-	InterlockedExchange((LONG*)&externCurrent, (LONG)current);
-#endif
+	externCurrent = current;
 }
 
 void d912pxy_replay_buffer::CheckRange()

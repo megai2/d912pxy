@@ -101,7 +101,7 @@ private:
 
 	d912pxy_StackWalker* stkWlk;
 
-	LONG64 memUsed;
+	std::atomic<LONG64> memUsed;
 	LONG64 memVAUsed;
 #endif
 };

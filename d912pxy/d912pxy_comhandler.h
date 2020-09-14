@@ -99,11 +99,12 @@ protected:
 	d912pxy_com_object* comBase;
 
 private:
-	LONG thrdRefc;
-	LONG thrdRefcFlag;
-	LONG refc;
-	UINT32 timestamp;	
-	LONG beingWatched;	
+	std::atomic<LONG> thrdRefc;
+	std::atomic<LONG> thrdRefcFlag;
+	std::atomic<LONG> beingWatched;
+	std::atomic<ULONG> refc;
+
+	UINT32 timestamp;		
 	UINT persistentlyPooled;
 	d912pxy_com_obj_typeid objType;
 

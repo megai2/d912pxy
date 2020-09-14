@@ -25,7 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 #ifdef _DEBUG
-LONG g_ObjectsCounter = 0;
+std::atomic<LONG> g_ObjectsCounter { 0 };
 
 #include <map>
 
@@ -56,8 +56,6 @@ d912pxy_noncom::~d912pxy_noncom()
 void d912pxy_noncom::UnInit()
 {
 #ifdef _DEBUG	
-	//InterlockedDecrement(&g_ObjectsCounter);
-
 	LOG_DBG_DTDM("Objs last = %u", g_ObjectsCounter);
 
 	WaitForSingleObject(gLeakMapLock, INFINITE);
@@ -110,7 +108,7 @@ void d912pxy_noncom::NonCom_Init(const wchar_t * logModule)
 	LOG_DBG_DTDM("new %s", logModule);
 
 #ifdef _DEBUG
-	LONG ouid = InterlockedIncrement(&g_ObjectsCounter);
+	LONG ouid = ++g_ObjectsCounter;
 
 	LOG_DBG_DTDM("obj %u is %s", ouid, logModule);
 

@@ -58,6 +58,6 @@ private:
 
 	d912pxy_pso_item(d912pxy_trimmed_pso_desc* inDesc);
 
-	ID3D12PipelineState* psoPtr;
+	std::atomic<ID3D12PipelineState*> psoPtr;
 	d912pxy_trimmed_pso_desc* desc;
 };

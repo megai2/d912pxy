@@ -60,7 +60,7 @@ private:
 
 	LONG maxElements;
 	UINT grow;
-	LONG writed;
+	std::atomic<LONG> writed;
 
 	d912pxy_thread_lock growthLock;
 	d912pxy_thread_lock writeLock;

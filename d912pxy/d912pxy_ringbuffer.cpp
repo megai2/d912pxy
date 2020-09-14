@@ -92,7 +92,7 @@ void d912pxy_ringbuffer<ElementType>::WriteElement(ElementType ele)
 	if (writePoint == bufferEnd)
 		writePoint = bufferData;
 
-	InterlockedAdd(&writed,1);
+	++writed;
 }
 
 template<class ElementType>
@@ -161,7 +161,7 @@ void d912pxy_ringbuffer<ElementType>::Next()
 	if (!writed)
 		return;
 
-	InterlockedDecrement(&writed);
+	--writed;
 
 	readPoint += sizeof(ElementType);
 

@@ -38,7 +38,7 @@ d912pxy_pso_item::~d912pxy_pso_item()
 {
 	if (psoPtr)
 	{
-		psoPtr->Release();
+		psoPtr.load()->Release();
 	}
 }
 
@@ -113,11 +113,7 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 		}
 	}
 
-#if _WIN64
-	InterlockedExchange((unsigned long long*) &psoPtr, (unsigned long long)obj);
-#else
-	InterlockedExchange((unsigned long*)&psoPtr, (unsigned long)obj);
-#endif
+	psoPtr = obj;
 }
 
 void d912pxy_pso_item::CreatePSODerived(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)

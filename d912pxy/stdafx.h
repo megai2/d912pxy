@@ -30,6 +30,8 @@ SOFTWARE.
 
 #include "build_version.h"
 
+#include <atomic>
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>

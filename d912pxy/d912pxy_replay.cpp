@@ -222,7 +222,7 @@ d912pxy_replay_item* d912pxy_replay::WaitForData(d912pxy_replay_item* from, d912
 
 bool d912pxy_replay::WaitForWake(d912pxy_replay_thread* thrd)
 {
-	if (InterlockedAdd(&stopMarker, 0))
+	if (stopMarker)
 		return false;
 
 	thrd->WaitForJob();
@@ -235,7 +235,7 @@ void d912pxy_replay::Finish()
 	buffer.CheckRange();
 	buffer.syncCurrent();
 
-	InterlockedIncrement(&stopMarker);	
+	++stopMarker;	
 	
 	for (int i = 0; i != numThreads; ++i)
 		threads[i]->Finish();	
@@ -313,7 +313,7 @@ void d912pxy_replay::Start()
 
 	buffer.Reset();
 
-	InterlockedDecrement(&stopMarker);
+	--stopMarker;
 }
 
 void d912pxy_replay::IFrameStart()

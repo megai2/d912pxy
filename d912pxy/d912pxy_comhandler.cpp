@@ -73,12 +73,12 @@ ULONG d912pxy_comhandler::AddRef()
 {
 	LOG_DBG_DTDM("::CAR");
 
-	return InterlockedAdd(&refc, 1);
+	return ++refc;
 }
 
 ULONG d912pxy_comhandler::Release()
 {
-	LONG decR = InterlockedAdd(&refc, -1);
+	ULONG decR = --refc;
 
 	if (decR == 0)
 	{
@@ -102,7 +102,7 @@ ULONG d912pxy_comhandler::Release()
 
 UINT d912pxy_comhandler::FinalReleaseTest()
 {
-	if (InterlockedAdd(&thrdRefc, 0))
+	if (thrdRefc)
 	{
 		d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		return 2;
@@ -116,16 +116,16 @@ UINT d912pxy_comhandler::FinalReleaseTest()
 
 UINT d912pxy_comhandler::FinalRelease()
 {
-	if (InterlockedAdd(&thrdRefc, 0))
+	if (thrdRefc)
 	{
 		d912pxy_s.dev.IFrameCleanupEnqeue(this);
 		return 3;
 	}
 	else {		
 
-		if (InterlockedAdd(&thrdRefcFlag, 0))
+		if (thrdRefcFlag)
 		{
-			InterlockedAdd(&thrdRefcFlag, -1);
+			--thrdRefcFlag;
 			d912pxy_s.dev.IFrameCleanupEnqeue(this);
 			return 2;
 		}
@@ -148,14 +148,14 @@ void d912pxy_comhandler::ThreadRef(INT ic)
 	//megai2: we must be sure that object referenced by some internal threads/logic are not deleted before gpu processed current submitted command list
 	//example: interframe flush, currently used vs objects will be holded on, but can be deleted after flushed cl are executed before next cl that have reference to that objects are executed
 	//			making GPU crash possible	
-	if (!InterlockedAdd(&refc, 0) && !InterlockedAdd(&thrdRefc, 0))
+	if (!refc && !thrdRefc)
 		//this will make object persist one cleanup cycle
-		InterlockedAdd(&thrdRefcFlag, 1);
+		++thrdRefcFlag;
 
 	if (ic > 0)
-		InterlockedAdd(&thrdRefc, 1);
+		++thrdRefc;
 	else
-		InterlockedAdd(&thrdRefc, -1);
+		--thrdRefc;
 }
 
 void d912pxy_comhandler::NoteDeletion(UINT32 time)
@@ -210,7 +210,8 @@ void d912pxy_comhandler::PooledActionExit()
 
 int d912pxy_comhandler::Watching(LONG v)
 {
-	return InterlockedAdd(&beingWatched, v);
+	beingWatched += v;
+	return beingWatched;
 }
 
 void d912pxy_comhandler::DeAllocateBase()

@@ -25,9 +25,9 @@ SOFTWARE.
 #include "stdafx.h"
 
 d912pxy_thread_lock::d912pxy_thread_lock()
+	: spinLock(0)
 {
 	Init();
-	InterlockedExchange(&spinLock, 0);
 }
 
 d912pxy_thread_lock::~d912pxy_thread_lock()
@@ -88,7 +88,7 @@ LONG d912pxy_thread_lock::SpinOnce(LONG cond)
 	//megai2: simple spin wait
 	UINT spin = 0;
 
-	while (InterlockedAdd(&spinLock, 0) != cond)
+	while (spinLock != cond)
 	{
 		if (spin > 64)
 			return 0;
@@ -111,7 +111,8 @@ LONG d912pxy_thread_lock::SpinOnce(LONG cond)
 
 LONG d912pxy_thread_lock::Add(LONG val)
 {
-	return InterlockedAdd(&spinLock, val);
+	spinLock += val;
+	return spinLock;
 }
 
 void d912pxy_thread_lock::Wait(LONG cond)
@@ -119,7 +120,7 @@ void d912pxy_thread_lock::Wait(LONG cond)
 	//megai2: simple spin wait
 	UINT spin = 0;
 
-	while (InterlockedAdd(&spinLock, 0) != cond)
+	while (spinLock != cond)
 	{
 		if (spin > 32)
 			Sleep(0);
@@ -143,7 +144,7 @@ UINT d912pxy_thread_lock::WaitTimeout(LONG cond, DWORD ms)
 	//megai2: simple spin wait
 	UINT spin = 0;
 
-	while (InterlockedAdd(&spinLock, 0) != cond)
+	while (spinLock != cond)
 	{
 		if (spin > 32)
 		{
@@ -168,16 +169,17 @@ UINT d912pxy_thread_lock::WaitTimeout(LONG cond, DWORD ms)
 
 LONG d912pxy_thread_lock::GetValue()
 {
-	return InterlockedAdd(&spinLock, 0);
+	return spinLock;
 }
 
 void d912pxy_thread_lock::SetValue(LONG val)
 {
-	InterlockedExchange(&spinLock, val);
+	spinLock = val;
 }
 
 void d912pxy_thread_lock::SetValueAsync(LONG val)
 {
+	//FIXME: obsolete ?
 	spinLock = val;
 }
 

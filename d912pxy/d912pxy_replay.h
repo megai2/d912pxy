@@ -173,7 +173,7 @@ void RHA_##a##_extra(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList 
 
 	thread_transit_data transitData[PXY_INNER_REPLAY_THREADS_MAX];
 	d912pxy_replay_thread* threads[PXY_INNER_REPLAY_THREADS_MAX];
-	LONG stopMarker;
+	std::atomic<LONG> stopMarker{ 0 };
 
 public:
 	struct ExtraFeatures

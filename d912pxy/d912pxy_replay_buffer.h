@@ -63,6 +63,6 @@ private:
 
 	d912pxy_replay_item* base;
 	d912pxy_replay_item* current;
-	d912pxy_replay_item* externCurrent;
+	std::atomic<d912pxy_replay_item*> externCurrent;
 	intptr_t bufferLimit=0;
 };

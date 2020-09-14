@@ -56,7 +56,7 @@ public:
 	
 private:	
 	CRITICAL_SECTION cs;
-	LONG spinLock;
+	std::atomic<LONG> spinLock;
 
 };
 

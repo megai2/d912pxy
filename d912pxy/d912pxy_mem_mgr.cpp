@@ -221,7 +221,7 @@ bool d912pxy_mem_mgr::pxy_malloc_dbg(void** cp, size_t sz, const char* file, con
 	blkdsc->sz = sz;
 	blkdsc->trashCheck = 0xAAAAAAAA;
 
-	InterlockedAdd64(&memUsed, sz);
+	memUsed += sz;
 
 	*cp = (void*)((intptr_t)tempPointer + sizeof(d912pxy_dbg_mem_block));
 
@@ -277,7 +277,7 @@ bool d912pxy_mem_mgr::pxy_realloc_dbg(void** cp, size_t sz, const char* file, co
 
 	d912pxy_dbg_mem_block* blkdsc = (d912pxy_dbg_mem_block*)tempPointer;
 
-	InterlockedAdd64(&memUsed, sz - blkdsc->sz);
+	memUsed += sz - blkdsc->sz;
 
 	blkdsc->file = (char*)file;
 	blkdsc->function = (char*)function;
@@ -324,7 +324,7 @@ void d912pxy_mem_mgr::pxy_free_dbg(void** cp, const char* file, const int line, 
 
 justFree:
 	if (this)
-		InterlockedAdd64(&memUsed, -((LONG64)blkdsc->sz));
+		memUsed -= (LONG64)blkdsc->sz;
 
 	inFree(origBlk);
 	*cp = NULL;	
