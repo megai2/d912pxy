@@ -97,8 +97,8 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 		{
 			d912pxy_shader_pair_cache_entry entryData 
 			{ 
-				desc->ref.VS->GetID(), 
 				desc->ref.PS->GetID(), 
+				desc->ref.VS->GetID(), 
 				d912pxy_trimmed_pso_desc::StorageKey(desc->GetValuePart()) 
 			};
 
