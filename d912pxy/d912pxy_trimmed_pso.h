@@ -115,7 +115,7 @@ public:
 	bool haveValidRefs();
 
 	d912pxy_mem_block Serialize();
-	void DeSerialize(d912pxy_mem_block data);
+	bool DeSerialize(d912pxy_mem_block data);
 
 	static void SetupBaseFullPSO(ID3D12RootSignature* defaultRootSignature);
 

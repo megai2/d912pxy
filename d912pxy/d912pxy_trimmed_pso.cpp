@@ -127,11 +127,16 @@ d912pxy_mem_block d912pxy_trimmed_pso_desc::Serialize()
 	return mem;
 }
 
-void d912pxy_trimmed_pso_desc::DeSerialize(d912pxy_mem_block data)
+bool d912pxy_trimmed_pso_desc::DeSerialize(d912pxy_mem_block data)
 {
+	if (data.size() != sizeof(serialized_data))
+		return false;
+
 	serialized_data* input = data.c_arr<serialized_data>();
 	val = input->val;
 	ref.InputLayout = d912pxy_vdecl::d912pxy_vdecl_com(input->declData);
+
+	return true;
 }
 
 void d912pxy_trimmed_pso_desc::SetupBaseFullPSO(ID3D12RootSignature* defaultRootSignature)
