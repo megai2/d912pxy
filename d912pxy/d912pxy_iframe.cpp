@@ -468,7 +468,7 @@ void d912pxy_iframe::ProcessSurfaceBinds(UINT psoOnly)
 	{
 		if (bindedSurfaces[i])
 		{
-			d912pxy_s.render.state.pso.RTVFormat(bindedSurfaces[i]->GetSRVFormat(), 0);
+			d912pxy_s.render.state.pso.RTVFormat(bindedSurfaces[i]->GetSRVFormat(), i-1);
 			d912pxy_s.render.replay.DoBarrier(bindedSurfaces[i], D3D12_RESOURCE_STATE_RENDER_TARGET);
 			bindedRTVcount = i;//count total by last active
 		}
