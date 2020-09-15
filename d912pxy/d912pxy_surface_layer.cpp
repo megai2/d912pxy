@@ -72,7 +72,8 @@ D912PXY_METHOD_IMPL_NC_(ULONG, Release)(THIS)
 
 D912PXY_METHOD_IMPL_NC(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
 {
-	return PXY_COM_CAST(IDirect3DSurface9, base)->GetDesc(pDesc);
+	*pDesc = base->surface.GetDX9DescAtLevel(subres);
+	return D3D_OK;
 }
 
 D912PXY_METHOD_IMPL_NC(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
