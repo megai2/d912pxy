@@ -118,7 +118,7 @@ private:
 		d912pxy_replay_item* startPoint;
 		UINT tailItems;
 
-		d912pxy_surface* surfBind[2];
+		d912pxy_surface* surfBind[PXY_INNER_MAX_RENDER_TARGETS+1];
 		DWORD srefVal;
 		DWORD bfacVal;
 		UINT scissorEnabled;

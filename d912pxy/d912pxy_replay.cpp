@@ -330,8 +330,8 @@ void d912pxy_replay::thread_transit_data::Gather(d912pxy_replay_item* threadStar
 	bfacVal = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
 	srefVal = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
-	surfBind[0] = d912pxy_s.render.iframe.GetBindedSurface(0);
-	surfBind[1] = d912pxy_s.render.iframe.GetBindedSurface(1);
+	for (int i = 0; i<PXY_INNER_MAX_RENDER_TARGETS+1;++i)
+		surfBind[i] = d912pxy_s.render.iframe.GetBindedSurface(i);
 
 	indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
@@ -365,7 +365,12 @@ bool d912pxy_replay::thread_transit_data::Apply(ID3D12GraphicsCommandList* cl, d
 	item.Set(d912pxy_replay_item::dt_##a b); \
 	d912pxy_s.render.replay.PlayId(&item, cl, context) \
 
-	ITEM_TRANSIT(om_render_targets, ({ surfBind[1], surfBind[0] }));	
+	d912pxy_replay_item::dt_om_render_targets rtData;
+	rtData.dsv = surfBind[0];
+	for (int i = 1; i < PXY_INNER_MAX_RENDER_TARGETS + 1; ++i)
+		rtData.rtv[i-1] = surfBind[i];
+
+	ITEM_TRANSIT(om_render_targets, (rtData));	
 
 	for (UINT i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 	{
