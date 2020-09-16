@@ -53,10 +53,10 @@ void GenericTAA::resetAdditionalFrames(d912pxy_surface* from)
 	D3DSURFACE_DESC descTempl = from->GetDX9DescAtLevel(0);
 
 	if (prevFrame)
-		prevFrame->Release_Surface();
+		prevFrame->Release();
 
 	if (currentFrame)
-		currentFrame->Release_Surface();
+		currentFrame->Release();
 	
 	prevFrame = surfFromTempl(descTempl);
 	currentFrame = surfFromTempl(descTempl);
