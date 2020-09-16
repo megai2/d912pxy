@@ -76,6 +76,8 @@ public:
 		rt_blend_desc blend;
 		UINT8 format;
 	};
+
+	enum { NO_COMPARE_SAMPLERS = 0xFF };
 	   
 	struct ValuePart {
 		UINT vdeclHash;
@@ -83,6 +85,7 @@ public:
 		ds_desc ds;
 		rt_desc rt[PXY_INNER_MAX_RENDER_TARGETS];
 		UINT8 NumRenderTargets;
+		UINT8 compareSamplerStage;
 	};
 
 	struct ref_part {

@@ -51,6 +51,7 @@ public:
 
 	UINT GetSRVHeapId();
 	UINT GetSRVHeapId(UINT mode);
+	bool UsesCompareFormat() { return attachedCache.compareFormat > 0; }
 
 	D912PXY_METHOD_(DWORD, SetLOD)(PXY_THIS_ DWORD LODNew);
 	D912PXY_METHOD_(DWORD, GetLOD)(PXY_THIS);

@@ -53,6 +53,7 @@ public:
 	void RTVFormat(DXGI_FORMAT fmt, UINT idx);
 	void DSVFormat(DXGI_FORMAT fmt);
 	void OMReflect(UINT RTcnt, D3D12_CPU_DESCRIPTOR_HANDLE* dsv);
+	void UpdateCompareSampler(UINT stage, bool use);
 
 	///////getters
 
@@ -87,4 +88,5 @@ private:
 	DWORD DX9RSvalues[PXY_DX9_MAX_RS_INDEX];
 
 	bool isDirty;
+	UINT8 compareSamplerStage;
 };

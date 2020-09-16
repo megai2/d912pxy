@@ -767,12 +767,12 @@ d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::WriteOutput(UINT toMemory
 void d912pxy_hlsl_generator::DeclareSampler(d912pxy_dxbc9::token* op, d912pxy_dxbc9::token* dclTok, d912pxy_dxbc9::token* dstTok)
 {
 	const char* samplerType[] = {
-		"unk",
-		"unk",
-		"tex2d",
-		"texCube",
-		"texVolume",
-		"depth"
+		"unk       ",
+		"unk       ",
+		"tex2d     ",
+		"texCube   ",
+		"texVolume ",
+		"depth     "
 	};
 
 	UINT texTypeO = dclTok->dcl.samplerTexType;

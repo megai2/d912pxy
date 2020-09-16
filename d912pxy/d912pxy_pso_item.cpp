@@ -185,7 +185,11 @@ char* d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DE
 	//write declaration back to PS due to unused reg filtering
 	RCEUpdateIOBlock(shdSrc[1].c_arr<char>(), "PS_INPUT", psIn, psInCnt);
 
-	//pass 2 - make and save derived CSO with name unique to HLSL source and make alias to refer on this name
+	//pass 2 - change tex2d lookup to pcf lookup if needed
+	if (desc->val.compareSamplerStage != d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS)
+		RCEApplyPCFSampler(shdSrc[1].c_arr<char>(), desc->val.compareSamplerStage);
+
+	//pass 3 - make and save derived CSO with name unique to HLSL source and make alias to refer on this name
 	char* ret = RCELinkDerivedCSO(shdSrc, alias);
 
 	shdSrc[0].Delete();
@@ -372,6 +376,19 @@ bool d912pxy_pso_item::RCEIsDerivedPresent(char* derivedName)
 		d912pxy_s.vfs.IsFilePresent(d912pxy_vfs_path(derivedName, d912pxy_vfs_bid::derived_cso_ps)) &&
 		d912pxy_s.vfs.IsFilePresent(d912pxy_vfs_path(derivedName, d912pxy_vfs_bid::derived_cso_vs))
 		);
+}
+
+void d912pxy_pso_item::RCEApplyPCFSampler(char* source, UINT stage)
+{
+	char buf[256];
+	sprintf_s(buf, "%u_deftype tex2d", stage);
+	char* targetSamplerDef = strstr(source, buf);
+
+	if (targetSamplerDef)
+	{
+		sprintf_s(buf, "%u_deftype depth/*M*/", stage);
+		memcpy(targetSamplerDef, buf, strlen(buf));
+	}
 }
 
 bool d912pxy_pso_item::ValidateFullDesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)

@@ -42,6 +42,8 @@ void d912pxy_dx9_pipeline_state::Init()
 	psoDesc.val.NumRenderTargets = 1;
 	psoDesc.val.rt[0].format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	psoDesc.val.ds.format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	psoDesc.val.compareSamplerStage = d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS;
+	compareSamplerStage = d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS;
 
 	for (int i = 1 ;i<PXY_INNER_MAX_RENDER_TARGETS;++i)
 		psoDesc.val.rt[i].format = DXGI_FORMAT_UNKNOWN;
@@ -261,6 +263,17 @@ void d912pxy_dx9_pipeline_state::OMReflect(UINT RTcnt, D3D12_CPU_DESCRIPTOR_HAND
 		DSVFormat(DXGI_FORMAT_UNKNOWN);
 }
 
+void d912pxy_dx9_pipeline_state::UpdateCompareSampler(UINT stage, bool use)
+{
+	if (!use)
+	{		
+		if (stage == compareSamplerStage)
+			compareSamplerStage = d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS;
+	}
+	else
+		compareSamplerStage = stage;
+}
+
 d912pxy_vdecl* d912pxy_dx9_pipeline_state::GetIAFormat()
 {
 	return cVDecl;
@@ -310,6 +323,12 @@ DWORD d912pxy_dx9_pipeline_state::GetDX9RsValue(D3DRENDERSTATETYPE State)
 
 void d912pxy_dx9_pipeline_state::Use()
 {
+	if (compareSamplerStage != psoDesc.val.compareSamplerStage)
+	{
+		psoDesc.val.compareSamplerStage = compareSamplerStage;
+		isDirty = true;
+	}
+
 	if (isDirty)
 	{
 		d912pxy_s.render.replay.DoPSORaw(&psoDesc);

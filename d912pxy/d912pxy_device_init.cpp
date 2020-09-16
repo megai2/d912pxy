@@ -260,13 +260,8 @@ void d912pxy_device::InitComPatches()
 
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
 	{
-		for (int i = 0; i != 32; ++i)
-			stageFormatsTrack[i] = D3DFMT_UNKNOWN;
-
 		d912pxy_s.vfs.SetWriteMask(~(1 << (UINT)d912pxy_vfs_bid::shader_profile));
 
-		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETTEXTURE, &d912pxy_device::com_SetTexture_PS);
-		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_PS);		
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWPRIMITIVE, &d912pxy_device::com_DrawPrimitive_PS);
 	}
 	else if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))

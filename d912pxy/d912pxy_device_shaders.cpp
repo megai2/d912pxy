@@ -152,12 +152,6 @@ void d912pxy_device::TrackPSProfile()
 	if (!sProfile.isValid())
 		return;
 
-	for (int i = 0; i != 32; ++i)
-		if ((stageFormatsTrack[i] == D3DFMT_D24X8) || (stageFormatsTrack[i] == D3DFMT_D24S8))
-		{
-			sProfile.entryStageSelect(d912pxy_shader_profile::entry::pcf_sampler, i);			
-		}
-
 	UINT srgbState = d912pxy_s.render.state.tex.GetTexStage(30);
 	if (srgbState)
 		for (int i = 0; i != 30; ++i)

@@ -348,7 +348,6 @@ public:
 	D912PXY_METHOD_NC(DrawPrimitiveUP_StateUnsafe)(THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
 	D912PXY_METHOD_NC(DrawIndexedPrimitiveUP_StateUnsafe)(THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
 
-	HRESULT SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTexture);
 	HRESULT Present_PG(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
 	HRESULT Present_Extra(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
 	HRESULT Clear_Emulated(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
@@ -367,7 +366,6 @@ public:
 	D912PXY_METHOD(DrawIndexedPrimitive_Compat)(PXY_THIS_ D3DPRIMITIVETYPE, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount);
 	D912PXY_METHOD(DrawPrimitiveUP_StateUnsafe)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
 	D912PXY_METHOD(DrawIndexedPrimitiveUP_StateUnsafe)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
-	D912PXY_METHOD(SetTexture_PS)(PXY_THIS_ DWORD Stage, IDirect3DBaseTexture9* pTexture);
 	D912PXY_METHOD(Present_PG)(PXY_THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);	
 	D912PXY_METHOD(Present_Extra)(PXY_THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
 	D912PXY_METHOD(Clear_Emulated)(PXY_THIS_ DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
@@ -424,7 +422,6 @@ private:
 	UINT32 gpuWriteDsc;
 
 	d912pxy_performance_graph* perfGraph;
-	D3DFORMAT stageFormatsTrack[1024];
 
 	//nvapi 
 	nvapi_fptrs* nvapi;

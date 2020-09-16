@@ -53,6 +53,7 @@ private:
 	char* RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias);
 	bool RCECompileDerivedCSO(d912pxy_mem_block* src, char* derivedName);
 	bool RCEIsDerivedPresent(char* derivedName);
+	void RCEApplyPCFSampler(char* source, UINT stage);
 
 	bool ValidateFullDesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc);
 
