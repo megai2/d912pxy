@@ -33,15 +33,17 @@ d912pxy_texture::d912pxy_texture(UINT Width, UINT Height, UINT Levels, DWORD Usa
 	
 	LOG_DBG_DTDM("tex usage is %u", Usage);
 
-	srvIDc[1] = (Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL);
+	attachedCache.shouldBarrier = (Usage == D3DUSAGE_RENDERTARGET) | (Usage == D3DUSAGE_DEPTHSTENCIL);
 
 	if (m_levels != 0)
-		baseSurface = d912pxy_s.pool.surface.GetSurface(Width, Height, Format, m_levels, 1, Usage, &srvIDc[0]);
+		baseSurface = d912pxy_s.pool.surface.GetSurface(Width, Height, Format, m_levels, 1, Usage, &attachedCache.srvId);
 	else 
-		baseSurface = d912pxy_surface::d912pxy_surface_com(Width, Height, Format, Usage, D3DMULTISAMPLE_NONE,0,	0, &m_levels, 1, &srvIDc[0]);
+		baseSurface = d912pxy_surface::d912pxy_surface_com(Width, Height, Format, Usage, D3DMULTISAMPLE_NONE,0,	0, &m_levels, 1, &attachedCache.srvId);
 
-	if (!srvIDc[1])
-		srvIDc[0] = baseSurface->GetSRVHeapId();
+	if (!attachedCache.shouldBarrier)
+		attachedCache.srvId = baseSurface->GetSRVHeapId();
+
+	attachedCache.compareFormat = (Format == D3DFMT_D24X8) || (Format == D3DFMT_D24S8);
 }
 
 
@@ -70,13 +72,10 @@ HRESULT d912pxy_texture::GetLevelDesc(UINT Level, D3DSURFACE_DESC * pDesc)
 
 HRESULT d912pxy_texture::GetSurfaceLevel(UINT Level, IDirect3DSurface9 ** ppSurfaceLevel)
 {
-	if (srvIDc[1])
-	{
+	if (attachedCache.shouldBarrier)
 		*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface);
-	}
-	else {
-		*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface->GetLayer(Level, 0));			
-	}
+	else
+		*ppSurfaceLevel = PXY_COM_CAST_(IDirect3DSurface9, baseSurface->GetLayer(Level, 0));
 
 	(*ppSurfaceLevel)->AddRef();
 

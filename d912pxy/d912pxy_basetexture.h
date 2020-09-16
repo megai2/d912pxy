@@ -25,6 +25,24 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
+#pragma pack(push, 1)
+
+struct d912pxy_basetexture_cache_data
+{
+	UINT32 srvId;
+	union 
+	{
+		struct 
+		{
+			UINT16 shouldBarrier;
+			UINT16 compareFormat;
+		};
+		UINT32 extraData;
+	};
+};
+
+#pragma pack(pop)
+
 class d912pxy_basetexture : private d912pxy_vtable, public d912pxy_resource
 {
 public:
@@ -50,7 +68,7 @@ public:
 	UINT FinalRelease();
 
 protected:
-	UINT32 srvIDc[2];
+	d912pxy_basetexture_cache_data attachedCache;
 
 	d912pxy_surface * baseSurface = nullptr;
 

@@ -45,17 +45,12 @@ D912PXY_METHOD_IMPL_NC_(DWORD, GetPriority_SRVhack)(THIS)
 
 UINT d912pxy_basetexture::GetSRVHeapId()
 {
-	return GetSRVHeapId(srvIDc[1]);
+	return GetSRVHeapId(attachedCache.shouldBarrier);
 }
 
-UINT d912pxy_basetexture::GetSRVHeapId(UINT mode)
+UINT d912pxy_basetexture::GetSRVHeapId(UINT genBarrier)
 {
-	if (mode)
-	{
-		return baseSurface->GetSRVHeapIdRTDS();
-	}
-	else
-		return srvIDc[0];
+	return genBarrier ? baseSurface->GetSRVHeapIdRTDS() : attachedCache.srvId;
 }
 
 UINT d912pxy_basetexture::FinalRelease()
