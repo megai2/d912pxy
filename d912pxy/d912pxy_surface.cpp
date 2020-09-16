@@ -206,13 +206,6 @@ D912PXY_METHOD_IMPL_NC(UnlockRect)(THIS)
 	return GetLayer(0, 0)->UnlockRect();
 }
 
-D912PXY_METHOD_IMPL_NC_(ULONG, Release_Surface)(THIS)
-{
-	ULONG ret = Release();
-
-	return ret;
-}
-
 #undef D912PXY_METHOD_IMPL_CN
 
 void d912pxy_surface::ClearAsRTV(FLOAT * color4f, ID3D12GraphicsCommandList * cl, D3D12_RECT* clearRect)

@@ -61,7 +61,7 @@ UINT d912pxy_basetexture::FinalRelease()
 		//megai2: keep threadRef if surface is still in use, otherwise free surface and remove threadRef
 		if (baseSurface->GetCOMRefCount() == 1)
 		{
-			baseSurface->Release_Surface();
+			baseSurface->Release();
 			ThreadRef(-1);
 		}
 	}

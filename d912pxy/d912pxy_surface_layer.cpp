@@ -30,7 +30,6 @@ d912pxy_surface_layer::d912pxy_surface_layer(d912pxy_com_object * iBase, UINT32 
 	, wPitch(iWPitch)
 	, width(iWidth)
 	, memPerPix(imemPerPix)
-	, intRefc(0)
 	, lockDepth(0)
 	, lockWrite(0)
 	, isDrect(0)
@@ -48,27 +47,18 @@ d912pxy_surface_layer::~d912pxy_surface_layer()
 
 D912PXY_METHOD_IMPL_NC(QueryInterface)(THIS_ REFIID riid, void** ppvObj)
 {
-	return PXY_COM_CAST(IUnknown, base)->QueryInterface(riid, ppvObj);
+	return base->com.QueryInterface(riid, ppvObj);
 }
 
 D912PXY_METHOD_IMPL_NC_(ULONG, AddRef)(THIS)
 {
-	++intRefc;
-
-	PXY_COM_CAST(IUnknown, base)->AddRef();
-
-	return intRefc;
+	return base->com.AddRef();
 }
 
 D912PXY_METHOD_IMPL_NC_(ULONG, Release)(THIS)
 {
-	--intRefc;
-
-	PXY_COM_CAST(IUnknown, base)->Release();
-
-	return intRefc;
+	return base->com.Release();
 }
-
 
 D912PXY_METHOD_IMPL_NC(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc)
 {

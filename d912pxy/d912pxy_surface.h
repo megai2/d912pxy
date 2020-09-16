@@ -43,15 +43,12 @@ public:
 	D912PXY_METHOD(UnlockRect)(PXY_THIS);
 	D912PXY_METHOD(GetDC)(PXY_THIS_ HDC *phdc);
 	D912PXY_METHOD(ReleaseDC)(PXY_THIS_ HDC hdc);
-	
-	D912PXY_METHOD_(ULONG, Release_Surface)(PXY_THIS);
 
 	//inner metods
 
 	D912PXY_METHOD_NC(GetDesc)(THIS_ D3DSURFACE_DESC *pDesc);
 	D912PXY_METHOD_NC(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags);
 	D912PXY_METHOD_NC(UnlockRect)(THIS);
-	D912PXY_METHOD_NC_(ULONG, Release_Surface)(THIS);
 
 	void ClearAsRTV(FLOAT* color4f, ID3D12GraphicsCommandList* cl, D3D12_RECT* clearRect);
 	void ClearAsDSV(FLOAT Depth, UINT8 Stencil, D3D12_CLEAR_FLAGS flag, ID3D12GraphicsCommandList* cl, D3D12_RECT* clearRect);

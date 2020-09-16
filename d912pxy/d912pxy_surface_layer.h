@@ -81,7 +81,5 @@ private:
 	UINT width;
 	UINT memPerPix;
 
-	UINT intRefc;
-
 };
 
