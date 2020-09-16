@@ -26,20 +26,19 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_TEXSTATE
 
+#if _WIN64
+	#define SRV_GET_MODE (intptr_t)pTexture & PXY_COM_OBJ_SIGNATURE_TEXTURE_RTDS
+#else
+	#define SRV_GET_MODE 
+#endif
+
 HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
+	Stage = convertTexStage(Stage);
 
 	UINT64 srvId = 0;//megai2: make this to avoid memory reading. but we must be assured that mNullTextureSRV is equal to this constant!
-
 	if (pTexture)
-	{
-#if _WIN64
-		srvId = PXY_COM_LOOKUP_(pTexture, basetex).GetSRVHeapId((intptr_t)pTexture & PXY_COM_OBJ_SIGNATURE_TEXTURE_RTDS);
-#else
-		srvId = PXY_COM_LOOKUP_(pTexture, basetex).GetPriority_SRVhack();
-#endif
-	}
+		srvId = PXY_COM_LOOKUP_(pTexture, basetex).GetSRVHeapId(SRV_GET_MODE);
 
 	d912pxy_s.render.state.tex.SetTexture(Stage, (UINT32)srvId);
 
@@ -48,21 +47,12 @@ HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 
 HRESULT d912pxy_device::SetTexture_PS(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	Stage = (Stage & 0xF) + 16 * ((Stage >> 4) != 0);
+	SetTexture(Stage, pTexture);
 
-	UINT64 srvId = 0;//megai2: make this to avoid memory reading. but we must be assured that mNullTextureSRV is equal to this constant!
-
-	if (pTexture)
-	{
-		srvId = (PXY_COM_LOOKUP(pTexture, basetex))->GetSRVHeapId((intptr_t)pTexture & PXY_COM_OBJ_SIGNATURE_TEXTURE_RTDS);
-	}
-
-	d912pxy_s.render.state.tex.SetTexture(Stage, (UINT32)srvId);
-
+	Stage = convertTexStage(Stage);
 	if (pTexture)
 	{
 		d912pxy_basetexture* btex = PXY_COM_LOOKUP(pTexture, basetex);
-
 		stageFormatsTrack[Stage] = btex->GetBaseSurface()->GetDX9DescAtLevel(0).Format;
 	}
 	else

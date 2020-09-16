@@ -43,6 +43,11 @@ D912PXY_METHOD_IMPL_NC_(DWORD, GetPriority_SRVhack)(THIS)
 
 #undef D912PXY_METHOD_IMPL_CN
 
+UINT d912pxy_basetexture::GetSRVHeapId()
+{
+	return GetSRVHeapId(srvIDc[1]);
+}
+
 UINT d912pxy_basetexture::GetSRVHeapId(UINT mode)
 {
 	if (mode)

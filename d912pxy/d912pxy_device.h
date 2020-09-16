@@ -430,5 +430,7 @@ private:
 	nvapi_fptrs* nvapi;
 
 	UINT nvapi_dynPstateChanged;
+
+	UINT convertTexStage(UINT stage) { return (stage & 0xF) + 16 * ((stage >> 4) != 0); }
 };
 
