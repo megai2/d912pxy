@@ -62,6 +62,12 @@ void d912pxy_pso_item::MarkPushedToCompile()
 
 void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 {
+	if (!fullDesc->VS.pShaderBytecode)
+		fullDesc->VS = *desc->ref.VS->GetCode();
+
+	if (!fullDesc->PS.pShaderBytecode)
+		fullDesc->PS = *desc->ref.PS->GetCode();
+
 	if (!ValidateFullDesc(fullDesc))
 		return;
 
@@ -431,7 +437,7 @@ void d912pxy_pso_item::RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC
 		PXY_FREE(derivedName);
 	}	
 	else {
-		LOG_ERR_DTDM("RCE failed to generate derived hlsl");
+		LOG_ERR_DTDM("RCE failed to generate derived hlsl for %s", derivedAlias);
 		CreatePSO(fullDesc);
 	}
 }

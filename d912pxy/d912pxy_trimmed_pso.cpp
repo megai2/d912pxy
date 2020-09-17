@@ -46,8 +46,8 @@ const d912pxy_trimmed_pso_desc::ValuePart& d912pxy_trimmed_pso_desc::GetValuePar
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC* d912pxy_trimmed_pso_desc::GetPSODesc()
 {
-	singleFullPSO.VS = *ref.VS->GetCode();
-	singleFullPSO.PS = *ref.PS->GetCode();
+	singleFullPSO.VS = { 0 };
+	singleFullPSO.PS = { 0 };
 	singleFullPSO.InputLayout = *ref.InputLayout->GetD12IA_InputElementFmt();
 	singleFullPSO.NumRenderTargets = val.NumRenderTargets;
 
