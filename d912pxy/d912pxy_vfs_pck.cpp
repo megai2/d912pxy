@@ -179,6 +179,12 @@ d912pxy_vfs_pck_chunk * d912pxy_vfs_pck::ReadHeader()
 	if (!ret)
 		return 0;
 
+	if (ret->data.header.ver != PXY_VFS_PCK_VER)
+	{
+		FreeChunk(ret);
+		return 0;
+	}
+
 	UINT64 actualFsz = FS_Size();
 
 	if (ret->data.header.fileSize != actualFsz)
