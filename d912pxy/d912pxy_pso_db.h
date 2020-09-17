@@ -54,8 +54,6 @@ public:
 		return saveCache;
 	}
 
-	static bool allowRealtimeChecks;
-
 private:
 	d912pxy_trimmed_pso_desc::IdStorage cacheIndexes;
 	uint32_t cacheIncID;

@@ -46,10 +46,7 @@ void d912pxy_pso_item::Compile()
 {
 	auto fullDesc = desc->GetPSODesc();
 
-	if (d912pxy_pso_db::allowRealtimeChecks)
-		RealtimeIntegrityCheck(fullDesc);
-	else
-		CreatePSO(fullDesc);
+	RealtimeIntegrityCheck(fullDesc);
 
 	desc->HoldRefs(false);
 	delete desc;

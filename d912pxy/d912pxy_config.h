@@ -47,7 +47,6 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_ALLOW_PP_SUFFIX,
 	PXY_CFG_SDB_ENABLE_PROFILING,
 	PXY_CFG_SDB_FORCE_UNUSED_REGS,
-	PXY_CFG_SDB_ALLOW_REALTIME_CHECKS,
 	PXY_CFG_SDB_NAN_GUARD_FLAG,
 	PXY_CFG_SDB_SRGB_ALPHATEST_FLAG,
 	PXY_CFG_REPLAY_BEHAIVOUR,
@@ -166,7 +165,6 @@ private:
 		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX
 		{L"sdb", L"enable_profiling", L"0"},//PXY_CFG_SDB_ENABLE_PROFILING
 		{L"sdb", L"force_unused_regs", L"0"},//PXY_CFG_SDB_FORCE_UNUSED_REGS
-		{L"sdb", L"allow_realtime_checks", L"1"},//PXY_CFG_SDB_ALLOW_REALTIME_CHECKS
 		{L"sdb", L"nan_guard_flag", L"81"},//PXY_CFG_SDB_NAN_GUARD_FLAG
 		{L"sdb", L"srgb_alphatest_flag", L"0"},//PXY_CFG_SDB_SRGB_ALPHATEST_FLAG
 		{L"replay", L"replay", L"1"},//PXY_CFG_REPLAY_BEHAIVOUR

@@ -24,8 +24,6 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-bool d912pxy_pso_db::allowRealtimeChecks = false;
-
 d912pxy_pso_db::d912pxy_pso_db()
 {
 }
@@ -41,8 +39,6 @@ void d912pxy_pso_db::Init()
 
 	cacheIncID = 0;
 	
-	allowRealtimeChecks = d912pxy_s.config.GetValueB(PXY_CFG_SDB_ALLOW_REALTIME_CHECKS);
-
 	saveCache = d912pxy_s.config.GetValueB(PXY_CFG_SDB_SAVE_PSO_CACHE);
 
 	if (d912pxy_s.config.GetValueB(PXY_CFG_SDB_LOAD_PSO_CACHE))

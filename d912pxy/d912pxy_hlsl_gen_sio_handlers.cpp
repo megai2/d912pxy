@@ -577,25 +577,6 @@ void d912pxy_hlsl_generator::ProcSIO_DCL_sm3(d912pxy_dxbc9::token* op)
 				"/*default*/    float4 %s%u: %s%u;",
 				GetRegTypeStr(dstTok->reg.regType, 0), regNum, usageStr, dclTok->dcl.id
 			);
-
-			if ((dclTok->dcl.id > 0) && (!d912pxy_pso_db::allowRealtimeChecks))
-			{
-				UINT itr = priority + headerOffsetI;
-				do
-				{
-					--itr;
-					--dclTok->dcl.id;
-
-					if (lines[itr] == 0)
-					{
-						HLSL_GEN_WRITE_HEADI(
-							itr - headerOffsetI,
-							"/*default*/    float4 %s%u_s%u: %s%u;",
-							"unused_ireg_", regNum, dclTok->dcl.id, usageStr, dclTok->dcl.id
-						);
-					}
-				} while (dclTok->dcl.id != 0);
-			}
 		}
 		break;
 		case D3DSPR_MISCTYPE:
