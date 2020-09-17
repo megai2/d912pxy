@@ -54,6 +54,7 @@ d912pxy_vfs_pck::d912pxy_vfs_pck(wchar_t * fn, UINT in_allowWrite)
 	if (!cuHeader)
 	{
 		LOG_ERR_DTDM("Error reading %s header", fn);
+		FS_Close();
 		cuStatus = 1;
 		return;
 	}
@@ -61,6 +62,7 @@ d912pxy_vfs_pck::d912pxy_vfs_pck(wchar_t * fn, UINT in_allowWrite)
 	if (!LoadChunkIndex())
 	{
 		LOG_ERR_DTDM("Error reading %s chunk index", fn);
+		FS_Close();
 		cuStatus = 1;
 		return;
 	}
