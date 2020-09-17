@@ -287,6 +287,40 @@ d912pxy_hlsl_generator_memout* d912pxy_shader_replacer::GenerateHLSL(const wchar
 	return ret;
 }
 
+d912pxy_mem_block d912pxy_shader_replacer::GetHLSL()
+{
+	wchar_t replFn[1024];
+
+	wsprintf(replFn, L"%s/%08lX%08lX.hlsl", d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_CUSTOM_DIR)->w, (int)(mUID >> 32), (int)(mUID & 0xFFFFFFFF));
+
+	FILE* customHLSL = _wfopen(replFn, L"rb+");
+	if (customHLSL)
+	{
+		fseek(customHLSL, SEEK_END, 0);
+		int fsz = ftell(customHLSL);
+		
+		if (!fsz)
+			fclose(customHLSL);
+		else
+		{
+			auto ret = d912pxy_mem_block::alloc(fsz);
+			fread(ret.ptr(), 1, fsz, customHLSL);
+			fclose(customHLSL);
+			return ret;
+		}
+	}
+
+	d912pxy_hlsl_generator_memout* genRet = GenerateHLSL(d912pxy_helper::GetFilePath(FP_SHADER_DB_HLSL_DIR)->w);
+	if (!genRet)
+		return d912pxy_mem_block::null();
+
+	auto ret = d912pxy_mem_block::from(genRet->data, genRet->size);
+	PXY_FREE(genRet);
+
+	d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(mUID, d912pxy_vfs_bid::shader_sources), ret);
+	return ret;
+}
+
 d912pxy_shader_code d912pxy_shader_replacer::GetCode()
 {	
 	d912pxy_shader_code ret = LoadFromCSO(d912pxy_helper::GetFilePath(FP_SHADER_DB_CSO_DIR)->s);

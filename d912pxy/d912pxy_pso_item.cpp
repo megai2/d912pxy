@@ -156,8 +156,14 @@ char* d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DE
 
 	if (shdSrc[0].isNullptr() || shdSrc[1].isNullptr())
 	{
-		LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for alias %S", alias);
-		return nullptr;
+		shdSrc[0] = desc->ref.VS->GetHLSLSource();
+		shdSrc[1] = desc->ref.PS->GetHLSLSource();
+
+		if (shdSrc[0].isNullptr() || shdSrc[1].isNullptr())
+		{
+			LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for alias %S", alias);
+			return nullptr;
+		}
 	}
 
 	//megai2: pass 0 - vdecl to vs input signature typecheck

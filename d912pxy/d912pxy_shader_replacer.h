@@ -48,6 +48,7 @@ public:
 
 	d912pxy_hlsl_generator_memout* GenerateHLSL(const wchar_t * bfolder);
 
+	d912pxy_mem_block GetHLSL();
 	d912pxy_shader_code GetCode();
 	d912pxy_shader_code GetCodeCS();
 

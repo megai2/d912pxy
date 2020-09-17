@@ -46,6 +46,7 @@ public:
 	D912PXY_METHOD_NC_(ULONG, ReleaseWithPairRemoval)(THIS);
 	
 	D3D12_SHADER_BYTECODE* GetCode();
+	d912pxy_mem_block GetHLSLSource();
 
 	d912pxy_shader_uid GetID();
 
