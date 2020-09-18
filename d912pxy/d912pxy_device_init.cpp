@@ -155,7 +155,6 @@ void d912pxy_device::InitClassFields()
 	d912pxy_hlsl_generator::FillHandlers();
 	d912pxy_hlsl_generator::allowPP_suffix = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ALLOW_PP_SUFFIX);
 	d912pxy_hlsl_generator::NaNguard_flag = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_NAN_GUARD_FLAG);
-	d912pxy_hlsl_generator::sRGB_alphatest_bits = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_SRGB_ALPHATEST_FLAG);
 
 	d912pxy_vstream::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
 	d912pxy_surface::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);
@@ -258,13 +257,7 @@ void d912pxy_device::InitComPatches()
 			mFakeOccQuery = NULL;
 	}
 
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
-	{
-		d912pxy_s.vfs.SetWriteMask(~(1 << (UINT)d912pxy_vfs_bid::shader_profile));
-
-		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWPRIMITIVE, &d912pxy_device::com_DrawPrimitive_PS);
-	}
-	else if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_BATCH_COMMIT))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWINDEXEDPRIMITIVE, &d912pxy_device::com_DrawIndexedPrimitive_Compat);
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_DRAWPRIMITIVE, &d912pxy_device::com_DrawPrimitive_Compat);
@@ -360,16 +353,6 @@ void d912pxy_device::PrintInfoBanner()
 		LOG_INFO_DTDM("dbg messages and errors are now redirected to log file");
 	}
 	
-	if (d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ENABLE_PROFILING))
-	{
-		LOG_INFO_DTDM("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		LOG_INFO_DTDM("   ATTENTION:Shader profiling enabled         ");
-		LOG_INFO_DTDM("   this is a special mode to fix shader bugs  ");
-		LOG_INFO_DTDM("   DO NOT REPORT ANY ERRORS                   ");
-		LOG_INFO_DTDM("   IF YOU DON'T KNOW WHAT YOU ARE DOING       ");
-		LOG_INFO_DTDM("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-	}
-
 	OSVERSIONINFOEX info;
 	ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
 	info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);

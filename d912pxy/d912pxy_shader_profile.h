@@ -33,18 +33,12 @@ public:
 	typedef union entry_data
 	{
 		UINT32 stage;
-		UINT32 enable;	
+		UINT32 enable;
 		UINT32 raw;
 	} entry_data;
 
 	enum class entry : UINT32 {
-		pcf_sampler = 0,
-		alpha_test,
-		srgb_read,
-		srgb_write,
 		clipplane0,
-		uint_normals,
-		uint_tangents,
 		reserve2,
 		reserve3,
 		count

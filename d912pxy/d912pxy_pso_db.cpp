@@ -136,6 +136,8 @@ void d912pxy_pso_db::ThreadJob()
 
 void d912pxy_pso_db::LoadCachedData()
 {
+
+
 	//todo: use proper buffer
 	d912pxy_ringbuffer<d912pxy_trimmed_pso_desc> psoDescs(65535, 2);
 	psoDescs.WriteElement(d912pxy_trimmed_pso_desc());

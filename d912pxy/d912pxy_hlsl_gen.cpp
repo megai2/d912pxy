@@ -26,20 +26,16 @@ SOFTWARE.
 
 UINT d912pxy_hlsl_generator::allowPP_suffix = 0;
 UINT32 d912pxy_hlsl_generator::NaNguard_flag = 0;
-UINT32 d912pxy_hlsl_generator::sRGB_alphatest_bits = 0;
 const wchar_t* d912pxy_hlsl_generator::commonIncludeOverride = nullptr;
 
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : 
 	d912pxy_noncom(L"hlsl generator"),
-	genProfile(d912pxy_shader_profile::load(uid)),
 	code(src)
 {
 	PSpositionUsed = 0;
 	procIdent = 0;
 	mUID = uid;
 	
-	LoadGenProfile();
-
 #ifdef _DEBUG
 	LOG_DBG_DTDM("generating hlsl file %s", ofn);
 	of = _wfopen(ofn, L"wb");
@@ -608,20 +604,6 @@ UINT d912pxy_hlsl_generator::IsNaNGuardEnabled(UINT bit)
 	return ((NaNguard_flag >> (verToken.isPS * PXY_SDB_HLSL_NAN_GUARD_PS_SHIFT)) & bit) > 0;	
 }
 
-void d912pxy_hlsl_generator::LoadGenProfile()
-{	
-	if ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBR) != 0)
-		genProfile.entryEnable(d912pxy_shader_profile::entry::srgb_read);
-
-	if ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_ALPHATEST) != 0)
-		genProfile.entryEnable(d912pxy_shader_profile::entry::alpha_test);
-
-	if ((sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_FORCE_SRGBW) != 0)
-		genProfile.entryEnable(d912pxy_shader_profile::entry::srgb_write);
-	
-	genProfile.ignoreChanges();
-}
-
 void d912pxy_hlsl_generator::ProcSIO_DOTX(d912pxy_dxbc9::token * op, UINT sz)
 {
 	d912pxy_hlsl_generator_regtext sDst = FormatRegister(1, 0, 0);
@@ -781,10 +763,9 @@ void d912pxy_hlsl_generator::DeclareSampler(d912pxy_dxbc9::token* op, d912pxy_dx
 	const char* regTypeStr = GetRegTypeStr(dstTok->reg.regType, 1);
 	UINT samplerIdx = regNum + (verToken.isPS ? 0 : HLSL_GEN_VTEXTURE_OFFSET);
 
-	///
-
-	if (genProfile.entryStageSelected(d912pxy_shader_profile::entry::pcf_sampler, samplerIdx))
-		texTypeO = 5;
+	///this is handled in RCE stage
+	//if (genProfile.entryStageSelected(d912pxy_shader_profile::entry::pcf_sampler, samplerIdx))
+	//  texTypeO = 5;
 
 	if ((texTypeO == 0) || (texTypeO > 5))
 	{
@@ -878,15 +859,8 @@ void d912pxy_hlsl_generator::ProcSIO_UNK(d912pxy_dxbc9::token* op)
 
 void d912pxy_hlsl_generator::WriteShaderHeadData()
 {
-	if (genProfile.entryEnabled(d912pxy_shader_profile::entry::srgb_read))
-		HLSL_GEN_WRITE_HEADI(0, "#define dx9_texture_srgb_read(a,b) dx9_texture_srgb_read_proc(a,b)");
-	else
-		HLSL_GEN_WRITE_HEADI(0, "#define dx9_texture_srgb_read(a,b) ");
-
-	if (sRGB_alphatest_bits & PXY_SDB_HLSL_SRGB_ALPHATEST_COND_SRGBW)
-		HLSL_GEN_WRITE_HEADI(0, "#define srgb_write_color_lin2s(color) color_lin2s_cond(color, texState.texture_s31 >> 13)");
-	else
-		HLSL_GEN_WRITE_HEADI(0, "#define srgb_write_color_lin2s(color) color_lin2s_thru(color)");
+	HLSL_GEN_WRITE_HEADI(0, "#define dx9_texture_srgb_read(a,b) dx9_texture_srgb_read_proc(a,b)");
+	HLSL_GEN_WRITE_HEADI(0, "#define srgb_write_color_lin2s(color) color_lin2s_cond(color, texState.texture_s31 >> 13)");
 
 	if (commonIncludeOverride)
 		HLSL_GEN_WRITE_HEADI(0, "#include \"%S\"", commonIncludeOverride);
@@ -918,10 +892,7 @@ void d912pxy_hlsl_generator::WriteShaderHeadData()
 		HLSL_GEN_WRITE_HEADO(0, "struct VS_OUTPUT");
 		HLSL_GEN_WRITE_HEADO(0, "{");
 
-		if (genProfile.entryEnabled(d912pxy_shader_profile::entry::clipplane0))
-		{
-			HLSL_GEN_WRITE_PROC_PD("vs_clip_plane0_def");
-		}
+		HLSL_GEN_WRITE_PROC_PD("vs_clip_plane0_def");
 
 		mainFunctionDeclStrIdx = HLSL_GEN_WRITE_PROC_PD("VS_OUTPUT main(VS_INPUT inp)");
 
@@ -963,29 +934,7 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 			HLSL_GEN_WRITE_PROC("dx9_ps_nan_cull_emulation(dx9_ret_color_reg_ac);");
 		}
 
-		if (genProfile.entryEnabled(d912pxy_shader_profile::entry::alpha_test))
-		{
-			if (genProfile.entryEnabled(d912pxy_shader_profile::entry::srgb_write))
-				HLSL_GEN_WRITE_PROC("dx9_ps_write_emulation_at_srgb(dx9_ret_color_reg_ac);");
-			else
-				HLSL_GEN_WRITE_PROC("dx9_ps_write_emulation_at(dx9_ret_color_reg_ac);");
-		}
-		else {
-			if (genProfile.entryEnabled(d912pxy_shader_profile::entry::srgb_write))
-				HLSL_GEN_WRITE_PROC("dx9_ps_write_emulation_srgb(dx9_ret_color_reg_ac);");
-			else
-				HLSL_GEN_WRITE_PROC("dx9_ps_write_emulation(dx9_ret_color_reg_ac);");
-		}
-
-		/*if (genVSClipplane0)
-		{
-			if (PSpositionUsed)
-			{
-				HLSL_GEN_WRITE_PROC("dx9_clip_plane_ps(ps_ros_reg_ac, 0);");
-			} else {
-				HLSL_GEN_WRITE_PROC("dx9_clip_plane_ps(inp.unusedPos, 0);");
-			}
-		}*/
+		HLSL_GEN_WRITE_PROC("dx9_ps_write_emulation_at_srgb(dx9_ret_color_reg_ac);");
 	}
 	else {
 		HLSL_GEN_WRITE_PROC("dx9_halfpixel_pos_reg_ac = dx9_fix_halfpixel_offset(dx9_halfpixel_pos_reg_ac);");

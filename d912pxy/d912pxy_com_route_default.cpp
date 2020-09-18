@@ -651,13 +651,6 @@ D912PXY_METHOD_IMPL(DrawPrimitive_Compat)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveTy
 	D912PXY_ROUTE_IMPL_END
 }
 
-D912PXY_METHOD_IMPL(DrawPrimitive_PS)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
-{
-	D912PXY_ROUTE_IMPL_START
-		D912PXY_ROUTE_IMPL_PREFIX DrawPrimitive_PS(PrimitiveType, StartVertex, PrimitiveCount);
-	D912PXY_ROUTE_IMPL_END
-}
-
 D912PXY_METHOD_IMPL(DrawPrimitive)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
 	D912PXY_ROUTE_IMPL_START
@@ -942,13 +935,6 @@ D912PXY_METHOD_IMPL(CreateQuery_Optimized)(PXY_THIS_ D3DQUERYTYPE Type, IDirect3
 {
 	D912PXY_ROUTE_IMPL_START
 		D912PXY_ROUTE_IMPL_PREFIX CreateQuery_Optimized(Type, ppQuery);
-	D912PXY_ROUTE_IMPL_END
-}
-
-D912PXY_METHOD_IMPL(DrawIndexedPrimitive_PS)(PXY_THIS_ D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
-{
-	D912PXY_ROUTE_IMPL_START
-		D912PXY_ROUTE_IMPL_PREFIX DrawIndexedPrimitive_PS(PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 	D912PXY_ROUTE_IMPL_END
 }
 

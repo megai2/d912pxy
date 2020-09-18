@@ -107,7 +107,6 @@ public:
 	static void FillHandlers();
 	static UINT allowPP_suffix;
 	static UINT32 NaNguard_flag;
-	static UINT32 sRGB_alphatest_bits;
 	static const wchar_t* commonIncludeOverride;
 	
 	static void overrideCommonInclude(const wchar_t* relPath);
@@ -233,10 +232,6 @@ private:
 	void WriteProcLine(const char* fmt, ...);
 	void WriteHeadILine(UINT prio, const char* fmt, ...);
 	void WriteHeadOLine(UINT prio, const char* fmt, ...);
-
-	//megai2: shader profile managing 	
-	d912pxy_shader_profile genProfile;
-	void LoadGenProfile();
 
 	//megai2: register definition and tracking
 	UINT64 regDefined[(D3DSPR_PREDICATE + 1) * HLSL_MAX_REG_FILE_LEN];
