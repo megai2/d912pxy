@@ -223,16 +223,10 @@ void d912pxy_pso_db::LoadCachedData()
 			if (!ps)			
 				ps = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_PS, 0, pairEntry->ps);
 
-			bool missingItems[3] = {
-				!cacheIndexes.containsPrepared(pairEntry->pso),
-				!vs->GetCode()->pShaderBytecode,
-				!ps->GetCode()->pShaderBytecode
-			};
-
-			if (missingItems[0] || missingItems[1] || missingItems[2])
+			if (!cacheIndexes.containsPrepared(pairEntry->pso))
 			{
-				LOG_ERR_DTDM("Can't precompile PSO with VS: %llX PS: %llX DSC KEY: %lX due to missing %S %S %S", pairEntry->vs, pairEntry->ps, pairEntry->pso.data(),
-					missingItems[0] ? "PSO desc" : "", missingItems[1] ? "VS code" : "", missingItems[2] ? "PS code" : "");
+				LOG_ERR_DTDM("Can't precompile PSO with VS: %llX PS: %llX DSC KEY: %lX due to missing PSO desc", 
+					pairEntry->vs, pairEntry->ps, pairEntry->pso.data());
 			}
 			else {
 				d912pxy_shader_pair* pair = d912pxy_s.render.db.shader.GetPair(vs, ps);
@@ -269,7 +263,7 @@ void d912pxy_pso_db::LoadCachedData()
 		psoDescs.PopElement().ref.InputLayout->Release();		
 	}
 
-	LOG_INFO_DTDM("Compiled %u out of %u PSO items", psoItemsCompiled, psoItemsTotal);
+	LOG_INFO_DTDM("Pushed %u out of %u PSO items to compilation", psoItemsCompiled, psoItemsTotal);
 }
 
 void d912pxy_pso_db::CheckCompileQueueLock()
