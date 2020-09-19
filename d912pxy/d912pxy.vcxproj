@@ -731,7 +731,6 @@
     <ClInclude Include="d912pxy_shader.h" />
     <ClInclude Include="d912pxy_shader_db.h" />
     <ClInclude Include="d912pxy_shader_pair.h" />
-    <ClInclude Include="d912pxy_shader_profile.h" />
     <ClInclude Include="d912pxy_shader_replacer.h" />
     <ClInclude Include="d912pxy_stackwalker.h" />
     <ClInclude Include="d912pxy_surface.h" />
@@ -863,7 +862,6 @@
     <ClCompile Include="d912pxy_shader.cpp" />
     <ClCompile Include="d912pxy_shader_db.cpp" />
     <ClCompile Include="d912pxy_shader_pair.cpp" />
-    <ClCompile Include="d912pxy_shader_profile.cpp" />
     <ClCompile Include="d912pxy_shader_replacer.cpp" />
     <ClCompile Include="d912pxy_stackwalker.cpp" />
     <ClCompile Include="d912pxy_surface.cpp" />
