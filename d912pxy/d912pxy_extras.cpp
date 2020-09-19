@@ -366,11 +366,10 @@ void d912pxy_extras::DrawFirstInstallMessage()
 	ImGui::Text("Ensure your GPU Driver is fully up-to-date or you may experience unexpected problems, this is very important.");
 	ImGui::Text("You must use Windowed-fullscreen mode; you may use compatible 3rd party addons and safe GPU overclocking profiles");
 	ImGui::Text("Ctrl+Alt+N toggles this overlay mode between hide/show/edit");
-
-	int buttonPressed = ImGui::Button("Okay & hide this all") ? 1 : 0;
-
-	ImGui::SameLine();
-	buttonPressed |= ImGui::Button("Let me hack around please!") ? 2 : 0;
+	ImGui::Text("----------");
+	ImGui::Text("Select what to do with this overlay windows");
+	int buttonPressed = ImGui::Button("Disable them permanently") ? 1 : 0;
+	buttonPressed |= ImGui::Button("Keep them and show config editor") ? 2 : 0;
 
 	if (buttonPressed)
 	{		
