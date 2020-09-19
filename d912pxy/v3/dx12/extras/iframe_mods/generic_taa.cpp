@@ -120,6 +120,11 @@ void GenericTAA::RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912px
 
 		currentRt->BCopyToWStates(currentFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		
+
+		{
+			StateHolder(*rpContext, StateHolder::PSO);
+		}
+
 		//TODO: make state holder for replay context & "native" dx12 draw class
 		//{
 	    //	StateHolder oldStates;

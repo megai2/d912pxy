@@ -246,24 +246,28 @@
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\release_d\</OutDir>
     <TargetName>d3d9</TargetName>
     <IntDir>$(SolutionDir)\compiler_output\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_d|Win32'">
     <TargetName>d3d9</TargetName>
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(SolutionDir)\compiler_output\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\release_d_x86\</OutDir>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_pp|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\release_pp\</OutDir>
     <TargetName>d3d9</TargetName>
     <IntDir>$(SolutionDir)\compiler_output\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_pp|Win32'">
     <TargetName>d3d9</TargetName>
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(SolutionDir)\compiler_output\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\bin\d912pxy\dll\release_pp_x86\</OutDir>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -512,7 +516,7 @@
       <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release_avx2\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)\bin\d912pxy\dll\release\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
+      <Command>copy $(SolutionDir)\bin\d912pxy\dll\release_avx2\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copy release dll</Message>
@@ -548,7 +552,7 @@
       <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release_avx2_x86\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)\bin\d912pxy\dll\release\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
+      <Command>copy $(SolutionDir)\bin\d912pxy\dll\release_avx2_x86\d3d9.dll $(SolutionDir)\bin\bin32\d3d9.dll</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>copy release dll</Message>
@@ -762,9 +766,11 @@
     <ClInclude Include="v3\base_object.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\gw2_taa.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\manager.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\native_draw.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\pass_detector.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\generic_taa.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\shader.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\state_holder.h" />
     <ClInclude Include="v3\dx12\extras\shader_pair\info.h" />
     <ClInclude Include="v3\dx12\extras\shader_pair\tracker.h" />
     <ClInclude Include="v3\util\dir_reader.h" />
@@ -904,6 +910,7 @@
     <ClCompile Include="v3\dx12\extras\iframe_mods\gw2_taa.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\pass_detector.cpp" />
+    <ClCompile Include="v3\dx12\extras\iframe_mods\state_holder.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\tracker.cpp" />
     <ClCompile Include="v3\util\dir_reader.cpp" />

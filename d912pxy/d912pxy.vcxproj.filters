@@ -333,26 +333,27 @@
       <Filter>d3d9_impl\device\iframe\replay</Filter>
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\shader_pair\tracker.cpp">
-      <Filter>d3d9_impl\device\dx12\extras\shader_pair</Filter>
+      <Filter>v3\extras\shader_pair</Filter>
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp">
-      <Filter>d3d9_impl\device\dx12\extras\shader_pair</Filter>
+      <Filter>v3\extras\shader_pair</Filter>
     </ClCompile>
     <ClCompile Include="v3\util\dir_reader.cpp">
       <Filter>v3\util</Filter>
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\iframe_mods\pass_detector.cpp">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\iframe_mods\generic_taa.cpp">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\iframe_mods\gw2_taa.cpp">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
+    <ClCompile Include="v3\dx12\extras\iframe_mods\state_holder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -679,28 +680,34 @@
       <Filter>v3\util\log</Filter>
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\shader_pair\tracker.h">
-      <Filter>d3d9_impl\device\dx12\extras\shader_pair</Filter>
+      <Filter>v3\extras\shader_pair</Filter>
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\shader_pair\info.h">
-      <Filter>d3d9_impl\device\dx12\extras\shader_pair</Filter>
+      <Filter>v3\extras\shader_pair</Filter>
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\iframe_mods\pass_detector.h">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\iframe_mods\manager.h">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClInclude>
     <ClInclude Include="v3\util\dir_reader.h">
       <Filter>v3\util</Filter>
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\iframe_mods\generic_taa.h">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\iframe_mods\gw2_taa.h">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\iframe_mods\shader.h">
-      <Filter>d3d9_impl\device\dx12\extras\iframe_mods</Filter>
+      <Filter>v3\extras\iframe_mods</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\state_holder.h">
+      <Filter>v3\extras\iframe_mods</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\native_draw.h">
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -812,11 +819,14 @@
     <Filter Include="v3\util\log">
       <UniqueIdentifier>{8452a761-88cf-42d0-b26e-dc9c8487b803}</UniqueIdentifier>
     </Filter>
-    <Filter Include="d3d9_impl\device\dx12\extras\shader_pair">
-      <UniqueIdentifier>{82184ead-e162-4c0f-88d7-eeef3db31d3c}</UniqueIdentifier>
+    <Filter Include="v3\extras">
+      <UniqueIdentifier>{3c049b2c-5732-4930-8c6a-f345112f6edb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="d3d9_impl\device\dx12\extras\iframe_mods">
+    <Filter Include="v3\extras\iframe_mods">
       <UniqueIdentifier>{ba4b577c-723c-432a-8a64-2f85ffcb1b90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="v3\extras\shader_pair">
+      <UniqueIdentifier>{82184ead-e162-4c0f-88d7-eeef3db31d3c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

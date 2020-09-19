@@ -156,6 +156,7 @@ SOFTWARE.
 #include "v3/dx12/extras/shader_pair/info.h"
 #include "v3/dx12/extras/shader_pair/tracker.h"
 #include "v3/dx12/extras/iframe_mods/manager.h"
+#include "v3/dx12/extras/iframe_mods/state_holder.h"
 #include "v3/dx12/extras/iframe_mods/pass_detector.h"
 #include "v3/dx12/extras/iframe_mods/generic_taa.h"
 #include "v3/dx12/extras/iframe_mods/gw2_taa.h"
