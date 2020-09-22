@@ -296,8 +296,9 @@ d912pxy_mem_block d912pxy_shader_replacer::GetHLSL()
 	FILE* customHLSL = _wfopen(replFn, L"rb+");
 	if (customHLSL)
 	{
-		fseek(customHLSL, SEEK_END, 0);
+		fseek(customHLSL, 0, SEEK_END);
 		int fsz = ftell(customHLSL);
+		fseek(customHLSL, 0, SEEK_SET);
 		
 		if (!fsz)
 			fclose(customHLSL);
