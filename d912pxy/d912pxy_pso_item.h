@@ -35,6 +35,9 @@ public:
 	void Compile();
 	void MarkPushedToCompile();
 
+	void DerivedCompile();
+	void PSOCompile();
+
 	ID3D12PipelineState* GetPtr();
 
 private:	
@@ -62,7 +65,12 @@ private:
 
 	d912pxy_pso_item(d912pxy_trimmed_pso_desc* inDesc);
 
+	//MT transfers
+	void MT_DerivedCompile();
+	void MT_PSOCompile();
+	
 	std::atomic<ID3D12PipelineState*> psoPtr;
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC* dx12Desc;
 	d912pxy_trimmed_pso_desc* desc;
 	d912pxy_mem_block HLSLsource[2];
 	char derivedAlias[255];

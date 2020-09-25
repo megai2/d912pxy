@@ -46,51 +46,66 @@ void d912pxy_pso_item::Compile()
 {
 	//0 full PSO desc: translate trimmed PSO desc to full dx12 PSO desc
 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC fullDesc = *desc->GetPSODesc();
+	d912pxy_mem_block::alloc(&dx12Desc);
+	*dx12Desc = *desc->GetPSODesc();
 
 	//1 RCE: generates primary HLSL from DXBC bytecode & patches things that need a change based on PSO desc (i.e. not tied to DXBC)
 
-	RealtimeIntegrityCheck(fullDesc);
+	RealtimeIntegrityCheck(*dx12Desc);
 
 	//2 DXC: compile final HLSL codes to DXBC in DXC
 
-	if (!fallbacktoNonDerived)
-	{		
-		if (!RCELinkDerivedCSO(HLSLsource, derivedAlias))
-		{
-			//triggers DXC compilation from HLSL source
-			if (!RCECompileDerivedCSO(HLSLsource, derivedName))
-			{
-				PXY_FREE(derivedName);
-				derivedName = nullptr;
-			}
-		}
-
-		HLSLsource[0].Delete();
-		HLSLsource[1].Delete();
-	}
-
-	//3 PSO: make PSO in dx12 using RCE data or fallback to raw hlsl (latter one should be "rare")
-
-	if (derivedName)
+	if (fallbacktoNonDerived)
 	{
-		CreatePSODerived(derivedName, fullDesc);
-		PXY_FREE(derivedName);
-	}
-	else {
-		LOG_ERR_DTDM("RCE failed to generate derived hlsl for %s", derivedAlias);
-		CreatePSO(fullDesc);
-	}
-
-	//4 cleanup
-
-	AfterCompileRelease();
+		CreatePSO(*dx12Desc);
+		AfterCompileRelease();
+	} else {			   
+		if (!RCELinkDerivedCSO(HLSLsource, derivedAlias))
+			MT_DerivedCompile();
+		else
+			MT_PSOCompile();
+	} 
+		
 }
 
 void d912pxy_pso_item::MarkPushedToCompile()
 {
 	AddRef();
 	desc->HoldRefs(true);
+}
+
+void d912pxy_pso_item::DerivedCompile()
+{
+	//triggers DXC compilation from HLSL source
+	if (!RCECompileDerivedCSO(HLSLsource, derivedName))
+	{
+		PXY_FREE(derivedName);
+		derivedName = nullptr;
+	}
+	
+	HLSLsource[0].Delete();
+	HLSLsource[1].Delete();
+
+	MT_PSOCompile();
+}
+
+void d912pxy_pso_item::PSOCompile()
+{
+	//3 PSO: make PSO in dx12 using RCE data or fallback to raw hlsl (latter one should be "rare")
+
+	if (derivedName)
+	{
+		CreatePSODerived(derivedName, *dx12Desc);
+		PXY_FREE(derivedName);
+	}
+	else {
+		LOG_ERR_DTDM("RCE failed to generate derived hlsl for %s", derivedAlias);
+		CreatePSO(*dx12Desc);
+	}
+
+	//4 cleanup
+
+	AfterCompileRelease();
 }
 
 void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
@@ -421,6 +436,8 @@ void d912pxy_pso_item::RCEApplyPCFSampler(char* source, UINT stage)
 
 void d912pxy_pso_item::AfterCompileRelease()
 {
+	delete dx12Desc;
+
 	desc->HoldRefs(false);
 	delete desc;
 
@@ -468,4 +485,16 @@ d912pxy_pso_item::d912pxy_pso_item(d912pxy_trimmed_pso_desc* inDesc) : d912pxy_c
 	psoPtr(nullptr)
 {
 	desc = new d912pxy_trimmed_pso_desc(*inDesc);
+}
+
+void d912pxy_pso_item::MT_DerivedCompile()
+{
+	//TODO: queue execution on DXC threads
+	DerivedCompile();
+}
+
+void d912pxy_pso_item::MT_PSOCompile()
+{
+	//TODO: queue execution on DX12 PSO creation threads
+	PSOCompile();
 }
