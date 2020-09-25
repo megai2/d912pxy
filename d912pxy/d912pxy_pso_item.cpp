@@ -62,8 +62,14 @@ void d912pxy_pso_item::Compile()
 	} else {			   
 		if (!RCELinkDerivedCSO(HLSLsource, derivedAlias))
 			MT_DerivedCompile();
-		else
+		else 
+		{
+			//cleanup hlsl code as it is not longer needed
+			HLSLsource[0].Delete();
+			HLSLsource[1].Delete();
+
 			MT_PSOCompile();
+		}
 	} 
 		
 }
