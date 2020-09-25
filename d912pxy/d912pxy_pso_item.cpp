@@ -44,14 +44,40 @@ d912pxy_pso_item::~d912pxy_pso_item()
 
 void d912pxy_pso_item::Compile()
 {
-	auto fullDesc = desc->GetPSODesc();
+	//0 full PSO desc: translate trimmed PSO desc to full dx12 PSO desc
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC fullDesc = *desc->GetPSODesc();
+
+	//1 RCE: generates primary HLSL from DXBC bytecode & patches things that need a change based on PSO desc (i.e. not tied to DXBC)
 
 	RealtimeIntegrityCheck(fullDesc);
 
-	desc->HoldRefs(false);
-	delete desc;
+	//2 DXC: compile final HLSL codes to DXBC in DXC
 
-	Release();
+	if (!derivedCSOPresent && !fallbacktoNonDerived)
+	{
+		//triggers DXC compilation from HLSL source
+		derivedName = RCELinkDerivedCSO(HLSLsource, derivedAlias);
+
+		HLSLsource[0].Delete();
+		HLSLsource[1].Delete();
+	}
+
+	//3 PSO: make PSO in dx12 using RCE data or fallback to raw hlsl (latter one should be "rare")
+
+	if (derivedName)
+	{
+		CreatePSODerived(derivedName, fullDesc);
+		PXY_FREE(derivedName);
+	}
+	else {
+		LOG_ERR_DTDM("RCE failed to generate derived hlsl for %s", derivedAlias);
+		CreatePSO(fullDesc);
+	}
+
+	//4 cleanup
+
+	AfterCompileRelease();
 }
 
 void d912pxy_pso_item::MarkPushedToCompile()
@@ -60,13 +86,13 @@ void d912pxy_pso_item::MarkPushedToCompile()
 	desc->HoldRefs(true);
 }
 
-void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
+void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 {
-	if (!fullDesc->VS.pShaderBytecode)
-		fullDesc->VS = *desc->ref.VS->GetCode();
+	if (!fullDesc.VS.pShaderBytecode)
+		fullDesc.VS = *desc->ref.VS->GetCode();
 
-	if (!fullDesc->PS.pShaderBytecode)
-		fullDesc->PS = *desc->ref.PS->GetCode();
+	if (!fullDesc.PS.pShaderBytecode)
+		fullDesc.PS = *desc->ref.PS->GetCode();
 
 	if (!ValidateFullDesc(fullDesc))
 		return;
@@ -74,7 +100,7 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", desc->ref.VS->GetID(), desc->ref.PS->GetID());
 
 	ID3D12PipelineState* obj;
-	HRESULT psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(fullDesc, IID_PPV_ARGS(&obj));
+	HRESULT psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
 
 	if (FAILED(psoHRet))
 	{
@@ -86,7 +112,7 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 		for (int i = 0; i != sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC); ++i)
 		{
 			char tmp[3];
-			sprintf(tmp, "%02X", ((UINT8*)fullDesc)[i]);
+			sprintf(tmp, "%02X", ((UINT8*)&fullDesc)[i]);
 			dumpString[i * 2] = tmp[0];
 			dumpString[i * 2 + 1] = tmp[1];
 		}
@@ -119,17 +145,17 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
 	psoPtr = obj;
 }
 
-void d912pxy_pso_item::CreatePSODerived(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
+void d912pxy_pso_item::CreatePSODerived(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 {
 	d912pxy_mem_block derCSO[2] = {
 		d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(alias, d912pxy_vfs_bid::derived_cso_vs)),
 		d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(alias, d912pxy_vfs_bid::derived_cso_ps)),
 	};
 
-	fullDesc->VS.BytecodeLength = derCSO[0].size();
-	fullDesc->PS.BytecodeLength = derCSO[1].size();
-	fullDesc->VS.pShaderBytecode = derCSO[0].ptr();
-	fullDesc->PS.pShaderBytecode = derCSO[1].ptr();
+	fullDesc.VS.BytecodeLength = derCSO[0].size();
+	fullDesc.PS.BytecodeLength = derCSO[1].size();
+	fullDesc.VS.pShaderBytecode = derCSO[0].ptr();
+	fullDesc.PS.pShaderBytecode = derCSO[1].ptr();
 
 	CreatePSO(fullDesc);
 
@@ -147,29 +173,27 @@ char* d912pxy_pso_item::GetDerivedNameByAlias(char* alias)
 		return nullptr;
 }
 
-char* d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
+bool d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 {
-	d912pxy_mem_block shdSrc[2] = {
-			d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(desc->ref.VS->GetID(), d912pxy_vfs_bid::shader_sources)),
-			d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(desc->ref.PS->GetID(), d912pxy_vfs_bid::shader_sources))
-	};
+	HLSLsource[0] = d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(desc->ref.VS->GetID(), d912pxy_vfs_bid::shader_sources));
+	HLSLsource[1] = d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(desc->ref.PS->GetID(), d912pxy_vfs_bid::shader_sources));
 
-	if (shdSrc[0].isNullptr() || shdSrc[1].isNullptr())
+	if (HLSLsource[0].isNullptr() || HLSLsource[1].isNullptr())
 	{
-		shdSrc[0] = desc->ref.VS->GetHLSLSource();
-		shdSrc[1] = desc->ref.PS->GetHLSLSource();
+		HLSLsource[0] = desc->ref.VS->GetHLSLSource();
+		HLSLsource[1] = desc->ref.PS->GetHLSLSource();
 
-		if (shdSrc[0].isNullptr() || shdSrc[1].isNullptr())
+		if (HLSLsource[0].isNullptr() || HLSLsource[1].isNullptr())
 		{
 			LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for alias %S", alias);
-			return nullptr;
+			return false;
 		}
 	}
 
 	//megai2: pass 0 - vdecl to vs input signature typecheck
 	LOG_DBG_DTDM("PSO RCE P0");
 
-	RCEUpdateVSInputByVDecl(shdSrc[0].c_arr<char>(), fullDesc);
+	RCEUpdateVSInputByVDecl(HLSLsource[0].c_arr<char>(), fullDesc);
 
 	//megai2: pass 1 - vs output to ps input signature ordering check
 	LOG_DBG_DTDM("PSO RCE P1");
@@ -180,8 +204,8 @@ char* d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DE
 	UINT vsOutCnt = 0;
 	UINT psInCnt = 0;
 
-	RCELoadIOBlock(shdSrc[0].c_arr<char>(), "VS_OUTPUT", vsOut, vsOutCnt);
-	RCELoadIOBlock(shdSrc[1].c_arr<char>(), "PS_INPUT", psIn, psInCnt);
+	RCELoadIOBlock(HLSLsource[0].c_arr<char>(), "VS_OUTPUT", vsOut, vsOutCnt);
+	RCELoadIOBlock(HLSLsource[1].c_arr<char>(), "PS_INPUT", psIn, psInCnt);
 
 	//filter ps unused regs
 	RCEFilterUnusedRegs(psIn, psInCnt);
@@ -190,21 +214,15 @@ char* d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DE
 	RCEFixIOBlocksOrdering(vsOut, psIn, vsOutCnt, psInCnt);
 
 	//write declaration back to VS
-	RCEUpdateIOBlock(shdSrc[0].c_arr<char>(), "VS_OUTPUT", vsOut, vsOutCnt);
+	RCEUpdateIOBlock(HLSLsource[0].c_arr<char>(), "VS_OUTPUT", vsOut, vsOutCnt);
 	//write declaration back to PS due to unused reg filtering
-	RCEUpdateIOBlock(shdSrc[1].c_arr<char>(), "PS_INPUT", psIn, psInCnt);
+	RCEUpdateIOBlock(HLSLsource[1].c_arr<char>(), "PS_INPUT", psIn, psInCnt);
 
 	//pass 2 - change tex2d lookup to pcf lookup if needed
 	if (desc->val.compareSamplerStage != d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS)
-		RCEApplyPCFSampler(shdSrc[1].c_arr<char>(), desc->val.compareSamplerStage);
+		RCEApplyPCFSampler(HLSLsource[1].c_arr<char>(), desc->val.compareSamplerStage);
 
-	//pass 3 - make and save derived CSO with name unique to HLSL source and make alias to refer on this name
-	char* ret = RCELinkDerivedCSO(shdSrc, alias);
-
-	shdSrc[0].Delete();
-	shdSrc[1].Delete();
-
-	return ret;
+	return true;
 }
 
 void d912pxy_pso_item::RCELoadIOBlock(char* source, const char* marker, char** out, UINT& outCnt)
@@ -229,15 +247,15 @@ void d912pxy_pso_item::RCELoadIOBlock(char* source, const char* marker, char** o
 	}
 }
 
-void d912pxy_pso_item::RCEUpdateVSInputByVDecl(char* source, D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
+void d912pxy_pso_item::RCEUpdateVSInputByVDecl(char* source, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 {
-	for (int i = 0; i != fullDesc->InputLayout.NumElements; ++i)
+	for (int i = 0; i != fullDesc.InputLayout.NumElements; ++i)
 	{
-		char* semDefPlace = strstr(source, fullDesc->InputLayout.pInputElementDescs[i].SemanticName);
+		char* semDefPlace = strstr(source, fullDesc.InputLayout.pInputElementDescs[i].SemanticName);
 
 		if (!semDefPlace)
 		{
-			LOG_DBG_DTDM("semantic %S not used in vs", fullDesc->InputLayout.pInputElementDescs[i].SemanticName);
+			LOG_DBG_DTDM("semantic %S not used in vs", fullDesc.InputLayout.pInputElementDescs[i].SemanticName);
 			continue;
 		}
 
@@ -246,7 +264,7 @@ void d912pxy_pso_item::RCEUpdateVSInputByVDecl(char* source, D3D12_GRAPHICS_PIPE
 
 		const char* newType = "/*default*/    float4";
 
-		switch (fullDesc->InputLayout.pInputElementDescs[i].Format)
+		switch (fullDesc.InputLayout.pInputElementDescs[i].Format)
 		{
 		case DXGI_FORMAT_R32_FLOAT:
 		case DXGI_FORMAT_R32G32_FLOAT:
@@ -400,9 +418,17 @@ void d912pxy_pso_item::RCEApplyPCFSampler(char* source, UINT stage)
 	}
 }
 
-bool d912pxy_pso_item::ValidateFullDesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
+void d912pxy_pso_item::AfterCompileRelease()
 {
-	if (!fullDesc->VS.pShaderBytecode || !fullDesc->PS.pShaderBytecode)
+	desc->HoldRefs(false);
+	delete desc;
+
+	Release();
+}
+
+bool d912pxy_pso_item::ValidateFullDesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
+{
+	if (!fullDesc.VS.pShaderBytecode || !fullDesc.PS.pShaderBytecode)
 	{
 		LOG_ERR_DTDM("Can't compile pso with shader pair VS %016llX PS %016llX", desc->ref.VS->GetID(), desc->ref.PS->GetID());
 		return false;
@@ -416,35 +442,26 @@ ID3D12PipelineState* d912pxy_pso_item::GetPtr()
 	return psoPtr;
 }
 
-void d912pxy_pso_item::RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc)
+void d912pxy_pso_item::RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 {
 	d912pxy_shader_pair_hash_type pairUID = desc->GetShaderPairUID();
-	d912pxy_trimmed_pso_desc::StorageKey psoKey(desc->GetValuePart());
-	char derivedAlias[255];
+	d912pxy_trimmed_pso_desc::StorageKey psoKey(desc->GetValuePart());	
 	sprintf(derivedAlias, "%016llX_%08lX", pairUID, psoKey.val.value);
-
 	LOG_DBG_DTDM("DX9 PSO realtime check emulation for alias %s", derivedAlias);
 
-	char* derivedName = GetDerivedNameByAlias(derivedAlias);
+	derivedName = GetDerivedNameByAlias(derivedAlias);
 
 	//megai2: both derived cso files are present, just load them to pso and compile on dx12 side
-	bool haveDerivedCSO = derivedName && RCEIsDerivedPresent(derivedName);	
-	if (!haveDerivedCSO)
+	derivedCSOPresent = derivedName && RCEIsDerivedPresent(derivedName);	
+	if (!derivedCSOPresent)
 	{
 		if (derivedName)
+		{
 			PXY_FREE(derivedName);
+			derivedName = nullptr;
+		}
 
-		derivedName = PerformRCE(derivedAlias, fullDesc);
-	}
-
-	if (derivedName)
-	{
-		CreatePSODerived(derivedName, fullDesc);
-		PXY_FREE(derivedName);
-	}	
-	else {
-		LOG_ERR_DTDM("RCE failed to generate derived hlsl for %s", derivedAlias);
-		CreatePSO(fullDesc);
+		fallbacktoNonDerived = !PerformRCE(derivedAlias, fullDesc);
 	}
 }
 

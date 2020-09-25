@@ -27,6 +27,7 @@ SOFTWARE.
 
 class d912pxy_mem_block {
 public:	
+	d912pxy_mem_block() : iPtr(nullptr), iSz(0) {};
 	~d912pxy_mem_block();
 
 	void Delete();

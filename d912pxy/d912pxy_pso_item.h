@@ -38,15 +38,15 @@ public:
 	ID3D12PipelineState* GetPtr();
 
 private:
-	void RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc);
-	void CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc);
-	void CreatePSODerived(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc);
+	void RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
+	void CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
+	void CreatePSODerived(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
 
 	char* GetDerivedNameByAlias(char* alias);
-	char* PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc);
+	bool PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
 
 	void RCELoadIOBlock(char* source, const char* marker, char** out, UINT& outCnt);
-	void RCEUpdateVSInputByVDecl(char* source, D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc);
+	void RCEUpdateVSInputByVDecl(char* source, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
 	void RCEUpdateIOBlock(char* source, const char* marker, char** data, UINT elements);
 	void RCEFilterUnusedRegs(char** ioBlock, UINT elements);
 	void RCEFixIOBlocksOrdering(char** vsOut, char** psIn, UINT vsOutCnt, UINT psInCnt);
@@ -55,10 +55,18 @@ private:
 	bool RCEIsDerivedPresent(char* derivedName);
 	void RCEApplyPCFSampler(char* source, UINT stage);
 
-	bool ValidateFullDesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC* fullDesc);
+	void AfterCompileRelease();
+
+	bool ValidateFullDesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
 
 	d912pxy_pso_item(d912pxy_trimmed_pso_desc* inDesc);
 
 	std::atomic<ID3D12PipelineState*> psoPtr;
 	d912pxy_trimmed_pso_desc* desc;
+	d912pxy_mem_block HLSLsource[2];
+	char derivedAlias[255];
+	char* derivedName = nullptr;
+
+	bool derivedCSOPresent = false;
+	bool fallbacktoNonDerived = true;
 };
