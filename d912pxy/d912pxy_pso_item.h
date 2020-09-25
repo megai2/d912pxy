@@ -50,7 +50,7 @@ private:
 	void RCEUpdateIOBlock(char* source, const char* marker, char** data, UINT elements);
 	void RCEFilterUnusedRegs(char** ioBlock, UINT elements);
 	void RCEFixIOBlocksOrdering(char** vsOut, char** psIn, UINT vsOutCnt, UINT psInCnt);
-	char* RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias);
+	bool RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias);
 	bool RCECompileDerivedCSO(d912pxy_mem_block* src, char* derivedName);
 	bool RCEIsDerivedPresent(char* derivedName);
 	void RCEApplyPCFSampler(char* source, UINT stage);

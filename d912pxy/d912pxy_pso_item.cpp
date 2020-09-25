@@ -55,9 +55,16 @@ void d912pxy_pso_item::Compile()
 	//2 DXC: compile final HLSL codes to DXBC in DXC
 
 	if (!fallbacktoNonDerived)
-	{
-		//triggers DXC compilation from HLSL source
-		derivedName = RCELinkDerivedCSO(HLSLsource, derivedAlias);
+	{		
+		if (!RCELinkDerivedCSO(HLSLsource, derivedAlias))
+		{
+			//triggers DXC compilation from HLSL source
+			if (!RCECompileDerivedCSO(HLSLsource, derivedName))
+			{
+				PXY_FREE(derivedName);
+				derivedName = nullptr;
+			}
+		}
 
 		HLSLsource[0].Delete();
 		HLSLsource[1].Delete();
@@ -353,27 +360,21 @@ void d912pxy_pso_item::RCEFixIOBlocksOrdering(char** vsOut, char** psIn, UINT vs
 	}
 }
 
-char* d912pxy_pso_item::RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias)
+bool d912pxy_pso_item::RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias)
 {
+	//megai2: link alias with derived CSO
 	UINT64 derivedUID[2] = {
 		d912pxy::Hash64(d912pxy::MemoryArea(src[0].ptr(), src[0].size())).value,
 		d912pxy::Hash64(d912pxy::MemoryArea(src[1].ptr(), src[1].size())).value
 	};
 
-	char derivedName[255];
-	sprintf(derivedName, "%016llX_%016llX", derivedUID[0], derivedUID[1]);
-
-	if (!RCEIsDerivedPresent(derivedName))
-	{
-		if (!RCECompileDerivedCSO(src, derivedName))
-			return nullptr;
-	}
-
-	d912pxy_mem_block ret = d912pxy_mem_block::from(derivedName, strlen(derivedName) + 1);
-
+	char buf[255];
+	sprintf(buf, "%016llX_%016llX", derivedUID[0], derivedUID[1]);
+	d912pxy_mem_block ret = d912pxy_mem_block::from(buf, strlen(buf) + 1);
+	derivedName = ret.c_arr<char>();
 	d912pxy_s.vfs.WriteFile(d912pxy_vfs_path(alias, d912pxy_vfs_bid::derived_cso_refs), ret);
 
-	return ret.c_arr<char>();
+	return RCEIsDerivedPresent(derivedName);
 }
 
 bool d912pxy_pso_item::RCECompileDerivedCSO(d912pxy_mem_block* src, char* derivedName)
