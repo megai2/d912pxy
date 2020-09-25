@@ -37,22 +37,23 @@ public:
 
 	ID3D12PipelineState* GetPtr();
 
-private:
-	void RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
+private:	
 	void CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
 	void CreatePSODerived(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
+	void RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
 
-	char* GetDerivedNameByAlias(char* alias);
+	char* GetDerivedNameByAlias(char* alias);	
+	bool RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias);
+	bool RCECompileDerivedCSO(d912pxy_mem_block* src, char* derivedName);
+	bool RCEIsDerivedPresent(char* derivedName);
+
+	//RCE part that work with HLSL code
 	bool PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
-
 	void RCELoadIOBlock(char* source, const char* marker, char** out, UINT& outCnt);
 	void RCEUpdateVSInputByVDecl(char* source, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
 	void RCEUpdateIOBlock(char* source, const char* marker, char** data, UINT elements);
 	void RCEFilterUnusedRegs(char** ioBlock, UINT elements);
 	void RCEFixIOBlocksOrdering(char** vsOut, char** psIn, UINT vsOutCnt, UINT psInCnt);
-	bool RCELinkDerivedCSO(d912pxy_mem_block* src, char* alias);
-	bool RCECompileDerivedCSO(d912pxy_mem_block* src, char* derivedName);
-	bool RCEIsDerivedPresent(char* derivedName);
 	void RCEApplyPCFSampler(char* source, UINT stage);
 
 	void AfterCompileRelease();
