@@ -54,7 +54,7 @@ void d912pxy_pso_item::Compile()
 
 	//2 DXC: compile final HLSL codes to DXBC in DXC
 
-	if (!derivedCSOPresent && !fallbacktoNonDerived)
+	if (!fallbacktoNonDerived)
 	{
 		//triggers DXC compilation from HLSL source
 		derivedName = RCELinkDerivedCSO(HLSLsource, derivedAlias);
@@ -450,19 +450,17 @@ void d912pxy_pso_item::RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC
 	LOG_DBG_DTDM("DX9 PSO realtime check emulation for alias %s", derivedAlias);
 
 	derivedName = GetDerivedNameByAlias(derivedAlias);
+	
+	if (derivedName && RCEIsDerivedPresent(derivedName))		
+		return;//megai2: both derived cso files are present, just load them to pso and compile on dx12 side
 
-	//megai2: both derived cso files are present, just load them to pso and compile on dx12 side
-	derivedCSOPresent = derivedName && RCEIsDerivedPresent(derivedName);	
-	if (!derivedCSOPresent)
+	if (derivedName)
 	{
-		if (derivedName)
-		{
-			PXY_FREE(derivedName);
-			derivedName = nullptr;
-		}
-
-		fallbacktoNonDerived = !PerformRCE(derivedAlias, fullDesc);
+		PXY_FREE(derivedName);
+		derivedName = nullptr;
 	}
+
+	fallbacktoNonDerived = !PerformRCE(derivedAlias, fullDesc);
 }
 
 d912pxy_pso_item::d912pxy_pso_item(d912pxy_trimmed_pso_desc* inDesc) : d912pxy_comhandler(PXY_COM_OBJ_PSO_ITEM, L"PSO item"),
