@@ -60,15 +60,20 @@ void d912pxy_pso_item::Compile()
 		CreatePSO(*dx12Desc);
 		AfterCompileRelease();
 	} else {			   
-		if (!RCELinkDerivedCSO(HLSLsource, derivedAlias))
-			MT_DerivedCompile();
-		else 
+		if (derivedName)	
+			MT_PSOCompile();		
+		else
 		{
-			//cleanup hlsl code as it is not longer needed
-			HLSLsource[0].Delete();
-			HLSLsource[1].Delete();
+			if (!RCELinkDerivedCSO(HLSLsource, derivedAlias))
+				MT_DerivedCompile();
+			else
+			{
+				//cleanup hlsl code as it is not longer needed
+				HLSLsource[0].Delete();
+				HLSLsource[1].Delete();
 
-			MT_PSOCompile();
+				MT_PSOCompile();
+			}
 		}
 	} 
 		
@@ -132,7 +137,7 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 
 	if (FAILED(psoHRet))
 	{
-		LOG_ERR_DTDM("CreateGraphicsPipelineState error %llX for VS %016llX PS %016llX", psoHRet, desc->ref.VS->GetID(), desc->ref.PS->GetID());
+		LOG_ERR_DTDM("CreateGraphicsPipelineState error %lX for VS %016llX PS %016llX", psoHRet, desc->ref.VS->GetID(), desc->ref.PS->GetID());
 
 		char dumpString[sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC) * 2 + 1];
 		dumpString[0] = 0;

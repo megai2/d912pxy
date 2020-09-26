@@ -76,5 +76,5 @@ private:
 	char derivedAlias[255];
 	char* derivedName = nullptr;
 
-	bool fallbacktoNonDerived = true;
+	bool fallbacktoNonDerived = false;
 };
