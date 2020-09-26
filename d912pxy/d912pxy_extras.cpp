@@ -410,7 +410,10 @@ void d912pxy_extras::DrawMainWindow()
 		ImGui::Text("%6u GC", d912pxy_s.thread.cleanup.TotalWatchedItems());
 
 	if (bShowPSOCompileQue)
+	{
 		ImGui::Text("%6u PSO", d912pxy_s.render.db.pso.GetCompileQueueLength());
+		ImGui::Text("%s", d912pxy_s.render.db.psoMTCompiler.getQueueInfoStr());
+	}
 
 	if (bShowFpsGraph)
 	{

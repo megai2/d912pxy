@@ -65,6 +65,7 @@ typedef struct d912pxy_instance {
 		struct db {
 			d912pxy_pso_db pso;
 			d912pxy_shader_db shader;
+			d912pxy_pso_mt_dispatcher psoMTCompiler;
 		} db;
 	} render;
 

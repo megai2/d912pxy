@@ -211,16 +211,16 @@ bool d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DES
 	HLSLsource[0] = d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(desc->ref.VS->GetID(), d912pxy_vfs_bid::shader_sources));
 	HLSLsource[1] = d912pxy_s.vfs.ReadFile(d912pxy_vfs_path(desc->ref.PS->GetID(), d912pxy_vfs_bid::shader_sources));
 
+	if (HLSLsource[0].isNullptr())
+		HLSLsource[0] = desc->ref.VS->GetHLSLSource();
+
+	if (HLSLsource[1].isNullptr())
+		HLSLsource[1] = desc->ref.PS->GetHLSLSource();
+		
 	if (HLSLsource[0].isNullptr() || HLSLsource[1].isNullptr())
 	{
-		HLSLsource[0] = desc->ref.VS->GetHLSLSource();
-		HLSLsource[1] = desc->ref.PS->GetHLSLSource();
-
-		if (HLSLsource[0].isNullptr() || HLSLsource[1].isNullptr())
-		{
-			LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for alias %S (VS %016llX PS %016llX)", alias, desc->ref.VS->GetID(), desc->ref.PS->GetID());
-			return false;
-		}
+		LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for alias %S (VS %016llX PS %016llX)", alias, desc->ref.VS->GetID(), desc->ref.PS->GetID());
+		return false;
 	}
 
 	//megai2: pass 0 - vdecl to vs input signature typecheck
@@ -500,12 +500,10 @@ d912pxy_pso_item::d912pxy_pso_item(d912pxy_trimmed_pso_desc* inDesc) : d912pxy_c
 
 void d912pxy_pso_item::MT_DerivedCompile()
 {
-	//TODO: queue execution on DXC threads
-	DerivedCompile();
+	d912pxy_s.render.db.psoMTCompiler.queueCompileDXC(this);
 }
 
 void d912pxy_pso_item::MT_PSOCompile()
 {
-	//TODO: queue execution on DX12 PSO creation threads
-	PSOCompile();
+	d912pxy_s.render.db.psoMTCompiler.queueCompilePSO(this);
 }

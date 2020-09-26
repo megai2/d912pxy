@@ -34,6 +34,8 @@ d912pxy_pso_db::~d912pxy_pso_db()
 
 void d912pxy_pso_db::Init()
 {
+	d912pxy_s.render.db.psoMTCompiler.Init();
+
 	NonCom_Init(L"pso db");
 	InitThread("d912pxy pso compile", 0);
 
@@ -56,6 +58,8 @@ void d912pxy_pso_db::UnInit()
 {
 	Stop();
 	delete psoCompileQue;
+
+	d912pxy_s.render.db.psoMTCompiler.UnInit();
 
 	d912pxy_noncom::UnInit();
 }

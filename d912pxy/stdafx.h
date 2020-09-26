@@ -31,6 +31,7 @@ SOFTWARE.
 #include "build_version.h"
 
 #include <atomic>
+#include <vector>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -138,6 +139,7 @@ SOFTWARE.
 #include "d912pxy_gpu_cmd_list.h"
 #include "d912pxy_gpu_que.h"
 #include "d912pxy_texture_state.h"
+#include "d912pxy_pso_mt_dispatcher.h"
 #include "d912pxy_pso_db.h"
 #include "d912pxy_dx9_pipeline_state.h"
 #include "d912pxy_folded_buffer.h"

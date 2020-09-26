@@ -719,6 +719,7 @@
     <ClInclude Include="d912pxy_pool_memcat.h" />
     <ClInclude Include="d912pxy_pso_db.h" />
     <ClInclude Include="d912pxy_pso_item.h" />
+    <ClInclude Include="d912pxy_pso_mt_dispatcher.h" />
     <ClInclude Include="d912pxy_query.h" />
     <ClInclude Include="d912pxy_query_occlusion.h" />
     <ClInclude Include="d912pxy_replay.h" />
@@ -847,6 +848,7 @@
     <ClCompile Include="d912pxy_pool_memcat.cpp" />
     <ClCompile Include="d912pxy_pso_db.cpp" />
     <ClCompile Include="d912pxy_pso_item.cpp" />
+    <ClCompile Include="d912pxy_pso_mt_dispatcher.cpp" />
     <ClCompile Include="d912pxy_query.cpp" />
     <ClCompile Include="d912pxy_query_occlusion.cpp" />
     <ClCompile Include="d912pxy_replay.cpp" />

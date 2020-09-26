@@ -351,6 +351,9 @@
       <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
     <ClCompile Include="v3\dx12\extras\iframe_mods\state_holder.cpp" />
+    <ClCompile Include="d912pxy_pso_mt_dispatcher.cpp">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -702,6 +705,9 @@
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\iframe_mods\native_draw.h">
       <Filter>v3\extras\iframe_mods</Filter>
+    </ClInclude>
+    <ClInclude Include="d912pxy_pso_mt_dispatcher.h">
+      <Filter>d3d9_impl\device\iframe\pso</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

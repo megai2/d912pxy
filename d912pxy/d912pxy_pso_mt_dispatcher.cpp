@@ -1,0 +1,155 @@
+/*
+MIT License
+
+Copyright(c) 2020 megai2
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+#include "stdafx.h"
+
+void d912pxy_pso_mt_dispatcher::Init()
+{
+	NonCom_Init(L"pso mt dispatcher");
+
+	dxcThreads.clear();
+	psoThreads.clear();
+
+	uint32_t threads = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_DXC_THREADS);
+	for (uint32_t i = 0; i < threads; ++i)
+		dxcThreads.push_back(new DXCThread());
+		
+	threads = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_PSO_THREADS);
+	for (uint32_t i = 0; i < threads; ++i)
+		psoThreads.push_back(new PSOThread());
+}
+
+void d912pxy_pso_mt_dispatcher::UnInit()
+{
+	for (DXCThread* i : dxcThreads)
+		delete i;
+	dxcThreads.clear();
+
+	for (PSOThread* i : psoThreads)
+		delete i;
+	psoThreads.clear();
+
+	d912pxy_noncom::UnInit();
+}
+
+void d912pxy_pso_mt_dispatcher::queueCompilePSO(d912pxy_pso_item* item)
+{
+	if (!psoThreads.size())
+	{
+		item->PSOCompile();
+		return;
+	}
+
+	psoThreads[rrIdxPSO]->enqueue(item);
+	rrIdxPSO = (rrIdxPSO + 1) % psoThreads.size();
+}
+
+char* d912pxy_pso_mt_dispatcher::getQueueInfoStr()
+{
+	infoStr[0] = 0;
+
+	char buf[128];
+
+	strcat_s(infoStr, "DXC: ");
+
+	if (!dxcThreads.size())
+		strcat_s(infoStr, "n/a ");
+
+	for (DXCThread* i : dxcThreads)
+	{
+		sprintf_s(buf, "%zu ", i->queueLength());
+		strcat_s(infoStr, buf);
+	}
+
+	strcat_s(infoStr, "DX12: ");
+
+	if (!psoThreads.size())
+		strcat_s(infoStr, "n/a");
+
+	for (PSOThread* i : psoThreads)
+	{
+		sprintf_s(buf, "%zu ", i->queueLength());
+		strcat_s(infoStr, buf);
+	}
+	
+	return infoStr;
+}
+
+void d912pxy_pso_mt_dispatcher::queueCompileDXC(d912pxy_pso_item* item)
+{
+	if (!dxcThreads.size())
+	{
+		item->DerivedCompile();
+		return;
+	}
+
+	dxcThreads[rrIdxDXC]->enqueue(item);
+	rrIdxDXC = (rrIdxDXC + 1) % dxcThreads.size();
+}
+
+d912pxy_pso_mt_dispatcher::CompilerThread::CompilerThread(const char* thrdName) : queue(256, 2)
+{
+	InitThread(thrdName, 0);
+}
+
+void d912pxy_pso_mt_dispatcher::CompilerThread::UnInit()
+{
+	Stop();
+}
+
+void d912pxy_pso_mt_dispatcher::CompilerThread::ThreadJob()
+{
+	while (queue.HaveElements())
+	{
+		d912pxy_pso_item* item = queue.PopElementMTG();
+
+		CompileItem(item);
+	}
+}
+
+void d912pxy_pso_mt_dispatcher::CompilerThread::enqueue(d912pxy_pso_item* item)
+{	
+	queue.WriteElementMT(item);
+	IssueWork();
+}
+
+d912pxy_pso_mt_dispatcher::DXCThread::DXCThread() 
+	: CompilerThread("DXC compiler thread")
+{}
+
+void d912pxy_pso_mt_dispatcher::DXCThread::CompileItem(d912pxy_pso_item* item)
+{
+	//TODO:
+	//communicate with other threads to avoid compiling same HLSL multiple times
+	item->DerivedCompile();
+}
+
+d912pxy_pso_mt_dispatcher::PSOThread::PSOThread()
+	: CompilerThread("PSO compiler thread")
+{}
+
+void d912pxy_pso_mt_dispatcher::PSOThread::CompileItem(d912pxy_pso_item* item)
+{
+	item->PSOCompile();
+}
