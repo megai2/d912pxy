@@ -268,12 +268,17 @@ d912pxy_hlsl_generator_memout* d912pxy_shader_replacer::GenerateHLSL(const wchar
 	}
 	catch (...)
 	{		
+		ret = 0;
+	}
+
+	if (!ret)
+	{
 		wsprintf(replFn, L"%s/%08lX%08lX.dxbc", bfolder, (UINT32)(mUID >> 32), (UINT32)(mUID & 0xFFFFFFFF));
 		LOG_ERR_DTDM("hlsl generator failed, dumping original bytecode to %s", replFn);
 
 		FILE* dumpFile = _wfopen(replFn, L"wb+");
 		if (dumpFile)
-		{			
+		{
 			fwrite(oCode, 4, oLen, dumpFile);
 			fclose(dumpFile);
 		}

@@ -213,7 +213,7 @@ bool d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DES
 
 		if (HLSLsource[0].isNullptr() || HLSLsource[1].isNullptr())
 		{
-			LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for alias %S", alias);
+			LOG_ERR_DTDM("No HLSL source available to perfrom PSO RCE for alias %S (VS %016llX PS %016llX)", alias, desc->ref.VS->GetID(), desc->ref.PS->GetID());
 			return false;
 		}
 	}
