@@ -110,7 +110,7 @@ void d912pxy_pso_item::PSOCompile()
 		PXY_FREE(derivedName);
 	}
 	else {
-		LOG_ERR_DTDM("RCE failed to generate derived hlsl for %s", derivedAlias);
+		LOG_ERR_DTDM("RCE failed to generate derived hlsl for %S", derivedAlias);
 		CreatePSO(*dx12Desc);
 	}
 
@@ -413,7 +413,7 @@ bool d912pxy_pso_item::RCECompileDerivedCSO(d912pxy_mem_block* src, char* derive
 
 	if ((!bcVS.blob) || (!bcPS.blob))
 	{
-		LOG_ERR_DTDM("RCE derived code %s failed to compile", derivedName);
+		LOG_ERR_DTDM("RCE derived code %S failed to compile", derivedName);
 		return false;
 	}
 	else {
