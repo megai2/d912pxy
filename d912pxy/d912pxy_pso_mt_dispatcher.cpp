@@ -58,11 +58,7 @@ d912pxy_pso_mt_dispatcher::DXCThread* d912pxy_pso_mt_dispatcher::isAlreadyCompil
 {
 	for (DXCThread* i : dxcThreads)
 	{
-		d912pxy_pso_item* eItem = i->getCurrentItem();
-		if (!eItem)
-			continue;
-
-		if (strcmp(item->GetDerivedName(), eItem->GetDerivedName()) == 0)
+		if (strcmp(item->GetDerivedName(), i->getCurrentDerived()) == 0)
 			return i;
 	}
 
@@ -170,14 +166,14 @@ void d912pxy_pso_mt_dispatcher::DXCThread::CompileItem(d912pxy_pso_item* item)
 		if (item->RetryDerivedPresence())
 			return;
 
-		currentItem = item;
+		strcpy_s(currentDerived, item->GetDerivedName());
 	}
 
 	item->DerivedCompile();
 
 	{
 		d912pxy::mt::sync::ScopedLock lock(submissionLock);
-		currentItem = nullptr;
+		currentDerived[0] = 0;
 	}
 }
 

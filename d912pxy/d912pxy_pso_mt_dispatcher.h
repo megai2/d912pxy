@@ -48,12 +48,13 @@ class d912pxy_pso_mt_dispatcher : public d912pxy_noncom
 	class DXCThread : public CompilerThread
 	{
 		d912pxy::mt::sync::Lock& submissionLock;
-		d912pxy_pso_item* currentItem;
+		
+		char currentDerived[64];
 	public:
 		DXCThread(d912pxy::mt::sync::Lock& submission_lock);
 		void CompileItem(d912pxy_pso_item* item);
 
-		d912pxy_pso_item* getCurrentItem() { return currentItem; }
+		char* getCurrentDerived() { return currentDerived; }
 	};
 
 	class PSOThread : public CompilerThread
