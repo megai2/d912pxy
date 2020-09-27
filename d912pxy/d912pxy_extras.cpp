@@ -411,7 +411,7 @@ void d912pxy_extras::DrawMainWindow()
 
 	if (bShowPSOCompileQue)
 	{
-		ImGui::Text("%6u PSO", d912pxy_s.render.db.pso.GetCompileQueueLength());
+		ImGui::Text("%6u PSO", d912pxy_pso_item::GetTotalPendingItems());
 		ImGui::Text("%s", d912pxy_s.render.db.psoMTCompiler.getQueueInfoStr());
 	}
 
