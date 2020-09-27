@@ -47,10 +47,13 @@ class d912pxy_pso_mt_dispatcher : public d912pxy_noncom
 
 	class DXCThread : public CompilerThread
 	{
+		d912pxy::mt::sync::Lock& submissionLock;
+		d912pxy_pso_item* currentItem;
 	public:
-		DXCThread();
-
+		DXCThread(d912pxy::mt::sync::Lock& submission_lock);
 		void CompileItem(d912pxy_pso_item* item);
+
+		d912pxy_pso_item* getCurrentItem() { return currentItem; }
 	};
 
 	class PSOThread : public CompilerThread
@@ -63,12 +66,13 @@ class d912pxy_pso_mt_dispatcher : public d912pxy_noncom
 
 	std::vector<DXCThread*> dxcThreads;
 	std::vector<PSOThread*> psoThreads;
-	uint32_t rrIdxDXC=0;
+	uint32_t rrIdxDXC = 0;
 	uint32_t rrIdxPSO = 0;
 
 	static constexpr int infoStrLen = 4096;
 	char infoStr[infoStrLen];
 
+	d912pxy::mt::sync::Lock dxcSubmissionLock;
 public:
 	d912pxy_pso_mt_dispatcher() {}
 	~d912pxy_pso_mt_dispatcher() {}
@@ -76,8 +80,12 @@ public:
 	void Init();
 	void UnInit();
 
+	DXCThread* isAlreadyCompilingDerived(d912pxy_pso_item* item);
+
 	void queueCompileDXC(d912pxy_pso_item* item);
 	void queueCompilePSO(d912pxy_pso_item* item);
+
+	size_t getTotalQueueLength();
 
 	char* getQueueInfoStr();
 };

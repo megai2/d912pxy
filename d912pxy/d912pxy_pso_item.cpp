@@ -85,6 +85,20 @@ void d912pxy_pso_item::MarkPushedToCompile()
 	desc->HoldRefs(true);
 }
 
+bool d912pxy_pso_item::RetryDerivedPresence()
+{
+	if (!RCEIsDerivedPresent(derivedName))
+		return false;
+	
+	//cleanup hlsl code as it is not longer needed
+	HLSLsource[0].Delete();
+	HLSLsource[1].Delete();
+
+	MT_PSOCompile();
+	
+	return true;
+}
+
 void d912pxy_pso_item::DerivedCompile()
 {
 	//triggers DXC compilation from HLSL source

@@ -35,8 +35,11 @@ public:
 	void Compile();
 	void MarkPushedToCompile();
 
+	bool RetryDerivedPresence();
 	void DerivedCompile();
 	void PSOCompile();
+
+	char* GetDerivedName() { return derivedName; }
 
 	ID3D12PipelineState* GetPtr();
 

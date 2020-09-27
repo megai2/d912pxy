@@ -23,6 +23,7 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "d912pxy_pso_mt_dispatcher.h"
 
 void d912pxy_pso_mt_dispatcher::Init()
 {
@@ -33,7 +34,7 @@ void d912pxy_pso_mt_dispatcher::Init()
 
 	uint32_t threads = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_DXC_THREADS);
 	for (uint32_t i = 0; i < threads; ++i)
-		dxcThreads.push_back(new DXCThread());
+		dxcThreads.push_back(new DXCThread(dxcSubmissionLock));
 		
 	threads = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_PSO_THREADS);
 	for (uint32_t i = 0; i < threads; ++i)
@@ -53,6 +54,21 @@ void d912pxy_pso_mt_dispatcher::UnInit()
 	d912pxy_noncom::UnInit();
 }
 
+d912pxy_pso_mt_dispatcher::DXCThread* d912pxy_pso_mt_dispatcher::isAlreadyCompilingDerived(d912pxy_pso_item* item)
+{
+	for (DXCThread* i : dxcThreads)
+	{
+		d912pxy_pso_item* eItem = i->getCurrentItem();
+		if (!eItem)
+			continue;
+
+		if (strcmp(item->GetDerivedName(), eItem->GetDerivedName()) == 0)
+			return i;
+	}
+
+	return nullptr;
+}
+
 void d912pxy_pso_mt_dispatcher::queueCompilePSO(d912pxy_pso_item* item)
 {
 	if (!psoThreads.size())
@@ -63,6 +79,19 @@ void d912pxy_pso_mt_dispatcher::queueCompilePSO(d912pxy_pso_item* item)
 
 	psoThreads[rrIdxPSO]->enqueue(item);
 	rrIdxPSO = (rrIdxPSO + 1) % psoThreads.size();
+}
+
+size_t d912pxy_pso_mt_dispatcher::getTotalQueueLength()
+{
+	size_t ret = 0;
+
+	for (DXCThread* i : dxcThreads)
+		ret += i->queueLength();
+
+	for (PSOThread* i : psoThreads)
+		ret += i->queueLength();
+
+	return ret;
 }
 
 char* d912pxy_pso_mt_dispatcher::getQueueInfoStr()
@@ -134,15 +163,35 @@ void d912pxy_pso_mt_dispatcher::CompilerThread::enqueue(d912pxy_pso_item* item)
 	IssueWork();
 }
 
-d912pxy_pso_mt_dispatcher::DXCThread::DXCThread() 
+d912pxy_pso_mt_dispatcher::DXCThread::DXCThread(d912pxy::mt::sync::Lock& submission_lock)
 	: CompilerThread("DXC compiler thread")
+	, submissionLock(submission_lock)
 {}
 
 void d912pxy_pso_mt_dispatcher::DXCThread::CompileItem(d912pxy_pso_item* item)
 {
-	//TODO:
-	//communicate with other threads to avoid compiling same HLSL multiple times
+	{
+		d912pxy::mt::sync::ScopedLock lock(submissionLock);
+		DXCThread* anotherThread = d912pxy_s.render.db.psoMTCompiler.isAlreadyCompilingDerived(item);
+		if (anotherThread)
+		{
+			anotherThread->enqueue(item);
+			return;
+		}
+
+		//if DXC is not working on this item, we still have a chance that it was already finished
+		if (item->RetryDerivedPresence())
+			return;
+
+		currentItem = item;
+	}
+
 	item->DerivedCompile();
+
+	{
+		d912pxy::mt::sync::ScopedLock lock(submissionLock);
+		currentItem = nullptr;
+	}
 }
 
 d912pxy_pso_mt_dispatcher::PSOThread::PSOThread()
