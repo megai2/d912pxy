@@ -336,6 +336,8 @@ public:
 	
 	d912pxy_swapchain* GetPrimarySwapChain();
 
+	uint32_t getCPUCoreCount() { return cpuCoreCount; }
+
 	//megai2: variants of API calls
 
 	HRESULT DrawPrimitive_Compat(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount);
@@ -410,6 +412,7 @@ private:
 	void* initPtr;
 
 	char GPUNameA[128];
+	uint32_t cpuCoreCount=1;
 
 	//dx9 api hacks
 	UINT32 gpuWriteDsc;

@@ -33,10 +33,16 @@ void d912pxy_pso_mt_dispatcher::Init()
 	psoThreads.clear();
 
 	uint32_t threads = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_DXC_THREADS);
+	if (threads == -1)
+		threads = max(1, ((int32_t)d912pxy_s.dev.getCPUCoreCount() - 2)/2);//DXC threads are CPU heavy
+
 	for (uint32_t i = 0; i < threads; ++i)
 		dxcThreads.push_back(new DXCThread(dxcSubmissionLock));
 		
 	threads = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_PSO_THREADS);
+	if (threads == -1)
+		threads = max(1, (int32_t)d912pxy_s.dev.getCPUCoreCount() - 2);
+
 	for (uint32_t i = 0; i < threads; ++i)
 		psoThreads.push_back(new PSOThread());
 }

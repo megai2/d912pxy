@@ -170,8 +170,8 @@ private:
 		{L"replay", L"items_per_batch", L"100"},//PXY_CFG_REPLAY_ITEMS_PER_BATCH
 		{L"mt", L"vstream_ctor", L"0"},//PXY_CFG_MT_VSTREAM_CTOR
 		{L"mt", L"surface_ctor", L"0"},//PXY_CFG_MT_SURFACE_CTOR
-	    {L"mt", L"dxc_threads", L"0"},//PXY_CFG_MT_DXC_THREADS
-		{L"mt", L"pso_threads", L"0"},//PXY_CFG_MT_PSO_THREADS
+	    {L"mt", L"dxc_threads", L"-1"},//PXY_CFG_MT_DXC_THREADS
+		{L"mt", L"pso_threads", L"-1"},//PXY_CFG_MT_PSO_THREADS
 		{L"log", L"p7config", L"/P7.Pool=32768 /P7.Sink=FileBin"},//PXY_CFG_LOG_P7CONFIG
 		{L"log", L"perf_graph", L"0"},//PXY_CFG_LOG_PERF_GRAPH		
 		{L"log", L"dbg_mem_mgr_save_new_caller", L"0"},//PXY_CFG_LOG_DBG_MEM_MGR_SAVE_NEW_CALLER

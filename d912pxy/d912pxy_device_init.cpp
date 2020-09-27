@@ -388,6 +388,8 @@ void d912pxy_device::PrintInfoBanner()
 	GetSystemInfo(&sysInf);
 	LOG_INFO_DTDM("CPU cores: %u", sysInf.dwNumberOfProcessors);
 
+	cpuCoreCount = sysInf.dwNumberOfProcessors;
+
 	LOG_INFO_DTDM("=========================================== Config data");
 
 	for (int i = 0; i != PXY_CFG_CNT; ++i)
