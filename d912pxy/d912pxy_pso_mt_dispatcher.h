@@ -85,7 +85,5 @@ public:
 	void queueCompileDXC(d912pxy_pso_item* item);
 	void queueCompilePSO(d912pxy_pso_item* item);
 
-	size_t getTotalQueueLength();
-
 	char* getQueueInfoStr();
 };

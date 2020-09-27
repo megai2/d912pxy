@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
+std::atomic<size_t> d912pxy_pso_item::itemsInCompile { 0 };
+
 d912pxy_pso_item* d912pxy_pso_item::d912pxy_pso_item_com(d912pxy_trimmed_pso_desc* sDsc)
 {
 	d912pxy_com_object* ret = d912pxy_s.com.AllocateComObj(PXY_COM_OBJ_PSO_ITEM);
@@ -81,6 +83,7 @@ void d912pxy_pso_item::Compile()
 
 void d912pxy_pso_item::MarkPushedToCompile()
 {
+	++itemsInCompile;
 	AddRef();
 	desc->HoldRefs(true);
 }
@@ -467,6 +470,8 @@ void d912pxy_pso_item::AfterCompileRelease()
 	delete desc;
 
 	Release();
+
+	--itemsInCompile;
 }
 
 bool d912pxy_pso_item::ValidateFullDesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
@@ -483,6 +488,11 @@ bool d912pxy_pso_item::ValidateFullDesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC& full
 ID3D12PipelineState* d912pxy_pso_item::GetPtr()
 {
 	return psoPtr;
+}
+
+size_t d912pxy_pso_item::GetTotalPendingItems()
+{
+	return itemsInCompile.load();
 }
 
 void d912pxy_pso_item::RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)

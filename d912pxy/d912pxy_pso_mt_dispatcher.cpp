@@ -81,19 +81,6 @@ void d912pxy_pso_mt_dispatcher::queueCompilePSO(d912pxy_pso_item* item)
 	rrIdxPSO = (rrIdxPSO + 1) % psoThreads.size();
 }
 
-size_t d912pxy_pso_mt_dispatcher::getTotalQueueLength()
-{
-	size_t ret = 0;
-
-	for (DXCThread* i : dxcThreads)
-		ret += i->queueLength();
-
-	for (PSOThread* i : psoThreads)
-		ret += i->queueLength();
-
-	return ret;
-}
-
 char* d912pxy_pso_mt_dispatcher::getQueueInfoStr()
 {
 	infoStr[0] = 0;

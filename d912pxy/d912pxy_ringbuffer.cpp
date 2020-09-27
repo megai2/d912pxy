@@ -225,4 +225,5 @@ template class d912pxy_ringbuffer<void*>;
 template class d912pxy_ringbuffer<d912pxy_vfs_pck_chunk*>;
 template class d912pxy_ringbuffer<float>;
 template class d912pxy_ringbuffer<d912pxy_pso_item*>;
+template class d912pxy_ringbuffer<d912pxy_pso_item**>;
 template class d912pxy_ringbuffer<d912pxy_trimmed_pso_desc>;

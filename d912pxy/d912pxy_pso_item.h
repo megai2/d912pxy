@@ -43,6 +43,8 @@ public:
 
 	ID3D12PipelineState* GetPtr();
 
+	static size_t GetTotalPendingItems();
+
 private:	
 	void CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
 	void CreatePSODerived(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
@@ -80,4 +82,6 @@ private:
 	char* derivedName = nullptr;
 
 	bool fallbacktoNonDerived = false;
+
+	static std::atomic<size_t> itemsInCompile;
 };

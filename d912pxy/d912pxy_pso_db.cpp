@@ -144,6 +144,7 @@ void d912pxy_pso_db::LoadCachedData()
 
 	//todo: use proper buffer
 	d912pxy_ringbuffer<d912pxy_trimmed_pso_desc> psoDescs(65535, 2);
+	d912pxy_ringbuffer<d912pxy_pso_item**> psoItems(65535, 2);
 	psoDescs.WriteElement(d912pxy_trimmed_pso_desc());
 	
 	{
@@ -236,6 +237,7 @@ void d912pxy_pso_db::LoadCachedData()
 			}
 			else {
 				d912pxy_shader_pair* pair = d912pxy_s.render.db.shader.GetPair(vs, ps);
+				pair->CheckArrayAllocation(cacheIncID);
 
 				uint32_t psoDescIdx = cacheIndexes.findPrepared(pairEntry->pso);
 				auto psoDesc = psoDescs.GetElementOffsetPtr(psoDescIdx);
@@ -243,8 +245,8 @@ void d912pxy_pso_db::LoadCachedData()
 				psoDesc->ref.PS = ps;
 				psoDesc->ref.VS = vs;
 
-				if (pair->PrecompilePSO(psoDescIdx, psoDesc))
-					++psoItemsCompiled;
+				psoItems.WriteElement(pair->PrecompilePSO(psoDescIdx, psoDesc));
+				++psoItemsCompiled;
 			}
 
 			++psoItemsTotal;
@@ -263,13 +265,32 @@ void d912pxy_pso_db::LoadCachedData()
 		delete precompList;
 	}
 
+	LOG_INFO_DTDM("Pushed %u out of %u PSO items to compilation", psoItemsCompiled, psoItemsTotal);
+
+	size_t compilePendingItems = d912pxy_pso_item::GetTotalPendingItems();
+	while (compilePendingItems)
+	{
+		LOG_INFO_DTDM("Waiting for PSO compiler threads to process %u items", compilePendingItems);
+		Sleep(500);
+		compilePendingItems = d912pxy_pso_item::GetTotalPendingItems();
+	}
+
+	//remove failed PSO items in order to compile them later on when game need them
+	while (psoItems.HaveElements())
+	{
+		d912pxy_pso_item** i = psoItems.PopElement();
+		if (!(*i)->GetPtr())
+		{
+			(*i)->Release();
+			i = nullptr;
+		}
+	}
+
 	psoDescs.PopElement();
 	while (psoDescs.HaveElements())
 	{
 		psoDescs.PopElement().ref.InputLayout->Release();		
 	}
-
-	LOG_INFO_DTDM("Pushed %u out of %u PSO items to compilation", psoItemsCompiled, psoItemsTotal);
 }
 
 void d912pxy_pso_db::CheckCompileQueueLock()

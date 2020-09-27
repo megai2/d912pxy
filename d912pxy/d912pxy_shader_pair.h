@@ -37,7 +37,7 @@ public:
 	d912pxy_shader_pair(d912pxy_shader_pair_hash_type hash, d912pxy_shader_uid* shd);
 	~d912pxy_shader_pair();
 
-	bool PrecompilePSO(UINT32 idx, d912pxy_trimmed_pso_desc* dsc);
+	d912pxy_pso_item** PrecompilePSO(UINT32 idx, d912pxy_trimmed_pso_desc* dsc);
 	void CheckArrayAllocation(UINT32 idx);
 
 	d912pxy_pso_item* GetPSOItem(UINT32 idx, d912pxy_trimmed_pso_desc* dsc);
