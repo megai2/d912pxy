@@ -50,11 +50,18 @@ void d912pxy_pso_mt_dispatcher::Init()
 void d912pxy_pso_mt_dispatcher::UnInit()
 {
 	for (DXCThread* i : dxcThreads)
+	{
+		i->UnInit();
 		delete i;
+	}
+
 	dxcThreads.clear();
 
 	for (PSOThread* i : psoThreads)
+	{
+		i->UnInit();
 		delete i;
+	}
 	psoThreads.clear();
 
 	d912pxy_noncom::UnInit();

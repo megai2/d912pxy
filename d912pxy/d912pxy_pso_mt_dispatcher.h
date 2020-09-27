@@ -32,7 +32,6 @@ class d912pxy_pso_mt_dispatcher : public d912pxy_noncom
 		d912pxy_ringbuffer<d912pxy_pso_item*> queue;
 	public:
 		CompilerThread(const char* thrdName);
-		virtual ~CompilerThread() { Stop(); }
 
 		void UnInit();
 
