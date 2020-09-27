@@ -268,11 +268,20 @@ void d912pxy_pso_db::LoadCachedData()
 	LOG_INFO_DTDM("Pushed %u out of %u PSO items to compilation", psoItemsCompiled, psoItemsTotal);
 
 	size_t compilePendingItems = d912pxy_pso_item::GetTotalPendingItems();
-	while (compilePendingItems)
+	int compilerIntegrity = 10;
+	while (compilePendingItems && compilerIntegrity)
 	{
 		LOG_INFO_DTDM("Waiting for PSO compiler threads to process %u items", compilePendingItems);
 		Sleep(500);
 		compilePendingItems = d912pxy_pso_item::GetTotalPendingItems();
+
+		if ((compilePendingItems > 0) && (d912pxy_s.render.db.psoMTCompiler.getTotalQueueLength() == 0))
+			--compilerIntegrity;
+	}
+
+	if (!compilerIntegrity)
+	{
+		LOG_ERR_DTDM("PSO compiler bugged out, skipping leftover PSO items");
 	}
 
 	//remove failed PSO items in order to compile them later on when game need them

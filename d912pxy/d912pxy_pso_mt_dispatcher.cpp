@@ -121,6 +121,19 @@ char* d912pxy_pso_mt_dispatcher::getQueueInfoStr()
 	return infoStr;
 }
 
+size_t d912pxy_pso_mt_dispatcher::getTotalQueueLength()
+{
+	size_t ret = 0;
+
+	for (DXCThread* i : dxcThreads)
+		ret += i->queueLength();
+
+	for (PSOThread* i : psoThreads)
+		ret += i->queueLength();
+
+	return ret;
+}
+
 void d912pxy_pso_mt_dispatcher::queueCompileDXC(d912pxy_pso_item* item)
 {
 	if (!dxcThreads.size())
@@ -156,7 +169,7 @@ void d912pxy_pso_mt_dispatcher::CompilerThread::ThreadJob()
 void d912pxy_pso_mt_dispatcher::CompilerThread::enqueue(d912pxy_pso_item* item)
 {	
 	queue.WriteElementMT(item);
-	IssueWork();
+	SignalWork();
 }
 
 d912pxy_pso_mt_dispatcher::DXCThread::DXCThread(d912pxy::mt::sync::Lock& submission_lock)
