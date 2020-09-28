@@ -175,7 +175,9 @@ void d912pxy_pso_mt_dispatcher::CompilerThread::enqueue(d912pxy_pso_item* item)
 d912pxy_pso_mt_dispatcher::DXCThread::DXCThread(d912pxy::mt::sync::Lock& submission_lock)
 	: CompilerThread("DXC compiler thread")
 	, submissionLock(submission_lock)
-{}
+{
+	currentDerived[0] = 0;
+}
 
 void d912pxy_pso_mt_dispatcher::DXCThread::CompileItem(d912pxy_pso_item* item)
 {
