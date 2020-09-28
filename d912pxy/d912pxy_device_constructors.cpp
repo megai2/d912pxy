@@ -35,7 +35,7 @@ HRESULT d912pxy_device::CreateTexture(UINT Width, UINT Height, UINT Levels, DWOR
 
 HRESULT d912pxy_device::CreateVolumeTexture(UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture9** ppVolumeTexture, HANDLE* pSharedHandle)
 {
-	*ppVolumeTexture = PXY_COM_CAST_(IDirect3DVolumeTexture9, new d912pxy_vtexture(this, Width, Height, Depth, Levels, Usage, Format));
+	*ppVolumeTexture = PXY_COM_CAST_(IDirect3DVolumeTexture9, d912pxy_vtexture::d912pxy_vtexture_com(Width, Height, Depth, Levels, Usage, Format));
 
 	return D3D_OK;
 }

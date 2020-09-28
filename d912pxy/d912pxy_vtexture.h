@@ -29,13 +29,22 @@ SOFTWARE.
 class d912pxy_vtexture : public d912pxy_basetexture
 {
 public:
-	d912pxy_vtexture(d912pxy_device* dev, UINT Width, UINT Height, UINT depth, UINT Levels, DWORD Usage, D3DFORMAT Format);
+	static d912pxy_vtexture* d912pxy_vtexture_com(UINT Width, UINT Height, UINT depth, UINT Levels, DWORD Usage, D3DFORMAT Format);
 	~d912pxy_vtexture();
-
+		
 	D912PXY_METHOD(GetLevelDesc)(PXY_THIS_ UINT Level, D3DVOLUME_DESC *pDesc);
 	D912PXY_METHOD(GetVolumeLevel)(PXY_THIS_ UINT Level, IDirect3DVolume9** ppVolumeLevel);
 	D912PXY_METHOD(LockBox)(PXY_THIS_ UINT Level, D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags);
 	D912PXY_METHOD(UnlockBox)(PXY_THIS_ UINT Level);
 	D912PXY_METHOD(AddDirtyBox)(PXY_THIS_ CONST D3DBOX* pDirtyBox);
+
+	D912PXY_METHOD_NC(GetLevelDesc)(THIS_ UINT Level, D3DVOLUME_DESC* pDesc);
+	D912PXY_METHOD_NC(GetVolumeLevel)(THIS_ UINT Level, IDirect3DVolume9** ppVolumeLevel);
+	D912PXY_METHOD_NC(LockBox)(THIS_ UINT Level, D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags);
+	D912PXY_METHOD_NC(UnlockBox)(THIS_ UINT Level);
+	D912PXY_METHOD_NC(AddDirtyBox)(THIS_ CONST D3DBOX* pDirtyBox);
+
+private:
+	d912pxy_vtexture(UINT Width, UINT Height, UINT depth, UINT Levels, DWORD Usage, D3DFORMAT Format);
 };
 
