@@ -140,8 +140,6 @@ void d912pxy_pso_db::ThreadJob()
 
 void d912pxy_pso_db::LoadCachedData()
 {
-
-
 	//todo: use proper buffer
 	d912pxy_ringbuffer<d912pxy_trimmed_pso_desc> psoDescs(65535, 2);
 	d912pxy_ringbuffer<d912pxy_pso_item**> psoItems(65535, 2);
@@ -222,13 +220,17 @@ void d912pxy_pso_db::LoadCachedData()
 			if (!pairEntry)
 				continue;
 
-			d912pxy_shader*& vs = shaderBuffer->find(pairEntry->vs);
-			d912pxy_shader*& ps = shaderBuffer->find(pairEntry->ps);
+			auto findShader = [&shaderBuffer](d912pxy_shader_uid uid)
+			{
+				d912pxy_shader*& shRef = shaderBuffer->find(uid);
+				if (!shRef)
+					shRef = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_VS, 0, uid);
 
-			if (!vs)
-				vs = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_VS, 0, pairEntry->vs);
-			if (!ps)			
-				ps = d912pxy_shader::d912pxy_shader_com(PXY_SHADER_TYPE_PS, 0, pairEntry->ps);
+				return shRef;
+			};
+
+			d912pxy_shader* vs = findShader(pairEntry->vs);
+			d912pxy_shader* ps = findShader(pairEntry->ps);
 
 			if (!cacheIndexes.containsPrepared(pairEntry->pso))
 			{
