@@ -26,26 +26,12 @@ SOFTWARE.
 
 #define API_OVERHEAD_TRACK_LOCAL_ID_DEFINE PXY_METRICS_API_OVERHEAD_DEVICE_TEXSTATE
 
-#if _WIN64
-	#define SRV_GET_MODE (intptr_t)pTexture & PXY_COM_OBJ_SIGNATURE_TEXTURE_RTDS
-#else
-	#define SRV_GET_MODE 
-#endif
-
 HRESULT d912pxy_device::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
-	Stage = convertTexStage(Stage);
-
-	UINT64 srvId = 0;//megai2: make this to avoid memory reading. but we must be assured that mNullTextureSRV is equal to this constant!
-	if (pTexture)
-	{
-		d912pxy_basetexture& bTex = PXY_COM_LOOKUP_(pTexture, basetex);
-		srvId = bTex.GetSRVHeapId(SRV_GET_MODE);
-		d912pxy_s.render.state.pso.UpdateCompareSampler(Stage, bTex.UsesCompareFormat());
-	} else 
-		d912pxy_s.render.state.pso.UpdateCompareSampler(Stage, false);
-
-	d912pxy_s.render.state.tex.SetTexture(Stage, (UINT32)srvId);
+	d912pxy_s.render.state.tex.SetTexture(
+		convertTexStage(Stage),
+		PXY_COM_LOOKUP(pTexture, basetex)
+	);
 
 	return D3D_OK; 
 }

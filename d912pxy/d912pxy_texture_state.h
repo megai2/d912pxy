@@ -28,7 +28,10 @@ SOFTWARE.
 #pragma pack(push, 1)
 
 typedef struct d912pxy_device_texture_state {
-	UINT64 dirty;
+	UINT64 dirtyTexRefs;
+	d912pxy_basetexture* texRefs[PXY_INNER_MAX_TEXTURE_STAGES];
+
+	UINT64 dirty;	
 	UINT texHeapID[PXY_INNER_MAX_TEXTURE_STAGES];
 	UINT splHeapID[PXY_INNER_MAX_SHADER_SAMPLERS];
 } d912pxy_device_texture_state;
@@ -52,7 +55,8 @@ public:
 	void Init();
 	void UnInit();
 
-	void SetTexture(UINT stage, UINT srv);
+	void SetTextureSrvId(UINT stage, UINT srv);
+	void SetTexture(UINT stage, d912pxy_basetexture* texRef);
 	void ModStageByMask(UINT stage, UINT srv, UINT mask);
 	void ModStageBit(UINT stage, UINT bit, UINT set);
 	void ModSamplerTracked(UINT stage, D3DSAMPLERSTATETYPE state, DWORD value);

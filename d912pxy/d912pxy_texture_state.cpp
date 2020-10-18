@@ -1,5 +1,11 @@
 #include "stdafx.h"
 
+#if _WIN64
+	#define SRV_GET_MODE (intptr_t)newTex & PXY_COM_OBJ_SIGNATURE_TEXTURE_RTDS
+#else
+	#define SRV_GET_MODE 
+#endif
+
 d912pxy_texture_state::d912pxy_texture_state() 
 {
 	memset(DX9SSTValues, 7, sizeof(DWORD)*(D3DSAMP_DMAPOFFSET+1));
@@ -46,12 +52,20 @@ void d912pxy_texture_state::UnInit()
 	d912pxy_noncom::UnInit();
 }
 
-void d912pxy_texture_state::SetTexture(UINT stage, UINT srv)
+void d912pxy_texture_state::SetTextureSrvId(UINT stage, UINT srv)
 {
 	current.dirty |= 1ULL << (stage >> 2);
 	current.texHeapID[stage] = srv;
 
 	LOG_DBG_DTDM("tex[%u] = %u", stage, srv);
+}
+
+void d912pxy_texture_state::SetTexture(UINT stage, d912pxy_basetexture* texRef)
+{
+	current.dirtyTexRefs |= (1ULL << stage);
+	current.texRefs[stage] = texRef;
+
+	LOG_DBG_DTDM("texRef[%u] = %p", stage, texRef);
 }
 
 void d912pxy_texture_state::ModStageByMask(UINT stage, UINT srv, UINT mask)
@@ -135,6 +149,29 @@ void d912pxy_texture_state::ModSampler(UINT stage, D3DSAMPLERSTATETYPE state, DW
 
 UINT d912pxy_texture_state::Use()
 {	
+	if (current.dirtyTexRefs)
+	{
+		UINT64 dMask = current.dirtyTexRefs;
+		current.dirtyTexRefs = 0;
+		for (int i = 0; i < 32 && dMask; ++i,dMask >>= 1)
+		{
+			if ((dMask & 1) == 0)
+				continue;			
+
+			d912pxy_basetexture* newTex = current.texRefs[i];
+			UINT64 srvId = 0;//megai2: make this to avoid memory reading. but we must be assured that mNullTextureSRV is equal to this constant!
+			if (newTex)
+			{
+				srvId = newTex->GetSRVHeapId(SRV_GET_MODE);
+				d912pxy_s.render.state.pso.UpdateCompareSampler(i, newTex->UsesCompareFormat());
+			}
+			else
+				d912pxy_s.render.state.pso.UpdateCompareSampler(i, false);
+
+			d912pxy_s.render.state.tex.SetTextureSrvId(i, (UINT32)srvId);
+		}
+	}
+
 	if (!current.dirty)
 		return 0;
 	
