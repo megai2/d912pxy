@@ -43,14 +43,15 @@ namespace d912pxy {
 				d912pxy_vstream* ibuf;
 				d912pxy_vstream* vbuf;
 				d912pxy_vstream* cbuf;
-
+				uint32_t vstride;
+				uint32_t indexCount;
 
 			public:
 				NativeDraw(const NativeDraw&) = delete;
 				NativeDraw(ID3D12PipelineState* psoObj, const NativeDrawData& data);
+				~NativeDraw();
 
 				void draw(const d912pxy_replay_thread_context& rpCtx);
-				void draw();
 			};
 
 		} //namespace IFrameMods

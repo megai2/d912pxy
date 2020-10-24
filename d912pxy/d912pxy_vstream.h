@@ -72,6 +72,8 @@ public:
 
 	static UINT32 threadedCtor;
 
+	void LoadFromBlock(const d912pxy::MemoryArea& mem);
+
 private:	
 	d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB);
 

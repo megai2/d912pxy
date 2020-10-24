@@ -25,16 +25,36 @@ SOFTWARE.
 #pragma once
 #include "stdafx.h"
 
+struct d912pxy_replay_tracked_state
+{
+	d912pxy_surface* surfBind[PXY_INNER_MAX_RENDER_TARGETS + 1];
+	DWORD srefVal;
+	DWORD bfacVal;
+	UINT scissorEnabled;
+
+	UINT32 activeStreams;
+	d912pxy_device_streamsrc streams[PXY_INNER_MAX_VBUF_STREAMS];
+	d912pxy_vstream* indexBuf;
+
+	d912pxy_trimmed_pso_desc pso;
+	d912pxy_pso_item* cpso;
+
+	D3D12_VIEWPORT main_viewport;
+	D3D12_RECT main_scissor;
+
+	D3DPRIMITIVETYPE primType;
+
+	//not used in thread transits
+
+	d912pxy_shader_pair_hash_type spair;
+	float bfacColor[4];
+};
+
 typedef struct d912pxy_replay_thread_context {
 	ID3D12PipelineState* pso;
 	UINT tid;
 	D3D12_GPU_VIRTUAL_ADDRESS customBatchPtr;
-	struct 
-	{
-		d912pxy_shader_pair_hash_type spair;
-		d912pxy_surface* dsv;
-		d912pxy_surface* rtv[PXY_INNER_MAX_RENDER_TARGETS];		
-	} tracked;
+	d912pxy_replay_tracked_state tracked;
 	ID3D12GraphicsCommandList* cl;
 } d912pxy_replay_thread_context;
 
@@ -118,22 +138,7 @@ private:
 		d912pxy_replay_item* startPoint;
 		UINT tailItems;
 
-		d912pxy_surface* surfBind[PXY_INNER_MAX_RENDER_TARGETS+1];
-		DWORD srefVal;
-		DWORD bfacVal;
-		UINT scissorEnabled;
-
-		UINT32 activeStreams;
-		d912pxy_device_streamsrc streams[PXY_INNER_MAX_VBUF_STREAMS];
-		d912pxy_vstream* indexBuf;
-
-		d912pxy_trimmed_pso_desc pso;
-		d912pxy_pso_item* cpso;
-
-		D3D12_VIEWPORT main_viewport;
-		D3D12_RECT main_scissor;
-
-		D3DPRIMITIVETYPE primType;
+		d912pxy_replay_tracked_state data;
 	};
 
 	//handlers
@@ -141,7 +146,7 @@ private:
 
 #define RHA_DECL(a,b) \
 void RHA_##a(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList * cl, b); \
-void RHA_##a##_extra(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList * cl, b)
+void RHA_##a##_extra(d912pxy_replay_item::dt_##a* it, ID3D12GraphicsCommandList * cl, d912pxy_replay_thread_context* context)
 	RHA_DECL(barrier, void* unused);
 	RHA_DECL(om_stencilref, void* unused);
 	RHA_DECL(om_blendfactor, void* unused);

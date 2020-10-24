@@ -111,6 +111,7 @@ namespace IFrameMods {
 				void resetAdditionalFrames(d912pxy_surface* from);
 
 				d912pxy_pso_item* taaShader = nullptr;
+				d912pxy::extras::IFrameMods::NativeDraw* taaDraw;
 				PassDetector* uiPass;
 
 				d912pxy_vstream* jitterCBuf = nullptr;

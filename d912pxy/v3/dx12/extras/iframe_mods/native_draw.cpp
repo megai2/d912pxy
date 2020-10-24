@@ -26,32 +26,32 @@ SOFTWARE.
 
 using namespace d912pxy::extras::IFrameMods;
 
-StateHolder::StateHolder(const d912pxy_replay_thread_context& rpState, uint32_t statesToBeChanged)
-	: prevState(rpState)
-	, restorationMask(statesToBeChanged)
+NativeDraw::NativeDraw(ID3D12PipelineState* psoObj, const NativeDrawData& data)
+	: pso(psoObj)
 {
+	ibuf = d912pxy_s.pool.vstream.GetVStreamObject((UINT)data.index.getSize(), D3DFMT_INDEX32, 1);
+	ibuf->LoadFromBlock(data.index);
+	vbuf = d912pxy_s.pool.vstream.GetVStreamObject((UINT)data.vertex.getSize(), 0, 0);
+	ibuf->LoadFromBlock(data.index);
+	cbuf = d912pxy_s.pool.vstream.GetVStreamObject((UINT)data.cb0.getSize(), 0, 0);
+	vstride = data.vstride;
+	indexCount = (data.index.getSize() / sizeof(uint32_t));
 }
 
-StateHolder::~StateHolder()
+d912pxy::extras::IFrameMods::NativeDraw::~NativeDraw()
 {
-	if (restorationMask & ST_PSO)
-		prevState.cl->SetPipelineState(prevState.pso);
+	pso->Release();
+	ibuf->Release();
+	vbuf->Release();
+	cbuf->Release();
+}
 
-	if (restorationMask & ST_INDEX)
-		prevState.tracked.indexBuf->IFrameBindIB(prevState.cl);
-
-	if (restorationMask & ST_VSTREAM0)
-	{
-		prevState.tracked.streams[0].buffer->IFrameBindVB(
-			prevState.tracked.streams[0].stride,
-			0,
-			prevState.tracked.streams[0].offset,
-			prevState.cl
-		);
-	}
-
-	if (restorationMask & ST_PRIMTOPO)
-	{
-		prevState.cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)prevState.tracked.primType);
-	}
+void NativeDraw::draw(const d912pxy_replay_thread_context& rpCtx)
+{
+	StateHolder(rpCtx, StateHolder::ST_PSO | StateHolder::ST_VSTREAM0 | StateHolder::ST_INDEX | StateHolder::ST_PRIMTOPO);
+	rpCtx.cl->SetPipelineState(pso);
+	ibuf->IFrameBindIB(rpCtx.cl);
+	vbuf->IFrameBindVB(vstride, 0, 0, rpCtx.cl);
+	rpCtx.cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	rpCtx.cl->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 }

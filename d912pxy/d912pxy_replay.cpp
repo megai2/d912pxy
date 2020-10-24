@@ -327,27 +327,27 @@ void d912pxy_replay::thread_transit_data::Reset()
 
 void d912pxy_replay::thread_transit_data::Gather(d912pxy_replay_item* threadStartingItem, UINT in_tailItems)
 {
-	bfacVal = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
-	srefVal = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
+	data.bfacVal = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_BLENDFACTOR);
+	data.srefVal = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_STENCILREF);
 
 	for (int i = 0; i<PXY_INNER_MAX_RENDER_TARGETS+1;++i)
-		surfBind[i] = d912pxy_s.render.iframe.GetBindedSurface(i);
+		data.surfBind[i] = d912pxy_s.render.iframe.GetBindedSurface(i);
 
-	indexBuf = d912pxy_s.render.iframe.GetIBuf();
+	data.indexBuf = d912pxy_s.render.iframe.GetIBuf();
 
-	activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
-	scissorEnabled = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
+	data.activeStreams = d912pxy_s.render.iframe.GetActiveStreamCount();
+	data.scissorEnabled = d912pxy_s.render.state.pso.GetDX9RsValue(D3DRS_SCISSORTESTENABLE);
 
 	for (int i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
-		streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
+		data.streams[i] = d912pxy_s.render.iframe.GetStreamSource(i);
 
-	pso = d912pxy_s.render.state.pso.GetCurrentDesc();
+	data.pso = d912pxy_s.render.state.pso.GetCurrentDesc();
 
-	main_viewport = *d912pxy_s.render.iframe.GetViewport();
-	main_scissor = *d912pxy_s.render.iframe.GetScissorRect();
+	data.main_viewport = *d912pxy_s.render.iframe.GetViewport();
+	data.main_scissor = *d912pxy_s.render.iframe.GetScissorRect();
 
-	primType = d912pxy_s.render.iframe.GetCurrentPrimType();
-	cpso = d912pxy_s.render.state.pso.GetCurrentCPSO();
+	data.primType = d912pxy_s.render.iframe.GetCurrentPrimType();
+	data.cpso = d912pxy_s.render.state.pso.GetCurrentCPSO();
 	startPoint = threadStartingItem;
 	tailItems = in_tailItems;
 	
@@ -366,50 +366,50 @@ bool d912pxy_replay::thread_transit_data::Apply(ID3D12GraphicsCommandList* cl, d
 	d912pxy_s.render.replay.PlayId(&item, cl, context) \
 
 	d912pxy_replay_item::dt_om_render_targets rtData;
-	rtData.dsv = surfBind[0];
+	rtData.dsv = data.surfBind[0];
 	for (int i = 1; i < PXY_INNER_MAX_RENDER_TARGETS + 1; ++i)
-		rtData.rtv[i-1] = surfBind[i];
+		rtData.rtv[i-1] = data.surfBind[i];
 
 	ITEM_TRANSIT(om_render_targets, (rtData));	
 
 	for (UINT i = 0; i != PXY_INNER_MAX_VBUF_STREAMS; ++i)
 	{
-		if (!streams[i].buffer)
+		if (!data.streams[i].buffer)
 			continue;
 
-		ITEM_TRANSIT(vbuf_bind, ({ streams[i].buffer, streams[i].stride, i, streams[i].offset }));
+		ITEM_TRANSIT(vbuf_bind, ({ data.streams[i].buffer, data.streams[i].stride, i, data.streams[i].offset }));
 	}
 
-	if (indexBuf)
+	if (data.indexBuf)
 	{
-		ITEM_TRANSIT(ibuf_bind, ({ indexBuf }));
+		ITEM_TRANSIT(ibuf_bind, ({ data.indexBuf }));
 	}
 
-	ITEM_TRANSIT(om_stencilref, ({ srefVal }));
+	ITEM_TRANSIT(om_stencilref, ({ data.srefVal }));
 
-	fv4Color bfColor = d912pxy_s.render.state.pso.TransformBlendFactor(bfacVal);
+	fv4Color bfColor = d912pxy_s.render.state.pso.TransformBlendFactor(data.bfacVal);
 	ITEM_TRANSIT(om_blendfactor, ({ { bfColor.val[0], bfColor.val[1], bfColor.val[2], bfColor.val[3]} }));
 
-	ITEM_TRANSIT(ia_prim_topo, ({ (UINT8)primType }));
+	ITEM_TRANSIT(ia_prim_topo, ({ (UINT8)data.primType }));
 
-	if (cpso)
+	if (data.cpso)
 	{
-		ITEM_TRANSIT(pso_compiled, ({ cpso }));
+		ITEM_TRANSIT(pso_compiled, ({ data.cpso }));
 	}
 	else {
-		ITEM_TRANSIT(pso_raw, ({ pso }));
+		ITEM_TRANSIT(pso_raw, ({ data.pso }));
 	}
 
-	cl->RSSetViewports(1, &main_viewport);
+	cl->RSSetViewports(1, &data.main_viewport);
 
-	if (scissorEnabled)
-		cl->RSSetScissorRects(1, &main_scissor);
+	if (data.scissorEnabled)
+		cl->RSSetScissorRects(1, &data.main_scissor);
 	else {
 		D3D12_RECT r;
-		r.left = (UINT)main_viewport.TopLeftX;
-		r.top = (UINT)main_viewport.TopLeftY;
-		r.bottom = (UINT)main_viewport.Height + (UINT)main_viewport.TopLeftY;
-		r.right = (UINT)main_viewport.Width + (UINT)main_viewport.TopLeftX;
+		r.left = (UINT)data.main_viewport.TopLeftX;
+		r.top = (UINT)data.main_viewport.TopLeftY;
+		r.bottom = (UINT)data.main_viewport.Height + (UINT)data.main_viewport.TopLeftY;
+		r.right = (UINT)data.main_viewport.Width + (UINT)data.main_viewport.TopLeftX;
 
 		cl->RSSetScissorRects(1, &r);
 	}

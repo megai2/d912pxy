@@ -350,9 +350,14 @@
     <ClCompile Include="v3\dx12\extras\iframe_mods\gw2_taa.cpp">
       <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
-    <ClCompile Include="v3\dx12\extras\iframe_mods\state_holder.cpp" />
     <ClCompile Include="d912pxy_pso_mt_dispatcher.cpp">
       <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClCompile>
+    <ClCompile Include="v3\dx12\extras\iframe_mods\state_holder.cpp">
+      <Filter>v3\extras\iframe_mods</Filter>
+    </ClCompile>
+    <ClCompile Include="v3\dx12\extras\iframe_mods\native_draw.cpp">
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

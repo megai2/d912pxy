@@ -30,7 +30,15 @@ SOFTWARE.
 
 UINT32 d912pxy_vstream::threadedCtor = 0;
 
-d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB) 
+void d912pxy_vstream::LoadFromBlock(const d912pxy::MemoryArea& mem)
+{
+	void* dst = nullptr;
+	Lock(0, mem.getSize(), &dst, 0);
+	memcpy(dst, mem.getPtr(), mem.getSize());
+	Unlock();
+}
+
+d912pxy_vstream::d912pxy_vstream(UINT Length, DWORD Usage, DWORD fmt, DWORD isIB)
 	: d912pxy_resource(isIB ? RTID_IBUF : RTID_VBUF, PXY_COM_OBJ_VSTREAM, isIB ? L"vstream i" : L"vstream v")
 	, lockDepth(0)
 	, ul(NULL)

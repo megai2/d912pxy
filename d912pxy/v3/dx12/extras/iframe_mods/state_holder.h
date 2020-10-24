@@ -37,8 +37,10 @@ namespace IFrameMods {
 	public:
 		enum
 		{
-			PSO = 0x1,
-			VSTREAM0 = 0x2
+			ST_PSO = 0x1,
+			ST_VSTREAM0 = 0x2,
+			ST_INDEX = 0x4,
+			ST_PRIMTOPO = 0x8
 		};
 
 		StateHolder(const StateHolder&) = delete;

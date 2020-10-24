@@ -42,7 +42,7 @@ namespace d912pxy
 		template<class T>
 		T* c_arr() const { return (T*)ptr; }
 
-		void* getPtr() { return ptr; }
+		void* getPtr() const { return ptr; }
 
 		template<class T>
 		T* end() const { return (T*)((void*)((uintptr_t)ptr + size)); }

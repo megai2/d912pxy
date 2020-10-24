@@ -73,8 +73,24 @@ GenericTAA::GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw,
 
 	jitterCBuf = d912pxy_vstream::d912pxy_vstream_com(jitterSeq.size, 0, 0, 0);	
 
-	//TODO: make dx12 shader class
-	//compile & load TAA shader
+	//TODO: make dx12 shader & load it
+	uint32_t indexData[6] = { 0, 1, 2, 2, 3, 0};
+	float vertexData[16] = {
+		-1.0f, -1.0f, 0.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f, 0.0f
+	};
+
+	float cb0Data[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	taaDraw = new NativeDraw(nullptr,
+		{
+			MemoryArea(&indexData, sizeof(indexData)),
+			MemoryArea(&vertexData, sizeof(vertexData)),
+			MemoryArea(&cb0Data, sizeof(cb0Data))
+		}
+	);
 }
 
 void GenericTAA::setJitter(bool enable, d912pxy_replay_thread_context* ctx)
@@ -119,17 +135,8 @@ void GenericTAA::RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912px
 		}
 
 		currentRt->BCopyToWStates(currentFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		
-
-		{
-			StateHolder(*rpContext, StateHolder::PSO);
-		}
-
-		//TODO: make state holder for replay context & "native" dx12 draw class
-		//{
-	    //	StateHolder oldStates;
-		//	taaDraw->perform(rpContext.cl, 0);
-		//}		
+			
+		taaDraw->draw(*rpContext);
 
 		currentFrame->BCopyToWStates(prevFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		

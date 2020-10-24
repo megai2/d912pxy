@@ -32,8 +32,8 @@ void PassDetector::enter(d912pxy_replay_thread_context* rpContext)
 	justEntered = true;
 	inPass = true;
 
-	surfaces[SURF_TRACKED + SURF_DS] = rpContext->tracked.dsv;
-	surfaces[SURF_TRACKED + SURF_RT] = rpContext->tracked.rtv[0];
+	surfaces[SURF_TRACKED + SURF_DS] = rpContext->tracked.surfBind[0];
+	surfaces[SURF_TRACKED + SURF_RT] = rpContext->tracked.surfBind[1];
 }
 
 void PassDetector::exit()
@@ -83,8 +83,8 @@ void d912pxy::extras::IFrameMods::PassDetector::RP_RTDSChange(d912pxy_replay_ite
 {
 	surfaces[SURF_LAST + SURF_DS] = surfaces[SURF_DS];
 	surfaces[SURF_LAST + SURF_RT] = surfaces[SURF_RT];
-	surfaces[SURF_DS] = rpContext->tracked.dsv;
-	surfaces[SURF_RT] = rpContext->tracked.rtv[0];
+	surfaces[SURF_DS] = rpContext->tracked.surfBind[0];
+	surfaces[SURF_RT] = rpContext->tracked.surfBind[1];
 
 	if (inPass)
 		exit();
