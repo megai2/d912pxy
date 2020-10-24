@@ -289,7 +289,8 @@ void d912pxy_vfs::LoadPckFromRootPath()
 	//megai2: load actual data from disk after we collect/overwrite listing from all pck files
 	//if precache specified
 	for (int i = 0; i != (UINT)d912pxy_vfs_bid::end; ++i)
-		if (memCache & (1ULL << i))
+		//precache all data if write is disabled to allow multi instance runs
+		if ((memCache & (1ULL << i)) || !writeAllowed)
 			items[i]->LoadFilesFromDisk();
 }
 
