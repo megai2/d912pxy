@@ -27,55 +27,18 @@ SOFTWARE.
 
 namespace d912pxy
 {
-	namespace Trivial
+	namespace KeyValue
 	{
-		template<typename Element, typename IndexType = intptr_t, int initialSize = 256>
-		class PushBuffer
+		struct Element
 		{
-			IndexType maxElements;
-			IndexType last;
-			LinearArray<Element> storage;
-
-		public:
-			PushBuffer()
-				: maxElements(initialSize)
-				, last(0)
-			{
-				storage.init(initialSize);
-				storage.zeroMem(0, initialSize);
-			}
-
-			IndexType next()
-			{
-				++last;
-				if (last >= maxElements)
-				{
-					auto oldMax = maxElements;
-					maxElements <<= 1;
-					storage.resize(maxElements);
-					storage.zeroMem(oldMax, oldMax);
-				}
-				return last;
-			}
-
-			void push(const Element& v) { auto newIdx = next(); storage.get(newIdx) = v; }
-			void reset() { last = 0; }
-
-			IndexType headIdx() { return last; }
-			Element& head() { return storage.get(last); }
-			Element& operator[](IndexType idx) { return storage.get(idx); }
+			wchar_t* key;
+			wchar_t* value;
 		};
 
-		template<typename Element, typename IndexType = intptr_t, int initialSize = 256>
-		class IteratedPushBuffer
+		class Reader : public Trivial::IteratedPushBuffer<Element>
 		{
-			int cur = 1;
-		protected:
-			PushBuffer<Element, IndexType, initialSize> data;
 		public:
-			bool empty() { return cur > data.headIdx(); }
-			Element& next()	{ return data[cur++]; }
+			Reader(const MemoryBlock& source);
 		};
-
 	}
 }

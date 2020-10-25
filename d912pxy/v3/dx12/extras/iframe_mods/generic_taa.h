@@ -54,7 +54,7 @@ namespace IFrameMods {
 				{
 					//ref https://github.com/cenit/jburkardt/blob/master/halton/halton.cpp
 
-					int   prime[2]     = { 1   , 2    };
+					int   prime[2]     = { 2   , 3    };
 					float prime_inv[2] = { 1.0f, 0.5f };
 					int   t[2]         = { idx , idx  };
 					float r[2]         = { 0.0f, 0.0f };
@@ -111,13 +111,15 @@ namespace IFrameMods {
 				void resetAdditionalFrames(d912pxy_surface* from);
 
 				d912pxy_pso_item* taaShader = nullptr;
-				d912pxy::extras::IFrameMods::NativeDraw* taaDraw;
+				d912pxy::extras::IFrameMods::NativeDraw* taaDraw = nullptr;
 				PassDetector* uiPass;
 
 				d912pxy_vstream* jitterCBuf = nullptr;
 				int jitterCBufRSIdx = 0;
 				int jitterIdx = 0;
 				JitterSequence<16> jitterSeq;
+
+				void checkNativeDrawLoaded();
 				
 			public:
 				GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw, int cbufferRSIdx);

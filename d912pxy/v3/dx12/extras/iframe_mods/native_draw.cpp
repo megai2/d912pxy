@@ -35,7 +35,7 @@ NativeDraw::NativeDraw(ID3D12PipelineState* psoObj, const NativeDrawData& data)
 	ibuf->LoadFromBlock(data.index);
 	cbuf = d912pxy_s.pool.vstream.GetVStreamObject((UINT)data.cb0.getSize(), 0, 0);
 	vstride = data.vstride;
-	indexCount = (data.index.getSize() / sizeof(uint32_t));
+	indexCount = ((UINT)data.index.getSize() / sizeof(uint32_t));
 }
 
 d912pxy::extras::IFrameMods::NativeDraw::~NativeDraw()

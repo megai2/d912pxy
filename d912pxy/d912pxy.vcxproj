@@ -775,6 +775,7 @@
     <ClInclude Include="v3\dx12\extras\shader_pair\tracker.h" />
     <ClInclude Include="v3\util\dir_reader.h" />
     <ClInclude Include="v3\util\hash.h" />
+    <ClInclude Include="v3\util\key_value_reader.h" />
     <ClInclude Include="v3\util\log\error_handler.h" />
     <ClInclude Include="v3\util\memory_block.h" />
     <ClInclude Include="v3\util\memtree.h" />
@@ -915,6 +916,7 @@
     <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\tracker.cpp" />
     <ClCompile Include="v3\util\dir_reader.cpp" />
+    <ClCompile Include="v3\util\key_value_reader.cpp" />
     <ClCompile Include="v3\util\log\error_handler.cpp" />
     <ClCompile Include="v3\util\memory_block.cpp" />
   </ItemGroup>

@@ -72,6 +72,7 @@ SOFTWARE.
 #include "v3/util/mt/container.h"
 #include "v3/util/memtree.h"
 #include "v3/util/dir_reader.h"
+#include "v3/util/key_value_reader.h"
 
 #include "../thirdparty/imgui/imgui.h"
 #include "../thirdparty/imgui/imgui_impl_dx12.h"

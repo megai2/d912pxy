@@ -29,7 +29,12 @@ namespace d912pxy {
 	namespace extras {
 		namespace IFrameMods {
 
-			typedef wchar_t* ModConfigEntry;
+			struct ModConfigEntry
+			{
+				wchar_t* raw = nullptr;
+
+				bool valid() const { return raw != nullptr; }
+			};
 
 			class ModHandler : public d912pxy_noncom
 			{

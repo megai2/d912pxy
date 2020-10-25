@@ -28,7 +28,14 @@ using namespace d912pxy::extras::IFrameMods;
 
 void Manager::parseData(const d912pxy::MemoryBlock& data)
 {
-	//TODO
+	KeyValue::Reader kvReader(data);
+	while (!kvReader.empty())
+	{
+		auto& i = kvReader.next();
+
+		ModConfigEntry newEntry { d912pxy_helper::strdupw(i.value) };
+		configValues[MemoryArea((void*)i.key, lstrlenW(i.key))] = newEntry;
+	}
 }
 
 void Manager::loadConfig()
@@ -64,25 +71,23 @@ void Manager::Init()
 	loadConfig();
 	auto& mainMod = configVal(L"primary_mod");	
 
-	if (!mainMod)
+	if (!mainMod.valid())
 	{
 		LOG_ERR_DTDM("Primary mod not found while iframe mods are enabled");
 	}
-	else if (lstrcmpW(mainMod, L"debug") == 0)
+	else if (lstrcmpW(mainMod.raw, L"debug") == 0)
 	{
 		//nothing right now
 	}
-	else if (lstrcmpW(mainMod, L"gw2_taa") == 0)
+	else if (lstrcmpW(mainMod.raw, L"gw2_taa") == 0)
 	{
 		ModHandler* gw2taa = (ModHandler*)(new Gw2TAA());
 		//TODO
-		//1. add shader code modification based on external parameter at compile time by swapping common.hlsli source
-		//2. update & store jitter in free fv4 elements
-		//3. save frame after postprocess stage
+		//1. debug current code as load order is wrong
 		//4. mix last saved frame with new one via "decent" taa algo
-		//5. apply jitter in "right" places via pass detector and shader code modification
+		//5. apply jitter in "right" places via pass detector
 	}
-	else if (lstrcmpW(mainMod, L"gw2_rtx") == 0)
+	else if (lstrcmpW(mainMod.raw, L"gw2_rtx") == 0)
 	{
 		d912pxy::error::fatal(L"someday");
 	}
@@ -96,6 +101,12 @@ void Manager::UnInit()
 	{
 		modList[i]->UnInit();
 		delete modList[i];
+	}
+
+	for (auto i = configValues.begin();i<configValues.end(); ++i)
+	{
+		if (i.value().valid())
+			PXY_FREE(i.value().raw);
 	}
 }
 

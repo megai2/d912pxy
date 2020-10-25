@@ -60,11 +60,11 @@ void d912pxy::extras::IFrameMods::Gw2TAA::initAndSetRSOverride()
 
 Gw2TAA::Gw2TAA()
 {
-	taa = new GenericTAA(d912pxy_s.iframeMods.configVal(L"post_proc_apply"), nullptr, jitterCbufRSIdx);
+	taa = new GenericTAA(d912pxy_s.iframeMods.configVal(L"post_proc_apply").raw, nullptr, jitterCbufRSIdx);
 	d912pxy_s.iframeMods.pushMod(taa);
 
 	initAndSetRSOverride();
-	d912pxy_hlsl_generator::overrideCommonInclude(d912pxy_s.iframeMods.configVal(L"common_hlsl_override"));
+	d912pxy_hlsl_generator::overrideCommonInclude(d912pxy_s.iframeMods.configVal(L"common_hlsl_override").raw);
 }
 
 void Gw2TAA::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext)

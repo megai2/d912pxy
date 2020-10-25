@@ -65,16 +65,15 @@ void GenericTAA::resetAdditionalFrames(d912pxy_surface* from)
 	jitterSeq.loadTo(jitterCBuf);
 }
 
-GenericTAA::GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw, int cbufferReg)
-	: jitterCBufRSIdx(cbufferReg)
+void GenericTAA::checkNativeDrawLoaded()
 {
-	uiPass = new PassDetector(preUiLastDraw, uiFirstDraw, 0, false);
-	d912pxy_s.iframeMods.pushMod(uiPass);
+	if (taaDraw)
+		return;
 
-	jitterCBuf = d912pxy_vstream::d912pxy_vstream_com(jitterSeq.size, 0, 0, 0);	
+	jitterCBuf = d912pxy_vstream::d912pxy_vstream_com(jitterSeq.size, 0, 0, 0);
 
 	//TODO: make dx12 shader & load it
-	uint32_t indexData[6] = { 0, 1, 2, 2, 3, 0};
+	uint32_t indexData[6] = { 0, 1, 2, 2, 3, 0 };
 	float vertexData[16] = {
 		-1.0f, -1.0f, 0.0f, 0.0f,
 		-1.0f,  1.0f, 0.0f, 0.0f,
@@ -91,6 +90,13 @@ GenericTAA::GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw,
 			MemoryArea(&cb0Data, sizeof(cb0Data))
 		}
 	);
+}
+
+GenericTAA::GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw, int cbufferReg)
+	: jitterCBufRSIdx(cbufferReg)
+{
+	uiPass = new PassDetector(preUiLastDraw, uiFirstDraw, 0, false);
+	d912pxy_s.iframeMods.pushMod(uiPass);
 }
 
 void GenericTAA::setJitter(bool enable, d912pxy_replay_thread_context* ctx)
@@ -136,7 +142,8 @@ void GenericTAA::RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912px
 
 		currentRt->BCopyToWStates(currentFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 			
-		taaDraw->draw(*rpContext);
+		checkNativeDrawLoaded();
+		//taaDraw->draw(*rpContext);
 
 		currentFrame->BCopyToWStates(prevFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		

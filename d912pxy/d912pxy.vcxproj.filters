@@ -359,6 +359,9 @@
     <ClCompile Include="v3\dx12\extras\iframe_mods\native_draw.cpp">
       <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
+    <ClCompile Include="v3\util\key_value_reader.cpp">
+      <Filter>v3\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -713,6 +716,9 @@
     </ClInclude>
     <ClInclude Include="d912pxy_pso_mt_dispatcher.h">
       <Filter>d3d9_impl\device\iframe\pso</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\util\key_value_reader.h">
+      <Filter>v3\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
