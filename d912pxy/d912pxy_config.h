@@ -78,6 +78,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_COMPAT_TRACK_RS,
 	PXY_CFG_COMPAT_DUP_UNSAFE,
 	PXY_CFG_COMPAT_DHEAP_MODE,
+	PXY_CFG_COMPAT_EXPLICIT_D3DCOMPILER,
 	PXY_CFG_VFS_ROOT,
 	PXY_CFG_VFS_MEMCACHE_MASK,
 	PXY_CFG_VFS_PACK_DATA,
@@ -219,6 +220,14 @@ private:
 		{L"compat",L"track_rs",L"0"},//PXY_CFG_COMPAT_TRACK_RS
 		{L"compat",L"unsafe_dup",L"0"},//PXY_CFG_COMPAT_DUP_UNSAFE
 		{L"compat",L"dheap_mode",L"0"},//PXY_CFG_COMPAT_DHEAP_MODE
+		{
+			L"compat",
+			L"explicit_d3dcompiler_dll",
+			L"0"
+			L"b r:0,1"
+			L"Allows to use d912pxy supplied d3d compiler dll",
+			L"If 1 uses d3d compiler 27 v10 lib from 12on7 instead of default one"
+		},//PXY_CFG_COMPAT_EXPLICIT_D3DCOMPILER
 		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
 		{L"vfs", L"memcache_mask", L"63"},//PXY_CFG_VFS_MEMCACHE_MASK
 		{L"vfs", L"pack_data", L"0"},//PXY_CFG_VFS_PACK_DATA

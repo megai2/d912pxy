@@ -39,6 +39,8 @@ typedef struct d912pxy_dynamic_import_lib_array {
 
 #define DYNIMP_LIB_SET_WIN10 0
 #define DYNIMP_LIB_SET_WIN7 1
+#define DYNIMP_LIB_SET_WIN10_EXPLICIT_COMPILER_X64 2
+#define DYNIMP_LIB_SET_WIN10_EXPLICIT_COMPILER_X86 3
 
 static const d912pxy_dynamic_import_lib_array d912pxy_dynamic_import_libs[] = {
 	{
@@ -56,13 +58,37 @@ static const d912pxy_dynamic_import_lib_array d912pxy_dynamic_import_libs[] = {
 	{
 		{
 			L"d3d12.dll",
-			L"d3dcompiler_47_v10.dll",
+			L"d3dcompiler_47_v10_x64.dll",
 			L"dxilconv7.dll"
 		},
 		{
 			FP_W7_12ON7,
-			FP_W7_12ON7,
+			FP_PROXY_DATA_PATH,
 			FP_W7_12ON7
+		}
+	},
+	{
+		{
+			L"d3d12.dll",
+			L"d3dcompiler_47_v10_x64.dll",
+			NULL
+		},
+		{
+			FP_NO_PATH,
+			FP_PROXY_DATA_PATH,
+			FP_NO_PATH
+		}
+	},
+	{
+		{
+			L"d3d12.dll",
+			L"d3dcompiler_47_v10_x86.dll",
+			NULL
+		},
+		{
+			FP_NO_PATH,
+			FP_PROXY_DATA_PATH,
+			FP_NO_PATH
 		}
 	}
 };

@@ -47,12 +47,20 @@ void d912pxy_dynamic_imports::Init()
 
 
 	UINT dynLibSet = LoadDynLib(DYNIMP_DX12, DYNIMP_LIB_SET_WIN7) ? DYNIMP_LIB_SET_WIN7 : DYNIMP_LIB_SET_WIN10;
+	bool isWin7 = (dynLibSet == DYNIMP_LIB_SET_WIN7);
 
-	if (dynLibSet)
+	if (isWin7)
 		LOG_INFO_DTDM("Pepe: Is this windows 7? windows 7 right.");
+	else if (d912pxy_s.config.GetValueUI32(PXY_CFG_COMPAT_EXPLICIT_D3DCOMPILER) > 0)
+	{
+#if _WIN64
+		dynLibSet = DYNIMP_LIB_SET_WIN10_EXPLICIT_COMPILER_X64;
+#else
+		dynLibSet = DYNIMP_LIB_SET_WIN10_EXPLICIT_COMPILER_X86;
+#endif
+	}
 
-	//megai2: tricky cycle start
-	for (int i = dynLibSet; i != DYNIMP_COUNT; ++i)
+	for (int i = isWin7 ? DYNIMP_D3DCOMPILER : DYNIMP_DX12; i != DYNIMP_COUNT; ++i)
 	{
 		if (!LoadDynLib((d912pxy_dynamic_import_lib)i, dynLibSet))
 		{
