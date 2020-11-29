@@ -514,7 +514,8 @@ void d912pxy_surface::CopySurfaceDataToCPU()
 	D3D12_TEXTURE_COPY_LOCATION dstR = { readbackBuffer->GetD12Obj(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, 0 };
 
 	UINT64 activeSize;
-	d912pxy_s.dx12.dev->GetCopyableFootprints(&m_res->GetDesc(), 0, 1, 0, &dstR.PlacedFootprint, 0, 0, &activeSize);
+	D3D12_RESOURCE_DESC rDesc = m_res->GetDesc();
+	d912pxy_s.dx12.dev->GetCopyableFootprints(&rDesc, 0, 1, 0, &dstR.PlacedFootprint, 0, 0, &activeSize);
 
 	D3D12_TEXTURE_COPY_LOCATION srcR = { m_res, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, 0 };
 
