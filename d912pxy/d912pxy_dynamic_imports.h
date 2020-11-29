@@ -56,7 +56,7 @@ static const d912pxy_dynamic_import_lib_array d912pxy_dynamic_import_libs[] = {
 	{
 		{
 			L"d3d12.dll",
-			L"d3dcompiler_47_v10",
+			L"d3dcompiler_47_v10.dll",
 			L"dxilconv7.dll"
 		},
 		{
