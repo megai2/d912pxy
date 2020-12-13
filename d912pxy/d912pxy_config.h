@@ -223,8 +223,8 @@ private:
 		{
 			L"compat",
 			L"explicit_d3dcompiler_dll",
-			L"0"
-			L"b r:0,1"
+			L"0",
+			L"b r:0,1",
 			L"Allows to use d912pxy supplied d3d compiler dll",
 			L"If 1 uses d3d compiler 27 v10 lib from 12on7 instead of default one"
 		},//PXY_CFG_COMPAT_EXPLICIT_D3DCOMPILER
