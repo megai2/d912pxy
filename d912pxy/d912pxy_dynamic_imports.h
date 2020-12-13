@@ -63,7 +63,7 @@ static const d912pxy_dynamic_import_lib_array d912pxy_dynamic_import_libs[] = {
 		},
 		{
 			FP_W7_12ON7,
-			FP_PROXY_DATA_PATH,
+			FP_W7_12ON7,
 			FP_W7_12ON7
 		}
 	},
