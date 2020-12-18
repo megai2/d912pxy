@@ -83,7 +83,6 @@ void Manager::Init()
 	{
 		ModHandler* gw2taa = (ModHandler*)(new Gw2TAA());
 		//TODO
-		//1. debug current code as load order is wrong
 		//4. mix last saved frame with new one via "decent" taa algo
 		//5. apply jitter in "right" places via pass detector
 	}

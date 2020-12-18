@@ -529,22 +529,24 @@ void d912pxy_iframe::FillPrimaryRSstaticPCFSampler(D3D12_STATIC_SAMPLER_DESC& st
 
 void d912pxy_iframe::FillPrimaryRSDescriptorRanges(D3D12_DESCRIPTOR_RANGE* ranges)
 {
+	d912pxy_dheap** heaps = d912pxy_s.dev.GetDHeaps();
+
 	//zero of ROOTDESC is PXY_INNER_HEAP_TEX2D where all our textures are
 	ranges[0].BaseShaderRegister = 0;
 	ranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	ranges[0].NumDescriptors = mHeaps[PXY_INNER_HEAP_SRV]->GetDesc()->NumDescriptors;
+	ranges[0].NumDescriptors = heaps[PXY_INNER_HEAP_SRV]->GetDesc()->NumDescriptors;
 	ranges[0].OffsetInDescriptorsFromTableStart = 0;
 	ranges[0].RegisterSpace = 0;
 
 	ranges[1].BaseShaderRegister = 0;
 	ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	ranges[1].NumDescriptors = mHeaps[PXY_INNER_HEAP_SRV]->GetDesc()->NumDescriptors;
+	ranges[1].NumDescriptors = heaps[PXY_INNER_HEAP_SRV]->GetDesc()->NumDescriptors;
 	ranges[1].OffsetInDescriptorsFromTableStart = 0;
 	ranges[1].RegisterSpace = 1;
 
 	ranges[2].BaseShaderRegister = 0;
 	ranges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-	ranges[2].NumDescriptors = mHeaps[PXY_INNER_HEAP_SPL]->GetDesc()->NumDescriptors;
+	ranges[2].NumDescriptors = heaps[PXY_INNER_HEAP_SPL]->GetDesc()->NumDescriptors;
 	ranges[2].OffsetInDescriptorsFromTableStart = 0;
 	ranges[2].RegisterSpace = 0;
 }

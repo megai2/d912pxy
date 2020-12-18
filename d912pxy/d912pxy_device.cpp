@@ -236,6 +236,12 @@ D3D12_HEAP_PROPERTIES d912pxy_device::GetResourceHeap(D3D12_HEAP_TYPE Type)
 	return ret;
 }
 
+
+d912pxy_dheap** d912pxy_device::GetDHeaps()
+{
+	return m_dheaps;
+}
+
 d912pxy_dheap * d912pxy_device::GetDHeap(UINT slot)
 {
 	return m_dheaps[slot];

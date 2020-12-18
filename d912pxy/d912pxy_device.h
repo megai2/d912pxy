@@ -296,6 +296,7 @@ public:
 	ID3D12Device* GetDev12Ptr() { return m_d12evice_ptr;  }
 	D3D12_HEAP_PROPERTIES GetResourceHeap(D3D12_HEAP_TYPE Type);
 	d912pxy_dheap* GetDHeap(UINT slot);
+	d912pxy_dheap** GetDHeaps();
 
 	void IFrameCleanupEnqeue(d912pxy_comhandler* obj);
 
