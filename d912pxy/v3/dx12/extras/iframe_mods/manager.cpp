@@ -90,6 +90,10 @@ void Manager::Init()
 	{
 		d912pxy::error::fatal(L"someday");
 	}
+	else if (lstrcmpW(mainMod.raw, L"reshade_compat") == 0)
+	{
+		(ModHandler*)(new ReshadeCompat());
+	}
 }
 
 //TODO: tidy this up somehow, literally this is one thing route 1 to many

@@ -769,6 +769,7 @@
     <ClInclude Include="v3\dx12\extras\iframe_mods\native_draw.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\pass_detector.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\generic_taa.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\reshade_compat.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\shader.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\state_holder.h" />
     <ClInclude Include="v3\dx12\extras\shader_pair\info.h" />
@@ -912,6 +913,7 @@
     <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\native_draw.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\pass_detector.cpp" />
+    <ClCompile Include="v3\dx12\extras\iframe_mods\reshade_compat.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\state_holder.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\tracker.cpp" />

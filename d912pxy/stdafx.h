@@ -163,6 +163,7 @@ SOFTWARE.
 #include "v3/dx12/extras/iframe_mods/native_draw.h"
 #include "v3/dx12/extras/iframe_mods/generic_taa.h"
 #include "v3/dx12/extras/iframe_mods/gw2_taa.h"
+#include "v3/dx12/extras/iframe_mods/reshade_compat.h"
 #include "d912pxy_extras.h"
 #include "d912pxy_device.h"
 #include "d912pxy_instance.h"

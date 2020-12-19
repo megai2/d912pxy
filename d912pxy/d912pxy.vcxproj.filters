@@ -362,6 +362,9 @@
     <ClCompile Include="v3\util\key_value_reader.cpp">
       <Filter>v3\util</Filter>
     </ClCompile>
+    <ClCompile Include="v3\dx12\extras\iframe_mods\reshade_compat.cpp">
+      <Filter>v3\extras\iframe_mods</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -719,6 +722,9 @@
     </ClInclude>
     <ClInclude Include="v3\util\key_value_reader.h">
       <Filter>v3\util</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\reshade_compat.h">
+      <Filter>v3\extras\iframe_mods</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
