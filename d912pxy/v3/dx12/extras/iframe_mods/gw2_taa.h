@@ -29,7 +29,7 @@ namespace d912pxy {
 namespace extras {
 namespace IFrameMods {
 
-			class Gw2TAA : public d912pxy_noncom
+			class Gw2TAA : public ModHandler
 			{
 				GenericTAA* taa;
 
@@ -47,16 +47,16 @@ namespace IFrameMods {
 			public:
 				Gw2TAA();
 
-				void Init();
-				void UnInit();
+				//void Init();
+				//void UnInit();
 
-				void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext);
-				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext);
+				void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext) override;
+				//void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;
+				//void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;
+				//void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext) override;
 
-				void IFR_Start();
-				void IFR_End();
+				//void IFR_Start() override;
+				//void IFR_End() override;
 			};
 
 }

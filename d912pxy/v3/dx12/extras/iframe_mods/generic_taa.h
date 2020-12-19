@@ -127,8 +127,8 @@ namespace IFrameMods {
 				void setJitter(bool enable, d912pxy_replay_thread_context* ctx);
 
 				void UnInit();
-				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
-				void IFR_Start();
+				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;
+				void IFR_Start() override;
 			};
 
 }
