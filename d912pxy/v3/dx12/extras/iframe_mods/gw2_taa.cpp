@@ -60,6 +60,7 @@ void d912pxy::extras::IFrameMods::Gw2TAA::initAndSetRSOverride()
 
 Gw2TAA::Gw2TAA()
 {
+	//TODO: pattern is generic, so can be moved inside pass detector constructor
 	wchar_t* preNormPass = d912pxy_s.iframeMods.configVal(L"pre_norm_pass").raw;
 	wchar_t* normPassInitial = d912pxy_s.iframeMods.configVal(L"norm_pass_initial").raw;
 	uint32_t normPassRTDSmask = d912pxy_s.iframeMods.configVal(L"norm_pass_RTDS_mask").ui32();
@@ -81,8 +82,6 @@ Gw2TAA::Gw2TAA()
 	d912pxy_hlsl_generator::overrideCommonInclude(d912pxy_s.iframeMods.configVal(L"common_hlsl_override").raw);
 
 	d912pxy_s.iframeMods.pushMod(this);
-
-
 }
 
 void Gw2TAA::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext)

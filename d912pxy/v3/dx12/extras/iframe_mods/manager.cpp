@@ -84,7 +84,7 @@ void Manager::Init()
 		ModHandler* gw2taa = (ModHandler*)(new Gw2TAA());
 		//TODO
 		//4. mix last saved frame with new one via "decent" taa algo
-		//5. apply jitter in "right" places via pass detector
+		//6. debug pass detectors
 	}
 	else if (lstrcmpW(mainMod.raw, L"gw2_rtx") == 0)
 	{
