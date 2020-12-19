@@ -111,36 +111,36 @@ void Manager::UnInit()
 
 void d912pxy::extras::IFrameMods::Manager::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext)
 {
-	for (int i = 1; i < modList.headIdx(); ++i)
+	for (int i = 1; i <= modList.headIdx(); ++i)
 		modList[i]->RP_PSO_Change(rpItem, rpContext);
 }
 
 void Manager::RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext)
 {
-	for (int i = 1; i < modList.headIdx(); ++i)	
+	for (int i = 1; i <= modList.headIdx(); ++i)	
 		modList[i]->RP_PreDraw(rpItem, rpContext);
 }
 
 void Manager::RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext)
 {
-	for (int i = 1; i < modList.headIdx(); ++i)
+	for (int i = 1; i <= modList.headIdx(); ++i)
 		modList[i]->RP_PostDraw(rpItem, rpContext);
 }
 
 void Manager::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext)
 {
-	for (int i = 1; i < modList.headIdx(); ++i)
+	for (int i = 1; i <= modList.headIdx(); ++i)
 		modList[i]->RP_RTDSChange(rpItem, rpContext);
 }
 
 void Manager::IFR_Start()
 {
-	for (int i = 1; i < modList.headIdx(); ++i)
+	for (int i = 1; i <= modList.headIdx(); ++i)
 		modList[i]->IFR_Start();
 }
 
 void Manager::IFR_End()
 {
-	for (int i = 1; i < modList.headIdx(); ++i)
+	for (int i = 1; i <= modList.headIdx(); ++i)
 		modList[i]->IFR_End();
 }
