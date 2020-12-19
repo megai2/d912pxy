@@ -122,7 +122,7 @@ namespace IFrameMods {
 				void checkNativeDrawLoaded();
 				
 			public:
-				GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw, int cbufferRSIdx);
+				GenericTAA(int cbufferRSIdx);
 
 				void setJitter(bool enable, d912pxy_replay_thread_context* ctx);
 

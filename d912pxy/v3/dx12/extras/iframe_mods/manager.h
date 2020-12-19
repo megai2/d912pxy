@@ -34,6 +34,7 @@ namespace d912pxy {
 				wchar_t* raw = nullptr;
 
 				bool valid() const { return raw != nullptr; }
+				uint32_t ui32() const { return _wtoi(raw); }
 			};
 
 			class ModHandler : public d912pxy_noncom

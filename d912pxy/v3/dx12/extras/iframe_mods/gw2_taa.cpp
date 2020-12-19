@@ -60,11 +60,29 @@ void d912pxy::extras::IFrameMods::Gw2TAA::initAndSetRSOverride()
 
 Gw2TAA::Gw2TAA()
 {
-	taa = new GenericTAA(d912pxy_s.iframeMods.configVal(L"post_proc_apply").raw, nullptr, jitterCbufRSIdx);
+	wchar_t* preNormPass = d912pxy_s.iframeMods.configVal(L"pre_norm_pass").raw;
+	wchar_t* normPassInitial = d912pxy_s.iframeMods.configVal(L"norm_pass_initial").raw;
+	uint32_t normPassRTDSmask = d912pxy_s.iframeMods.configVal(L"norm_pass_RTDS_mask").ui32();
+	uint32_t normPassTargetLock = d912pxy_s.iframeMods.configVal(L"norm_pass_target_lock").ui32();
+	wchar_t* preResolvePass = d912pxy_s.iframeMods.configVal(L"pre_resolve_pass").raw;
+	wchar_t* resolvePassInitial = d912pxy_s.iframeMods.configVal(L"resolve_pass_initial").raw;
+	uint32_t resolvePassRTDSmask = d912pxy_s.iframeMods.configVal(L"resolve_pass_RTDS_mask").ui32();
+	uint32_t resolvePassTargetLock = d912pxy_s.iframeMods.configVal(L"resolve_pass_target_lock").ui32();
+
+	taa = new GenericTAA(jitterCbufRSIdx);
+	normDepthPass = new PassDetector(preNormPass, normPassInitial, normPassRTDSmask, normPassTargetLock);
+	resolvePass = new PassDetector(preResolvePass, resolvePassInitial, resolvePassRTDSmask, resolvePassTargetLock);
+
 	d912pxy_s.iframeMods.pushMod(taa);
+	d912pxy_s.iframeMods.pushMod(normDepthPass);
+	d912pxy_s.iframeMods.pushMod(resolvePass);
 
 	initAndSetRSOverride();
 	d912pxy_hlsl_generator::overrideCommonInclude(d912pxy_s.iframeMods.configVal(L"common_hlsl_override").raw);
+
+	d912pxy_s.iframeMods.pushMod(this);
+
+
 }
 
 void Gw2TAA::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext)

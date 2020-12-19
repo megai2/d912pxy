@@ -92,10 +92,15 @@ void GenericTAA::checkNativeDrawLoaded()
 	);
 }
 
-GenericTAA::GenericTAA(const wchar_t* preUiLastDraw, const wchar_t* uiFirstDraw, int cbufferReg)
+GenericTAA::GenericTAA(int cbufferReg)
 	: jitterCBufRSIdx(cbufferReg)
 {
-	uiPass = new PassDetector(preUiLastDraw, uiFirstDraw, 0, false);
+	wchar_t* preUiPass = d912pxy_s.iframeMods.configVal(L"pre_ui_pass").raw;
+	wchar_t* uiPassInitial = d912pxy_s.iframeMods.configVal(L"ui_pass_initial").raw;
+	uint32_t uiPassRTDSmask = d912pxy_s.iframeMods.configVal(L"ui_pass_RTDS_mask").ui32();
+	uint32_t uiPassTargetLock = d912pxy_s.iframeMods.configVal(L"ui_pass_target_lock").ui32();
+
+	uiPass = new PassDetector(preUiPass, uiPassInitial, uiPassRTDSmask, uiPassTargetLock);
 	d912pxy_s.iframeMods.pushMod(uiPass);
 }
 
