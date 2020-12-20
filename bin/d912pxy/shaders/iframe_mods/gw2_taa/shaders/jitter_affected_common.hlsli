@@ -37,7 +37,7 @@ struct TAAParams
 {
 	float2 jitter;
 	float2 invSize;
-}
+};
 
 //root signature 
 
