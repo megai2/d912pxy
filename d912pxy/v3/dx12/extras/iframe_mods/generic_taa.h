@@ -104,10 +104,9 @@ namespace IFrameMods {
 	
 			class GenericTAA : public ModHandler
 			{				
-				d912pxy_surface* prevFrame = nullptr;
-				d912pxy_surface* currentFrame = nullptr;
+				SimilarTex prevFrame;
+				SimilarTex currentFrame;
 
-				d912pxy_surface* surfFromTempl(D3DSURFACE_DESC& descTempl);
 				void resetAdditionalFrames(d912pxy_surface* from);
 
 				d912pxy_pso_item* taaShader = nullptr;

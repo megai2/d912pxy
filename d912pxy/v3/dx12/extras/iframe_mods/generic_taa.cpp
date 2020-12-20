@@ -26,40 +26,10 @@ SOFTWARE.
 
 using namespace d912pxy::extras::IFrameMods;
 
-d912pxy_surface* GenericTAA::surfFromTempl(D3DSURFACE_DESC& descTempl)
-{
-	UINT levels = 1;
-	d912pxy_surface* ret = d912pxy_surface::d912pxy_surface_com(
-		descTempl.Width,
-		descTempl.Height,
-		descTempl.Format,
-		descTempl.Usage,
-		descTempl.MultiSampleType,
-		descTempl.MultiSampleQuality,
-		false,
-		&levels,
-		0,
-		nullptr
-	);
-
-	//TODO: ensure we have rtds at first TAA draw call
-	ret->GetSRVHeapIdRTDS();
-
-	return ret;
-}
 
 void GenericTAA::resetAdditionalFrames(d912pxy_surface* from)
 {
 	D3DSURFACE_DESC descTempl = from->GetDX9DescAtLevel(0);
-
-	if (prevFrame)
-		prevFrame->Release();
-
-	if (currentFrame)
-		currentFrame->Release();
-	
-	prevFrame = surfFromTempl(descTempl);
-	currentFrame = surfFromTempl(descTempl);
 
 	jitterSeq.adjustInverseWH(descTempl.Width, descTempl.Height);
 	jitterSeq.loadTo(jitterCBuf);
@@ -116,11 +86,8 @@ void d912pxy::extras::IFrameMods::GenericTAA::UnInit()
 {
 	delete taaShader;
 
-	if (prevFrame)
-		prevFrame->Release();
-
-	if (currentFrame)
-		currentFrame->Release();
+	prevFrame.UnInit();
+	currentFrame.UnInit();
 
 	jitterCBuf->Release();
 }
@@ -131,26 +98,18 @@ void GenericTAA::RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912px
 	{
 		d912pxy_surface* currentRt = uiPass->getSurf(true);
 
-		if (!prevFrame || !currentFrame)
+		if (prevFrame.syncFrom(currentRt))
 		{
 			resetAdditionalFrames(currentRt);
-		}
-		else {
-			D3DSURFACE_DESC actualDesc = currentRt->GetDX9DescAtLevel(0);
-			D3DSURFACE_DESC oldDesc = prevFrame->GetDX9DescAtLevel(0);
-			
-			if ((oldDesc.Height != actualDesc.Height) || (oldDesc.Width != actualDesc.Width))
-			{
-				resetAdditionalFrames(currentRt);
-			}
+			currentFrame.syncFrom(currentRt);
 		}
 
-		currentRt->BCopyToWStates(currentFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		currentRt->BCopyToWStates(currentFrame.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 			
 		checkNativeDrawLoaded();
 		//taaDraw->draw(*rpContext);
 
-		currentFrame->BCopyToWStates(prevFrame, 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		currentFrame.ptr()->BCopyToWStates(prevFrame.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		
 	}
 }
