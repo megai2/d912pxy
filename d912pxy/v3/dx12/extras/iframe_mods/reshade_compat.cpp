@@ -24,6 +24,39 @@ SOFTWARE.
 
 */
 
+/////////reshade ct interface
+
+static const GUID reshade_ct_fake_guid = { 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } };
+static const uint64_t reshade_ct_magic = 0x505670b7c18ff478;
+
+enum reshade_ct_res_names
+{
+	COLOR = 0,
+	DEPTH = 1,
+	ZPREPASS = 2,
+	GBUF_0 = 3,
+	GBUF_1 = 4,
+	GBUF_2 = 5,
+	GBUF_3 = 6,
+	GBUF_4 = 7,
+	OVERLAY_0 = 8,
+	OVERLAY_1 = 9,
+	OVERLAY_2 = 10,
+	OVERLAY_3 = 11,
+	OPAQUE_GEOMETRY = 12,
+	TRANSP_GEOMETRY = 13,
+	COUNT = 14
+};
+
+struct reshade_ct_entry
+{
+	uint64_t magic;
+	uint64_t ct_idx;
+	ID3D12Resource* res;
+};
+
+/////////
+
 using namespace d912pxy::extras::IFrameMods;
 
 ReshadeCompat::ReshadeCompat()
@@ -41,5 +74,14 @@ ReshadeCompat::ReshadeCompat()
 
 void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext)
 {
-	//if in ui pass force reshade to perform PP in this cl
+	//detect any copy needed frames to ReShade as external resource
+	if (uiPass->entered())
+	{
+		if (colorCopy.syncFrom(uiPass->getSurf()))
+		{
+			reshade_ct_entry color_tex_ct { reshade_ct_magic, reshade_ct_res_names::COLOR, colorCopy.ptr()->GetD12Obj() };
+			rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&color_tex_ct));
+		}
+		uiPass->getSurf()->BCopyToWStates(colorCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	}
 }

@@ -33,6 +33,8 @@ namespace d912pxy {
 			{
 				PassDetector* uiPass;
 
+				SimilarTex colorCopy;
+
 			public:
 				ReshadeCompat();
 
