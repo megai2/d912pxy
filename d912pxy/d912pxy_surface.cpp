@@ -760,12 +760,12 @@ UINT d912pxy_surface::GetSRVHeapIdRTDS()
 	if (dheapId == -1)
 		dheapId = AllocateSRV(m_res);
 
+	bool isDs = (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0;
+
 	//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but some drivers handle this bad
-	if (d912pxy_s.render.replay.DoBarrier(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
-		(descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_COMMON
-	))
+	if (d912pxy_s.render.replay.DoBarrier(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | (isDs ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_COMMON)))
 	{
-		d912pxy_s.render.iframe.NoteBindedSurfaceTransit(this, (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) == 0);
+		d912pxy_s.render.iframe.NoteBindedSurfaceTransit(this, isDs ? 0 : 1);
 	}
 
 	return dheapId;
