@@ -36,12 +36,13 @@ d912pxy_surface* d912pxy::extras::IFrameMods::SimilarTex::surfFromTempl(D3DSURFA
 		descTempl.MultiSampleQuality,
 		false,
 		&levels,
-		0,
+		1,
 		nullptr
 	);
+	ret->ConstructResource();
 
 	//TODO: ensure we have rtds at first TAA draw call
-	ret->GetSRVHeapIdRTDS();
+	//ret->GetSRVHeapIdRTDS();
 
 	return ret;
 }
@@ -60,6 +61,9 @@ void d912pxy::extras::IFrameMods::SimilarTex::UnInit()
 
 bool d912pxy::extras::IFrameMods::SimilarTex::syncFrom(d912pxy_surface* source)
 {
+	if (!source)
+		return false;
+
 	D3DSURFACE_DESC actualDesc = source->GetDX9DescAtLevel(0);
 
 	if (surf)
