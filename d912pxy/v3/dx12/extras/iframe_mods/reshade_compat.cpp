@@ -66,6 +66,9 @@ ReshadeCompat::ReshadeCompat()
 	uint32_t uiPassRTDSmask = d912pxy_s.iframeMods.configVal(L"ui_pass_RTDS_mask").ui32();
 	uint32_t uiPassTargetLock = d912pxy_s.iframeMods.configVal(L"ui_pass_target_lock").ui32();
 
+	afterFirstUiDraw = d912pxy_s.iframeMods.configVal(L"catch_scene_after_first_ui_draw").ui32() > 0;
+	doCopy = false;
+
 	uiPass = new PassDetector(preUiPass, uiPassInitial, uiPassRTDSmask, uiPassTargetLock);
 	d912pxy_s.iframeMods.pushMod(uiPass);
 
@@ -74,14 +77,60 @@ ReshadeCompat::ReshadeCompat()
 
 void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext)
 {
-	//detect any copy needed frames to ReShade as external resource
 	if (uiPass->entered())
+		copySceneColorAndDepth(rpContext);
+}
+
+void ReshadeCompat::RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext)
+{
+	if (afterFirstUiDraw)
 	{
-		if (colorCopy.syncFrom(uiPass->getSurf()))
+		if (uiPass->entered())
+			doCopy = true;
+		else if (uiPass->inside() && doCopy)
 		{
-			reshade_ct_entry color_tex_ct { reshade_ct_magic, reshade_ct_res_names::COLOR, colorCopy.ptr()->GetD12Obj() };
-			rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&color_tex_ct));
+			doCopy = false;
+			copySceneColorAndDepth(rpContext);
 		}
-		uiPass->getSurf()->BCopyToWStates(colorCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	}
+	else if (uiPass->entered())
+		copySceneColorAndDepth(rpContext);
+}
+
+void ReshadeCompat::copySceneColorAndDepth(d912pxy_replay_thread_context* rpContext)
+{
+	d912pxy_surface* sceneColor = uiPass->getSurf();
+	d912pxy_surface* sceneDepth = uiPass->getSurf(false, afterFirstUiDraw);
+
+	//copy needed frames to ReShade as external resource
+	if (colorCopy.syncFrom(sceneColor))
+	{
+		colorCopy.ptr()->GetD12Obj()->SetName(L"proxyColorCopy");
+		colorCopy.ptr()->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, rpContext->cl);
+		reshade_ct_entry color_tex_ct{ reshade_ct_magic, reshade_ct_res_names::COLOR, colorCopy.ptr()->GetD12Obj() };
+		rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&color_tex_ct));
+	}
+
+	if (depthCopy.syncFrom(sceneDepth))
+	{
+		depthCopy.ptr()->GetD12Obj()->SetName(L"proxyDepthCopy");
+		depthCopy.ptr()->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_DEPTH_READ, rpContext->cl);
+		reshade_ct_entry depth_tex_ct{ reshade_ct_magic, reshade_ct_res_names::DEPTH, depthCopy.ptr()->GetD12Obj() };
+		rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&depth_tex_ct));
+	}
+
+	sceneColor->BCopyToWStates(colorCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	if (sceneDepth)
+		sceneDepth->BCopyToWStates(depthCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_DEPTH_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+	//clear color to mix UI easier
+	D3DSURFACE_DESC desc = sceneColor->GetDX9DescAtLevel(0);
+	float black[4] = { 0,0,0,0 };
+	D3D12_RECT view = {
+				(LONG)0,
+				(LONG)0,
+				(LONG)desc.Width,
+				(LONG)desc.Height
+	};
+	sceneColor->ClearAsRTV(black, rpContext->cl, &view);
 }
