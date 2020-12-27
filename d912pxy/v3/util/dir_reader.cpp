@@ -59,7 +59,7 @@ d912pxy::DirReader::~DirReader()
 
 bool DirReader::empty()
 {
-	return cur > dataArray.headIdx();
+	return (cur > dataArray.headIdx()) && dataArray.headIdx() ;
 }
 
 MemoryBlock& DirReader::next()
