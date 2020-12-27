@@ -87,7 +87,7 @@ d912pxy_surface::d912pxy_surface(UINT Width, UINT Height, D3DFORMAT Format, DWOR
 	}
 	else if (!threadedCtor || (*levels == 0)) {
 		dheapId = 0;
-		d12res_tex2d(Width, Height, m_fmt, (UINT16*)levels, arrSz);
+		d12res_tex2d(Width, Height, ConvertInnerDSVFormat(), (UINT16*)levels, arrSz);
 	}
 	else {
 		descCache = {
@@ -592,7 +592,7 @@ UINT32 d912pxy_surface::AllocateSRV(ID3D12Resource* resPtr)
 	}
 	else {
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDsc;
-		srvDsc.Format = m_fmt;
+		srvDsc.Format = GetSRVFormat();
 		srvDsc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 		srvDsc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
@@ -734,7 +734,7 @@ void d912pxy_surface::ConstructResource()
 
 	//megai2: tmp location is needed to drop into ConstructResource from other threads when we are in ConstructResource
 
-	ID3D12Resource* tmpLocation = d12res_tex2d_target(surf_dx9dsc.Width, surf_dx9dsc.Height, m_fmt, &descCache.MipLevels, descCache.DepthOrArraySize);
+	ID3D12Resource* tmpLocation = d12res_tex2d_target(surf_dx9dsc.Width, surf_dx9dsc.Height, ConvertInnerDSVFormat(), &descCache.MipLevels, descCache.DepthOrArraySize);
 	dheapId = AllocateSRV(tmpLocation);
 
 	m_res = tmpLocation;
@@ -761,7 +761,9 @@ UINT d912pxy_surface::GetSRVHeapIdRTDS()
 		dheapId = AllocateSRV(m_res);
 
 	//megai2: doin no transit here allows us to use surface as RTV and SRV in one time, but some drivers handle this bad
-	if (d912pxy_s.render.replay.DoBarrier(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+	if (d912pxy_s.render.replay.DoBarrier(this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+		(descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_COMMON
+	))
 	{
 		d912pxy_s.render.iframe.NoteBindedSurfaceTransit(this, (descCache.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) == 0);
 	}
