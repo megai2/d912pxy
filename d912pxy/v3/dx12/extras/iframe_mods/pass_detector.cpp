@@ -40,6 +40,7 @@ void PassDetector::exit()
 {
 	justExited = true;
 	inPass = false;
+	justEntered = false;
 }
 
 void PassDetector::neutral()
