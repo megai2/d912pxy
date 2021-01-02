@@ -48,13 +48,15 @@ public:
 	d912pxy_folded_buffer_stream() : dataPtr(0) { };
 	~d912pxy_folded_buffer_stream() { };
 
-	void Init(UINT eCount, const wchar_t* name)
+	uint64_t Init(UINT eCount, const wchar_t* name)
 	{
 		UINT size = eCount * sizeof(bufElement);
 		cData.Add(new d912pxy_cbuffer(size, true, name));
 		cData.Add(new d912pxy_cbuffer(size, true, name));
 
 		dataPtr = cData->HostPtr();
+
+		return size * 2;
 	}
 
 	void UnInit()

@@ -27,12 +27,23 @@ SOFTWARE.
 template<class base_element, class sub_element>
 void d912pxy_folded_buffer<base_element, sub_element>::Init(UINT maxElements, UINT maxWrites, UINT threads)
 {
-	ctl.Init(maxWrites, L"folded control");
-	data.Init(maxWrites, L"folded data");
+	uint64_t ramUsed = 0;
+
+	ramUsed += ctl.Init(maxWrites, L"folded control");
+	ramUsed += data.Init(maxWrites, L"folded data");
+
+	uint64_t vramUsed = 
+		  sizeof(d912pxy_folded_buffer_control_entry) * maxWrites
+		+ sizeof(sub_element) * maxWrites
+		+ sizeof(base_element) * maxElements;
+
+
 	gpuCtl = new d912pxy_cbuffer(sizeof(d912pxy_folded_buffer_control_entry)*maxWrites, false, L"folded gpu control");
 	gpuData = new d912pxy_cbuffer(sizeof(sub_element)*maxWrites, false, L"folded gpu data");
 
 	unfolded = new d912pxy_cbuffer(sizeof(base_element)*maxElements, false, L"unfolded buffer");
+
+	LOG_INFO_DTDM("Used VRAM: %llu Mb, RAM: %llu Mb", vramUsed >> 20, ramUsed >> 20);
 
 	unfoldedDevPtrBase = unfolded->DevPtr();
 	
