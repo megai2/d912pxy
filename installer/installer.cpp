@@ -39,6 +39,15 @@ int read_user_integer(int defv)
 	return ret;
 }
 
+void WaitNewLine()
+{
+	std::cout << "Press enter to continue";
+
+	std::string str;
+
+	getline(std::cin, str);
+}
+
 bool ReadUserYN(bool defaultY)
 {
 	if (defaultY)
@@ -82,7 +91,7 @@ int action_install()
 	else if (!arch.SSE)
 	{
 		std::cout << "Your CPU need SSE support in order to use this tool\n";
-		system("pause");
+		WaitNewLine();
 		return -1;
 	}
 
@@ -118,16 +127,16 @@ int action_install()
 		case 1:
 			break;
 		case 2:
-			if (system("copy config.ini backup_config.ini") != 0)
+			if (!CopyFile(L"config.ini", L"backup_config.ini", false))
 				std::cout << "failed to backup config \n";
 
-			if (system("copy bns_config.ini config.ini") != 0)
+			if (!CopyFile(L"bns_config.ini", L"config.ini", false))
 				std::cout << "failed to copy config \n";
 
 			break;
 		default:
 			std::cout << "exiting";
-			system("pause");
+			WaitNewLine();
 			return 0;
 
 			break;
@@ -160,7 +169,7 @@ int action_install()
 			break;
 		default:
 			std::cout << "Incorrect parameter; exiting.\n";
-			system("pause");
+			WaitNewLine();
 			return -1;
 		}
 	}
@@ -194,44 +203,32 @@ int action_install()
 			break;
 		default:
 			std::cout << "Incorrect parameter; exiting.\n";
-			system("pause");
+			WaitNewLine();
 			return -1;
 		}
 	}
 
-	std::string fCpy = "";
-	std::string fBkp = "";
-	std::string fIfn = installPath + installFile;
+	std::string fInstallSource = "dll\\" + installSource + "d3d9.dll";
+	std::string fTargetFile = installPath + installFile;
+	std::string fBackupFile = installPath + "d912pxy_installer_backup._ll";
 
-	fCpy += "copy dll\\";
-	fCpy += installSource;
-	fCpy += "d3d9.dll";
-	fCpy += " ";
-	fCpy += fIfn;
-
-	fBkp += "copy ";
-	fBkp += fIfn;
-	fBkp += " ";
-	fBkp += installPath;
-	fBkp += "d912pxy_installer_backup._ll";
-
-	if (IsFileExist(fIfn.c_str()))
+	if (IsFileExist(fTargetFile.c_str()))
 	{
-		std::cout << "Backing up old file: " << fBkp << " \n";
-		if (system(fBkp.c_str()) != 0)
+		std::cout << "Backing up old file: " << fTargetFile.c_str() << " \n";
+		if (!CopyFileA(fTargetFile.c_str(), fBackupFile.c_str(), false))
 		{
 			std::cout << "Backup failed! Exiting.\n";
-			system("pause");
+			WaitNewLine();
 			return -1;
 		}
 	}
 
 	std::cout << "\nInstalling... \n";
 
-	if (system(fCpy.c_str()) != 0)
+	if (!CopyFileA(fInstallSource.c_str(), fTargetFile.c_str(), false))
 	{
-		std::cout << "Installation to " << fIfn << " from dll\\" << installSource << "d3d9.dll failed! Exiting.\n";
-		system("pause");
+		std::cout << "Installation to " << fTargetFile.c_str() << " from dll\\" << installSource << "d3d9.dll failed! Exiting.\n";
+		WaitNewLine();
 		return -1;
 	}
 
@@ -250,10 +247,10 @@ int action_install()
 		std::cout << "Installation complete. \n";
 	}
 	else {
-		std::cout << "Failed to write installation info. You should remove the file '" << fIfn << "' by hand if you want to remove this program. \n";
+		std::cout << "Failed to write installation info. You should remove the file '" << fTargetFile.c_str() << "' by hand if you want to remove this program. \n";
 	}
 
-	system("pause");
+	WaitNewLine();
 
 	return 0;
 }
@@ -266,7 +263,7 @@ int action_remove()
 	{
 		std::cout << "No installation found. Remove the installed d3d9.dll (or other) file and this folder by hand to uninstall manually. \n";
 
-		system("pause");
+		WaitNewLine();
 		return 0;
 	}
 
@@ -300,7 +297,7 @@ int action_remove()
 		break;
 	default:
 		std::cout << "Incorrect installation data. Remove the installed d3d9.dll (or other) file and this folder by hand to uninstall manually. Exiting.\n";
-		system("pause");
+		WaitNewLine();
 		return -1;
 	}
 
@@ -311,33 +308,21 @@ int action_remove()
 	{
 		std::cout << "Found backup. Restoring: \n";
 
-		std::string fRst = "";
-
-		fRst += "copy ";
-		fRst += fBkp;
-		fRst += " ";
-		fRst += fIfn;
-
-		if (system(fRst.c_str()) != 0)
+		if (!CopyFileA(fBkp.c_str(), fIfn.c_str(), false))
 			std::cout << "Failed to restore backup! \n";
 		else
 			std::cout << "Backup restored \n";
 	} else {
-		std::string fDel = "del /Q ";
-		fDel += fIfn;
-
-		if (system(fDel.c_str()) != 0)
+		if (!DeleteFileA(fIfn.c_str()))
 			std::cout << "Failed to delete target installation file " << fIfn << " \n";
 		else
 			std::cout << "Installation removed \n";
 	}
 
-	if (system("del /Q installed.flag") != 0)
-	{
+	if (!DeleteFileA("installed.flag"))
 		std::cout << "Can't clean up install.flag file \n";
-	}
 
-	system("pause");
+	WaitNewLine();
 
 	return 0;
 }
@@ -346,19 +331,12 @@ int action_clear_shader_cache()
 {
 	std::cout << "Deleting latest.pck in pck and pck_bns \n";
 
-	system("del /Q pck_bns\\latest.pck");
-	system("del /Q pck\\latest.pck");
-
-	std::cout << "Perform additional hlsl sources cleaning? ";
-
-	if (ReadUserYN(0))
-	{
-		system("del /Q shaders\\hlsl\\*");
-	}
+	DeleteFileA("pck_bns\\latest.pck");
+	DeleteFileA("pck\\latest.pck");
 
 	std::cout << "Finished \n";
 
-	system("pause");
+	WaitNewLine();
 
 	return 0;
 }
@@ -366,7 +344,7 @@ int action_clear_shader_cache()
 int action_exit()
 {
 	std::cout << "Exiting \n";
-	system("pause");
+	WaitNewLine();
 
 	return 0;
 }
@@ -379,7 +357,7 @@ int main()
 
 	if (!ReadUserYN(1))
 	{
-		system("pause");
+		WaitNewLine();
 		return -1;
 	}
 
@@ -388,7 +366,7 @@ int main()
 
 	if (!ReadUserYN(1))
 	{
-		system("pause");
+		WaitNewLine();
 		return -1;
 	}
 
@@ -398,7 +376,7 @@ int main()
 
 	if (!ReadUserYN(1))
 	{
-		system("pause");
+		WaitNewLine();
 		return -1;
 	}
 
@@ -406,7 +384,7 @@ int main()
 
 	if (!ReadUserYN(1))
 	{
-		system("pause");
+		WaitNewLine();
 		return -1;
 	}
 
@@ -427,7 +405,7 @@ int main()
 			std::cout << "|-d912pxy \n";
 			std::cout << "	|-install.exe \n\n";
 
-			system("pause");
+			WaitNewLine();
 
 			return -1;
 		}
