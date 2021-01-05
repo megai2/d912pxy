@@ -34,7 +34,12 @@ namespace d912pxy {
 				wchar_t* raw = nullptr;
 
 				bool valid() const { return raw != nullptr; }
-				uint32_t ui32() const { return _wtoi(raw); }
+				uint32_t ui32() const
+				{
+					if (!raw)
+						return 0;
+					return _wtoi(raw);
+				}
 			};
 
 			class ModHandler : public d912pxy_noncom
@@ -50,10 +55,13 @@ namespace d912pxy {
 
 				virtual void IFR_Start() {};
 				virtual void IFR_End() {};
+
+				virtual void UI_Draw() {};
 			};
 
 			class Manager : public d912pxy_noncom
 			{
+				bool drawUi = false;
 				Trivial::PushBuffer<ModHandler*> modList;
 				Memtree<MemoryArea, ModConfigEntry, Hash64> configValues;
 
@@ -77,6 +85,7 @@ namespace d912pxy {
 
 				void IFR_Start();
 				void IFR_End();
+				void UI_Draw();
 			};
 
 		}

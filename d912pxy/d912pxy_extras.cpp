@@ -459,6 +459,9 @@ void d912pxy_extras::DrawOverlay()
 	if (bShowShaderPairTracker)
 		pairTracker.draw();
 
+	if (d912pxy_s.render.replay.extras.enable)
+		d912pxy_s.iframeMods.UI_Draw();
+
 	ImGUI_Render_End();
 
 }

@@ -70,6 +70,7 @@ void Manager::Init()
 {
 	loadConfig();
 	auto& mainMod = configVal(L"primary_mod");	
+	drawUi = configVal(L"draw_ui").ui32() > 0;
 
 	if (!mainMod.valid())
 	{
@@ -77,7 +78,8 @@ void Manager::Init()
 	}
 	else if (lstrcmpW(mainMod.raw, L"debug") == 0)
 	{
-		//nothing right now
+		//force enable ui draw
+		drawUi = true;
 	}
 	else if (lstrcmpW(mainMod.raw, L"gw2_taa") == 0)
 	{
@@ -147,4 +149,13 @@ void Manager::IFR_End()
 {
 	for (int i = 1; i <= modList.headIdx(); ++i)
 		modList[i]->IFR_End();
+}
+
+void Manager::UI_Draw()
+{
+	if (!drawUi)
+		return;
+
+	for (int i = 1; i <= modList.headIdx(); ++i)
+		modList[i]->UI_Draw();
 }
