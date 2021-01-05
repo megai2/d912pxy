@@ -131,15 +131,4 @@ void ReshadeCompat::copySceneColorAndDepth(d912pxy_replay_thread_context* rpCont
 	sceneColor->BCopyToWStates(colorCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	if (sceneDepth)
 		sceneDepth->BCopyToWStates(depthCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_DEPTH_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-	//clear color to mix UI easier
-	D3DSURFACE_DESC desc = sceneColor->GetDX9DescAtLevel(0);
-	float black[4] = { 0,0,0,0 };
-	D3D12_RECT view = {
-				(LONG)0,
-				(LONG)0,
-				(LONG)desc.Width,
-				(LONG)desc.Height
-	};
-	sceneColor->ClearAsRTV(black, rpContext->cl, &view);
 }
