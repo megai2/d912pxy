@@ -175,6 +175,9 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 		psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
 	}
 
+	if (!hwBlob.isNullptr())
+		hwBlob.Delete();
+
 	if (FAILED(psoHRet))
 	{
 		LOG_ERR_DTDM("CreateGraphicsPipelineState error %lX for %S", psoHRet, fullPsoName);
