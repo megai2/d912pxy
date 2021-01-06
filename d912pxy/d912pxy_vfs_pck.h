@@ -27,7 +27,7 @@ SOFTWARE.
 
 #define PXY_VFS_PCK_SIGNATURE 0x7670636b
 #define PXY_VFS_PCK_INDEX_ROOM 512
-#define PXY_VFS_PCK_VER 3
+#define PXY_VFS_PCK_VER 4
 
 typedef enum d912pxy_vfs_pck_chunk_type {
 	CHU_UNDEF,
