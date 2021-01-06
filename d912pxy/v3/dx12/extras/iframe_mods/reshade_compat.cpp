@@ -101,8 +101,8 @@ void ReshadeCompat::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912p
 {
 	if (uiPass->inside() && !uiPass->entered())
 	{
-		if (rpItem->rawState.val.rt[0].blend.writeMask)
-			rpItem->rawState.val.rt[0].blend.writeMask |= D3D12_COLOR_WRITE_ENABLE_ALL;
+		if (rpItem->rawState.val.rt[0].writeMask)
+			rpItem->rawState.val.rt[0].writeMask |= D3D12_COLOR_WRITE_ENABLE_ALL;
 	}
 }
 

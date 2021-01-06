@@ -54,15 +54,18 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC* d912pxy_trimmed_pso_desc::GetPSODesc()
 	//TODO: check about blend states for different RTs in DX9
 	for (int i = 0; i<val.NumRenderTargets;++i)
 	{
-		singleFullPSO.BlendState.RenderTarget[i].SrcBlend = (D3D12_BLEND)val.rt[0].blend.src;
-		singleFullPSO.BlendState.RenderTarget[i].SrcBlendAlpha = (D3D12_BLEND)val.rt[0].blend.srcAlpha;
-		singleFullPSO.BlendState.RenderTarget[i].DestBlend = (D3D12_BLEND)val.rt[0].blend.dest;
-		singleFullPSO.BlendState.RenderTarget[i].DestBlendAlpha = (D3D12_BLEND)val.rt[0].blend.destAlpha;
-		singleFullPSO.BlendState.RenderTarget[i].BlendEnable = val.rt[0].blend.enable;
-		singleFullPSO.BlendState.RenderTarget[i].RenderTargetWriteMask = val.rt[0].blend.writeMask;
-		singleFullPSO.BlendState.RenderTarget[i].BlendOp = (D3D12_BLEND_OP)val.rt[0].blend.op;
-		singleFullPSO.BlendState.RenderTarget[i].BlendOpAlpha = (D3D12_BLEND_OP)val.rt[0].blend.opAlpha;
+		singleFullPSO.BlendState.RenderTarget[i].SrcBlend = (D3D12_BLEND)val.blend.src;
+		singleFullPSO.BlendState.RenderTarget[i].SrcBlendAlpha = (D3D12_BLEND)val.blend.srcAlpha;
+		singleFullPSO.BlendState.RenderTarget[i].DestBlend = (D3D12_BLEND)val.blend.dest;
+		singleFullPSO.BlendState.RenderTarget[i].DestBlendAlpha = (D3D12_BLEND)val.blend.destAlpha;
+		singleFullPSO.BlendState.RenderTarget[i].BlendEnable = val.blend.enable;
+		singleFullPSO.BlendState.RenderTarget[i].RenderTargetWriteMask = val.rt[i].writeMask;
+		singleFullPSO.BlendState.RenderTarget[i].BlendOp = (D3D12_BLEND_OP)val.blend.op;
+		singleFullPSO.BlendState.RenderTarget[i].BlendOpAlpha = (D3D12_BLEND_OP)val.blend.opAlpha;
 	}
+
+	for (int i = val.NumRenderTargets; i < PXY_INNER_MAX_RENDER_TARGETS; ++i)
+		singleFullPSO.BlendState.RenderTarget[i] = { 0 };
 
 	for (int i = 0; i < PXY_INNER_MAX_RENDER_TARGETS; ++i)
 		singleFullPSO.RTVFormats[i] = (DXGI_FORMAT)val.rt[i].format;

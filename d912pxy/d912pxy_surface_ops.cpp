@@ -188,7 +188,7 @@ void d912pxy_surface_ops::StretchRect(d912pxy_surface* pSourceSurface, d912pxy_s
 
 	SavedIFrameState savedState;
 	SetCommonState(shaderSet::SHSET_STRETCH);
-	localPSO.val.rt[0].blend.writeMask = 0xF;
+	localPSO.val.rt[0].writeMask = 0xF;
 	
 	d912pxy_surface* oldRT = d912pxy_s.render.iframe.GetBindedSurface(1);
 	d912pxy_surface* oldDS = d912pxy_s.render.iframe.GetBindedSurface(0);
@@ -241,7 +241,7 @@ void d912pxy_surface_ops::SetCommonState(shaderSet idx)
 	d912pxy_s.render.state.pso.PShader(ps[idx]);
 
 	localPSO = d912pxy_s.render.state.pso.GetCurrentDesc();
-	localPSO.val.rt[0].blend.enable = FALSE;
+	localPSO.val.blend.enable = FALSE;
 	localPSO.val.rast.cullMode = D3D12_CULL_MODE_NONE;
 	localPSO.val.ds.enable = FALSE;
 	localPSO.val.ds.stencilEnable = FALSE;

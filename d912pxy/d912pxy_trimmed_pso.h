@@ -30,7 +30,7 @@ SOFTWARE.
 class d912pxy_trimmed_pso_desc 
 {
 public:
-	struct rt_blend_desc 
+	struct global_blend_desc
 	{
 		UINT8 enable;
 		UINT8 src;
@@ -39,6 +39,10 @@ public:
 		UINT8 srcAlpha;
 		UINT8 destAlpha;
 		UINT8 opAlpha;
+	};
+
+	struct rt_blend_desc 
+	{
 		UINT8 writeMask;
 	};
 
@@ -73,7 +77,7 @@ public:
 	};
 
 	struct rt_desc {
-		rt_blend_desc blend;
+		UINT8 writeMask;
 		UINT8 format;
 	};
 
@@ -83,6 +87,8 @@ public:
 		UINT vdeclHash;
 		rasterizer_desc rast;
 		ds_desc ds;
+		global_blend_desc blend;
+
 		rt_desc rt[PXY_INNER_MAX_RENDER_TARGETS];
 		UINT8 NumRenderTargets;
 		UINT8 compareSamplerStage;
