@@ -50,8 +50,9 @@ enum class d912pxy_vfs_bid : UINT32 {
 	derived_cso_vs = 5,
 	derived_cso_ps = 6,
 	derived_cso_refs = 7,
-	vfs_paths = 8,
-	end = 9
+	pso_hw_cache = 8,
+	vfs_paths = 9,
+	end = 10
 };
 
 typedef UINT64 d912pxy_vfs_path_hash;

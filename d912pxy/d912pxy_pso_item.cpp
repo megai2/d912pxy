@@ -147,14 +147,37 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 	if (!ValidateFullDesc(fullDesc))
 		return;
 
-	LOG_DBG_DTDM("Compiling PSO with vs = %016llX , ps = %016llX", desc->ref.VS->GetID(), desc->ref.PS->GetID());
+	d912pxy_shader_pair_cache_entry entryData
+	{
+		desc->ref.PS->GetID(),
+		desc->ref.VS->GetID(),
+		d912pxy_trimmed_pso_desc::StorageKey(desc->GetValuePart())
+	};
+
+	char fullPsoName[255];
+	sprintf(fullPsoName, "%016llX_%016llX_%08lX", entryData.vs, entryData.ps, entryData.pso.data());
+
+	LOG_DBG_DTDM("Compiling PSO %S", fullPsoName);
+
+	d912pxy_vfs_path hwCachePath(fullPsoName, d912pxy_vfs_bid::pso_hw_cache);
+	d912pxy_mem_block hwBlob = d912pxy_s.vfs.ReadFile(hwCachePath);
+	fullDesc.CachedPSO.CachedBlobSizeInBytes = hwBlob.size();
+	fullDesc.CachedPSO.pCachedBlob = hwBlob.ptr();
 
 	ID3D12PipelineState* obj;
 	HRESULT psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
 
+	//hw or driver updated, cache is invalid
+	if ((psoHRet == D3D12_ERROR_DRIVER_VERSION_MISMATCH) || (psoHRet == D3D12_ERROR_ADAPTER_NOT_FOUND))
+	{
+		fullDesc.CachedPSO.pCachedBlob = nullptr;
+		fullDesc.CachedPSO.CachedBlobSizeInBytes = 0;
+		psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
+	}
+
 	if (FAILED(psoHRet))
 	{
-		LOG_ERR_DTDM("CreateGraphicsPipelineState error %lX for VS %016llX PS %016llX", psoHRet, desc->ref.VS->GetID(), desc->ref.PS->GetID());
+		LOG_ERR_DTDM("CreateGraphicsPipelineState error %lX for %S", psoHRet, fullPsoName);
 
 		char dumpString[sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC) * 2 + 1];
 		dumpString[0] = 0;
@@ -172,16 +195,13 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 		LOG_ERR_DTDM("full pso desc dump %S", dumpString);
 	}
 	else {
-		d912pxy_shader_pair_cache_entry entryData 
-		{ 
-			desc->ref.PS->GetID(), 
-			desc->ref.VS->GetID(), 
-			d912pxy_trimmed_pso_desc::StorageKey(desc->GetValuePart()) 
-		};
-
-
-		char fullPsoName[255];
-		sprintf(fullPsoName, "%016llX_%016llX_%08lX", entryData.vs, entryData.ps, entryData.pso.data());
+		if (!fullDesc.CachedPSO.pCachedBlob)
+		{
+			ID3DBlob* hwBlob = nullptr;
+			obj->GetCachedBlob(&hwBlob);
+			d912pxy_s.vfs.WriteFile(hwCachePath, d912pxy_mem_block::use(hwBlob->GetBufferPointer(), hwBlob->GetBufferSize()));
+			hwBlob->Release();
+		}
 
 		auto cacheFn = d912pxy_vfs_path(fullPsoName, d912pxy_vfs_bid::pso_precompile_list);
 
