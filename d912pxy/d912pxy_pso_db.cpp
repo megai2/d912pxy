@@ -285,7 +285,7 @@ void d912pxy_pso_db::LoadCachedData()
 		if (!(*i)->GetPtr())
 		{
 			(*i)->Release();
-			i = nullptr;
+			*i = nullptr;
 		}
 	}
 
