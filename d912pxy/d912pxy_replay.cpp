@@ -75,7 +75,8 @@ void d912pxy_replay::Init()
 		transitData[i].Reset();
 	}
 
-	extras.enable = lstrcmpW(d912pxy_s.config.GetValueRaw(PXY_CFG_EXTRAS_IFRAME_MOD_SOURCE), L"none") != 0;
+	extras.enable = lstrcmpW(d912pxy_s.config.GetValueRaw(PXY_CFG_EXTRAS_IFRAME_MOD_SOURCE), L"none") != 0 
+		&& d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_ENABLE);
 	extras.pairTracker.enable = d912pxy_s.config.GetValueB(PXY_CFG_EXTRAS_TRACK_SHADER_PAIRS);
 
 	if (extras.enable)
