@@ -197,11 +197,6 @@ void d912pxy_device::InitComPatches()
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_SETSAMPLERSTATE, &d912pxy_device::com_SetSamplerState_Tracked);
 	}
 
-	if (!d912pxy_s.config.GetValueUI64(PXY_CFG_SDB_KEEP_PAIRS))
-	{
-		d912pxy_com_route_set(PXY_COM_ROUTE_SHADER, PXY_COM_METHOD_UNK_RELEASE, &d912pxy_shader::com_ReleaseWithPairRemoval);		
-	}
-
 	if (d912pxy_s.config.GetValueUI64(PXY_CFG_COMPAT_CLEAR))
 	{
 		d912pxy_com_route_set(PXY_COM_ROUTE_DEVICE, PXY_COM_METHOD_DEV_CLEAR, &d912pxy_device::com_Clear_Emulated);

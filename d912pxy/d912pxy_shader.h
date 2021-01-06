@@ -40,25 +40,15 @@ public:
 	d912pxy_shader(const d912pxy_shader&) = delete;
 
 	D912PXY_METHOD(GetFunction)(PXY_THIS_ void* arg, UINT* pSizeOfData);
-
-	D912PXY_METHOD_(ULONG, ReleaseWithPairRemoval)(PXY_THIS);
-
-	D912PXY_METHOD_NC_(ULONG, ReleaseWithPairRemoval)(THIS);
 	
 	D3D12_SHADER_BYTECODE* GetCode();
 	d912pxy_mem_block GetHLSLSource();
 
 	d912pxy_shader_uid GetID();
-
-	void NotePairUsage(d912pxy_shader_pair_hash_type pairHash);
 	
 	UINT FinalReleaseCB();
 
-	void RemovePairs();
-
 private:
-	d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>* pairs;
-
 	d912pxy_shader_code bytecode;
 	d912pxy_shader_uid mUID;
 

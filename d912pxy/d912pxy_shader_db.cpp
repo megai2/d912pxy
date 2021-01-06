@@ -101,9 +101,6 @@ d912pxy_shader_pair* d912pxy_shader_db::GetPair(d912pxy_shader* vs, d912pxy_shad
 		d912pxy_shader_uid pdc[2] = { vs->GetID(), ps->GetID() };
 
 		ref.add() = new d912pxy_shader_pair(ha, pdc);
-
-		vs->NotePairUsage(ha);
-		ps->NotePairUsage(ha);
 	}
 
 	return *ref.val;

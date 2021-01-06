@@ -41,7 +41,6 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_CLEANUP_SOFT_LIMIT,
 	PXY_CFG_CLEANUP_HARD_LIMIT,
 	PXY_CFG_CLEANUP_AFTER_RESET_MAID,
-	PXY_CFG_SDB_KEEP_PAIRS,
 	PXY_CFG_SDB_LOAD_PSO_CACHE,
 	PXY_CFG_SDB_SAVE_PSO_CACHE,
 	PXY_CFG_SDB_ALLOW_PP_SUFFIX,
@@ -160,7 +159,6 @@ private:
 		{L"cleanup", L"soft_limit",L"3000"},//PXY_CFG_CLEANUP_SOFT_LIMIT
 		{L"cleanup", L"hard_limit",L"4000"},//PXY_CFG_CLEANUP_HARD_LIMIT
 		{L"cleanup", L"after_reset_maid",L"2"},//PXY_CFG_CLEANUP_AFTER_RESET_MAID
-		{L"sdb", L"keep_pairs", L"1"},//PXY_CFG_SDB_KEEP_PAIRS
 		{L"sdb", L"load_pso_cache", L"0"},//PXY_CFG_SDB_LOAD_PSO_CACHE
 		{L"sdb", L"save_pso_cache", L"0"},//PXY_CFG_SDB_SAVE_PSO_CACHE
 		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX

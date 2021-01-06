@@ -44,12 +44,7 @@ void d912pxy_pso_db::Init()
 	saveCache = d912pxy_s.config.GetValueB(PXY_CFG_SDB_SAVE_PSO_CACHE);
 
 	if (d912pxy_s.config.GetValueB(PXY_CFG_SDB_LOAD_PSO_CACHE))
-	{
-		if (!d912pxy_s.config.GetValueB(PXY_CFG_SDB_KEEP_PAIRS))
-			LOG_WARN_DTDM("pso cache load enabled but keep pairs is disabled, skipping cache load");
-		else
-			LoadCachedData();
-	}
+		LoadCachedData();
 
 	psoCompileQue = new d912pxy_ringbuffer<d912pxy_pso_item*>(0xFFFF, 0);
 }

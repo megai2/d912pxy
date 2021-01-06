@@ -57,16 +57,12 @@ d912pxy_shader::d912pxy_shader(const wchar_t * shtName, const DWORD* fun, d912px
 
 	shaderType = shdType;
 
-	pairs = new d912pxy_ringbuffer<d912pxy_shader_pair_hash_type>(0x10, 2);
-
 	bytecode.code = 0;
 	bytecode.blob = nullptr;	
 }
 
 d912pxy_shader::~d912pxy_shader()
 {
-	delete pairs;
-
 	if (oCode) {
 		PXY_FREE(oCode);
 	}
@@ -107,40 +103,7 @@ d912pxy_shader_uid d912pxy_shader::GetID()
 	return mUID;
 }
 
-void d912pxy_shader::NotePairUsage(d912pxy_shader_pair_hash_type pairHash)
-{
-	pairs->WriteElement(pairHash);
-}
-
 UINT d912pxy_shader::FinalReleaseCB()
 {
 	return 1;
 }
-
-void d912pxy_shader::RemovePairs()
-{
-	while (pairs->HaveElements())
-	{
-		d912pxy_shader_pair_hash_type ha = pairs->GetElement();
-
-		d912pxy_s.render.db.shader.DeletePair(ha);
-
-		pairs->Next();
-	}
-}
-
-#define D912PXY_METHOD_IMPL_CN d912pxy_shader
-
-D912PXY_METHOD_IMPL_NC_(ULONG, ReleaseWithPairRemoval)(THIS)
-{
-	ULONG ret = Release();
-
-	if (!ret)
-	{
-		RemovePairs();
-	}
-
-	return ret;
-}
-
-#undef D912PXY_METHOD_IMPL_CN
