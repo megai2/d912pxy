@@ -151,23 +151,15 @@ int action_install()
 	if (!ReadUserYN(1))
 	{
 		std::cout << "Select configuration: \n\n";
-		std::cout << "1. Release_pp  - performance data collection \n";
-		std::cout << "2. Release_d   - in-depth debug logging \n";
-		std::cout << "3. Debug       - debug build\n";
+		std::cout << "1. Debug       - debug build\n";
 
-		std::cout << "\n[default: Release_pp]: ";
+		std::cout << "\n[default: debug]: ";
 
 		int mode = read_user_integer(1);
 
 		switch (mode)
 		{
 		case 1:
-			installSource = "release_pp\\";
-			break;
-		case 2:
-			installSource = "release_d\\";
-			break;
-		case 3:
 			installSource = "debug\\";
 			break;
 		default:
