@@ -44,6 +44,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_ALLOW_PP_SUFFIX,
 	PXY_CFG_SDB_FORCE_UNUSED_REGS,
 	PXY_CFG_SDB_NAN_GUARD_FLAG,
+	PXY_CFG_SDB_PRECOMPILE_LIMIT,
 	PXY_CFG_REPLAY_BEHAIVOUR,
 	PXY_CFG_REPLAY_THREADS,	
 	PXY_CFG_REPLAY_ITEMS_PER_BATCH,
@@ -160,6 +161,16 @@ private:
 		{L"sdb", L"allow_pp_suffix", L"1"},//PXY_CFG_SDB_ALLOW_PP_SUFFIX
 		{L"sdb", L"force_unused_regs", L"0"},//PXY_CFG_SDB_FORCE_UNUSED_REGS
 		{L"sdb", L"nan_guard_flag", L"81"},//PXY_CFG_SDB_NAN_GUARD_FLAG
+		{
+			L"sdb",
+			L"precompile_limit",
+			L"10000",
+			L"u r:0,+inf",
+			L"limit on how much shaders will be precompiled on startup",
+			L"increasing this value will reduce object pop-ins, but increase RAM usage and game startup time",
+			nullptr
+		},
+		//PXY_CFG_SDB_PRECOMPILE_LIMIT
 		{L"replay", L"replay", L"1"},//PXY_CFG_REPLAY_BEHAIVOUR
 		{L"replay", L"replay_threads", L"1"},//PXY_CFG_REPLAY_THREADS
 		{L"replay", L"items_per_batch", L"100"},//PXY_CFG_REPLAY_ITEMS_PER_BATCH

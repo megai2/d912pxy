@@ -198,12 +198,13 @@ void d912pxy_pso_db::LoadCachedData()
 
 	UINT psoItemsTotal = 0;
 	UINT psoItemsCompiled = 0;
+	UINT precompileLimit = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_PRECOMPILE_LIMIT);
 
 	{
 		auto precompList = d912pxy_s.vfs.GetFileList(d912pxy_vfs_bid::pso_precompile_list);
 		auto shaderBuffer = new d912pxy::Memtree<d912pxy_shader_uid, d912pxy_shader*, d912pxy::RawHash<d912pxy_shader_uid>>();
 
-		while (precompList->HaveElements())
+		while (precompList->HaveElements() && (precompileLimit > psoItemsCompiled))
 		{
 			auto cacheElement = d912pxy_vfs_path(precompList->PopElement(), d912pxy_vfs_bid::pso_precompile_list);
 			d912pxy_shader_pair_cache_entry* pairEntry = d912pxy_s.vfs.ReadFile(cacheElement).c_arr<d912pxy_shader_pair_cache_entry>();
