@@ -172,24 +172,21 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 		LOG_ERR_DTDM("full pso desc dump %S", dumpString);
 	}
 	else {
-		if (d912pxy_s.render.db.pso.IsCacheSavingEnabled())
-		{
-			d912pxy_shader_pair_cache_entry entryData 
-			{ 
-				desc->ref.PS->GetID(), 
-				desc->ref.VS->GetID(), 
-				d912pxy_trimmed_pso_desc::StorageKey(desc->GetValuePart()) 
-			};
+		d912pxy_shader_pair_cache_entry entryData 
+		{ 
+			desc->ref.PS->GetID(), 
+			desc->ref.VS->GetID(), 
+			d912pxy_trimmed_pso_desc::StorageKey(desc->GetValuePart()) 
+		};
 
 
-			char fullPsoName[255];
-			sprintf(fullPsoName, "%016llX_%016llX_%08lX", entryData.vs, entryData.ps, entryData.pso.data());
+		char fullPsoName[255];
+		sprintf(fullPsoName, "%016llX_%016llX_%08lX", entryData.vs, entryData.ps, entryData.pso.data());
 
-			auto cacheFn = d912pxy_vfs_path(fullPsoName, d912pxy_vfs_bid::pso_precompile_list);
+		auto cacheFn = d912pxy_vfs_path(fullPsoName, d912pxy_vfs_bid::pso_precompile_list);
 
-			if (!d912pxy_s.vfs.IsFilePresent(cacheFn))
-				d912pxy_s.vfs.WriteFile(cacheFn, d912pxy_mem_block::use(&entryData));
-		}
+		if (!d912pxy_s.vfs.IsFilePresent(cacheFn))
+			d912pxy_s.vfs.WriteFile(cacheFn, d912pxy_mem_block::use(&entryData));
 	}
 
 	psoPtr = obj;

@@ -49,15 +49,10 @@ public:
 
 	//precompile 
 	void LoadCachedData();
-	bool IsCacheSavingEnabled()
-	{
-		return saveCache;
-	}
 
 private:
 	d912pxy_trimmed_pso_desc::IdStorage cacheIndexes;
 	uint32_t cacheIncID;
-	bool saveCache;
 
 	d912pxy_ringbuffer<d912pxy_pso_item*>* psoCompileQue;
 	d912pxy_thread_lock compileQueLock;

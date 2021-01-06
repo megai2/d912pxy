@@ -40,11 +40,7 @@ void d912pxy_pso_db::Init()
 	InitThread("d912pxy pso compile", 0);
 
 	cacheIncID = 0;
-	
-	saveCache = d912pxy_s.config.GetValueB(PXY_CFG_SDB_SAVE_PSO_CACHE);
-
-	if (d912pxy_s.config.GetValueB(PXY_CFG_SDB_LOAD_PSO_CACHE))
-		LoadCachedData();
+	LoadCachedData();
 
 	psoCompileQue = new d912pxy_ringbuffer<d912pxy_pso_item*>(0xFFFF, 0);
 }
@@ -84,7 +80,7 @@ d912pxy_pso_item* d912pxy_pso_db::GetByDescMT(d912pxy_trimmed_pso_desc* desc)
 			id = *lookup.val;
 	}
 
-	if (newId && saveCache)
+	if (newId)
 		SaveKeyToCache(cacheIndexes.prepareKey(key), desc);
 
 	return d912pxy_s.render.db.shader.GetPair(desc->ref.VS, desc->ref.PS)->GetPSOItemMT((UINT32)id, desc);
