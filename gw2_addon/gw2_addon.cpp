@@ -44,11 +44,14 @@ wchar_t* GetD3D9CustomLib()
 {
 	cpu_arch arch = GetCPUArch();
 
-	if (arch.AVX2)
-		return (wchar_t*)L"./addons/d912pxy/dll/release_avx2/d3d9.dll";
-	else if (arch.AVX)
-		return (wchar_t*)L"./addons/d912pxy/dll/release_avx/d3d9.dll";
-	else if (arch.SSE)
+	//block AVX builds for now, as they don't have any actuall usage of AVX,
+	//simply clocking down CPU due to AVX offset
+	//if (arch.AVX2)
+	//	return (wchar_t*)L"./addons/d912pxy/dll/release_avx2/d3d9.dll";
+	//else if (arch.AVX)
+	//	return (wchar_t*)L"./addons/d912pxy/dll/release_avx/d3d9.dll";
+	//else 
+	if (arch.SSE)
 		return (wchar_t*)L"./addons/d912pxy/dll/release/d3d9.dll";
 	else 
 	{

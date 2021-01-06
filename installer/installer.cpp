@@ -84,11 +84,14 @@ int action_install()
 
 	cpu_arch arch = GetCPUArch();
 
-	if (arch.AVX2)
-		installSource = "release_avx2\\";
-	else if (arch.AVX)
-		installSource = "release_avx\\";
-	else if (!arch.SSE)
+	//block AVX builds for now, as they don't have any actuall usage of AVX,
+	//simply clocking down CPU due to AVX offset
+	//if (arch.AVX2)
+	//	installSource = "release_avx2\\";
+	//else if (arch.AVX)
+	//	installSource = "release_avx\\";
+	//else 
+	if (!arch.SSE)
 	{
 		std::cout << "Your CPU need SSE support in order to use this tool\n";
 		WaitNewLine();
