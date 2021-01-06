@@ -167,9 +167,11 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 	ID3D12PipelineState* obj;
 	HRESULT psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
 
-	//hw or driver updated, cache is invalid
-	if ((psoHRet == D3D12_ERROR_DRIVER_VERSION_MISMATCH) || (psoHRet == D3D12_ERROR_ADAPTER_NOT_FOUND))
+	//hw changed, driver changed, or cache is invalid for some obscure reason
+	if (FAILED(psoHRet))
 	{
+		LOG_ERR_DTDM("cached CreateGraphicsPipelineState error %lX for %S", psoHRet, fullPsoName);
+
 		fullDesc.CachedPSO.pCachedBlob = nullptr;
 		fullDesc.CachedPSO.CachedBlobSizeInBytes = 0;
 		psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
