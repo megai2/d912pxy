@@ -45,8 +45,11 @@ void d912pxy_dx9_pipeline_state::Init()
 	psoDesc.val.compareSamplerStage = d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS;
 	compareSamplerStage = d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS;
 
-	for (int i = 1 ;i<PXY_INNER_MAX_RENDER_TARGETS;++i)
+	for (int i = 1; i < PXY_INNER_MAX_RENDER_TARGETS; ++i)
+	{
 		psoDesc.val.rt[i].format = DXGI_FORMAT_UNKNOWN;
+		psoDesc.val.rt[i].writeMask = 0xF;
+	}
 
 	for (int i = 0; i != PXY_DX9_MAX_RS_INDEX; ++i)
 		DX9RSvalues[i] = PXY_DX9_RS_INITIAL_VALUE;
