@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_surface* d912pxy::extras::IFrameMods::SimilarTex::surfFromTempl(D3DSURFACE_DESC& descTempl)
+d912pxy_surface* d912pxy::extras::IFrameMods::SimilarTex::surfFromTempl(const D3DSURFACE_DESC& descTempl)
 {
 	UINT levels = 1;
 	d912pxy_surface* ret = d912pxy_surface::d912pxy_surface_com(
@@ -64,12 +64,11 @@ bool d912pxy::extras::IFrameMods::SimilarTex::syncFrom(d912pxy_surface* source)
 	if (!source)
 		return false;
 
-	D3DSURFACE_DESC actualDesc = source->GetDX9DescAtLevel(0);
+	const D3DSURFACE_DESC& actualDesc = source->GetL0Desc();
 
 	if (surf)
 	{
-		D3DSURFACE_DESC oldDesc = surf->GetDX9DescAtLevel(0);
-		if ((oldDesc.Height != actualDesc.Height) || (oldDesc.Width != actualDesc.Width))
+		if (!sameSize(source))
 		{
 			surf->Release();
 			surf = nullptr;
@@ -83,4 +82,15 @@ bool d912pxy::extras::IFrameMods::SimilarTex::syncFrom(d912pxy_surface* source)
 	}
 	else
 		return false;
+}
+
+bool d912pxy::extras::IFrameMods::SimilarTex::sameSize(d912pxy_surface* test)
+{
+	if (!surf || !test)
+		return false;
+
+	const D3DSURFACE_DESC& testDesc = test->GetL0Desc();
+	const D3DSURFACE_DESC& thisDesc = surf->GetL0Desc();
+
+	return (testDesc.Height == thisDesc.Height) || (testDesc.Width == thisDesc.Width);
 }

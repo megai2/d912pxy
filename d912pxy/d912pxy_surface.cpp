@@ -867,3 +867,8 @@ D3DSURFACE_DESC d912pxy_surface::GetDX9DescAtLevel(UINT level)
 
 	return ret;
 }
+
+const D3DSURFACE_DESC& d912pxy_surface::GetL0Desc()
+{
+	return surf_dx9dsc;
+}

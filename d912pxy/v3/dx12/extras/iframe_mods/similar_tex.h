@@ -32,7 +32,7 @@ namespace IFrameMods {
 	class SimilarTex
 	{
 		d912pxy_surface* surf = nullptr;
-		d912pxy_surface* surfFromTempl(D3DSURFACE_DESC& descTempl);
+		d912pxy_surface* surfFromTempl(const D3DSURFACE_DESC& descTempl);
 
 	public:
 		~SimilarTex();
@@ -42,6 +42,8 @@ namespace IFrameMods {
 		d912pxy_surface* ptr() { return surf; }
 
 		bool syncFrom(d912pxy_surface* source);
+
+		bool sameSize(d912pxy_surface* test);
 	};
 
 }

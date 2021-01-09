@@ -58,6 +58,7 @@ public:
 	UINT GetSRVHeapIdRTDS();
 	d912pxy_surface_layer* GetLayer(UINT32 mip, UINT32 ar);
 	D3DSURFACE_DESC GetDX9DescAtLevel(UINT level);
+	const D3DSURFACE_DESC& GetL0Desc();
 
 	DXGI_FORMAT GetDSVFormat();
 	DXGI_FORMAT GetSRVFormat();
