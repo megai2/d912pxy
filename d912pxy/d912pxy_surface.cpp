@@ -277,6 +277,7 @@ DXGI_FORMAT d912pxy_surface::GetDSVFormat()
 			return DXGI_FORMAT_D32_FLOAT;
 		case D3DFMT_INTZ:		
 		case D3DFMT_D24X8:
+		case D3DFMT_D24S8:
 			return DXGI_FORMAT_D24_UNORM_S8_UINT;
 		default:
 			return ret;
@@ -314,6 +315,7 @@ DXGI_FORMAT d912pxy_surface::ConvertInnerDSVFormat()
 			return DXGI_FORMAT_R32_TYPELESS;
 		case D3DFMT_INTZ:
 		case D3DFMT_D24X8:
+		case D3DFMT_D24S8:
 			return DXGI_FORMAT_R24G8_TYPELESS;
 		default:
 			return ret;
