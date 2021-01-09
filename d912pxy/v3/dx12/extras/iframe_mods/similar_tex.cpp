@@ -72,9 +72,6 @@ bool d912pxy::extras::IFrameMods::SimilarTex::syncFrom(d912pxy_surface* source)
 		if ((oldDesc.Height != actualDesc.Height) || (oldDesc.Width != actualDesc.Width))
 		{
 			surf->Release();
-			//add 2 cycle delay
-			surf->ThreadRef(0);
-			surf->ThreadRef(0);
 			surf = nullptr;
 		}
 	} 
