@@ -120,15 +120,19 @@ void ReshadeCompat::copySceneColorAndDepth(d912pxy_replay_thread_context* rpCont
 		rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&color_tex_ct));
 	}
 
-	if (depthCopy.syncFrom(sceneDepth))
+	if (colorCopy.sameSize(sceneDepth))
 	{
-		depthCopy.ptr()->GetD12Obj()->SetName(L"proxyDepthCopy");
-		depthCopy.ptr()->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_DEPTH_READ, rpContext->cl);
-		reshade_ct_entry depth_tex_ct{ reshade_ct_magic, reshade_ct_res_names::DEPTH, depthCopy.ptr()->GetD12Obj() };
-		rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&depth_tex_ct));
+		if (depthCopy.syncFrom(sceneDepth))
+		{
+			depthCopy.ptr()->GetD12Obj()->SetName(L"proxyDepthCopy");
+			depthCopy.ptr()->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_DEPTH_READ, rpContext->cl);
+			reshade_ct_entry depth_tex_ct{ reshade_ct_magic, reshade_ct_res_names::DEPTH, depthCopy.ptr()->GetD12Obj() };
+			rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&depth_tex_ct));
+		}
+
+		if (sceneDepth)
+			sceneDepth->BCopyToWStates(depthCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_DEPTH_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	}
 
 	sceneColor->BCopyToWStates(colorCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	if (sceneDepth)
-		sceneDepth->BCopyToWStates(depthCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_DEPTH_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 }
