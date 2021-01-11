@@ -92,5 +92,5 @@ bool d912pxy::extras::IFrameMods::SimilarTex::sameSize(d912pxy_surface* test)
 	const D3DSURFACE_DESC& testDesc = test->GetL0Desc();
 	const D3DSURFACE_DESC& thisDesc = surf->GetL0Desc();
 
-	return (testDesc.Height == thisDesc.Height) || (testDesc.Width == thisDesc.Width);
+	return (testDesc.Height == thisDesc.Height) && (testDesc.Width == thisDesc.Width);
 }
