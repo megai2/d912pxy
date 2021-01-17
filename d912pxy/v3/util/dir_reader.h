@@ -29,7 +29,7 @@ namespace d912pxy
 {
 	class DirReader
 	{
-		int cur = 0;
+		int cur = 1;
 		Trivial::PushBuffer<MemoryBlock> dataArray;
 
 	public:

@@ -46,9 +46,6 @@ DirReader::DirReader(const wchar_t* root, const wchar_t* path)
 			fclose(f);
 		}
 	} while (FindNextFile(hFind, &fdFile));
-
-	if (dataArray.headIdx())
-		cur = 1;
 }
 
 d912pxy::DirReader::~DirReader()
@@ -59,7 +56,7 @@ d912pxy::DirReader::~DirReader()
 
 bool DirReader::empty()
 {
-	return (cur > dataArray.headIdx()) && dataArray.headIdx() ;
+	return (cur > dataArray.headIdx());
 }
 
 MemoryBlock& DirReader::next()
