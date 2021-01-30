@@ -379,6 +379,9 @@ public:
 	HRESULT InnerPresentExecute();
 	void InnerPresentFinish();
 
+	bool isBigVRAMMode() { return bigVRAMamount; }
+	bool isBigRAMMode() { return bigRAMamount; }
+
 private:
 	std::atomic<LONG> threadInterruptState { 0 };
 	d912pxy_thread_lock threadLockdEvents[PXY_INNER_THREADID_MAX];
@@ -414,6 +417,8 @@ private:
 
 	char GPUNameA[128];
 	uint32_t cpuCoreCount=1;
+	bool bigVRAMamount;
+	bool bigRAMamount;
 
 	//dx9 api hacks
 	UINT32 gpuWriteDsc;

@@ -156,8 +156,16 @@ void d912pxy_device::InitClassFields()
 	d912pxy_hlsl_generator::allowPP_suffix = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_ALLOW_PP_SUFFIX);
 	d912pxy_hlsl_generator::NaNguard_flag = d912pxy_s.config.GetValueUI32(PXY_CFG_SDB_NAN_GUARD_FLAG);
 
-	d912pxy_vstream::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);
+	d912pxy_vstream::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_VSTREAM_CTOR);	
 	d912pxy_surface::threadedCtor = d912pxy_s.config.GetValueUI32(PXY_CFG_MT_SURFACE_CTOR);
+
+	if (d912pxy_s.dev.getCPUCoreCount() < 3)
+	{
+		d912pxy_vstream::threadedCtor = 0;
+		d912pxy_surface::threadedCtor = 0;
+		//enabling on low core count systems create more lag than profit
+		LOG_INFO_DTDM("Detected less than 3 cores, threaded constructors are force disabled");
+	}
 
 	d912pxy_resource::residencyOverride = (d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_KEEP_RESIDENT) != 0) * 2;
 }
@@ -371,9 +379,12 @@ void d912pxy_device::PrintInfoBanner()
 		LOG_INFO_DTDM("- commit limit: %0.3f Gb", (ramInfo.ullTotalPageFile >> 20llu)/ 1024.0f);
 		LOG_INFO_DTDM("- usable: %0.3f Gb", (ramInfo.ullAvailPageFile >> 20llu) / 1024.0f);
 		LOG_INFO_DTDM("- phys usable: %0.3f Gb", (ramInfo.ullAvailPhys >> 20llu) / 1024.0f);
+
+		bigRAMamount = (ramInfo.ullTotalPhys >> 30llu) >= 16;
 	}
 	else {
 		LOG_ERR_DTDM("No info about system RAM is available");
+		bigRAMamount = false;
 	}
 
 	//string includes manufacturer, model and clockspeed
@@ -532,6 +543,8 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 	gpu_totalVidmemMB = (DWORD)(pDesc.DedicatedVideoMemory >> 20llu);
 
 	LOG_INFO_DTDM("GPU name: %s vidmem: %u Mb", pDesc.Description, gpu_totalVidmemMB);
+
+	bigVRAMamount = (gpu_totalVidmemMB >> 10) >= 4;
 
 	//nvidia 
 	if (pDesc.VendorId == 0x10de)

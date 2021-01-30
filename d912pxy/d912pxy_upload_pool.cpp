@@ -44,7 +44,9 @@ void d912pxy_upload_pool::Init()
 	d912pxy_pool_memcat<d912pxy_upload_item*, d912pxy_upload_pool*>::Init(		
 		PXY_INNDER_UPLOAD_POOL_BITIGNORE,
 		PXY_INNDER_UPLOAD_POOL_BITLIMIT,
-		PXY_CFG_POOLING_UPLOAD_LIMITS	
+		d912pxy_s.dev.isBigVRAMMode() ?
+			PXY_CFG_POOLING_UPLOAD_LIMITS_BIG
+		  : PXY_CFG_POOLING_UPLOAD_LIMITS
 	);
 }
 

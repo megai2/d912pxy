@@ -35,14 +35,18 @@ d912pxy_vstream_pool::~d912pxy_vstream_pool()
 
 void d912pxy_vstream_pool::Init()
 {
-	memPoolSize = d912pxy_s.config.GetValueUI32(PXY_CFG_POOLING_VSTREAM_ALLOC_STEP);
+	memPoolSize = d912pxy_s.config.GetValueUI32(d912pxy_s.dev.isBigVRAMMode() 
+		? PXY_CFG_POOLING_VSTREAM_ALLOC_STEP_BIG 
+		: PXY_CFG_POOLING_VSTREAM_ALLOC_STEP);
 	memPoolHeapType = D3D12_HEAP_TYPE_DEFAULT;
 	memPoolHeapFlags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
 
 	d912pxy_pool_memcat<d912pxy_vstream*, d912pxy_vstream_pool*>::Init(
 		PXY_INNDER_VSTREAM_POOL_BITIGNORE,
-		PXY_INNDER_VSTREAM_POOL_BITLIMIT,
-		PXY_CFG_POOLING_VSTREAM_LIMITS
+		PXY_INNDER_VSTREAM_POOL_BITLIMIT,		
+		d912pxy_s.dev.isBigVRAMMode() ?
+			PXY_CFG_POOLING_VSTREAM_LIMITS_BIG
+		  : PXY_CFG_POOLING_VSTREAM_LIMITS
 	);
 }
 
