@@ -101,8 +101,11 @@ public:
 	
 	static UINT residencyOverride;
 
+	D3D12_RESOURCE_STATES getContextState() { return inContextState; }
+
 private: 
 	d912pxy_resource_typeid m_tid;
+	std::atomic<D3D12_RESOURCE_STATES> inContextState;
 
 protected:
 	ID3D12Resource* m_res;

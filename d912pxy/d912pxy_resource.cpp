@@ -172,6 +172,8 @@ void d912pxy_resource::BTransit(UINT subres, D3D12_RESOURCE_STATES to, D3D12_RES
 	LOG_DBG_DTDM("rbarrier %016llX to %u from %u", m_res, to, from);
 
 	cl->ResourceBarrier(1, &bar);
+
+	inContextState = to;
 }
 
 void d912pxy_resource::BTransitTo(UINT subres, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList * cl)

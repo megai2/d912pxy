@@ -160,6 +160,7 @@ SOFTWARE.
 #include "v3/dx12/extras/iframe_mods/manager.h"
 #include "v3/dx12/extras/iframe_mods/state_holder.h"
 #include "v3/dx12/extras/iframe_mods/pass_detector.h"
+#include "v3/dx12/extras/iframe_mods/pass_detector2.h"
 #include "v3/dx12/extras/iframe_mods/similar_tex.h"
 #include "v3/dx12/extras/iframe_mods/native_draw.h"
 #include "v3/dx12/extras/iframe_mods/generic_taa.h"

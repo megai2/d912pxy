@@ -151,7 +151,11 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 
 	if (extras.enable && (context.tid == 0))
 	{
+		context.tracked.surfBind[0] = nullptr;
+		context.tracked.surfBind[1] = nullptr;
 		context.cl = cl;
+
+		d912pxy_s.iframeMods.RP_FrameStart();
 
 		if (extras.pairTracker.enable)
 			extras.pairTracker.nextFrame();

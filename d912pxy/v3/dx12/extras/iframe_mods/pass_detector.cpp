@@ -25,6 +25,8 @@ SOFTWARE.
 #include "stdafx.h"
 #include "pass_detector.h"
 
+//TODO: TO BE REMOVED
+
 using namespace d912pxy::extras::IFrameMods;
 
 void PassDetector::enter(d912pxy_replay_thread_context* rpContext)
@@ -84,17 +86,9 @@ void d912pxy::extras::IFrameMods::PassDetector::RP_RTDSChange(d912pxy_replay_ite
 {
 	surfaces[SURF_LAST + SURF_DS] = surfaces[SURF_DS];
 	surfaces[SURF_LAST + SURF_RT] = surfaces[SURF_RT];
-	surfaces[SURF_DS] = rpContext->tracked.surfBind[0];
-	surfaces[SURF_RT] = rpContext->tracked.surfBind[1];
+	surfaces[SURF_DS] = rpItem->dsv;
+	surfaces[SURF_RT] = rpItem->rtv[0];
 
 	if (inPass)
 		exit();
-	else if (
-		triggerOnSameRT && 
-		((surfaces[SURF_TRACKED + SURF_DS] == surfaces[SURF_DS]) || ((RTDSmask & 2) == 0)) &&
-		((surfaces[SURF_TRACKED + SURF_RT] == surfaces[SURF_RT]) || ((RTDSmask & 1) == 0))
-	)
-	{
-		enter(rpContext);
-	}
 }

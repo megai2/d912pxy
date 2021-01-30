@@ -52,6 +52,7 @@ namespace d912pxy {
 				virtual void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed*, d912pxy_replay_thread_context*) {};
 				virtual void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed*, d912pxy_replay_thread_context*) {};
 				virtual void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets*, d912pxy_replay_thread_context*) {};
+				virtual void RP_FrameStart() {};
 
 				virtual void IFR_Start() {};
 				virtual void IFR_End() {};
@@ -82,6 +83,7 @@ namespace d912pxy {
 				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
 				void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext);
 				void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext);
+				void RP_FrameStart();
 
 				void IFR_Start();
 				void IFR_End();

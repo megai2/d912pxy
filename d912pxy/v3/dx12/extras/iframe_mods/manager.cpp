@@ -80,6 +80,8 @@ void Manager::Init()
 	{
 		//force enable ui draw
 		drawUi = true;
+		//enable pass detector 2
+		new PassDetector2();
 	}
 	else if (lstrcmpW(mainMod.raw, L"gw2_taa") == 0)
 	{
@@ -137,6 +139,12 @@ void Manager::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d
 {
 	for (int i = 1; i <= modList.headIdx(); ++i)
 		modList[i]->RP_RTDSChange(rpItem, rpContext);
+}
+
+void Manager::RP_FrameStart()
+{
+	for (int i = 1; i <= modList.headIdx(); ++i)
+		modList[i]->RP_FrameStart();
 }
 
 void Manager::IFR_Start()

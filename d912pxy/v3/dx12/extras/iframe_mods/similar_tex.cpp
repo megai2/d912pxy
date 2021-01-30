@@ -68,7 +68,7 @@ bool d912pxy::extras::IFrameMods::SimilarTex::syncFrom(d912pxy_surface* source)
 
 	if (surf)
 	{
-		if (!sameSize(source))
+		if (!sameSize(source) || (actualDesc.Format != surf->GetL0Desc().Format))
 		{
 			surf->Release();
 			surf = nullptr;

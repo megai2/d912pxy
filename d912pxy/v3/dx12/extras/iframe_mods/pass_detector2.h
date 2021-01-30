@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2020 megai2
+Copyright(c) 2021 megai2
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -26,38 +26,47 @@ SOFTWARE.
 #include "stdafx.h"
 
 namespace d912pxy {
-	namespace extras {
-		namespace IFrameMods {
+namespace extras {
+namespace IFrameMods {
 
-			class ReshadeCompat : public ModHandler
-			{
-				bool afterFirstUiDraw;
-				bool doCopy;
-				PassDetector* uiPass;
-				SimilarTex ssCopies[12];
+	class PassDetector2 : public ModHandler
+	{ 
 
-				SimilarTex colorCopy;
-				SimilarTex depthCopy;
+	public:
+		struct PassTarget
+		{
+			uint32_t width;
+			uint32_t height;
+			uint16_t frame_order;
+			uint8_t rtarget_index;
+			uint8_t tied_bits;
+			d912pxy_surface* surf;
 
-				Trivial::PushBuffer<d912pxy_surface*> passDetectList;
+			bool bbSized;
+			int spairTag;
+		};
 
-				void copySceneColorAndDepth(d912pxy_replay_thread_context* rpContext);
+	private:
+		uint32_t bb_width;
+		uint32_t bb_height;
+		uint32_t c_frame_order = 0;
+		std::atomic<Trivial::PushBuffer<PassTarget>*> lastPassTargets { nullptr };
+		d912pxy_swap_list<Trivial::PushBuffer<PassTarget>> passTargets;
 
-			public:
-				ReshadeCompat();
+		void recordTarget(d912pxy_surface* surf, uint8_t index, uint8_t bits);
 
-				//void Init();
-				//void UnInit();
+	public:
+		PassDetector2();
+		~PassDetector2();
+	
+		void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext) override;
+		void UI_Draw() override;
+		void RP_FrameStart() override;		
 
-				void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext) override;
-				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;
-				//void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;
-				void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext) override;
+		void IFR_Start();
+		void IFR_End();
+	};
 
-				//void IFR_Start() override;
-				//void IFR_End() override;
-			};
-
-		}
-	}
+}
+}
 }

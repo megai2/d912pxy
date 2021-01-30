@@ -75,8 +75,49 @@ ReshadeCompat::ReshadeCompat()
 	d912pxy_s.iframeMods.pushMod(this);
 }
 
+const wchar_t* dbgnn[12] =
+{
+	L"sscopy0",
+	L"sscopy1",
+	L"sscopy2",
+	L"sscopy3",
+	L"sscopy4",
+	L"sscopy5",
+	L"sscopy6",
+	L"sscopy7",
+	L"sscopy8",
+	L"sscopy9",
+	L"sscopy10",
+	L"sscopy11"
+};
+
 void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext)
 {
+	d912pxy_surface* oldZRT = rpContext->tracked.surfBind[1];
+
+	if (colorCopy.ptr() && oldZRT)
+	{
+		if (colorCopy.sameSize(oldZRT))
+		{
+			if (passDetectList.headIdx() <= 8)
+			{
+				passDetectList.push(oldZRT);
+
+				SimilarTex& sti = ssCopies[passDetectList.headIdx() - 1];
+				if (sti.syncFrom(passDetectList.head()))
+				{
+					sti.ptr()->GetD12Obj()->SetName(dbgnn[passDetectList.headIdx() - 1]);
+					sti.ptr()->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, rpContext->cl);
+					reshade_ct_entry color_tex_ct{ reshade_ct_magic, reshade_ct_res_names::GBUF_0 + passDetectList.headIdx() - 1, sti.ptr()->GetD12Obj() };
+					rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&color_tex_ct));
+				}
+
+				if (sti.ptr())
+					passDetectList.head()->BCopyToWStates(sti.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, passDetectList.head()->getContextState());
+			}
+		}
+	}
+
 	if (uiPass->entered())
 		copySceneColorAndDepth(rpContext);
 }
@@ -119,6 +160,8 @@ void ReshadeCompat::copySceneColorAndDepth(d912pxy_replay_thread_context* rpCont
 		reshade_ct_entry color_tex_ct{ reshade_ct_magic, reshade_ct_res_names::COLOR, colorCopy.ptr()->GetD12Obj() };
 		rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&color_tex_ct));
 	}
+
+	passDetectList.reset();
 
 	if (colorCopy.sameSize(sceneDepth))
 	{

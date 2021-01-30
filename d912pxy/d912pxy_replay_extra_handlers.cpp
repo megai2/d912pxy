@@ -71,6 +71,7 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 
 RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 {
+	d912pxy_s.iframeMods.RP_RTDSChange(it, context);
 
 	int changed = (context->tracked.surfBind[0] != it->dsv) * 1;
 	context->tracked.surfBind[0] = it->dsv;
@@ -80,8 +81,6 @@ RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 		context->tracked.surfBind[i + 1] = it->rtv[i];
 	}
 
-	if (changed)
-		d912pxy_s.iframeMods.RP_RTDSChange(it, context);
 
 	if (extras.pairTracker.enable && changed)
 	{
