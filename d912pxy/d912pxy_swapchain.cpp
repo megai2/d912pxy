@@ -561,7 +561,7 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
 
 	if (fullscreenIterrupt.GetValue())
 	{
-		ret = DXGI_STATUS_OCCLUDED;		
+		ret = DXGI_STATUS_OCCLUDED;
 	}
 	else 
 		ret = dxgiSwapchain->Present(currentPP.PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, dxgiPresentFlags);
@@ -742,8 +742,6 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable_W7()
 
 	return D3D_OK;
 }
-
-
 
 HRESULT d912pxy_swapchain::InitDXGISwapChain()
 {
@@ -934,6 +932,12 @@ void d912pxy_swapchain::FixPresentParameters()
 		case D3DFMT_UNKNOWN:
 			currentPP.BackBufferFormat = D3DFMT_A8R8G8B8;
 			break;
+	}
+
+	if (!currentPP.Windowed)
+	{
+		LOG_ERR_DTDM("true fullscreen mode is not supported, falling back to windowed");
+		currentPP.Windowed = true;
 	}
 }
 

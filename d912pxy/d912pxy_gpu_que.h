@@ -38,7 +38,6 @@ public:
 	HRESULT ExecuteCurrentGPUWork(UINT doSwap);
 
 	HRESULT ExecuteCommandsImm(UINT doSwap);
-	HRESULT ExecuteCommands(UINT doSwap);
 	void Flush(UINT doSwap);
 	void WaitForGPU();
 
@@ -50,26 +49,18 @@ public:
 	
 	ComPtr<ID3D12CommandQueue> GetDXQue() { return mDXQue; };
 
-	void ThreadJob();
-
 	void EnableGID(d912pxy_gpu_cmd_list_group id, UINT32 prio);
 
-	void SwitchCurrentCL();
+	HRESULT SwitchCurrentCL(UINT doSwap);
 
-	UINT WaitForExecuteCompletion();
-
-private:
-	UINT swapAsked;
-	
+private:	
 	d912pxy_swapchain* mSwp;
-	d912pxy_gpu_cmd_list* mCurrentGPUWork;
+	d912pxy_gpu_cmd_list* mCurrentGPUWork;	
 	d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>* mLists;	
 	d912pxy_gpu_cmd_list* mListsArr[PXY_INNER_GPU_QUEUE_BUFFER_COUNT];
 	
 	ComPtr<ID3D12CommandQueue> mDXQue;
 
 	d912pxy_gpu_cleanup_thread* mGPUCleanupThread;
-
-	UINT gpuExecuteTimeout;
 };
 

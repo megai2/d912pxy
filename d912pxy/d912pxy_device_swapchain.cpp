@@ -91,7 +91,7 @@ HRESULT d912pxy_device::InnerPresentExecute()
 	FRAME_METRIC_PRESENT(0)
 
 	LOG_DBG_DTDM2("Present Exec GPU");
-	return d912pxy_s.dx12.que.ExecuteCommands(1);
+	return d912pxy_s.dx12.que.ExecuteCommandsImm(1);
 }
 
 void d912pxy_device::InnerPresentFinish()
