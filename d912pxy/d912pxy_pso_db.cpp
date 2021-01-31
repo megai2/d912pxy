@@ -151,7 +151,7 @@ void d912pxy_pso_db::LoadCachedData()
 				d912pxy_trimmed_pso_desc psoDesc;
 				if (!psoDesc.DeSerialize(data))
 				{
-					LOG_ERR_DTDM("PSO with keyname %08lX have wrong data (old or corrupted)", keyName);
+					LOG_ERR_DTDM("PSO with keyname %016llX have wrong data (old or corrupted)", keyName);
 					continue;
 				}
 				data.Delete();

@@ -108,7 +108,7 @@ public:
 	ValuePart val;
 	ref_part ref;
 
-	typedef d912pxy::Memtree<ValuePart, uint32_t, d912pxy::Hash32> IdStorage;
+	typedef d912pxy::Memtree<ValuePart, uint32_t, d912pxy::Hash64> IdStorage;
 	typedef IdStorage::PreparedKey StorageKey;
 
 	d912pxy_trimmed_pso_desc();

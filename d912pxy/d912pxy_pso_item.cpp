@@ -155,7 +155,7 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 	};
 
 	char fullPsoName[255];
-	sprintf(fullPsoName, "%016llX_%016llX_%08lX", entryData.vs, entryData.ps, entryData.pso.data());
+	sprintf(fullPsoName, "%016llX_%016llX_%016llX", entryData.vs, entryData.ps, entryData.pso.data());
 
 	LOG_DBG_DTDM("Compiling PSO %S", fullPsoName);
 
@@ -521,7 +521,7 @@ void d912pxy_pso_item::RealtimeIntegrityCheck(D3D12_GRAPHICS_PIPELINE_STATE_DESC
 {
 	d912pxy_shader_pair_hash_type pairUID = desc->GetShaderPairUID();
 	d912pxy_trimmed_pso_desc::StorageKey psoKey(desc->GetValuePart());	
-	sprintf(derivedAlias, "%016llX_%08lX", pairUID, psoKey.val.value);
+	sprintf(derivedAlias, "%016llX_%016llX", pairUID, psoKey.val.value);
 	LOG_DBG_DTDM("DX9 PSO realtime check emulation for alias %s", derivedAlias);
 
 	derivedName = GetDerivedNameByAlias(derivedAlias);
