@@ -30,6 +30,7 @@ SOFTWARE.
 RHA_DECL(barrier, d912pxy_replay_thread_context* context)
 {
 	RHA_BASE(barrier, context);
+	it->res->setContextState(it->to);
 }
 
 RHA_DECL(om_stencilref, d912pxy_replay_thread_context* context)

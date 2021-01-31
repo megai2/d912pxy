@@ -102,6 +102,7 @@ public:
 	static UINT residencyOverride;
 
 	D3D12_RESOURCE_STATES getContextState() { return inContextState; }
+	void setContextState(D3D12_RESOURCE_STATES newState) { inContextState = newState; }
 
 private: 
 	d912pxy_resource_typeid m_tid;
