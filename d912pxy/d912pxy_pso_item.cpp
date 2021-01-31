@@ -294,6 +294,9 @@ bool d912pxy_pso_item::PerformRCE(char* alias, D3D12_GRAPHICS_PIPELINE_STATE_DES
 	if (desc->val.compareSamplerStage != d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS)
 		RCEApplyPCFSampler(HLSLsource[1].c_arr<char>(), desc->val.compareSamplerStage);
 
+	if (desc->val.dx9emulFlags)
+		RCEApplyDX9EmulFlags(HLSLsource[1].c_arr<char>(), desc->val.dx9emulFlags);
+
 	return true;
 }
 
@@ -482,6 +485,32 @@ void d912pxy_pso_item::RCEApplyPCFSampler(char* source, UINT stage)
 		sprintf_s(buf, "%u_deftype depth/*M*/", stage);
 		memcpy(targetSamplerDef, buf, strlen(buf));
 	}
+}
+
+const char* psWriteEmulReplacements[] =
+{
+	//"dx9_ps_write_emulation(dx9_ret_color_reg_ac);//RCE MARK",
+	  "dx9_ps_write_emulation(dx9_ret_color_reg_ac);//default ",//no extra emulation 0 flags
+	  "dx9_ps_write_emulation_at(dx9_ret_color_reg_ac);//flg01",//no extra emulation 1 flags
+	  "dx9_ps_write_emulation_srgb(dx9_ret_color_reg_ac);//f02",//no extra emulation 2 flags
+	  "dx9_ps_write_emulation_at_srgb(dx9_ret_color_reg_ac);//",//no extra emulation 3 flags
+	  "out of range bullshit marker"
+};
+
+void d912pxy_pso_item::RCEApplyDX9EmulFlags(char* source, UINT8 flags)
+{
+	const char* marker = "dx9_ps_write_emulation(dx9_ret_color_reg_ac);//RCE MARK";
+	const uint32_t markerSize = 55;
+
+	char* writeTarget = strstr(source, marker);
+
+	if (!writeTarget)
+	{
+		LOG_ERR_DTDM("No write marker found for PS dx9 emul RCE, this is totally wrong!");
+		return;
+	}
+
+	memcpy(writeTarget, psWriteEmulReplacements[flags], 55);
 }
 
 void d912pxy_pso_item::AfterCompileRelease()

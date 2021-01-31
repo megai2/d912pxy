@@ -43,6 +43,7 @@ void d912pxy_dx9_pipeline_state::Init()
 	psoDesc.val.rt[0].format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	psoDesc.val.ds.format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	psoDesc.val.compareSamplerStage = d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS;
+	psoDesc.val.dx9emulFlags = 0;
 	compareSamplerStage = d912pxy_trimmed_pso_desc::NO_COMPARE_SAMPLERS;
 
 	for (int i = 1; i < PXY_INNER_MAX_RENDER_TARGETS; ++i)
@@ -596,6 +597,10 @@ void d912pxy_dx9_pipeline_state::ProcessDX9RSChange(D3DRENDERSTATETYPE State, DW
 
 	case D3DRS_SRGBWRITEENABLE:
 		DX9RSvalues[State] = Value;
+		if (Value)
+			psoDesc.val.dx9emulFlags |= d912pxy_trimmed_pso_desc::DX9_EMUL_SRGB;
+		else
+			psoDesc.val.dx9emulFlags &= ~d912pxy_trimmed_pso_desc::DX9_EMUL_SRGB;
 		d912pxy_s.render.state.tex.ModStageBit(31, 13, Value);
 		//d912pxy_s.render.iframe.TST()->SetTexStage(29, Value);
 		break;
@@ -654,7 +659,14 @@ void d912pxy_dx9_pipeline_state::ProcessDX9RSChange(D3DRENDERSTATETYPE State, DW
 	case D3DRS_ALPHAREF:
 	case D3DRS_ALPHAFUNC:
 		DX9RSvalues[State] = Value;
-		//TODO: remove hardcoded 31, everywhere, ! 
+		if (State == D3DRS_ALPHATESTENABLE)
+		{
+			if (Value)
+				psoDesc.val.dx9emulFlags |= d912pxy_trimmed_pso_desc::DX9_EMUL_ATEST;
+			else
+				psoDesc.val.dx9emulFlags &= ~d912pxy_trimmed_pso_desc::DX9_EMUL_ATEST;
+		}
+		//TODO: remove hardcoded 31, everywhere, !
 		d912pxy_s.render.state.tex.ModStageByMask(31, (DX9RSvalues[D3DRS_ALPHATESTENABLE] & 1) | (DX9RSvalues[D3DRS_ALPHAFUNC] << 1) | (DX9RSvalues[D3DRS_ALPHAREF] << 5), 0xFFFFE000);
 		break;
 	case D3DRS_CLIPPLANEENABLE:

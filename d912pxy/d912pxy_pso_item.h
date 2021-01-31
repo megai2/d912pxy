@@ -63,6 +63,7 @@ private:
 	void RCEFilterUnusedRegs(char** ioBlock, UINT elements);
 	void RCEFixIOBlocksOrdering(char** vsOut, char** psIn, UINT vsOutCnt, UINT psInCnt);
 	void RCEApplyPCFSampler(char* source, UINT stage);
+	void RCEApplyDX9EmulFlags(char* source, UINT8 flags);
 
 	void AfterCompileRelease();
 

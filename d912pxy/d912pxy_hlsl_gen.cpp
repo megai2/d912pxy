@@ -934,7 +934,7 @@ void d912pxy_hlsl_generator::WriteShaderTailData()
 			HLSL_GEN_WRITE_PROC("dx9_ps_nan_cull_emulation(dx9_ret_color_reg_ac);");
 		}
 
-		HLSL_GEN_WRITE_PROC("dx9_ps_write_emulation_at_srgb(dx9_ret_color_reg_ac);");
+		HLSL_GEN_WRITE_PROC("dx9_ps_write_emulation(dx9_ret_color_reg_ac);//RCE MARK");
 	}
 	else {
 		HLSL_GEN_WRITE_PROC("dx9_halfpixel_pos_reg_ac = dx9_fix_halfpixel_offset(dx9_halfpixel_pos_reg_ac);");

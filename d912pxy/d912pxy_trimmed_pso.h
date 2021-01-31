@@ -82,6 +82,8 @@ public:
 	};
 
 	enum { NO_COMPARE_SAMPLERS = 0xFF };
+
+	enum { DX9_EMUL_ATEST = 0x1, DX9_EMUL_SRGB = 0x2 };
 	   
 	struct ValuePart {
 		UINT vdeclHash;
@@ -92,6 +94,7 @@ public:
 		rt_desc rt[PXY_INNER_MAX_RENDER_TARGETS];
 		UINT8 NumRenderTargets;
 		UINT8 compareSamplerStage;
+		UINT8 dx9emulFlags;
 	};
 
 	struct ref_part {
