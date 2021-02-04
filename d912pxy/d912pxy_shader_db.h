@@ -42,7 +42,6 @@ public:
 	d912pxy_shader_pair_hash_type GetPairUID(d912pxy_shader* vs, d912pxy_shader* ps);
 
 	d912pxy_shader_pair* GetPair(d912pxy_shader* vs, d912pxy_shader* ps);
-	void DeletePair(d912pxy_shader_pair_hash_type ha);
 
 private:
 	typedef d912pxy::Memtree<d912pxy_shader_pair_hash_type, d912pxy_shader_pair*, d912pxy::RawHash<d912pxy_shader_pair_hash_type>> ShaderPairStorage;
