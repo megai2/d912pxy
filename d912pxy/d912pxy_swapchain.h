@@ -64,8 +64,28 @@ static const char* d912pxy_swapchain_state_names[] = {
 	"SWCS_COUNT"
 };
 
+class d912pxy_swapchain;
+
+class d912pxy_present_thread : public d912pxy_thread
+{
+	d912pxy_swapchain* m_swp = nullptr;
+	std::atomic<HRESULT> lastRet;
+
+public:
+	void ThreadJob() override;
+
+	void Init(d912pxy_swapchain* swp)
+	{
+		m_swp = swp;
+		d912pxy_thread::InitThread("dxgi_fs_presenter", 0);
+	}
+
+	HRESULT GetLastResult() { return lastRet.load(std::memory_order_acquire); }
+};
+
 class d912pxy_swapchain : public d912pxy_vtable, public d912pxy_comhandler
 {
+	d912pxy_present_thread* fsPresenter = nullptr;
 public:	
 	static d912pxy_com_object* d912pxy_swapchain_com(int index, D3DPRESENT_PARAMETERS* in_pp);
 	~d912pxy_swapchain();
@@ -94,6 +114,7 @@ public:
 	HRESULT TestCoopLevel();
 	HRESULT Swap();
 	HRESULT SwapCheck();
+	HRESULT ExternalSwap();
 
 	void WaitForNewFrame();
 
@@ -131,6 +152,7 @@ private:
 
 	d912pxy_swapchain_state state;	
 	HRESULT swapCheckValue;
+	bool dxgiBlocked;
 	UINT errorCount;
 	HRESULT (d912pxy_swapchain::*swapHandlers[SWCS_COUNT])();
 
@@ -139,6 +161,7 @@ private:
 	HRESULT SwapHandle_Init_Error();
 	HRESULT SwapHandle_Swappable();
 	HRESULT SwapHandle_Swappable_Exclusive();
+	HRESULT SwapHandle_Swappable_Exclusive_Threaded();
 	HRESULT SwapHandle_Reconfigure();
 	HRESULT SwapHandle_Swap_Error();
 	HRESULT SwapHandle_Focus_Lost();

@@ -56,6 +56,7 @@ d912pxy_swapchain::d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS * in_pp) :
 	} else 
 		state = SWCS_SETUP;
 
+	dxgiBlocked = false;
 	depthStencilSurface = NULL;
 	backBufferSurface = NULL;
 	swapCheckValue = D3D_OK;
@@ -122,6 +123,12 @@ ULONG d912pxy_swapchain::ReleaseSwapChain(void)
 		ChangeState(SWCS_SHUTDOWN);
 		FreeFrameTargets();
 		FreeDXGISwapChain();
+		if (fsPresenter)
+		{
+			fsPresenter->Stop();
+			delete fsPresenter;
+			fsPresenter = nullptr;
+		}
 
 		swapCheckValue = D3DERR_DEVICELOST;		
 	}
@@ -226,7 +233,7 @@ HRESULT d912pxy_swapchain::TestCoopLevel()
 		Swap();
 		return D3DERR_DEVICELOST;
 	}
-	else 
+	else
 		return swapCheckValue;
 }
 
@@ -237,7 +244,47 @@ HRESULT d912pxy_swapchain::Swap()
 
 HRESULT d912pxy_swapchain::SwapCheck()
 {
+	if (dxgiBlocked)
+	{
+		if (fsPresenter)
+			dxgiBlocked = fsPresenter->IsWorkCompleted() ? false : true;
+		else
+			dxgiBlocked = false;
+	}
+
+	if (dxgiBlocked)
+		return D3DERR_DEVICELOST;
+
 	return swapCheckValue;
+}
+
+HRESULT d912pxy_swapchain::ExternalSwap()
+{
+	HRESULT ret;
+
+	//fullscreenIterrupt.Hold();
+
+	if (fullscreenIterrupt.GetValue())
+	{
+		ret = DXGI_STATUS_OCCLUDED;
+	}
+	else
+		ret = dxgiSwapchain->Present(currentPP.PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, dxgiPresentFlags);
+
+	//fullscreenIterrupt.Release();
+
+	if (ret == DXGI_STATUS_OCCLUDED)
+	{
+		swapCheckValue = D3DERR_DEVICELOST;
+		ChangeState(SWCS_FOCUS_LOST_SWITCH);
+	}
+	else if (FAILED(ret))
+	{
+		LOG_ERR_DTDM("error: %llX", ret);
+		ChangeState(SWCS_SWAP_ERROR);
+	}
+
+	return D3D_OK;
 }
 
 void d912pxy_swapchain::WaitForNewFrame()
@@ -553,32 +600,31 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable()
 	return D3D_OK;
 }
 
+HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive_Threaded()
+{
+	if (fsPresenter)
+	{
+		if (!fsPresenter->IsWorkCompleted())
+		{
+			fsPresenter->IssueWork();
+			//if we timeout, do not try again untill unblocked
+			if (fsPresenter->WaitForIssuedWorkCompletionTimeout(1000))
+				return fsPresenter->GetLastResult();
+		}
+
+	}
+
+	LOG_ERR_DTDM("error: dxgi blocked");
+	dxgiBlocked = true;
+	swapCheckValue = D3DERR_DEVICELOST;
+	ChangeState(SWCS_FOCUS_LOST_SWITCH);
+	return D3DERR_DEVICELOST;
+}
+
 HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
 {
-	HRESULT ret;
-
-	fullscreenIterrupt.Hold();
-
-	if (fullscreenIterrupt.GetValue())
-	{
-		ret = DXGI_STATUS_OCCLUDED;
-	}
-	else 
-		ret = dxgiSwapchain->Present(currentPP.PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, dxgiPresentFlags);
-
-	fullscreenIterrupt.Release();
-
-	if (ret == DXGI_STATUS_OCCLUDED)
-	{
-		swapCheckValue = D3DERR_DEVICELOST;
-		ChangeState(SWCS_FOCUS_LOST_SWITCH);
-	} else if (FAILED(ret))
-	{
-		LOG_ERR_DTDM("error: %llX", ret);
-		ChangeState(SWCS_SWAP_ERROR);
-	}	
-
-	return D3D_OK;
+	//return SwapHandle_Swappable_Exclusive_Threaded();
+	return 	ExternalSwap();
 }
 
 HRESULT d912pxy_swapchain::SwapHandle_Reconfigure()
@@ -829,7 +875,7 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 	}
 	else {
 		// Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen will be handled manually.
-		ThrowCritialError(dxgiFactory4->MakeWindowAssociation(currentPP.hDeviceWindow, DXGI_MWA_NO_ALT_ENTER), "DXGI window assoc @ InitDXGISwapChain");
+		ThrowCritialError(dxgiFactory4->MakeWindowAssociation(currentPP.hDeviceWindow, DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES), "DXGI window assoc @ InitDXGISwapChain");
 		ThrowCritialError(swapChain1.As(&dxgiSwapchain), "DXGI swap chain 1->4 @ InitDXGISwapChain");
 
 		if (dxgiMaxFrameLatency)
@@ -841,7 +887,20 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 				ThrowCritialError(-1, "Failed to get DXGI frame latency waitable obj");
 
 			WaitForNewFrame();
-		}		
+		}
+
+		if (fsPresenter)
+		{
+			fsPresenter->Stop();
+			delete fsPresenter;
+			fsPresenter = nullptr;
+		}
+
+		//if (!currentPP.Windowed)
+		//{
+		//	fsPresenter = new d912pxy_present_thread();
+		//	fsPresenter->Init(this);
+		//}
 
 		return swapRet;
 	}	
@@ -933,12 +992,6 @@ void d912pxy_swapchain::FixPresentParameters()
 			currentPP.BackBufferFormat = D3DFMT_A8R8G8B8;
 			break;
 	}
-
-	if (!currentPP.Windowed)
-	{
-		LOG_ERR_DTDM("true fullscreen mode is not supported, falling back to windowed");
-		currentPP.Windowed = true;
-	}
 }
 
 DXGI_FORMAT d912pxy_swapchain::GetDXGIFormatForBackBuffer(D3DFORMAT fmt)
@@ -997,4 +1050,10 @@ void d912pxy_swapchain::OverrideWndProc()
 		else
 			dxgiOWndProc = (WNDPROC)SetWindowLongPtr(currentPP.hDeviceWindow, GWLP_WNDPROC, (LONG_PTR)&d912pxy_dxgi_wndproc_patch);
 	}
+}
+
+void d912pxy_present_thread::ThreadJob()
+{
+	lastRet.store(m_swp->ExternalSwap(), std::memory_order::memory_order_release);
+	SignalWorkCompleted();
 }

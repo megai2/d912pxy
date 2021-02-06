@@ -95,7 +95,7 @@ void d912pxy_gpu_que::UnInit()
 
 HRESULT d912pxy_gpu_que::ExecuteCurrentGPUWork(UINT doSwap)
 {
-	HRESULT ret;
+	HRESULT ret = S_OK;
 
 	if (doSwap)
 	{
@@ -106,11 +106,8 @@ HRESULT d912pxy_gpu_que::ExecuteCurrentGPUWork(UINT doSwap)
 
 	if (doSwap)
 		ret = mSwp->Swap();
-	else
-		ret = D3D_OK;
 
 	mCurrentGPUWork->Signal();
-	
 		
 	return ret;
 }
@@ -190,10 +187,15 @@ HRESULT d912pxy_gpu_que::SwitchCurrentCL(UINT doSwap)
 	d912pxy_gpu_cmd_list* oldWork = mCurrentGPUWork;
 	mCurrentGPUWork = mLists->GetElement();
 
+	HRESULT ret = D3DERR_DEVICEREMOVED;
+	HRESULT ret2 = D3DERR_DEVICEREMOVED;
 	if (doSwap && mSwp)
-		doSwap = mSwp->SwapCheck() == S_OK;
+		ret = mSwp->SwapCheck();
 
-	HRESULT ret = ExecuteCurrentGPUWork(doSwap);
+	ret2 = ExecuteCurrentGPUWork(ret == S_OK);
+	if (ret == S_OK)
+		ret = ret2;
+
 	//wait after submit, keep GPU busy
 	if (oldWork)
 		oldWork->Wait();
