@@ -69,7 +69,15 @@ gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 {
 	gAPI = core_api;
 
-	gAPI->register_function(&GetD3D9CustomLib, gAPI->hash_name((wchar_t*)L"D3D_wrapper_custom_d3d9_lib_query"));
+	auto nha = gAPI->hash_name((wchar_t*)L"D3D_wrapper_custom_d3d9_lib_query");
+
+	if (gAPI->load_addon((wchar_t*)L"SelectRender") == GW2AL_OK)
+	{
+		gAPI->log_text(LL_INFO, (wchar_t*)L"d912pxy", (wchar_t*)L"render selector detected, disabling auto load");
+		return GW2AL_OK;
+	}
+
+	gAPI->register_function(&GetD3D9CustomLib, nha);
 		
 	return GW2AL_OK;
 }
@@ -77,7 +85,5 @@ gw2al_api_ret gw2addon_load(gw2al_core_vtable* core_api)
 gw2al_api_ret gw2addon_unload(int gameExiting)
 {
 	//TODO cleanup
-
-
 	return GW2AL_OK;
 }
