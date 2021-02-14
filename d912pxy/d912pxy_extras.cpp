@@ -434,10 +434,36 @@ void d912pxy_extras::DrawMainWindow()
 		ImGui::PlotLines("FPS", &fps_graph_buffer_transform, fpsGraph.Data, PXY_INNER_EXTRA_FPS_GRAPH_PTS, 0, 0, fpsGraph.min, fpsGraph.max, ImVec2(fpsGraph.w, fpsGraph.h));
 	}
 
-	if (bEnableConfigEditor && (overlayShowMode == eoverlay_edit))
+	if (overlayShowMode == eoverlay_edit)
 	{
-		if (ImGui::Button("Edit config"))
-			bShowConfigEditor = !bShowConfigEditor;
+		if (bEnableConfigEditor)
+			if (ImGui::Button("Edit config"))
+				bShowConfigEditor = !bShowConfigEditor;
+
+		if (ImGui::Button("Disable overlay & extras"))
+			ImGui::OpenPopup("disable_warning");
+
+
+		if (ImGui::BeginPopup("disable_warning"))
+		{
+			ImGui::Text("Overlay and all extra features will be disabled.");
+			ImGui::Text("You can enable them back by changing enable value to 1 in [extras] of d912pxy/config.ini file.");
+			if (ImGui::Button("Yes, disable extras & overlay"))
+			{
+				if (!bEnableConfigEditor)
+					d912pxy_s.config.InitNewValueBuffers();
+				strcpy(d912pxy_s.config.GetEntryRaw(PXY_CFG_EXTRAS_ENABLE)->newValue, "0");
+				overlayShowMode = eoverlay_hide;
+				d912pxy_s.config.SaveConfig();
+				if (!bEnableConfigEditor)
+					d912pxy_s.config.UnInitNewValueBuffers();
+			}
+			if (ImGui::Button("No, keep overlay and other stuff!"))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+		}
 	}
 
 	ImGui::End();
