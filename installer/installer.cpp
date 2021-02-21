@@ -151,7 +151,9 @@ int action_install()
 	if (!ReadUserYN(1))
 	{
 		std::cout << "Select configuration: \n\n";
-		std::cout << "1. Debug       - debug build\n";
+		std::cout << "1. Debug        - debug build\n";
+		std::cout << "2. 32-bit       - 32bit build\n";
+		std::cout << "3. Debug 32-bit - 32bit debug build\n";
 
 		std::cout << "\n[default: debug]: ";
 
@@ -161,6 +163,12 @@ int action_install()
 		{
 		case 1:
 			installSource = "debug\\";
+			break;
+		case 2:
+			installSource = "release_x86\\";
+			break;
+		case 3:
+			installSource = "debug_x86\\";
 			break;
 		default:
 			std::cout << "Incorrect parameter; exiting.\n";
