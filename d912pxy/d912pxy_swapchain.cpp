@@ -791,7 +791,7 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable_W7()
 
 HRESULT d912pxy_swapchain::InitDXGISwapChain()
 {
-	ComPtr<IDXGIFactory2> dxgiFactory4;	
+	ComPtr<IDXGIFactory2> dxgiFactory4;
 #ifdef _DEBUG
 	UINT createFactoryFlags = 0;
 	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
@@ -834,7 +834,8 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 		}
 	}
 	else {
-		dxgiResizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;	
+		d912pxy_s.dev.DisableSystemSleepMode();
+		dxgiResizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	}
 
 

@@ -415,6 +415,14 @@ void d912pxy_device::InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationPa
 	d912pxy_s.render.iframe.SetSwapper(swapchains[0]);
 }
 
+void d912pxy_device::DisableSystemSleepMode()
+{
+	if (SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED) == NULL)
+		LOG_ERR_DTDM("Can't prevent PC from goin into sleep mode");
+	else
+		LOG_INFO_DTDM("Sleep mode is disabled");
+}
+
 ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 {
 	ComPtr<IDXGIFactory1> dxgiFactory;

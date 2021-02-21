@@ -320,6 +320,7 @@ public:
 	void InitDescriptorHeaps();
 	void PrintInfoBanner();
 	void InitDefaultSwapChain(D3DPRESENT_PARAMETERS* pPresentationParameters);
+	void DisableSystemSleepMode();
 
 	void NvGPU_force_highpower();
 	void NvGPU_restore();
