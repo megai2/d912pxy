@@ -24,40 +24,16 @@ SOFTWARE.
 
 */
 
-/////////reshade ct interface
-
-static const GUID reshade_ct_fake_guid = { 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } };
-static const uint64_t reshade_ct_magic = 0x505670b7c18ff478;
-
-enum reshade_ct_res_names
-{
-	COLOR = 0,
-	DEPTH = 1,
-	ZPREPASS = 2,
-	GBUF_0 = 3,
-	GBUF_1 = 4,
-	GBUF_2 = 5,
-	GBUF_3 = 6,
-	GBUF_4 = 7,
-	OVERLAY_0 = 8,
-	OVERLAY_1 = 9,
-	OVERLAY_2 = 10,
-	OVERLAY_3 = 11,
-	OPAQUE_GEOMETRY = 12,
-	TRANSP_GEOMETRY = 13,
-	COUNT = 14
-};
-
-struct reshade_ct_entry
-{
-	uint64_t magic;
-	uint64_t ct_idx;
-	ID3D12Resource* res;
-};
-
-/////////
-
 using namespace d912pxy::extras::IFrameMods;
+
+const D3DFORMAT targetFormats[ReshadeCompat::TARGET_COUNT] =
+{
+	D3DFMT_A8B8G8R8,
+	D3DFMT_D24X8,
+	D3DFMT_A8B8G8R8,
+	D3DFMT_A8B8G8R8,
+	D3DFMT_A8B8G8R8
+};
 
 ReshadeCompat::ReshadeCompat()
 {
@@ -66,116 +42,49 @@ ReshadeCompat::ReshadeCompat()
 	uint32_t uiPassRTDSmask = d912pxy_s.iframeMods.configVal(L"ui_pass_RTDS_mask").ui32();
 	uint32_t uiPassTargetLock = d912pxy_s.iframeMods.configVal(L"ui_pass_target_lock").ui32();
 
-	afterFirstUiDraw = d912pxy_s.iframeMods.configVal(L"catch_scene_after_first_ui_draw").ui32() > 0;
-	doCopy = false;
+	passes = new PassDetector2();
+	d912pxy_s.iframeMods.pushMod(passes);
 
-	uiPass = new PassDetector(preUiPass, uiPassInitial, uiPassRTDSmask, uiPassTargetLock);
-	d912pxy_s.iframeMods.pushMod(uiPass);
+	uiPass = passes->registerName();
+	depthPass = passes->registerName();
+	resolvePass = passes->registerName();
+	shadowPass = passes->registerName();
+	normalPass = passes->registerName();
+
+	//TODO: read hashes from cfg
 
 	d912pxy_s.iframeMods.pushMod(this);
 }
 
-const wchar_t* dbgnn[12] =
-{
-	L"sscopy0",
-	L"sscopy1",
-	L"sscopy2",
-	L"sscopy3",
-	L"sscopy4",
-	L"sscopy5",
-	L"sscopy6",
-	L"sscopy7",
-	L"sscopy8",
-	L"sscopy9",
-	L"sscopy10",
-	L"sscopy11"
-};
-
 void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext)
 {
-	d912pxy_surface* oldZRT = rpContext->tracked.surfBind[1];
+	if (!passes->passChanged())
+		return;
 
-	if (colorCopy.ptr() && oldZRT)
-	{
-		if (colorCopy.sameSize(oldZRT))
-		{
-			if (passDetectList.headIdx() <= 8)
-			{
-				passDetectList.push(oldZRT);
-
-				SimilarTex& sti = ssCopies[passDetectList.headIdx() - 1];
-				if (sti.syncFrom(passDetectList.head()))
-				{
-					sti.ptr()->GetD12Obj()->SetName(dbgnn[passDetectList.headIdx() - 1]);
-					sti.ptr()->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, rpContext->cl);
-					reshade_ct_entry color_tex_ct{ reshade_ct_magic, reshade_ct_res_names::GBUF_0 + passDetectList.headIdx() - 1, sti.ptr()->GetD12Obj() };
-					rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&color_tex_ct));
-				}
-
-				if (sti.ptr())
-					passDetectList.head()->BCopyToWStates(sti.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, passDetectList.head()->getContextState());
-			}
-		}
-	}
-
-	if (uiPass->entered())
-		copySceneColorAndDepth(rpContext);
+	//TODO: indexes are changing between individual pass hashes, route them
+	//TODO: all other stuff
+	if (passes->inPass(uiPass))
+		passes->copyLastSurface(false, false, 5, 5, targets[TARGET_COLOR], rpContext->cl);
 }
 
-void ReshadeCompat::RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext)
+void d912pxy::extras::IFrameMods::ReshadeCompat::RP_FrameStart()
 {
-	if (afterFirstUiDraw)
+	if (passes->isBBChangedThisFrame())
 	{
-		if (uiPass->entered())
-			doCopy = true;
-		else if (uiPass->inside() && doCopy)
+		for (int i = 0; i < TARGET_COUNT; ++i)
 		{
-			doCopy = false;
-			copySceneColorAndDepth(rpContext);
+			if (targets[i])
+				targets[i]->Release();
+			targets[i] = passes->makeBBsizedTarget(targetFormats[i]);
 		}
 	}
-	else if (uiPass->entered())
-		copySceneColorAndDepth(rpContext);
 }
 
 void ReshadeCompat::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext)
 {
-	if (uiPass->inside() && !uiPass->entered())
+	if (passes->inPass(uiPass))
 	{
 		if (rpItem->rawState.val.rt[0].writeMask)
 			rpItem->rawState.val.rt[0].writeMask |= D3D12_COLOR_WRITE_ENABLE_ALL;
 	}
-}
-
-void ReshadeCompat::copySceneColorAndDepth(d912pxy_replay_thread_context* rpContext)
-{
-	d912pxy_surface* sceneColor = uiPass->getSurf();
-	d912pxy_surface* sceneDepth = uiPass->getSurf(false, afterFirstUiDraw);
-
-	//copy needed frames to ReShade as external resource
-	if (colorCopy.syncFrom(sceneColor))
-	{
-		colorCopy.ptr()->GetD12Obj()->SetName(L"proxyColorCopy");
-		colorCopy.ptr()->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, rpContext->cl);
-		reshade_ct_entry color_tex_ct{ reshade_ct_magic, reshade_ct_res_names::COLOR, colorCopy.ptr()->GetD12Obj() };
-		rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&color_tex_ct));
-	}
-
-	passDetectList.reset();
-
-	if (colorCopy.sameSize(sceneDepth))
-	{
-		if (depthCopy.syncFrom(sceneDepth))
-		{
-			depthCopy.ptr()->GetD12Obj()->SetName(L"proxyDepthCopy");
-			depthCopy.ptr()->BTransitTo(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, D3D12_RESOURCE_STATE_DEPTH_READ, rpContext->cl);
-			reshade_ct_entry depth_tex_ct{ reshade_ct_magic, reshade_ct_res_names::DEPTH, depthCopy.ptr()->GetD12Obj() };
-			rpContext->cl->SetPrivateData(reshade_ct_fake_guid, sizeof(reshade_ct_entry), (const void*)(&depth_tex_ct));
-		}
-
-		if (sceneDepth)
-			sceneDepth->BCopyToWStates(depthCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_DEPTH_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	}
-
-	sceneColor->BCopyToWStates(colorCopy.ptr(), 3, rpContext->cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }

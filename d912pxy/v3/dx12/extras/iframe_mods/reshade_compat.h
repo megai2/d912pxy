@@ -31,17 +31,30 @@ namespace d912pxy {
 
 			class ReshadeCompat : public ModHandler
 			{
-				bool afterFirstUiDraw;
-				bool doCopy;
-				PassDetector* uiPass;
-				SimilarTex ssCopies[12];
 
-				SimilarTex colorCopy;
-				SimilarTex depthCopy;
+			public:
+				enum
+				{
+					TARGET_COLOR,
+					TARGET_DEPTH,
+					TARGET_OPAQUE,
+					TARGET_GBUF0,
+					TARGET_GBUF1,
+					TARGET_COUNT
+				};
 
-				Trivial::PushBuffer<d912pxy_surface*> passDetectList;
+			private:
+				PassDetector2* passes;
+				d912pxy_surface* targets[TARGET_COUNT] = { 0 };
 
-				void copySceneColorAndDepth(d912pxy_replay_thread_context* rpContext);
+				uint64_t uiPass;
+				uint64_t depthPass;
+				uint64_t shadowPass;
+				uint64_t normalPass;
+				uint64_t resolvePass;
+
+				//TODO: load reshade addon lib and exchange data
+				HANDLE reshadeAddonLib;
 
 			public:
 				ReshadeCompat();
@@ -50,9 +63,10 @@ namespace d912pxy {
 				//void UnInit();
 
 				void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext) override;
-				void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;
+				//void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;
 				//void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;
 				void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext) override;
+				void RP_FrameStart() override;
 
 				//void IFR_Start() override;
 				//void IFR_End() override;
