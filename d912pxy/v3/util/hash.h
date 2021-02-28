@@ -48,13 +48,12 @@ namespace d912pxy
 		template<typename T>
 		void from(const T& obj)
 		{
-			value = base;
+			init(value);
 			uint8_t* objMem = (uint8_t*)&obj;
 
 			for (uintptr_t i = 0; i < sizeof(T); ++i)
 			{
-				value ^= *objMem;
-				value *= multiplier;
+				step(value, *objMem);
 				++objMem;
 			}
 		}
@@ -62,19 +61,29 @@ namespace d912pxy
 		template<>
 		void from(const MemoryArea& obj)
 		{
-			value = base;
+			init(value);
 			uint8_t* objMem = obj.c_arr<uint8_t>();
 
 			for (uintptr_t i = 0; i < obj.getSize(); ++i)
 			{
-				value ^= *objMem;
-				value *= multiplier;
+				step(value, *objMem);
 				++objMem;
 			}
 		}
 
 		uint8_t operator [] (int index) const { return mem[index]; }
 		bool operator==(const XorHash& r) const { return value == r.value; }
+
+		static void step(InnerType& value, uint8_t byte)
+		{
+			value ^= byte;
+			value *= multiplier;
+		}
+
+		static void init(InnerType& value)
+		{
+			value = base;
+		}
 	};
 
 	typedef XorHash<uint64_t, 0xcbf29ce484222325, 1099511628211> Hash64;
