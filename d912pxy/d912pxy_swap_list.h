@@ -47,6 +47,12 @@ public:
 		index %= PXY_INNER_GPU_QUEUE_BUFFER_COUNT;
 	}
 
+	void AddN(int cnt)
+	{
+		for (int i = 0; i < cnt; ++i)
+			Add(new T());
+	}
+
 	void Cleanup() {
 		for (int i = 0; i != PXY_INNER_GPU_QUEUE_BUFFER_COUNT; ++i)
 			delete objArr[i];

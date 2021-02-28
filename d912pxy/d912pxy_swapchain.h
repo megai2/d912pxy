@@ -133,6 +133,9 @@ public:
 	HWND GetTargetWindow();
 	d912pxy_surface* GetRenderBuffer();
 
+	//thread unsafe
+	const D3DPRESENT_PARAMETERS& GetCurrentPP() { return currentPP; }
+
 private:	
 	d912pxy_swapchain(int index, D3DPRESENT_PARAMETERS* in_pp);
 
