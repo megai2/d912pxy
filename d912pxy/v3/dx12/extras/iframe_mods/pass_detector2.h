@@ -51,6 +51,7 @@ namespace IFrameMods {
 			uint16_t rtarget_index;
 			uint8_t bits;
 			uint64_t hash;
+			const wchar_t* dbgName;
 
 			d912pxy_surface* surf;
 			int spairTag;
@@ -102,15 +103,26 @@ namespace IFrameMods {
 		d912pxy_swap_list<PerFrameData> frData;
 		d912pxy_surface* lastTargets[2] = { 0 };
 
+		struct NamedTarget
+		{
+			bool ds;
+			bool converge;
+			int index;
+			int minimalPassNum;
+		};
+
 		struct NamedPass
 		{
 			uint64_t hash;
 			uint64_t name;
+			const wchar_t* dbgName;
+			Trivial::PushBuffer<NamedTarget> targets;
 		};
 
 		Trivial::PushBuffer<NamedPass> namedPasses;
 		uint64_t newPassName = 0;
 		uint64_t acctivePassName = 0;
+		NamedPass* activePass = nullptr;
 		bool newPass = false;
 
 		void recordTarget(d912pxy_surface* surf, uint8_t bits);
@@ -119,8 +131,11 @@ namespace IFrameMods {
 		PassDetector2();
 		~PassDetector2();
 
+		int loadLinks(const wchar_t* passStrName);
+
 		int registerName() { return ++newPassName; }
-		void linkName(uint64_t name, uint64_t hash) { namedPasses.push({ hash, name }); }
+		void linkName(uint64_t name, uint64_t hash, const wchar_t* dbg_name) { namedPasses.push({ hash, name, dbg_name }); }
+		intptr_t linkTarget(uint64_t hash, const NamedTarget& tgt);
 		bool inPass(uint64_t name) { return acctivePassName == name; }
 		bool passChanged() { return newPass; }
 
@@ -130,6 +145,7 @@ namespace IFrameMods {
 		//1 frame lag here, as we can't detect what frame we have until it ends
 		//should be fine as resources are usually same between frames even if frame have small changes
 		uint64_t getLastFrameHash();
+		bool copyLastSurfaceNamed(intptr_t idx, d912pxy_surface* target, ID3D12GraphicsCommandList* cl);
 		bool copyLastSurface(bool ds, bool converge, int index, int minimalPassNum, d912pxy_surface* target, ID3D12GraphicsCommandList* cl);
 		uint64_t getCurrentHash() { return frData->hash; }
 

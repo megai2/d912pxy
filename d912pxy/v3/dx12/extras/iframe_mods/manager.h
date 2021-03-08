@@ -40,6 +40,33 @@ namespace d912pxy {
 						return 0;
 					return _wtoi(raw);
 				}
+
+				uint64_t ui64() const
+				{
+					if (!raw)
+						return 0;
+
+					return _wtoi64(raw);
+				}
+
+				uint64_t ux64() const
+				{
+					if (!raw)
+						return 0;
+
+					uint64_t ret;
+					swscanf(raw, L"%llX", &ret);
+
+					return ret;
+				}
+
+				bool b() const
+				{
+					if (!raw)
+						return false;
+
+					return ((raw[0] == L'Y') || (raw[0] == L'y')) ? true : false;
+				}
 			};
 
 			class ModHandler : public d912pxy_noncom
@@ -73,7 +100,9 @@ namespace d912pxy {
 				Manager();
 				~Manager();
 
+				const ModConfigEntry& configValF(const wchar_t* key, ...);
 				const ModConfigEntry& configVal(const wchar_t* key);
+				const ModConfigEntry& configValM(const wchar_t* key);
 				void pushMod(ModHandler* mod);
 			
 				void Init();

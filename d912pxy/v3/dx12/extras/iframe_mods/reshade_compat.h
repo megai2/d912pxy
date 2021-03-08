@@ -53,14 +53,25 @@ namespace d912pxy {
 				uint64_t normalPass;
 				uint64_t resolvePass;
 
-				//TODO: load reshade addon lib and exchange data
-				HANDLE reshadeAddonLib;
+
+				union rsad_Data
+				{
+					float fv4[4];
+					uint32_t ui4[4];
+				};
+
+				typedef void (*rsad_supplyTexture)(uint32_t idx, ID3D12Resource* res);
+				typedef void (*rsad_setData)(uint32_t idx, rsad_Data* value);
+
+				HMODULE reshadeAddonLib;
+				rsad_supplyTexture rsadSupplyTexture;
+				rsad_setData rsadSetData;
 
 			public:
 				ReshadeCompat();
 
 				//void Init();
-				//void UnInit();
+				void UnInit();
 
 				void RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext) override;
 				//void RP_PreDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext) override;

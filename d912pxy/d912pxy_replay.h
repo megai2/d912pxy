@@ -70,6 +70,7 @@ public:
 
 	void Init();
 	void Free();
+	void CleanupExtras();
 
 	//actions
 

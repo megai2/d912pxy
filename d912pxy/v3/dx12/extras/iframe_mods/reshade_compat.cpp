@@ -28,32 +28,33 @@ using namespace d912pxy::extras::IFrameMods;
 
 const D3DFORMAT targetFormats[ReshadeCompat::TARGET_COUNT] =
 {
-	D3DFMT_A8B8G8R8,
+	D3DFMT_A8R8G8B8,
 	D3DFMT_D24X8,
-	D3DFMT_A8B8G8R8,
-	D3DFMT_A8B8G8R8,
-	D3DFMT_A8B8G8R8
+	D3DFMT_A8R8G8B8,
+	D3DFMT_A8R8G8B8,
+	D3DFMT_A8R8G8B8
 };
 
 ReshadeCompat::ReshadeCompat()
 {
-	wchar_t* preUiPass = d912pxy_s.iframeMods.configVal(L"pre_ui_pass").raw;
-	wchar_t* uiPassInitial = d912pxy_s.iframeMods.configVal(L"ui_pass_initial").raw;
-	uint32_t uiPassRTDSmask = d912pxy_s.iframeMods.configVal(L"ui_pass_RTDS_mask").ui32();
-	uint32_t uiPassTargetLock = d912pxy_s.iframeMods.configVal(L"ui_pass_target_lock").ui32();
-
 	passes = new PassDetector2();
-	d912pxy_s.iframeMods.pushMod(passes);
 
-	uiPass = passes->registerName();
-	depthPass = passes->registerName();
-	resolvePass = passes->registerName();
-	shadowPass = passes->registerName();
-	normalPass = passes->registerName();
-
-	//TODO: read hashes from cfg
+	uiPass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_ui").raw);
+	depthPass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_depth").raw);
+	resolvePass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_resolve").raw);
+	shadowPass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_shadow").raw);
+	normalPass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_normal").raw);
 
 	d912pxy_s.iframeMods.pushMod(this);
+
+	reshadeAddonLib = LoadLibrary(L"./addons/gw2enhanced/gw2enhanced.addon");
+	error::check(reshadeAddonLib != NULL, L"<game root>/addons/gw2enhanced/gw2enhanced.addon are not found or can't be loaded!");
+
+	rsadSupplyTexture = (rsad_supplyTexture)GetProcAddress(reshadeAddonLib, "rsadSupplyTexture");
+	error::check(rsadSupplyTexture != nullptr, L"rsadSupplyTexture is not found in reshade addon");
+	rsadSetData = (rsad_setData)GetProcAddress(reshadeAddonLib, "rsadSetData");
+	error::check(rsadSupplyTexture != nullptr, L"rsadSetData is not found in reshade addon");
+
 }
 
 void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext)
@@ -61,10 +62,10 @@ void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpI
 	if (!passes->passChanged())
 		return;
 
-	//TODO: indexes are changing between individual pass hashes, route them
-	//TODO: all other stuff
 	if (passes->inPass(uiPass))
-		passes->copyLastSurface(false, false, 5, 5, targets[TARGET_COLOR], rpContext->cl);
+		passes->copyLastSurfaceNamed(TARGET_COLOR+1, targets[TARGET_COLOR], rpContext->cl);
+
+	//TODO: all other stuff
 }
 
 void d912pxy::extras::IFrameMods::ReshadeCompat::RP_FrameStart()
@@ -76,7 +77,19 @@ void d912pxy::extras::IFrameMods::ReshadeCompat::RP_FrameStart()
 			if (targets[i])
 				targets[i]->Release();
 			targets[i] = passes->makeBBsizedTarget(targetFormats[i]);
+
+			if (rsadSupplyTexture)
+				rsadSupplyTexture(i, targets[i]->GetD12Obj());
 		}
+	}
+}
+
+void d912pxy::extras::IFrameMods::ReshadeCompat::UnInit()
+{
+	for (int i = 0; i < TARGET_COUNT; ++i)
+	{
+		if (targets[i])
+			targets[i]->Release();
 	}
 }
 

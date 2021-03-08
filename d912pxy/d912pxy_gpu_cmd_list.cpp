@@ -145,13 +145,22 @@ void d912pxy_gpu_cmd_list::EnqueueCleanup(d912pxy_comhandler * obj)
 void d912pxy_gpu_cmd_list::FinalReferenceCleanup()
 {
 	auto totalRefs = mGpuRefs->TotalElements();
+	int retryAmounts = 5;
+
 	while (mGpuRefs->HaveElements())
 	{
-		d912pxy_comhandler* obj = mGpuRefs->GetElement();		
-		LOG_ASSERT(obj->FinalRelease(), "obj->FinalRelease() wrong cleanup");
+		mGpuRefs->GetElement()->FinalRelease();
 
 		if (!totalRefs && mGpuRefs->TotalElements())
+		{
 			LOG_WARN_DTDM("%u elements still pending in cmd list references", mGpuRefs->TotalElements());
+			--retryAmounts;
+			if (!retryAmounts)
+			{
+				LOG_ERR_DTDM("Some resources are not deleted properly!");
+				return;
+			}
+		}
 		else
 			--totalRefs;
 

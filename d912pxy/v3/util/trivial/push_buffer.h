@@ -60,6 +60,7 @@ namespace d912pxy
 
 			void push(const Element& v) { auto newIdx = next(); storage.get(newIdx) = v; }
 			void reset() { last = 0; }
+			void clear() { storage.clear(); };
 
 			IndexType headIdx() { return last; }
 			Element& head() { return storage.get(last); }

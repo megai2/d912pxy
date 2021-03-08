@@ -34,7 +34,7 @@ void Manager::parseData(const d912pxy::MemoryBlock& data)
 		auto& i = kvReader.next();
 
 		ModConfigEntry newEntry { d912pxy_helper::strdupw(i.value) };
-		configValues[MemoryArea((void*)i.key, lstrlenW(i.key))] = newEntry;
+		configValues[MemoryArea((void*)i.key, lstrlenW(i.key)*2)] = newEntry;
 	}
 }
 
@@ -56,9 +56,27 @@ Manager::~Manager()
 {
 }
 
+const ModConfigEntry& d912pxy::extras::IFrameMods::Manager::configValF(const wchar_t* key, ...)
+{
+	wchar_t buf[256];
+	va_list arg;
+	va_start(arg, key);
+	vswprintf(buf, key, arg);
+	va_end(arg);
+
+	return configVal(buf);
+}
+
 const ModConfigEntry& Manager::configVal(const wchar_t* key)
 {
-	return configValues[MemoryArea((void*)key, lstrlenW(key))];
+	return configValues[MemoryArea((void*)key, lstrlenW(key)*2)];
+}
+
+const ModConfigEntry& d912pxy::extras::IFrameMods::Manager::configValM(const wchar_t* key)
+{
+	const ModConfigEntry& ret = configValues[MemoryArea((void*)key, lstrlenW(key)*2)];
+	error::check(ret.valid(), L"Missing iframe mod config value %s that is mandatory, please specify it!", key);
+	return ret;
 }
 
 void Manager::pushMod(ModHandler* mod)
@@ -70,7 +88,7 @@ void Manager::Init()
 {
 	loadConfig();
 	auto& mainMod = configVal(L"primary_mod");	
-	drawUi = configVal(L"draw_ui").ui32() > 0;
+	drawUi = configVal(L"draw_ui").b();
 
 	if (!mainMod.valid())
 	{

@@ -312,6 +312,15 @@ void d912pxy_replay::Free()
 	d912pxy_noncom::UnInit();
 }
 
+void d912pxy_replay::CleanupExtras()
+{
+	if (extras.enable)
+	{
+		d912pxy_s.spairInfo.UnInit();
+		d912pxy_s.iframeMods.UnInit();
+	}
+}
+
 void d912pxy_replay::Start()
 {
 	LOG_DBG_DTDM("RP START");
@@ -323,6 +332,7 @@ void d912pxy_replay::Start()
 
 void d912pxy_replay::IFrameStart()
 {
+
 }
 
 void d912pxy_replay::thread_transit_data::Reset()

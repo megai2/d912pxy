@@ -63,6 +63,7 @@ void d912pxy_device::UnInit()
 	swapOpLock.Hold();
 
 	LOG_INFO_DTDM2(d912pxy_s.render.iframe.End(), "Last iframe ended");
+	LOG_INFO_DTDM2(d912pxy_s.render.replay.CleanupExtras(), "Cleaning up replay extras");
 	LOG_INFO_DTDM2(FreeAdditionalDX9Objects(), "Additional DX9 objects freed");
 	LOG_INFO_DTDM2(d912pxy_s.dx12.que.Flush(0), "Last gpu cmd lists flushed");
 	LOG_INFO_DTDM2(swapchains[0]->ReleaseSwapChain(), "Swapchain stopped");

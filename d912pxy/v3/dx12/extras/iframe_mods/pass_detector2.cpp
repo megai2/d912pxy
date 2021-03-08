@@ -23,6 +23,7 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "pass_detector2.h"
 
 using namespace d912pxy::extras::IFrameMods;
 
@@ -60,13 +61,18 @@ void PassDetector2::recordTarget(d912pxy_surface* surf, uint8_t bits)
 	Hash64::step(frData->hash, pt.bits);
 
 	pt.hash = frData->hash;
+	pt.dbgName = L"<unknown>";
 
 	if (namedPasses.headIdx())
 		//FIXME: link should do sorted insert and this will optimize to very simple code
 		for (int i = 1; i <= namedPasses.headIdx(); ++i)
 		{
 			if (namedPasses[i].hash == frData->hash)
+			{
 				acctivePassName = namedPasses[i].name;
+				activePass = &namedPasses[i];
+				pt.dbgName = activePass->dbgName;
+			}
 		}
 
 	frData->passTargets.push(pt);
@@ -82,11 +88,84 @@ PassDetector2::PassDetector2() : ModHandler()
 d912pxy::extras::IFrameMods::PassDetector2::~PassDetector2()
 {
 	frData.Cleanup();
+	for (int i = 1; i <= namedPasses.headIdx(); ++i)
+		namedPasses[i].targets.clear();
+}
+
+int d912pxy::extras::IFrameMods::PassDetector2::loadLinks(const wchar_t* passStrName)
+{
+	d912pxy::error::check(passStrName, L"Supply pass name to load its links");
+
+	int ret = registerName();
+	const uint32_t hashLimit = 128;
+	const uint32_t targetsLimit = 32;
+
+	for (uint32_t i = 0; i < hashLimit; ++i)
+	{
+		const ModConfigEntry& hash = d912pxy_s.iframeMods.configValF(L"pd2_%s_%u_hash", passStrName, i);
+
+		if (!hash.valid())
+		{
+			if (i == 0)
+				LOG_ERR_DTDM("No hashes for pass %s", passStrName);
+			break;
+		}
+		
+		const ModConfigEntry& dbgName = d912pxy_s.iframeMods.configValF(L"pd2_%s_%u_dbgName", passStrName, i);
+		linkName(ret, hash.ux64(), dbgName.raw);
+
+		for (uint32_t j = 0; j < targetsLimit; ++j)
+		{
+			const ModConfigEntry& index = d912pxy_s.iframeMods.configValF(L"pd2_%s_%u_tgt%u_index", passStrName, i, j);
+
+			if (!index.valid())
+			{
+				if (j == 0)
+					LOG_ERR_DTDM("No targets for pass %s", passStrName);
+				break;
+			}
+
+			NamedTarget tgt = 
+			{ 
+				d912pxy_s.iframeMods.configValF(L"pd2_%s_%u_tgt%u_ds", passStrName, i, j).b(),
+				d912pxy_s.iframeMods.configValF(L"pd2_%s_%u_tgt%u_converge", passStrName, i, j).b(),
+				(int)index.ui32(),
+				(int)d912pxy_s.iframeMods.configValF(L"pd2_%s_%u_tgt%u_minPass", passStrName, i, j).ui32()
+			};
+			linkTarget(hash.ux64(), tgt);
+		}
+	}
+
+	return ret;
+}
+
+intptr_t d912pxy::extras::IFrameMods::PassDetector2::linkTarget(uint64_t hash, const NamedTarget& tgt)
+{
+	for (int i = 1; i <= namedPasses.headIdx(); ++i)
+	{
+		if (namedPasses[i].hash != hash)
+			continue;
+
+		namedPasses[i].targets.push(tgt);
+		return namedPasses[i].targets.headIdx();
+	}
+
+	return 0;
 }
 
 uint64_t d912pxy::extras::IFrameMods::PassDetector2::getLastFrameHash()
 {
 	return lastFrData->hash;
+}
+
+bool d912pxy::extras::IFrameMods::PassDetector2::copyLastSurfaceNamed(intptr_t idx, d912pxy_surface* target, ID3D12GraphicsCommandList* cl)
+{
+	if (!activePass)
+		return false;
+
+	const NamedTarget& tgt = activePass->targets[idx];
+	
+	return copyLastSurface(tgt.ds, tgt.converge, tgt.index, tgt.minimalPassNum, target, cl);
 }
 
 bool d912pxy::extras::IFrameMods::PassDetector2::copyLastSurface(bool ds, bool converge, int index, int minimalPassNum, d912pxy_surface* target, ID3D12GraphicsCommandList* cl)
@@ -106,6 +185,10 @@ bool d912pxy::extras::IFrameMods::PassDetector2::copyLastSurface(bool ds, bool c
 		return false;
 
 	d912pxy_surface* src = uniqueTargets[index];
+
+	if (!src)
+		return false;
+
 	const D3DSURFACE_DESC& tgtDesc = target->GetL0Desc();
 	const D3DSURFACE_DESC& srcDesc = src->GetL0Desc();
 
@@ -187,9 +270,9 @@ void d912pxy::extras::IFrameMods::PassDetector2::UI_Draw()
 	{
 		const PassTarget& pt = pfd.passTargets[i];
 
-		ImGui::Text("%03u: %03u-%03x %04ux%04u %016llX %s %s %s %s", pt.frame_order, pt.rtarget_index, pt.bits, pt.width, pt.height, pt.hash,
+		ImGui::Text("%03u: %03u-%03x %04ux%04u %016llX %s %s %s %s %S", pt.frame_order, pt.rtarget_index, pt.bits, pt.width, pt.height, pt.hash,
 			pt.bits & PT_BIT_BB_SIZED ? "bb" : "  ", pt.bits & PT_BIT_SAME_SIZE ? "ss" : "  ", ((pt.bits & PT_MASK_MULTIWRITE) == PT_MASK_MULTIWRITE) ? "mw" : "  ",
-			pt.bits & PT_BIT_DS ? "ds" : "rt");
+			pt.bits & PT_BIT_DS ? "ds" : "rt", pt.dbgName);
 	}
 
 
@@ -203,6 +286,9 @@ void d912pxy::extras::IFrameMods::PassDetector2::RP_FrameStart()
 	externFrData = lastFrData;
 	frData.Next();
 	frData->reset();
+
+	activePass = nullptr;
+	acctivePassName = 0;
 
 	auto pp = d912pxy_s.dev.GetPrimarySwapChain()->GetCurrentPP();
 	bbChanged = (bb_height != pp.BackBufferHeight) || (bb_width != pp.BackBufferWidth);
