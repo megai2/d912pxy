@@ -29,10 +29,19 @@ using namespace d912pxy::extras::IFrameMods;
 const D3DFORMAT targetFormats[ReshadeCompat::TARGET_COUNT] =
 {
 	D3DFMT_A8R8G8B8,
-	D3DFMT_D24X8,
+	(D3DFORMAT)D3DFMT_INTZ,
 	D3DFMT_A8R8G8B8,
 	D3DFMT_A8R8G8B8,
 	D3DFMT_A8R8G8B8
+};
+
+const wchar_t* targetDbgNames[ReshadeCompat::TARGET_COUNT] =
+{
+	L"scene_color",
+	L"scene_depth",
+	L"scene_opaque",
+	L"gbuf0",
+	L"gbuf1"
 };
 
 ReshadeCompat::ReshadeCompat()
@@ -44,6 +53,7 @@ ReshadeCompat::ReshadeCompat()
 	resolvePass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_resolve").raw);
 	shadowPass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_shadow").raw);
 	normalPass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_normal").raw);
+	transparentPass = passes->loadLinks(d912pxy_s.iframeMods.configValM(L"reshade_compat_pass_transparent").raw);
 
 	d912pxy_s.iframeMods.pushMod(this);
 
@@ -62,10 +72,27 @@ void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpI
 	if (!passes->passChanged())
 		return;
 
-	if (passes->inPass(uiPass))
-		passes->copyLastSurfaceNamed(TARGET_COLOR+1, targets[TARGET_COLOR], rpContext->cl);
-
-	//TODO: all other stuff
+	if (passes->inPass(resolvePass))
+	{
+		passes->copyLastSurfaceNamed(1, targets[TARGET_GBUF1], rpContext->cl);
+	}
+	else if (passes->inPass(shadowPass))
+	{
+		passes->copyLastSurfaceNamed(1, targets[TARGET_GBUF0], rpContext->cl);
+	}
+	else if (passes->inPass(depthPass))
+	{
+		passes->copyLastSurfaceNamed(1, targets[TARGET_DEPTH], rpContext->cl);
+	}
+	else if (passes->inPass(transparentPass))
+	{
+		passes->copyLastSurfaceNamed(1, targets[TARGET_OPAQUE], rpContext->cl);
+	}
+	else if (passes->inPass(uiPass))
+	{
+		passes->copyLastSurfaceNamed(1, targets[TARGET_COLOR], rpContext->cl);
+		passes->copyLastSurfaceNamed(2, targets[TARGET_DEPTH], rpContext->cl);
+	}
 }
 
 void d912pxy::extras::IFrameMods::ReshadeCompat::RP_FrameStart()
@@ -76,7 +103,7 @@ void d912pxy::extras::IFrameMods::ReshadeCompat::RP_FrameStart()
 		{
 			if (targets[i])
 				targets[i]->Release();
-			targets[i] = passes->makeBBsizedTarget(targetFormats[i]);
+			targets[i] = passes->makeBBsizedTarget(targetFormats[i], targetDbgNames[i]);
 
 			if (rsadSupplyTexture)
 				rsadSupplyTexture(i, targets[i]->GetD12Obj());

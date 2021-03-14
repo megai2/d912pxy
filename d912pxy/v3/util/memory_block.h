@@ -57,6 +57,7 @@ namespace d912pxy
 		MemoryBlock(void* in_ptr) : MemoryArea(in_ptr, 0) {}
 		MemoryBlock(uintptr_t size);
 		~MemoryBlock();
+		MemoryBlock(const MemoryBlock&) = delete;
 
 		void alloc(uintptr_t size);
 		void realloc(uintptr_t newSize);

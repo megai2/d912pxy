@@ -119,7 +119,7 @@ namespace IFrameMods {
 			Trivial::PushBuffer<NamedTarget> targets;
 		};
 
-		Trivial::PushBuffer<NamedPass> namedPasses;
+		Trivial::PushBuffer<NamedPass*> namedPasses;
 		uint64_t newPassName = 0;
 		uint64_t acctivePassName = 0;
 		NamedPass* activePass = nullptr;
@@ -134,7 +134,7 @@ namespace IFrameMods {
 		int loadLinks(const wchar_t* passStrName);
 
 		int registerName() { return ++newPassName; }
-		void linkName(uint64_t name, uint64_t hash, const wchar_t* dbg_name) { namedPasses.push({ hash, name, dbg_name }); }
+		void linkName(uint64_t name, uint64_t hash, const wchar_t* dbg_name);
 		intptr_t linkTarget(uint64_t hash, const NamedTarget& tgt);
 		bool inPass(uint64_t name) { return acctivePassName == name; }
 		bool passChanged() { return newPass; }
@@ -149,7 +149,7 @@ namespace IFrameMods {
 		bool copyLastSurface(bool ds, bool converge, int index, int minimalPassNum, d912pxy_surface* target, ID3D12GraphicsCommandList* cl);
 		uint64_t getCurrentHash() { return frData->hash; }
 
-		d912pxy_surface* makeBBsizedTarget(D3DFORMAT fmt);
+		d912pxy_surface* makeBBsizedTarget(D3DFORMAT fmt, const wchar_t* dbgMarker);
 
 		bool isBBChangedThisFrame() { return bbChanged; }
 

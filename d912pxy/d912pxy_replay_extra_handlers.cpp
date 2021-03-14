@@ -76,10 +76,15 @@ RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 
 	int changed = (context->tracked.surfBind[0] != it->dsv) * 1;
 	context->tracked.surfBind[0] = it->dsv;
+	if (it->dsv)
+		it->dsv->setContextState(D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
 	for (int i = 0; i < PXY_INNER_MAX_RENDER_TARGETS; ++i)
 	{
 		changed |= (context->tracked.surfBind[i + 1] != it->rtv[i]) * 2;
 		context->tracked.surfBind[i + 1] = it->rtv[i];
+		if (it->rtv[i])
+			it->rtv[i]->setContextState(D3D12_RESOURCE_STATE_RENDER_TARGET);
 	}
 
 

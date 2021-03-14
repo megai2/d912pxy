@@ -106,7 +106,8 @@ public:
 
 private: 
 	d912pxy_resource_typeid m_tid;
-	std::atomic<D3D12_RESOURCE_STATES> inContextState;
+	//simple atomic here will not help
+	D3D12_RESOURCE_STATES inContextState;
 
 protected:
 	ID3D12Resource* m_res;

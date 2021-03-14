@@ -52,7 +52,7 @@ namespace d912pxy {
 				uint64_t shadowPass;
 				uint64_t normalPass;
 				uint64_t resolvePass;
-
+				uint64_t transparentPass;
 
 				union rsad_Data
 				{

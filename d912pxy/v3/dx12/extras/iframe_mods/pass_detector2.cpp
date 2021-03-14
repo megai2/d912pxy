@@ -67,10 +67,10 @@ void PassDetector2::recordTarget(d912pxy_surface* surf, uint8_t bits)
 		//FIXME: link should do sorted insert and this will optimize to very simple code
 		for (int i = 1; i <= namedPasses.headIdx(); ++i)
 		{
-			if (namedPasses[i].hash == frData->hash)
+			if (namedPasses[i]->hash == frData->hash)
 			{
-				acctivePassName = namedPasses[i].name;
-				activePass = &namedPasses[i];
+				acctivePassName = namedPasses[i]->name;
+				activePass = namedPasses[i];
 				pt.dbgName = activePass->dbgName;
 			}
 		}
@@ -89,7 +89,10 @@ d912pxy::extras::IFrameMods::PassDetector2::~PassDetector2()
 {
 	frData.Cleanup();
 	for (int i = 1; i <= namedPasses.headIdx(); ++i)
-		namedPasses[i].targets.clear();
+	{
+		namedPasses[i]->targets.clear();
+		delete namedPasses[i];
+	}
 }
 
 int d912pxy::extras::IFrameMods::PassDetector2::loadLinks(const wchar_t* passStrName)
@@ -139,15 +142,23 @@ int d912pxy::extras::IFrameMods::PassDetector2::loadLinks(const wchar_t* passStr
 	return ret;
 }
 
+void d912pxy::extras::IFrameMods::PassDetector2::linkName(uint64_t name, uint64_t hash, const wchar_t* dbg_name)
+{
+	namedPasses.push(new NamedPass());
+	namedPasses.head()->hash = hash;
+	namedPasses.head()->name = name;
+	namedPasses.head()->dbgName = dbg_name;
+}
+
 intptr_t d912pxy::extras::IFrameMods::PassDetector2::linkTarget(uint64_t hash, const NamedTarget& tgt)
 {
 	for (int i = 1; i <= namedPasses.headIdx(); ++i)
 	{
-		if (namedPasses[i].hash != hash)
+		if (namedPasses[i]->hash != hash)
 			continue;
 
-		namedPasses[i].targets.push(tgt);
-		return namedPasses[i].targets.headIdx();
+		namedPasses[i]->targets.push(tgt);
+		return namedPasses[i]->targets.headIdx();
 	}
 
 	return 0;
@@ -160,47 +171,65 @@ uint64_t d912pxy::extras::IFrameMods::PassDetector2::getLastFrameHash()
 
 bool d912pxy::extras::IFrameMods::PassDetector2::copyLastSurfaceNamed(intptr_t idx, d912pxy_surface* target, ID3D12GraphicsCommandList* cl)
 {
-	if (!activePass)
+	if (!activePass || (activePass->targets.headIdx() < idx))
 		return false;
 
-	const NamedTarget& tgt = activePass->targets[idx];
-	
+	const NamedTarget& tgt = activePass->targets[idx];	
 	return copyLastSurface(tgt.ds, tgt.converge, tgt.index, tgt.minimalPassNum, target, cl);
 }
 
 bool d912pxy::extras::IFrameMods::PassDetector2::copyLastSurface(bool ds, bool converge, int index, int minimalPassNum, d912pxy_surface* target, ID3D12GraphicsCommandList* cl)
 {
+#define DEBUG_TRACING(msg) LOG_DBG_DTDM3("%s %s %u-%u %p: %s", ds ? L"depth" : L"target", converge ? L"conv" : L"nconv", index, minimalPassNum, target, msg)
+
 	auto& uniqueTargets = lastFrData->uniqueTargetsArr[ds ? 1 : 0];
 
 	if (converge)
 	{
 		if (!isConvergingToLastFrame())
+		{
+			DEBUG_TRACING(L"not converging");
 			return false;
+		}
 	}
 
 	if (uniqueTargets.headIdx() < index)
+	{
+		DEBUG_TRACING(L"no target with index found");
 		return false;
+	}
 
 	if (c_frame_order < minimalPassNum)
+	{
+		DEBUG_TRACING(L"pass not reached");
 		return false;
+	}
 
 	d912pxy_surface* src = uniqueTargets[index];
 
 	if (!src)
+	{
+		DEBUG_TRACING(L"target is null");
 		return false;
+	}
 
 	const D3DSURFACE_DESC& tgtDesc = target->GetL0Desc();
 	const D3DSURFACE_DESC& srcDesc = src->GetL0Desc();
 
 	if ((tgtDesc.Width != srcDesc.Width) || (tgtDesc.Height != srcDesc.Height) || (tgtDesc.Format != srcDesc.Format))
+	{
+		DEBUG_TRACING(L"wh/format mismatch");
 		return false;
+	}
 
 	src->BCopyToWStates(target, 3, cl, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, src->getContextState());
 
 	return true;
+
+#undef DEBUG_TRACING
 }
 
-d912pxy_surface* d912pxy::extras::IFrameMods::PassDetector2::makeBBsizedTarget(D3DFORMAT fmt)
+d912pxy_surface* d912pxy::extras::IFrameMods::PassDetector2::makeBBsizedTarget(D3DFORMAT fmt, const wchar_t* dbgMarker)
 {
 	UINT levels = 1;
 	d912pxy_surface* ret = d912pxy_surface::d912pxy_surface_com(
@@ -216,6 +245,10 @@ d912pxy_surface* d912pxy::extras::IFrameMods::PassDetector2::makeBBsizedTarget(D
 		nullptr
 	);
 	ret->ConstructResource();
+
+	wchar_t buf[256];
+	wsprintf(buf, L"bb_sized_tgt_%s", dbgMarker);
+	ret->GetD12Obj()->SetName(buf);
 
 	return ret;
 }
