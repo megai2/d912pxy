@@ -897,11 +897,11 @@ HRESULT d912pxy_swapchain::InitDXGISwapChain()
 			fsPresenter = nullptr;
 		}
 
-		//if (!currentPP.Windowed)
-		//{
-		//	fsPresenter = new d912pxy_present_thread();
-		//	fsPresenter->Init(this);
-		//}
+		if (!currentPP.Windowed)
+		{
+			fsPresenter = new d912pxy_present_thread();
+			fsPresenter->Init(this);
+		}
 
 		return swapRet;
 	}	
