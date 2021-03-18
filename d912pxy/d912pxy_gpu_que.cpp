@@ -63,6 +63,8 @@ void d912pxy_gpu_que::Init(UINT iMaxCleanupPerSync, UINT iMaxRefernecedObjs, UIN
 	EnableGID(CLG_SEQ, PXY_INNER_CLG_PRIO_LAST);
 
 	d912pxy_s.dx12.cl = mLists->GetElement();
+
+	relaxedSubmission = d912pxy_s.config.GetValueB(PXY_CFG_COMPAT_RELAXED_GPU_SUBMISSION);
 }
 
 void d912pxy_gpu_que::UnInit()
@@ -185,6 +187,11 @@ HRESULT d912pxy_gpu_que::SwitchCurrentCL(UINT doSwap)
 	//and write back this one to que
 	//also make a mark that we executing something on gpu
 	d912pxy_gpu_cmd_list* oldWork = mCurrentGPUWork;
+	if (oldWork && relaxedSubmission)
+	{
+		oldWork->Wait();
+		oldWork = nullptr;
+	}
 	mCurrentGPUWork = mLists->GetElement();
 
 	HRESULT ret = D3DERR_DEVICEREMOVED;

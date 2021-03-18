@@ -80,6 +80,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_COMPAT_DUP_UNSAFE,
 	PXY_CFG_COMPAT_DHEAP_MODE,
 	PXY_CFG_COMPAT_EXPLICIT_D3DCOMPILER,
+	PXY_CFG_COMPAT_RELAXED_GPU_SUBMISSION,
 	PXY_CFG_VFS_ROOT,
 	PXY_CFG_VFS_MEMCACHE_MASK,
 	PXY_CFG_VFS_PACK_DATA,
@@ -239,6 +240,16 @@ private:
 			L"Allows to use d912pxy supplied d3d compiler dll",
 			L"If 1 uses d3d compiler 27 v10 lib from 12on7 instead of default one"
 		},//PXY_CFG_COMPAT_EXPLICIT_D3DCOMPILER
+		{
+			L"compat",
+			L"relaxed_gpu_submission",
+			L"0",
+			L"b r:0,1",
+            L"Controls GPU work submission",
+			L"If 0 uses agressive submit-before-wait, if 1 uses relaxed wait-before-submit."
+			L"Relaxed submission tend to underutilize GPU in gpu limited scenarios"
+			L"Use when TDR crashes or system instability are encountered"
+		},//PXY_CFG_COMPAT_RELAXED_GPU_SUBMISSION
 		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
 		{L"vfs", L"memcache_mask", L"63"},//PXY_CFG_VFS_MEMCACHE_MASK
 		{L"vfs", L"pack_data", L"0"},//PXY_CFG_VFS_PACK_DATA

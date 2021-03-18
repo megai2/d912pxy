@@ -58,6 +58,7 @@ private:
 	d912pxy_gpu_cmd_list* mCurrentGPUWork;	
 	d912pxy_ringbuffer<d912pxy_gpu_cmd_list*>* mLists;	
 	d912pxy_gpu_cmd_list* mListsArr[PXY_INNER_GPU_QUEUE_BUFFER_COUNT];
+	bool relaxedSubmission;
 	
 	ComPtr<ID3D12CommandQueue> mDXQue;
 
