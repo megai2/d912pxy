@@ -79,8 +79,9 @@ void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpI
 	else if (passes->inPass(shadowPass))
 	{
 		passes->copyLastSurfaceNamed(1, targets[TARGET_GBUF0], rpContext->cl);
+		passes->copyLastSurfaceNamed(2, targets[TARGET_DEPTH], rpContext->cl);
 	}
-	else if (passes->inPass(depthPass))
+	else if (passes->inPass(normalPass))
 	{
 		passes->copyLastSurfaceNamed(1, targets[TARGET_DEPTH], rpContext->cl);
 	}
