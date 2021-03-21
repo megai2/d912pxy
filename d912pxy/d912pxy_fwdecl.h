@@ -262,7 +262,8 @@ typedef enum d912pxy_file_path_id {
 	FP_SPAIR_INFO_BASE_PATH,
 	FP_IFRAME_MODS_BASE_PATH,
 	FP_PROXY_DATA_PATH,
-	FP_NO_PATH
+	FP_NO_PATH,
+	FP_GW2E_CONFIG
 } d912pxy_file_path_id;
 
 typedef union d912pxy_file_path {
@@ -302,7 +303,8 @@ static const d912pxy_file_path d912pxy_file_paths_default[] = {
 	FP_DEF("./d912pxy/shaders/pairs/"),
 	FP_DEF("./d912pxy/shaders/iframe_mods/"),
 	FP_DEF("./d912pxy/"),
-	FP_DEF("")
+	FP_DEF(""),
+	FP_DEF("./d912pxy/gw2e_config.ini")
 };
 
 static const d912pxy_file_path d912pxy_file_paths_addon[] = {
@@ -329,7 +331,8 @@ static const d912pxy_file_path d912pxy_file_paths_addon[] = {
 	FP_DEF("./addons/d912pxy/shaders/pairs/"),
 	FP_DEF("./addons/d912pxy/shaders/iframe_mods/"),
 	FP_DEF("./addons/d912pxy/"),
-	FP_DEF("")
+	FP_DEF(""),
+	FP_DEF("./addons/d912pxy/gw2e_config.ini")
 };
 
 static const d912pxy_file_path d912pxy_file_paths_abs_rh[] = {
@@ -356,7 +359,8 @@ static const d912pxy_file_path d912pxy_file_paths_abs_rh[] = {
 	FP_DEF("d912pxy/shaders/pairs/"),
 	FP_DEF("d912pxy/shaders/iframe_mods/"),
 	FP_DEF("d912pxy/"),
-	FP_DEF("")
+	FP_DEF(""),
+	FP_DEF("d912pxy/gw2e_config.ini")
 };
 
 #undef FP_DEF

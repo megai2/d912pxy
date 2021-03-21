@@ -33,9 +33,56 @@ d912pxy_config::~d912pxy_config()
 {
 }
 
+// borrowed from reshade with some modifications
+extern "C" BOOL WINAPI K32EnumProcessModules(HANDLE hProcess, HMODULE * lphModule, DWORD cb, LPDWORD lpcbNeeded);
+
+inline bool checkGW2Epresence()
+{
+	DWORD num = 0;
+	HMODULE modules[1024];
+
+	bool ret = false;
+
+	if (K32EnumProcessModules(GetCurrentProcess(), modules, sizeof(modules), &num))
+	{
+		num /= sizeof(HMODULE);
+		if (num > 1024)
+			num = 1024;
+
+		for (DWORD i = 0; i < num; ++i)
+		{
+			if (GetProcAddress(modules[i], "ReShadeVersion") != nullptr)
+			{
+				ret = true;
+				break;
+			}
+		}
+
+
+		if (!ret)
+			return ret;
+		else
+			ret = false;
+
+		for (DWORD i = 0; i < num; ++i)
+		{
+			if (GetProcAddress(modules[i], "gw2e_presence_marker") != nullptr)
+			{
+				return true;
+			}
+		}
+	}
+
+	return ret;
+}
+
 void d912pxy_config::Init()
 {
-	FILE* f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "rb");
+	bool use_gw2e_cfg = checkGW2Epresence();
+	FILE* f = fopen(d912pxy_helper::GetFilePath(use_gw2e_cfg ? FP_GW2E_CONFIG : FP_CONFIG)->s, "rb");
+
+	if (!f && use_gw2e_cfg)
+		f = fopen(d912pxy_helper::GetFilePath(FP_CONFIG)->s, "rb");
 
 	if (!f) {
 		SaveConfig();
