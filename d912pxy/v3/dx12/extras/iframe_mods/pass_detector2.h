@@ -52,6 +52,7 @@ namespace IFrameMods {
 			uint8_t bits;
 			uint64_t hash;
 			const wchar_t* dbgName;
+			uint32_t draws;
 
 			d912pxy_surface* surf;
 			int spairTag;
@@ -60,6 +61,7 @@ namespace IFrameMods {
 	private:
 		uint32_t bb_width = 0;
 		uint32_t bb_height = 0;
+		uint32_t draws_per_pass;
 		bool bbChanged = true;
 		int c_frame_order = 0;
 
@@ -156,6 +158,7 @@ namespace IFrameMods {
 		void RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext) override;
 		void UI_Draw() override;
 		void RP_FrameStart() override;
+		void RP_PostDraw(d912pxy_replay_item::dt_draw_indexed*, d912pxy_replay_thread_context*) override;
 
 		void IFR_Start();
 		void IFR_End();

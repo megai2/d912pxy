@@ -55,6 +55,8 @@ void PassDetector2::recordTarget(d912pxy_surface* surf, uint8_t bits)
 	const D3DSURFACE_DESC& sdsc = surf->GetL0Desc();
 	pt.height = sdsc.Height;
 	pt.width = sdsc.Width;
+	pt.draws = draws_per_pass;
+	draws_per_pass = 0;
 
 	pt.bits |= ((pt.width == bb_width) && (pt.height == bb_height)) ? PT_BIT_BB_SIZED : 0;
 
@@ -64,6 +66,8 @@ void PassDetector2::recordTarget(d912pxy_surface* surf, uint8_t bits)
 	pt.dbgName = L"<unknown>";
 
 	if (namedPasses.headIdx())
+	{
+		bool passFound = false;
 		//FIXME: link should do sorted insert and this will optimize to very simple code
 		for (int i = 1; i <= namedPasses.headIdx(); ++i)
 		{
@@ -72,8 +76,17 @@ void PassDetector2::recordTarget(d912pxy_surface* surf, uint8_t bits)
 				acctivePassName = namedPasses[i]->name;
 				activePass = namedPasses[i];
 				pt.dbgName = activePass->dbgName;
+				passFound = true;
+				break;
 			}
 		}
+
+		if (!passFound)
+		{
+			activePass = nullptr;
+			acctivePassName = 0;
+		}
+	}
 
 	frData->passTargets.push(pt);
 }
@@ -269,17 +282,19 @@ void PassDetector2::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpI
 
 	newPass = false;
 
-	if (rpItem->dsv && (rpItem->dsv != lastTargets[0]))
+	if (rpItem->dsv != lastTargets[0])
 	{
 		lastTargets[0] = rpItem->dsv;
-		recordTarget(rpItem->dsv, bits | PT_BIT_DS);
+		if (rpItem->dsv)
+			recordTarget(rpItem->dsv, bits | PT_BIT_DS);
 		newPass |= true;
 	}
 
-	if (rpItem->rtv[0] && (rpItem->rtv[0] != lastTargets[1]))
+	if (rpItem->rtv[0] != lastTargets[1])
 	{
 		lastTargets[1] = rpItem->rtv[0];
-		recordTarget(rpItem->rtv[0], bits | PT_BIT_RT);
+		if (rpItem->rtv[0])
+			recordTarget(rpItem->rtv[0], bits | PT_BIT_RT);
 		newPass |= true;
 	}
 
@@ -303,9 +318,9 @@ void d912pxy::extras::IFrameMods::PassDetector2::UI_Draw()
 	{
 		const PassTarget& pt = pfd.passTargets[i];
 
-		ImGui::Text("%03u: %03u-%03x %04ux%04u %016llX %s %s %s %s %S", pt.frame_order, pt.rtarget_index, pt.bits, pt.width, pt.height, pt.hash,
+		ImGui::Text("%03u: %03u-%03x %04ux%04u %016llX %s %s %s %s +%04u %S", pt.frame_order, pt.rtarget_index, pt.bits, pt.width, pt.height, pt.hash,
 			pt.bits & PT_BIT_BB_SIZED ? "bb" : "  ", pt.bits & PT_BIT_SAME_SIZE ? "ss" : "  ", ((pt.bits & PT_MASK_MULTIWRITE) == PT_MASK_MULTIWRITE) ? "mw" : "  ",
-			pt.bits & PT_BIT_DS ? "ds" : "rt", pt.dbgName);
+			pt.bits & PT_BIT_DS ? "ds" : "rt", pt.draws, pt.dbgName);
 	}
 
 
@@ -314,6 +329,7 @@ void d912pxy::extras::IFrameMods::PassDetector2::UI_Draw()
 
 void d912pxy::extras::IFrameMods::PassDetector2::RP_FrameStart()
 {
+	draws_per_pass = 0;
 	c_frame_order = 0;
 	lastFrData = frData.operator->();
 	externFrData = lastFrData;
@@ -330,6 +346,11 @@ void d912pxy::extras::IFrameMods::PassDetector2::RP_FrameStart()
 
 	lastTargets[0] = nullptr;
 	lastTargets[1] = nullptr;
+}
+
+void d912pxy::extras::IFrameMods::PassDetector2::RP_PostDraw(d912pxy_replay_item::dt_draw_indexed*, d912pxy_replay_thread_context*)
+{
+	++draws_per_pass;
 }
 
 void d912pxy::extras::IFrameMods::PassDetector2::IFR_Start()
