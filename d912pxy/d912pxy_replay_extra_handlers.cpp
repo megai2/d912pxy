@@ -79,12 +79,17 @@ RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 	if (it->dsv)
 		it->dsv->setContextState(D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
+	bool anyRT = false;
+
 	for (int i = 0; i < PXY_INNER_MAX_RENDER_TARGETS; ++i)
 	{
 		changed |= (context->tracked.surfBind[i + 1] != it->rtv[i]) * 2;
 		context->tracked.surfBind[i + 1] = it->rtv[i];
 		if (it->rtv[i])
+		{
 			it->rtv[i]->setContextState(D3D12_RESOURCE_STATE_RENDER_TARGET);
+			anyRT = true;
+		}
 	}
 
 
@@ -92,7 +97,10 @@ RHA_DECL(om_render_targets, d912pxy_replay_thread_context* context)
 	{
 		//add 2 markers for pass end & pass start on rt changes
 		extras.pairTracker.write(0);
-		extras.pairTracker.write(changed);
+		extras.pairTracker.write(
+			(it->dsv ? 1 : 0) |
+			(anyRT ? 2 : 0)
+		);
 	}
 
 	RHA_BASE(om_render_targets, context);
