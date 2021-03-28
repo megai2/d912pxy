@@ -9,8 +9,8 @@
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,4,0, BUILD_VERSION_REV
- PRODUCTVERSION 2,4,0, BUILD_VERSION_REV
+ FILEVERSION 2,4,3, BUILD_VERSION_REV
+ PRODUCTVERSION 2,4,3, BUILD_VERSION_REV
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -26,9 +26,9 @@ BEGIN
         BLOCK "000004b0"
         BEGIN
             VALUE "FileDescription", "DirectX9 to DirectX12 API proxy"
-            VALUE "FileVersion", 2,4,0, BUILD_VERSION_REV
+            VALUE "FileVersion", 2,4,3, BUILD_VERSION_REV
             VALUE "InternalName", "d912pxy.dll"
-            VALUE "LegalCopyright", "Copyright (c) 2018-2020 megai2"
+            VALUE "LegalCopyright", "Copyright (c) 2018-2021 megai2"
             VALUE "OriginalFilename", "d912pxy.dll"
             VALUE "ProductName", "DirectX9 to DirectX12 API proxy"
             VALUE "ProductVersion", BUILD_VERSION_NAME
