@@ -30,7 +30,7 @@ const wchar_t* d912pxy_hlsl_generator::commonIncludeOverride = nullptr;
 
 d912pxy_hlsl_generator::d912pxy_hlsl_generator(DWORD * src, UINT len, wchar_t * ofn, d912pxy_shader_uid uid) : 
 	d912pxy_noncom(L"hlsl generator"),
-	code(src)
+	code(src, len)
 {
 	PSpositionUsed = 0;
 	procIdent = 0;
@@ -88,7 +88,12 @@ d912pxy_hlsl_generator_memout* d912pxy_hlsl_generator::Process(UINT toMemory)
 		d912pxy_dxbc9::token* tok = code.Current();
 
 		if (tok->iType == d912pxy_dxbc9::token_type::instruction)
-			(this->*SIOhandlers[tok->ins.operation + sioTableOffset])(tok);
+		{
+			if (d912pxy_hlsl_generator_op_handler_group_size > tok->ins.operation)
+				(this->*SIOhandlers[tok->ins.operation + sioTableOffset])(tok);
+			else
+				ProcSIO_UNK(tok);
+		}
 
 	} while (code.Next());
 

@@ -24,9 +24,10 @@ SOFTWARE.
 */
 #include "stdafx.h"
 
-d912pxy_dxbc9::d912pxy_dxbc9(DWORD* code)
+d912pxy_dxbc9::d912pxy_dxbc9(DWORD* code, DWORD tokenCount)
 {
 	streamBase = code;
+	streamEnd = code + tokenCount;
 	Reset();
 }
 
@@ -49,6 +50,10 @@ bool d912pxy_dxbc9::Next()
 
 	subTokensLoadedFlags = 0;
 	stream += adv;
+
+	if (stream >= streamEnd)
+		return false;
+
 	return i_current.load(stream[0], token_type::unk);
 }
 

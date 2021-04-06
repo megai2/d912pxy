@@ -178,7 +178,7 @@ public:
 	};
 
 public:
-	d912pxy_dxbc9(DWORD* code);
+	d912pxy_dxbc9(DWORD* code, DWORD tokenCount);
 	~d912pxy_dxbc9();
 
 	token* Current();
@@ -203,6 +203,7 @@ private:
 	static const UINT maxSubtokensForOp = 10;
 
 	DWORD* streamBase;
+	DWORD* streamEnd;
 	DWORD* stream;
 	token i_current;
 
