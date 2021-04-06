@@ -181,6 +181,7 @@ private:
 	void ProcSIO_1OP(d912pxy_dxbc9::token * op, const char* pre, const char* post);
 	
 	void ProcSIO_UNK(d912pxy_dxbc9::token* op);
+	void ProcSIO_NOP(d912pxy_dxbc9::token* op);
 
 	//declaration subhandlers
 

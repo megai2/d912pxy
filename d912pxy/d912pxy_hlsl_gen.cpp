@@ -849,6 +849,11 @@ void d912pxy_hlsl_generator::DeclareMisc(d912pxy_dxbc9::token* op, d912pxy_dxbc9
 		LOG_ERR_THROW2(-1, "hlsl reg type misc unk");
 }
 
+void d912pxy_hlsl_generator::ProcSIO_NOP(d912pxy_dxbc9::token* op)
+{
+	HLSL_GEN_WRITE_PROC("//NOP");
+}
+
 void d912pxy_hlsl_generator::ProcSIO_UNK(d912pxy_dxbc9::token* op)
 {
 	LOG_DBG_DTDM("unknown opcode %u length %u", op->ins.operation, op->ins.length);
