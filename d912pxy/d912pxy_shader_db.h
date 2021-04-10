@@ -37,6 +37,7 @@ public:
 	void Init();
 	void UnInit();
 
+	UINT32 CalcTokenCount(DWORD* code);
 	d912pxy_shader_uid GetUID(DWORD* code, UINT32* len);		
 
 	d912pxy_shader_pair_hash_type GetPairUID(d912pxy_shader* vs, d912pxy_shader* ps);
