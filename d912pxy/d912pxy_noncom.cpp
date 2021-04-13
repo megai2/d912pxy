@@ -88,6 +88,8 @@ void d912pxy_noncom::ThrowErrorDbg(HRESULT hr, const char * msg)
 		return;
 
 	LOG_ERR_DTDM("throw on %S with HR = 0x%lX", msg, hr);
+
+	MessageBoxA(0, msg, "d912pxy error", MB_ICONERROR);
 			
 	d912pxy_helper::ThrowIfFailed(hr, msg);
 }
