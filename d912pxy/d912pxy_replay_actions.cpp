@@ -89,7 +89,7 @@ void d912pxy_replay::DoRSViewScissor(D3D12_VIEWPORT viewport, D3D12_RECT scissor
 	it->scissor = scissor;
 }
 
-void d912pxy_replay::DoDIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation, UINT batchId)
+void d912pxy_replay::DoDIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT batchId)
 {
 	ITEM_PUSH(draw_indexed);
 
@@ -97,7 +97,6 @@ void d912pxy_replay::DoDIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT
 	it->InstanceCount = InstanceCount;
 	it->StartIndexLocation = StartIndexLocation;
 	it->BaseVertexLocation = BaseVertexLocation;
-	it->StartInstanceLocation = StartInstanceLocation;
 	it->batchId = batchId;
 }
 

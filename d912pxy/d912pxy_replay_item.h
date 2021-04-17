@@ -87,7 +87,6 @@ public:
 		UINT InstanceCount;
 		UINT StartIndexLocation;
 		INT BaseVertexLocation;
-		UINT StartInstanceLocation;
 		UINT batchId;
 
 		static constexpr typeName GetTypeName() { return typeName::draw_indexed; };

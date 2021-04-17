@@ -83,7 +83,7 @@ public:
 	void DoPSORawFeedback(d912pxy_trimmed_pso_desc* dsc, void** ptr);
 	void DoVBbind(d912pxy_vstream* buf, UINT stride,	UINT slot, UINT offset);
 	void DoIBbind(d912pxy_vstream* buf);
-	void DoDIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation, UINT batchId);
+	void DoDIIP(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT batchId);
 	void DoRT(d912pxy_surface** rtv, d912pxy_surface* dsv);
 	void DoRTClear(d912pxy_surface* tgt, float* clr, D3D12_VIEWPORT* currentVWP);
 	void DoDSClear(d912pxy_surface* tgt, float depth, UINT8 stencil, D3D12_CLEAR_FLAGS flag, D3D12_VIEWPORT* currentVWP);

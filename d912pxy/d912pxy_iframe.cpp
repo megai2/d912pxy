@@ -662,7 +662,6 @@ void d912pxy_iframe::CommitBatchTailProc(D3DPRIMITIVETYPE PrimitiveType, INT Bas
 		batchCommitData.instanceCount,
 		startIndex, 
 		BaseVertexIndex, 
-		MinVertexIndex, 
 		d912pxy_s.render.batch.FinishCurrentDraw()
 	);
 

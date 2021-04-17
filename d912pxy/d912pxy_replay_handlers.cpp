@@ -64,7 +64,7 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 			it->IndexCountPerInstance,
 			it->InstanceCount,
 			it->StartIndexLocation,
-			it->StartInstanceLocation
+			0
 		);
 	else 
 		cl->DrawIndexedInstanced(
@@ -72,7 +72,7 @@ RHA_DECL(draw_indexed, d912pxy_replay_thread_context* context)
 			it->InstanceCount,
 			it->StartIndexLocation,
 			it->BaseVertexLocation,
-			it->StartInstanceLocation
+			0
 		);
 }
 
