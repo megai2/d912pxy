@@ -371,6 +371,9 @@
     <ClCompile Include="v3\dx12\extras\iframe_mods\pass_detector2.cpp">
       <Filter>v3\extras\iframe_mods</Filter>
     </ClCompile>
+    <ClCompile Include="v3\dx12\extras\iframe_mods\shader_const_recorder.cpp">
+      <Filter>v3\extras\iframe_mods</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -736,6 +739,9 @@
       <Filter>v3\extras\iframe_mods</Filter>
     </ClInclude>
     <ClInclude Include="v3\dx12\extras\iframe_mods\pass_detector2.h">
+      <Filter>v3\extras\iframe_mods</Filter>
+    </ClInclude>
+    <ClInclude Include="v3\dx12\extras\iframe_mods\shader_const_recorder.h">
       <Filter>v3\extras\iframe_mods</Filter>
     </ClInclude>
   </ItemGroup>

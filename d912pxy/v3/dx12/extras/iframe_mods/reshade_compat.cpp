@@ -64,7 +64,6 @@ ReshadeCompat::ReshadeCompat()
 	error::check(rsadSupplyTexture != nullptr, L"rsadSupplyTexture is not found in reshade addon");
 	rsadSetData = (rsad_setData)GetProcAddress(reshadeAddonLib, "rsadSetData");
 	error::check(rsadSupplyTexture != nullptr, L"rsadSetData is not found in reshade addon");
-
 }
 
 void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpItem, d912pxy_replay_thread_context* rpContext)
@@ -93,6 +92,8 @@ void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpI
 	{
 		passes->copyLastSurfaceNamed(1, targets[TARGET_COLOR], rpContext->cl);
 		passes->copyLastSurfaceNamed(2, targets[TARGET_DEPTH], rpContext->cl);
+
+		shConsts->record(*rpContext);
 	}
 }
 
@@ -109,6 +110,11 @@ void d912pxy::extras::IFrameMods::ReshadeCompat::RP_FrameStart()
 			if (rsadSupplyTexture)
 				rsadSupplyTexture(i, targets[i]->GetD12Obj());
 		}
+		if (shConsts)
+			delete shConsts;
+		shConsts = new ShaderConstRecorder();
+		if (rsadSupplyTexture)
+			rsadSupplyTexture(TARGET_SHCONSTS0, shConsts->getTarget()->GetD12Obj());
 	}
 }
 

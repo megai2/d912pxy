@@ -40,6 +40,7 @@ namespace d912pxy {
 					TARGET_OPAQUE,
 					TARGET_GBUF0,
 					TARGET_GBUF1,
+					TARGET_SHCONSTS0,
 					TARGET_COUNT
 				};
 
@@ -66,6 +67,7 @@ namespace d912pxy {
 				HMODULE reshadeAddonLib;
 				rsad_supplyTexture rsadSupplyTexture;
 				rsad_setData rsadSetData;
+				ShaderConstRecorder* shConsts = nullptr;
 
 			public:
 				ReshadeCompat();
