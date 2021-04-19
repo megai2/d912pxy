@@ -54,4 +54,24 @@ StateHolder::~StateHolder()
 	{
 		prevState.cl->IASetPrimitiveTopology((D3D12_PRIMITIVE_TOPOLOGY)prevState.tracked.primType);
 	}
+
+	if (restorationMask & ST_RTDS)
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE bindedSurfacesDH[1 + PXY_INNER_MAX_RENDER_TARGETS] = { 0 };
+
+		if (prevState.tracked.surfBind[0])
+			bindedSurfacesDH[0] = prevState.tracked.surfBind[0]->GetDHeapHandle();
+
+		int totalRTs = 0;
+		for (int i = 0; i != PXY_INNER_MAX_RENDER_TARGETS; ++i)
+			if (prevState.tracked.surfBind[i + 1])
+			{
+				++totalRTs;
+				bindedSurfacesDH[i + 1] = prevState.tracked.surfBind[i + 1]->GetDHeapHandle();
+			}
+			else
+				break;
+
+		prevState.cl->OMSetRenderTargets(totalRTs, totalRTs ? &bindedSurfacesDH[1] : nullptr, false, prevState.tracked.surfBind[0] ? &bindedSurfacesDH[0] : nullptr);
+	}
 }
