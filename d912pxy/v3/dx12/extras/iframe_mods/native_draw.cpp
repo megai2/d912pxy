@@ -23,6 +23,7 @@ SOFTWARE.
 
 */
 #include "stdafx.h"
+#include "native_draw.h"
 
 using namespace d912pxy::extras::IFrameMods;
 
@@ -54,4 +55,24 @@ void NativeDraw::draw(const d912pxy_replay_thread_context& rpCtx)
 	vbuf->IFrameBindVB(vstride, 0, 0, rpCtx.cl);
 	rpCtx.cl->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	rpCtx.cl->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+}
+
+/////////
+
+uint32_t quadIndexData[6] = { 0, 1, 2, 2, 3, 0 };
+float quadVertexData[16] = {
+	-1.0f, -1.0f, 0.0f, 0.0f,
+	-1.0f,  1.0f, 0.0f, 0.0f,
+	 1.0f,  1.0f, 0.0f, 0.0f,
+	 1.0f, -1.0f, 0.0f, 0.0f
+};
+
+float quadCb0Data[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+d912pxy::extras::IFrameMods::NativeFullRTDraw::NativeFullRTDraw(ID3D12PipelineState* pso)
+	: NativeDraw(pso, {
+		MemoryArea(&quadIndexData, sizeof(quadIndexData)),
+		MemoryArea(&quadVertexData, sizeof(quadVertexData)),
+		MemoryArea(&quadCb0Data, sizeof(quadCb0Data)) })
+{
 }

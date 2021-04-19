@@ -54,6 +54,12 @@ namespace d912pxy {
 				void draw(const d912pxy_replay_thread_context& rpCtx);
 			};
 
+			class NativeFullRTDraw : public NativeDraw
+			{
+			public:
+				NativeFullRTDraw(ID3D12PipelineState* pso);
+			};
+
 		} //namespace IFrameMods
 	} //namespace extras
 } //namespace d912pxy

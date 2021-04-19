@@ -42,24 +42,7 @@ void GenericTAA::checkNativeDrawLoaded()
 
 	jitterCBuf = d912pxy_vstream::d912pxy_vstream_com(jitterSeq.size, 0, 0, 0);
 
-	//TODO: make dx12 shader & load it
-	uint32_t indexData[6] = { 0, 1, 2, 2, 3, 0 };
-	float vertexData[16] = {
-		-1.0f, -1.0f, 0.0f, 0.0f,
-		-1.0f,  1.0f, 0.0f, 0.0f,
-		 1.0f,  1.0f, 0.0f, 0.0f,
-		 1.0f, -1.0f, 0.0f, 0.0f
-	};
-
-	float cb0Data[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-	taaDraw = new NativeDraw(nullptr,
-		{
-			MemoryArea(&indexData, sizeof(indexData)),
-			MemoryArea(&vertexData, sizeof(vertexData)),
-			MemoryArea(&cb0Data, sizeof(cb0Data))
-		}
-	);
+	taaDraw = new NativeFullRTDraw(nullptr);
 }
 
 GenericTAA::GenericTAA(int cbufferReg)
