@@ -35,18 +35,19 @@ namespace d912pxy {
 			public:
 				enum
 				{
-					TARGET_COLOR,
-					TARGET_DEPTH,
-					TARGET_OPAQUE,
-					TARGET_GBUF0,
-					TARGET_GBUF1,
-					TARGET_SHCONSTS0,
-					TARGET_COUNT
+					TARGET_COLOR = 0,
+					TARGET_DEPTH = 1,
+					TARGET_OPAQUE = 2,
+					TARGET_GBUF0 = 3,
+					TARGET_GBUF1 = 4,
+					TARGET_BB_SIZED_COUNT = 5,
+					TARGET_SHCONSTS0 = 5,
+					TARGET_TOTAL_COUNT = 6
 				};
 
 			private:
 				PassDetector2* passes;
-				d912pxy_surface* targets[TARGET_COUNT] = { 0 };
+				d912pxy_surface* targets[TARGET_BB_SIZED_COUNT] = { 0 };
 
 				uint64_t uiPass;
 				uint64_t depthPass;

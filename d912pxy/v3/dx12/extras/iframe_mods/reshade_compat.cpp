@@ -26,7 +26,7 @@ SOFTWARE.
 
 using namespace d912pxy::extras::IFrameMods;
 
-const D3DFORMAT targetFormats[ReshadeCompat::TARGET_COUNT] =
+const D3DFORMAT targetFormats[ReshadeCompat::TARGET_BB_SIZED_COUNT] =
 {
 	D3DFMT_A8R8G8B8,
 	(D3DFORMAT)D3DFMT_INTZ,
@@ -35,7 +35,7 @@ const D3DFORMAT targetFormats[ReshadeCompat::TARGET_COUNT] =
 	D3DFMT_A8R8G8B8
 };
 
-const wchar_t* targetDbgNames[ReshadeCompat::TARGET_COUNT] =
+const wchar_t* targetDbgNames[ReshadeCompat::TARGET_BB_SIZED_COUNT] =
 {
 	L"scene_color",
 	L"scene_depth",
@@ -101,7 +101,7 @@ void d912pxy::extras::IFrameMods::ReshadeCompat::RP_FrameStart()
 {
 	if (passes->isBBChangedThisFrame())
 	{
-		for (int i = 0; i < TARGET_COUNT; ++i)
+		for (int i = 0; i < TARGET_BB_SIZED_COUNT; ++i)
 		{
 			if (targets[i])
 				targets[i]->Release();
@@ -120,7 +120,7 @@ void d912pxy::extras::IFrameMods::ReshadeCompat::RP_FrameStart()
 
 void d912pxy::extras::IFrameMods::ReshadeCompat::UnInit()
 {
-	for (int i = 0; i < TARGET_COUNT; ++i)
+	for (int i = 0; i < TARGET_BB_SIZED_COUNT; ++i)
 	{
 		if (targets[i])
 			targets[i]->Release();
