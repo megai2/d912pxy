@@ -125,6 +125,7 @@ void d912pxy::extras::IFrameMods::ReshadeCompat::UnInit()
 		if (targets[i])
 			targets[i]->Release();
 	}
+	delete shConsts;
 }
 
 void ReshadeCompat::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912pxy_replay_thread_context* rpContext)
