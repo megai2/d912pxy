@@ -33,7 +33,7 @@ ShaderConstRecorder::ShaderConstRecorder()
 			256,
 			8,
 			D3DFMT_R32F,
-			0,
+			D3DUSAGE_RENDERTARGET,
 			D3DMULTISAMPLE_NONE,
 			0,
 			false,
@@ -41,7 +41,6 @@ ShaderConstRecorder::ShaderConstRecorder()
 			1,
 			nullptr
 		);
-	target->ConstructResource();
 
 	wchar_t buf[256];
 	wsprintf(buf, L"ShaderConstRecorder_target_%p", this);
