@@ -73,6 +73,6 @@ d912pxy::extras::IFrameMods::NativeFullRTDraw::NativeFullRTDraw(ID3D12PipelineSt
 	: NativeDraw(pso, {
 		MemoryArea(&quadIndexData, sizeof(quadIndexData)),
 		MemoryArea(&quadVertexData, sizeof(quadVertexData)),
-		MemoryArea(&quadCb0Data, sizeof(quadCb0Data)) })
+		MemoryArea(&quadCb0Data, sizeof(quadCb0Data)), sizeof(float) * 4})
 {
 }
