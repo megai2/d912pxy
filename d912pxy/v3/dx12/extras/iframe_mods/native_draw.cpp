@@ -33,7 +33,7 @@ NativeDraw::NativeDraw(ID3D12PipelineState* psoObj, const NativeDrawData& data)
 	ibuf = d912pxy_s.pool.vstream.GetVStreamObject((UINT)data.index.getSize(), D3DFMT_INDEX32, 1);
 	ibuf->LoadFromBlock(data.index);
 	vbuf = d912pxy_s.pool.vstream.GetVStreamObject((UINT)data.vertex.getSize(), 0, 0);
-	ibuf->LoadFromBlock(data.index);
+	vbuf->LoadFromBlock(data.vertex);
 	cbuf = d912pxy_s.pool.vstream.GetVStreamObject((UINT)data.cb0.getSize(), 0, 0);
 	vstride = data.vstride;
 	indexCount = ((UINT)data.index.getSize() / sizeof(uint32_t));
