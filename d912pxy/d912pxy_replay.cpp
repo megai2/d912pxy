@@ -153,6 +153,7 @@ void d912pxy_replay::Replay(UINT items, ID3D12GraphicsCommandList * cl, d912pxy_
 	{
 		context.tracked.surfBind[0] = nullptr;
 		context.tracked.surfBind[1] = nullptr;
+		context.tracked.primType = D3DPT_TRIANGLELIST;
 		context.cl = cl;
 
 		d912pxy_s.iframeMods.RP_FrameStart();
