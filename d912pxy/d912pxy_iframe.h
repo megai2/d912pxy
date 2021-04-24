@@ -130,6 +130,7 @@ public:
 	void FillPrimaryRSDescriptorRanges(D3D12_DESCRIPTOR_RANGE* ranges);
 	void FillPrimaryRSParameters(D3D12_ROOT_PARAMETER* rootParameters, D3D12_DESCRIPTOR_RANGE* ranges);
 	void FillPrimaryRSstaticPCFSampler(D3D12_STATIC_SAMPLER_DESC& staticPCF);
+	ID3D12RootSignature* getDefaultRS() { return mRootSignature; }
 
 private:	
 	void InitRootSignature();

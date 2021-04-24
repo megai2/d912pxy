@@ -406,6 +406,7 @@
       <AdditionalLibraryDirectories>..\thirdparty\p7logger\Binaries\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalOptions>/PDBALTPATH:"d912pxy\dll\release_x86\d3d9.pdb" %(AdditionalOptions)</AdditionalOptions>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <PostBuildEvent>
       <Command>copy $(SolutionDir)\bin\d912pxy\dll\release\d3d9.dll $(SolutionDir)\bin\bin64\d3d9.dll</Command>
@@ -767,11 +768,13 @@
     <ClInclude Include="v3\dx12\extras\iframe_mods\gw2_taa.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\manager.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\native_draw.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\native_shader.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\pass_detector.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\generic_taa.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\pass_detector2.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\reshade_compat.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\shader.h" />
+    <ClInclude Include="v3\dx12\extras\iframe_mods\shader_const_recorder.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\similar_tex.h" />
     <ClInclude Include="v3\dx12\extras\iframe_mods\state_holder.h" />
     <ClInclude Include="v3\dx12\extras\shader_pair\info.h" />
@@ -914,9 +917,11 @@
     <ClCompile Include="v3\dx12\extras\iframe_mods\gw2_taa.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\manager.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\native_draw.cpp" />
+    <ClCompile Include="v3\dx12\extras\iframe_mods\native_shader.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\pass_detector.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\pass_detector2.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\reshade_compat.cpp" />
+    <ClCompile Include="v3\dx12\extras\iframe_mods\shader_const_recorder.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\similar_tex.cpp" />
     <ClCompile Include="v3\dx12\extras\iframe_mods\state_holder.cpp" />
     <ClCompile Include="v3\dx12\extras\shader_pair\info.cpp" />
