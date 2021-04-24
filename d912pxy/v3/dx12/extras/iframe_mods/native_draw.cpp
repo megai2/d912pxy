@@ -49,7 +49,8 @@ d912pxy::extras::IFrameMods::NativeDraw::~NativeDraw()
 
 void NativeDraw::draw(const d912pxy_replay_thread_context& rpCtx)
 {
-	StateHolder(rpCtx, StateHolder::ST_PSO | StateHolder::ST_VSTREAM0 | StateHolder::ST_INDEX | StateHolder::ST_PRIMTOPO);
+	StateHolder holder(rpCtx, StateHolder::ST_PSO | StateHolder::ST_VSTREAM0 | StateHolder::ST_INDEX | StateHolder::ST_PRIMTOPO);
+
 	rpCtx.cl->SetPipelineState(pso);
 	ibuf->IFrameBindIB(rpCtx.cl);
 	vbuf->IFrameBindVB(vstride, 0, 0, rpCtx.cl);

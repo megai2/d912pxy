@@ -37,10 +37,10 @@ StateHolder::~StateHolder()
 	if (restorationMask & ST_PSO)
 		prevState.cl->SetPipelineState(prevState.pso);
 
-	if (restorationMask & ST_INDEX)
+	if ((restorationMask & ST_INDEX) && prevState.tracked.indexBuf)
 		prevState.tracked.indexBuf->IFrameBindIB(prevState.cl);
 
-	if (restorationMask & ST_VSTREAM0)
+	if ((restorationMask & ST_VSTREAM0) && prevState.tracked.streams[0].buffer)
 	{
 		prevState.tracked.streams[0].buffer->IFrameBindVB(
 			prevState.tracked.streams[0].stride,
