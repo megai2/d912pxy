@@ -34,7 +34,7 @@ StateHolder::StateHolder(const d912pxy_replay_thread_context& rpState, uint32_t 
 
 StateHolder::~StateHolder()
 {
-	if (restorationMask & ST_PSO)
+	if ((restorationMask & ST_PSO) && prevState.pso)
 		prevState.cl->SetPipelineState(prevState.pso);
 
 	if ((restorationMask & ST_INDEX) && prevState.tracked.indexBuf)
