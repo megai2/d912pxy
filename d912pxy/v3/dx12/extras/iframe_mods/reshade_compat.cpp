@@ -32,7 +32,8 @@ const D3DFORMAT targetFormats[ReshadeCompat::TARGET_BB_SIZED_COUNT] =
 	(D3DFORMAT)D3DFMT_INTZ,
 	D3DFMT_A8R8G8B8,
 	D3DFMT_A8R8G8B8,
-	D3DFMT_A8R8G8B8
+	D3DFMT_A8R8G8B8,
+	(D3DFORMAT)D3DFMT_INTZ,
 };
 
 const wchar_t* targetDbgNames[ReshadeCompat::TARGET_BB_SIZED_COUNT] =
@@ -41,7 +42,8 @@ const wchar_t* targetDbgNames[ReshadeCompat::TARGET_BB_SIZED_COUNT] =
 	L"scene_depth",
 	L"scene_opaque",
 	L"gbuf0",
-	L"gbuf1"
+	L"gbuf1",
+	L"early_depth"
 };
 
 ReshadeCompat::ReshadeCompat()
@@ -78,7 +80,7 @@ void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpI
 	else if (passes->inPass(shadowPass))
 	{
 		passes->copyLastSurfaceNamed(1, targets[TARGET_GBUF0], rpContext->cl);
-		passes->copyLastSurfaceNamed(2, targets[TARGET_DEPTH], rpContext->cl);
+		passes->copyLastSurfaceNamed(2, targets[TARGET_EARLY_DEPTH], rpContext->cl);
 	}
 	else if (passes->inPass(normalPass))
 	{

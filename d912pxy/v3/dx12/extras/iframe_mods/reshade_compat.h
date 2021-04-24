@@ -40,9 +40,10 @@ namespace d912pxy {
 					TARGET_OPAQUE = 2,
 					TARGET_GBUF0 = 3,
 					TARGET_GBUF1 = 4,
-					TARGET_BB_SIZED_COUNT = 5,
-					TARGET_SHCONSTS0 = 5,
-					TARGET_TOTAL_COUNT = 6
+					TARGET_EARLY_DEPTH = 5,
+					TARGET_BB_SIZED_COUNT = 6,
+					TARGET_SHCONSTS0 = 6,
+					TARGET_TOTAL_COUNT = 7
 				};
 
 			private:
