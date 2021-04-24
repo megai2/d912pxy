@@ -64,8 +64,8 @@ void ShaderConstRecorder::record(const d912pxy_replay_thread_context& ctx)
 	StateHolder rtHolder(ctx, StateHolder::ST_RTDS);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE dh = target->GetDHeapHandle();
-	target->BTransit(0, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, ctx.cl);
+	target->BTransitTo(0, D3D12_RESOURCE_STATE_RENDER_TARGET, ctx.cl);
 	ctx.cl->OMSetRenderTargets(1, &dh, false, nullptr);
 	filler->draw(ctx);
-	target->BTransit(0, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, ctx.cl);
+	target->BTransitTo(0, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, ctx.cl);
 }
