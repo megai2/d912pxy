@@ -49,6 +49,9 @@ d912pxy::extras::IFrameMods::NativeDraw::~NativeDraw()
 
 void NativeDraw::draw(const d912pxy_replay_thread_context& rpCtx)
 {
+	if (!pso)
+		return;
+
 	StateHolder holder(rpCtx, StateHolder::ST_PSO | StateHolder::ST_VSTREAM0 | StateHolder::ST_INDEX | StateHolder::ST_PRIMTOPO);
 
 	rpCtx.cl->SetPipelineState(pso);
