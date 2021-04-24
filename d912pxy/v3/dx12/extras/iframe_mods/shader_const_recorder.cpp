@@ -46,12 +46,16 @@ ShaderConstRecorder::ShaderConstRecorder()
 	wsprintf(buf, L"ShaderConstRecorder_target_%p", this);
 	target->GetD12Obj()->SetName(buf);
 
-	filler = new NativeFullRTDraw(nullptr);
+	NativeShader fshd(L"shConstRecorder");
+	fshd.getDesc().RTVFormats[0] = DXGI_FORMAT_R32_FLOAT;
+
+	filler = new NativeFullRTDraw(fshd.ptr());
 }
 
 ShaderConstRecorder::~ShaderConstRecorder()
 {
 	target->Release();
+	delete filler;
 }
 
 d912pxy_surface* ShaderConstRecorder::getTarget()
