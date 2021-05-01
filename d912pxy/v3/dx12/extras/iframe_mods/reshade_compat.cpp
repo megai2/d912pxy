@@ -81,6 +81,7 @@ void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpI
 	{
 		passes->copyLastSurfaceNamed(1, targets[TARGET_GBUF0], rpContext->cl);
 		passes->copyLastSurfaceNamed(2, targets[TARGET_EARLY_DEPTH], rpContext->cl);
+		shouldRecordShConsts = true;
 	}
 	else if (passes->inPass(normalPass))
 	{
@@ -94,8 +95,6 @@ void ReshadeCompat::RP_RTDSChange(d912pxy_replay_item::dt_om_render_targets* rpI
 	{
 		passes->copyLastSurfaceNamed(1, targets[TARGET_COLOR], rpContext->cl);
 		passes->copyLastSurfaceNamed(2, targets[TARGET_DEPTH], rpContext->cl);
-
-		shConsts->record(*rpContext);
 	}
 }
 
@@ -136,5 +135,14 @@ void ReshadeCompat::RP_PSO_Change(d912pxy_replay_item::dt_pso_raw* rpItem, d912p
 	{
 		if (rpItem->rawState.val.rt[0].writeMask)
 			rpItem->rawState.val.rt[0].writeMask |= D3D12_COLOR_WRITE_ENABLE_ALL;
+	}
+}
+
+void ReshadeCompat::RP_PostDraw(d912pxy_replay_item::dt_draw_indexed* rpItem, d912pxy_replay_thread_context* rpContext)
+{
+	if (shouldRecordShConsts)
+	{
+		shConsts->record(*rpContext);
+		shouldRecordShConsts = false;
 	}
 }
