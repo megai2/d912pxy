@@ -464,6 +464,12 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 		D3D_FEATURE_LEVEL_9_1
 	};
 
+	bool intelSelected = false;
+	bool autoSelect = d912pxy_s.config.GetValueUI64(PXY_CFG_DX_FORCE_GPU_INDEX) == -1LL;
+
+	if (autoSelect)
+		LOG_INFO_DTDM("Selecting DXGI adapter by vidmem size (and some magic)");
+
 	LOG_INFO_DTDM("Enum DXGI adapters");
 	{
 		for (UINT i = 0; dxgiFactory->EnumAdapters1(i, &dxgiAdapter1) != DXGI_ERROR_NOT_FOUND; ++i)
@@ -523,22 +529,44 @@ ComPtr<ID3D12Device> d912pxy_device::SelectSuitableGPU()
 				dxgiAdapterDesc2.Description
 			);
 
-			if (operational && (maxVidmem < dxgiAdapterDesc2.DedicatedVideoMemory))
-			{				
-				if ((maxVidmem > 0) && (dxgiAdapterDesc2.VendorId == 0x8086))
-				{
-					LOG_WARN_DTDM("Under prioritized Intel GPU have more VRAM than other non-Intel GPU. Odd, skipping Intel GPU.");
-				}
-				else {
-					maxVidmem = dxgiAdapterDesc2.DedicatedVideoMemory;
-					gpu = dxgiAdapter4;
-
-					usingFeatures = featureToCreate[operational];
-				}
+			if (i == d912pxy_s.config.GetValueUI64(PXY_CFG_DX_FORCE_GPU_INDEX))
+			{
+				LOG_INFO_DTDM("GPU of index %u is being used due to config");
 			}
+			else {
+
+				if (!autoSelect)
+					continue;
+
+				if (!operational)
+					continue;
+
+				if (maxVidmem >= dxgiAdapterDesc2.DedicatedVideoMemory)
+				{
+					//re-try if intel supposedly integrated gpu is selected
+					if (!intelSelected)
+						continue;
+				}
+
+				bool isIntel = dxgiAdapterDesc2.VendorId == 0x8086;
+				if (isIntel && gpu)
+				{
+					LOG_WARN_DTDM("Skipping Intel GPU due to another being already selected");
+					continue;
+				}
+
+				if (intelSelected && !isIntel)
+					LOG_WARN_DTDM("Skipping Intel GPU for %s", dxgiAdapterDesc2.Description);
+				intelSelected = isIntel;
+			}
+
+
+			maxVidmem = dxgiAdapterDesc2.DedicatedVideoMemory;
+			gpu = dxgiAdapter4;
+
+			usingFeatures = featureToCreate[operational];
 		}
 	}
-	LOG_INFO_DTDM("Selecting DXGI adapter by vidmem size");
 
 	if (gpu == nullptr)
 	{

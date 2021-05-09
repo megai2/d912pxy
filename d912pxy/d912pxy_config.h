@@ -68,6 +68,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_DX_DBG_RUNTIME,
 	PXY_CFG_DX_FRAME_LATENCY,
 	PXY_CFG_DX_ROUTE_TO_DX9,
+	PXY_CFG_DX_FORCE_GPU_INDEX,
 	PXY_CFG_MISC_GPU_TIMEOUT,		
 	PXY_CFG_MISC_NV_DISABLE_THROTTLE,	
 	PXY_CFG_COMPAT_OCCLUSION,
@@ -220,7 +221,15 @@ private:
 			L"enables and configures dxgi frame latency feature",
 			L"0 disables swapchain waits, any other value enables swapchain waits and trying to set this value as max frame latency"
 		},//PXY_CFG_DX_FRAME_LATENCY
-		{L"dx",L"route_to_dx9",L"0"},//PXY_CFG_DX_ROUTE_TO_DX9		
+		{L"dx",L"route_to_dx9",L"0"},//PXY_CFG_DX_ROUTE_TO_DX9
+		{
+			L"dx",
+			L"force_gpu_index",
+			L"-1",
+			L"u r:-1,inf",
+			L"forces usage of GPU with specified index",
+			L"-1 is auto, any other value will force specified GPU usage"
+		},//PXY_CFG_DX_FORCE_GPU_INDEX
 		{L"misc",L"gpu_timeout",L"5000"},//PXY_CFG_MISC_GPU_TIMEOUT
 		{L"misc",L"nv_disable_throttle", L"0"},//PXY_CFG_MISC_NV_DISABLE_THROTTLE		
 		{L"compat",L"occlusion",L"2"},//PXY_CFG_COMPAT_OCCLUSION
