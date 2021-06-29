@@ -49,6 +49,8 @@ void d912pxy_device::Init(IDirect3DDevice9* dev, void* par)
 	FRAME_METRIC_PRESENT(1)
 #endif
 
+	d912pxy_pso_item::hwCacheAllowed = d912pxy_s.config.GetValueB(PXY_CFG_SDB_ALLOW_HW_CACHE);
+
 	if (d912pxy_s.config.GetValueUI32(PXY_CFG_LOG_PERF_GRAPH) || d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_ENABLE))
 		perfGraph = new d912pxy_performance_graph(0);
 	else
@@ -142,9 +144,6 @@ void d912pxy_device::InitVFS()
 	}	
 
 	d912pxy_s.vfs.SetRoot(d912pxy_s.config.GetValueRaw(PXY_CFG_VFS_ROOT));
-
-	UINT64 memcacheMask = d912pxy_s.config.GetValueXI64(PXY_CFG_VFS_MEMCACHE_MASK);
-	
 	d912pxy_s.vfs.LoadVFS();
 }
 

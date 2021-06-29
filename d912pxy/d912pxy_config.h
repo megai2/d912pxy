@@ -48,6 +48,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_SDB_FORCE_UNUSED_REGS,
 	PXY_CFG_SDB_NAN_GUARD_FLAG,
 	PXY_CFG_SDB_PRECOMPILE_LIMIT,
+	PXY_CFG_SDB_ALLOW_HW_CACHE,
 	PXY_CFG_REPLAY_BEHAIVOUR,
 	PXY_CFG_REPLAY_THREADS,	
 	PXY_CFG_REPLAY_ITEMS_PER_BATCH,
@@ -179,6 +180,16 @@ private:
 			nullptr
 		},
 		//PXY_CFG_SDB_PRECOMPILE_LIMIT
+		{
+			L"sdb",
+			L"hw_cache",
+			L"0",
+			L"b r:0,1",
+			L"toggles hardware cache blob save & load",
+			L"enabling this value increases RAM usage & speeds up API-side PSO compilation",
+			nullptr
+		},
+		//PXY_CFG_SDB_ALLOW_HW_CACHE
 		{L"replay", L"replay", L"1"},//PXY_CFG_REPLAY_BEHAIVOUR
 		{L"replay", L"replay_threads", L"1"},//PXY_CFG_REPLAY_THREADS
 		{L"replay", L"items_per_batch", L"100"},//PXY_CFG_REPLAY_ITEMS_PER_BATCH

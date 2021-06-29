@@ -25,6 +25,7 @@ SOFTWARE.
 #include "stdafx.h"
 
 std::atomic<size_t> d912pxy_pso_item::itemsInCompile { 0 };
+bool d912pxy_pso_item::hwCacheAllowed = false;
 
 d912pxy_pso_item* d912pxy_pso_item::d912pxy_pso_item_com(d912pxy_trimmed_pso_desc* sDsc)
 {
@@ -160,25 +161,33 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 	LOG_DBG_DTDM("Compiling PSO %S", fullPsoName);
 
 	d912pxy_vfs_path hwCachePath(fullPsoName, d912pxy_vfs_bid::pso_hw_cache);
-	d912pxy_mem_block hwBlob = d912pxy_s.vfs.ReadFile(hwCachePath);
-	fullDesc.CachedPSO.CachedBlobSizeInBytes = hwBlob.size();
-	fullDesc.CachedPSO.pCachedBlob = hwBlob.ptr();
+	ID3D12PipelineState* obj = nullptr;
+	HRESULT psoHRet;
 
-	ID3D12PipelineState* obj;
-	HRESULT psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
-
-	//hw changed, driver changed, or cache is invalid for some obscure reason
-	if (FAILED(psoHRet))
+	if (hwCacheAllowed)
 	{
-		LOG_ERR_DTDM("cached CreateGraphicsPipelineState error %lX for %S", psoHRet, fullPsoName);
+		d912pxy_mem_block hwBlob = d912pxy_s.vfs.ReadFile(hwCachePath);
+		fullDesc.CachedPSO.CachedBlobSizeInBytes = hwBlob.size();
+		fullDesc.CachedPSO.pCachedBlob = hwBlob.ptr();
 
+		psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
+
+		//hw changed, driver changed, or cache is invalid for some obscure reason
+		if (FAILED(psoHRet))
+		{
+			LOG_ERR_DTDM("cached CreateGraphicsPipelineState error %lX for %S", psoHRet, fullPsoName);
+		}
+
+		if (!hwBlob.isNullptr())
+			hwBlob.Delete();
+	}
+
+	if (!obj)
+	{
 		fullDesc.CachedPSO.pCachedBlob = nullptr;
 		fullDesc.CachedPSO.CachedBlobSizeInBytes = 0;
 		psoHRet = d912pxy_s.dx12.dev->CreateGraphicsPipelineState(&fullDesc, IID_PPV_ARGS(&obj));
 	}
-
-	if (!hwBlob.isNullptr())
-		hwBlob.Delete();
 
 	if (FAILED(psoHRet))
 	{
@@ -200,7 +209,7 @@ void d912pxy_pso_item::CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc)
 		LOG_ERR_DTDM("full pso desc dump %S", dumpString);
 	}
 	else {
-		if (!fullDesc.CachedPSO.pCachedBlob)
+		if (!fullDesc.CachedPSO.pCachedBlob && hwCacheAllowed)
 		{
 			ID3DBlob* hwBlob = nullptr;
 			obj->GetCachedBlob(&hwBlob);

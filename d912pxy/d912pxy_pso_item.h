@@ -44,6 +44,7 @@ public:
 	ID3D12PipelineState* GetPtr();
 
 	static size_t GetTotalPendingItems();
+	static bool hwCacheAllowed;
 
 private:	
 	void CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& fullDesc);
