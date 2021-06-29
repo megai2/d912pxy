@@ -38,6 +38,7 @@ static const wchar_t* d912pxy_vfs_entry_name_str[] = {
 	L"PSO derived VS code",
 	L"PSO derived PS code",
 	L"PSO derived alias refs",
+	L"PSO hw cache",
 	L"VFS original paths"
 };
 
