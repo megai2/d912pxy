@@ -271,7 +271,7 @@ private:
 			L"Use when TDR crashes or system instability are encountered"
 		},//PXY_CFG_COMPAT_RELAXED_GPU_SUBMISSION
 		{L"vfs", L"root", L"./d912pxy/pck"},//PXY_CFG_VFS_ROOT
-		{L"vfs", L"memcache_mask", L"63"},//PXY_CFG_VFS_MEMCACHE_MASK
+		{L"vfs", L"memcache_mask", L"224"},//PXY_CFG_VFS_MEMCACHE_MASK
 		{L"vfs", L"pack_data", L"0"},//PXY_CFG_VFS_PACK_DATA
 		{L"vfs", L"write_mask", L"0"},//PXY_CFG_VFS_WRITE_MASK
 		{L"extras", L"enable", L"1"},//PXY_CFG_EXTRAS_ENABLE
