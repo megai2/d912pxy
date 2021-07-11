@@ -623,8 +623,10 @@ HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive_Threaded()
 
 HRESULT d912pxy_swapchain::SwapHandle_Swappable_Exclusive()
 {
-	//return SwapHandle_Swappable_Exclusive_Threaded();
-	return 	ExternalSwap();
+	if (fsPresenter)
+		return SwapHandle_Swappable_Exclusive_Threaded();
+	else
+		return ExternalSwap();
 }
 
 HRESULT d912pxy_swapchain::SwapHandle_Reconfigure()
