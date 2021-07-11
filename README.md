@@ -86,8 +86,6 @@ Video guides:
 
 [Guildwars 2 - DX12 Full Setup Guide (912pxy mod)](https://www.youtube.com/watch?v=AhtJA9B55tU)
 
-[Guild Wars 2: How to increase your FPS in 2020](https://www.youtube.com/watch?v=vsJyQKAa8FA)
-
 [How to chainload ArcDPS and d912pxy for Guild Wars 2](https://www.youtube.com/watch?v=0jwbDpzuv3k)
 
 [BnS DirectX12 Mod Installation Guide - B&S Reddit IQ safe(Windows 10)](https://www.youtube.com/watch?v=QkEX4Mgxnv8)
