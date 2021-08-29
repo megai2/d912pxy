@@ -74,23 +74,6 @@ Video by reddit u/moriz0, running WvW in 4k: https://www.youtube.com/watch?v=RQA
 
 [**Using with other addons and overlays**](https://github.com/megai2/d912pxy/wiki/Using-with-other-addons-and-overlays)
 
-Translated guides:
-
-[**RU**](https://github.com/megai2/d912pxy/wiki/InstallingRU)
-
-[**FR**](https://www.youtube.com/watch?v=hfSSIBICG6E)
-
-[**CN**](https://hackmd.io/vXa_ukUpQaOaLRBDdXdMLA)
-
-Video guides:
-
-[Guildwars 2 - DX12 Full Setup Guide (912pxy mod)](https://www.youtube.com/watch?v=AhtJA9B55tU)
-
-[How to chainload ArcDPS and d912pxy for Guild Wars 2](https://www.youtube.com/watch?v=0jwbDpzuv3k)
-
-[BnS DirectX12 Mod Installation Guide - B&S Reddit IQ safe(Windows 10)](https://www.youtube.com/watch?v=QkEX4Mgxnv8)
-
-
 # Known bugs
 
 **Bug**: 
@@ -147,13 +130,3 @@ Case #1: [Game crashes/hangs/not starting](https://github.com/megai2/d912pxy/wik
 Case #2: [Visual errors](https://github.com/megai2/d912pxy/wiki/Reporting-visual-errors)
 
 Case #3: [Unnatural performance drops](https://github.com/megai2/d912pxy/wiki/Reporting-performance-issues)
-
-# Support the developer
-
-WMZ: 442298672293
-
-Bitcoin: 1B46eQtKUcvSLyz1F8QxKcdHACAXbuXGgM
-
-Patreon: https://www.patreon.com/d912pxy
-
-Paypal: megai2@ya.ru
