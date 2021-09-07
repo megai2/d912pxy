@@ -44,6 +44,8 @@ void d912pxy_extras::Init()
 {
 	NonCom_Init(L"extras");
 
+	if (d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_HIDDEN_ON_LAUNCH)) overlayShowMode = eoverlay_hide;
+
 	activeTargetFrameTime = d912pxy_helper::SafeDiv(1000, d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_LIMIT));
 	inactiveTargetFrameTime = d912pxy_helper::SafeDiv(1000, d912pxy_s.config.GetValueUI32(PXY_CFG_EXTRAS_FPS_LIMIT_INACTIVE));
 

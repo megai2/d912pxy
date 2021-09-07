@@ -88,6 +88,7 @@ typedef enum d912pxy_config_value {
 	PXY_CFG_VFS_PACK_DATA,
 	PXY_CFG_VFS_WRITE_MASK,
 	PXY_CFG_EXTRAS_ENABLE,
+	PXY_CFG_EXTRAS_HIDDEN_ON_LAUNCH,
 	PXY_CFG_EXTRAS_FPS_LIMIT,
 	PXY_CFG_EXTRAS_FPS_LIMIT_INACTIVE,
 	PXY_CFG_EXTRAS_SHOW_FPS,
@@ -275,6 +276,7 @@ private:
 		{L"vfs", L"pack_data", L"0"},//PXY_CFG_VFS_PACK_DATA
 		{L"vfs", L"write_mask", L"0"},//PXY_CFG_VFS_WRITE_MASK
 		{L"extras", L"enable", L"1"},//PXY_CFG_EXTRAS_ENABLE
+		{L"extras", L"hidden_on_launch", L"0"},//PXY_CFG_EXTRAS_HIDDEN_ON_LAUNCH
 		{L"extras", L"fps_limit", L"0"},//PXY_CFG_EXTRAS_FPS_LIMIT,
 		{L"extras", L"fps_limit_inactive", L"0"},//PXY_CFG_EXTRAS_FPS_LIMIT_INACTIVE,
 		{L"extras", L"show_fps", L"1"},//PXY_CFG_EXTRAS_SHOW_FPS,
