@@ -6,18 +6,11 @@
 //gw2addon_unload
 
 gw2al_addon_dsc gAddonDeps[] = {
-	{
-		L"loader_core",
-		L"whatever",
-		0,
-		1,
-		1,
-		0
-	},
+	GW2AL_CORE_DEP_ENTRY,
 	{
 		L"d3d9_wrapper",
 		L"whatever",
-		1,
+		2,
 		0,
 		1,
 		0
