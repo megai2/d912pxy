@@ -1,5 +1,6 @@
 # d912pxy - "DirectX9 to DirectX12 API proxy for Guild Wars 2"
 
+
 d912pxy is a way to make games that use DirectX 9 use DirectX 12 instead, without changing any game code.
 
 This is specifically designed for Guild Wars 2.
@@ -8,6 +9,8 @@ You can try to use it with other games; it might work.
 Tool will show overlay when it installed correctly, use default hotkey Ctrl+Alt+N to toggle its mode (hide/show)
 
 Expect some minor crashes / visual bugs.
+
+Note: project will be achived when guild wars 2 dx11 beta ends, no support for other games are planned/in works.
 
 [![Current Version](https://img.shields.io/github/release/megai2/d912pxy)](https://github.com/megai2/d912pxy/releases) 
 [![Github Downloads](https://img.shields.io/github/downloads/megai2/d912pxy/total.svg)](https://github.com/megai2/d912pxy/releases) 
