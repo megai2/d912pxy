@@ -63,11 +63,11 @@ This is affected by performance recording, and should be better in normal situat
 
 DX12:
 
-https://cdn.discordapp.com/attachments/477036595019644928/539417113593380865/unknown.png
+![](img/dx12.png)
 
 DX9:
 
-https://cdn.discordapp.com/attachments/477036595019644928/539417612501647360/unknown.png
+![](img/dx9.png)
 
 Video by reddit u/moriz0, running WvW in 4k: https://www.youtube.com/watch?v=RQAB7Ma20Ow&
 
